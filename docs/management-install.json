@@ -1,0 +1,752 @@
+{
+  "version": "0.2.0",
+  "cwd": "/tmp/selark-management-client",
+  "shell": "fresh interactive non-login bash",
+  "command_path": "/home/nbcctwya/.local/bin/selark",
+  "module_file": "/home/nbcctwya/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark/__init__.py",
+  "virtual_env_active": false,
+  "conda_environment_active": false,
+  "installed_python_files_match_source": 15,
+  "generation_attempts_before": 6,
+  "generation_attempts_after": 6,
+  "checks": [
+    {
+      "command": [
+        "selark",
+        "usage",
+        "--json"
+      ],
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 17,
+          "known_usage_requests": 12,
+          "missing_usage_requests": 5,
+          "upstream_attempts": 6,
+          "unknown_attempt_count_requests": 8,
+          "unknown_time_requests": 1,
+          "status_counts": {
+            "failed": 5,
+            "success": 12
+          },
+          "known_tokens": {
+            "prompt_tokens": 364,
+            "completion_tokens": 98,
+            "total_tokens": 462
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 5,
+            "completion_tokens": 5,
+            "total_tokens": 5
+          }
+        },
+        "group_by": null,
+        "groups": []
+      }
+    },
+    {
+      "command": [
+        "selark",
+        "--help"
+      ],
+      "exit_code": 0,
+      "result": "usage: selark [-h] [--config-dir CONFIG_DIR]\n              {init,serve,models,ask,connection,tokens,records,usage,sessions,migrate,doctor}\n              ...\n\nSelark MiMo HTTP 服务与客户端\n\npositional arguments:\n  {init,serve,models,ask,connection,tokens,records,usage,sessions,migrate,doctor}\n    init                创建私有配置，自动生成独立访问令牌\n    serve               按持久配置启动 HTTP 服务\n    models              通过 Selark HTTP 获取允许模型\n    ask                 通过 Selark HTTP 发起文本对话\n    connection          本机管理 MiMo 连接；show 不生成模型请求\n    tokens              本机管理调用方令牌；普通令牌无管理权限\n    records             查询元数据或显式导入旧日志，不保存对话正文\n    usage               汇总已知用量及未知请求数；默认所有时间、UTC\n    sessions            按调用方和 session_id 归组，不保存或拼接历史\n    migrate             备份并幂等迁移旧配置；不生成模型请求\n    doctor              检查配置、记录库及本机服务；不生成模型请求\n\noptions:\n  -h, --help            show this help message and exit\n  --config-dir CONFIG_DIR\n                        私有配置的绝对路径（默认 ~/.config/selark）"
+    },
+    {
+      "command": [
+        "selark",
+        "init",
+        "--help"
+      ],
+      "exit_code": 0,
+      "result": "usage: selark init [-h] [--base-url BASE_URL] [--models MODELS [MODELS ...]]\n                   [--default-model DEFAULT_MODEL] [--port PORT]\n\noptions:\n  -h, --help            show this help message and exit\n  --base-url BASE_URL\n  --models MODELS [MODELS ...]\n                        允许模型列表\n  --default-model DEFAULT_MODEL\n  --port PORT"
+    },
+    {
+      "command": [
+        "selark",
+        "connection",
+        "--help"
+      ],
+      "exit_code": 0,
+      "result": "usage: selark connection [-h] {show,enable,disable,probe,set} ...\n\npositional arguments:\n  {show,enable,disable,probe,set}\n    show                显示脱敏配置和最近显式探测状态\n    enable              启用连接，新请求立即生效\n    disable             停用连接，拒绝新的上游调用\n    probe               显式发送一次真实短请求，有用量；必须先启动服务\n    set                 修改连接并热生效；关键修改使旧验证失效\n\noptions:\n  -h, --help            show this help message and exit"
+    },
+    {
+      "command": [
+        "selark",
+        "tokens",
+        "--help"
+      ],
+      "exit_code": 0,
+      "result": "usage: selark tokens [-h] {create,list,show,revoke} ...\n\npositional arguments:\n  {create,list,show,revoke}\n    create              创建调用方；仅本次完整显示令牌\n\noptions:\n  -h, --help            show this help message and exit"
+    },
+    {
+      "command": [
+        "selark",
+        "records",
+        "--help"
+      ],
+      "exit_code": 0,
+      "result": "usage: selark records [-h] {list,import} ...\n\npositional arguments:\n  {list,import}\n    import       备份后幂等导入旧 JSONL/验收 JSON\n\noptions:\n  -h, --help     show this help message and exit"
+    },
+    {
+      "command": [
+        "selark",
+        "usage",
+        "--help"
+      ],
+      "exit_code": 0,
+      "result": "usage: selark usage [-h] [--since SINCE] [--until UNTIL] [--today] [--tz TZ]\n                    [--model MODEL] [--caller CALLER] [--session SESSION]\n                    [--purpose {chat,connection_probe}]\n                    [--status {running,success,failed,cancelled,interrupted,unknown}]\n                    [--group-by {model,caller,session,day}] [--json]\n\noptions:\n  -h, --help            show this help message and exit\n  --since SINCE         起始时间，包含；无时区时按 --tz 解释\n  --until UNTIL         结束时间，不包含\n  --today               查询 --tz 时区的今天\n  --tz TZ               IANA 时区，默认 UTC，如 Asia/Shanghai\n  --model MODEL\n  --caller CALLER       鉴权确定的调用方 ID\n  --session SESSION     仅筛选归组标签；跨调用方仍分别汇总\n  --purpose {chat,connection_probe}\n  --status {running,success,failed,cancelled,interrupted,unknown}\n  --group-by {model,caller,session,day}\n  --json"
+    },
+    {
+      "command": [
+        "selark",
+        "sessions",
+        "--help"
+      ],
+      "exit_code": 0,
+      "result": "usage: selark sessions [-h] {list,show} ...\n\npositional arguments:\n  {list,show}\n    show       查看指定调用方的一组调用与用量\n\noptions:\n  -h, --help   show this help message and exit"
+    },
+    {
+      "command": [
+        "selark",
+        "doctor",
+        "--help"
+      ],
+      "exit_code": 0,
+      "result": "usage: selark doctor [-h] [--json]\n\noptions:\n  -h, --help  show this help message and exit\n  --json"
+    },
+    {
+      "command": [
+        "selark",
+        "models",
+        "--json"
+      ],
+      "exit_code": 0,
+      "result": {
+        "object": "list",
+        "data": [
+          {
+            "id": "mimo-v2.6-flash",
+            "object": "model",
+            "created": 0,
+            "owned_by": "xiaomi"
+          }
+        ],
+        "default_model": "mimo-v2.6-flash",
+        "connection_enabled": true
+      }
+    },
+    {
+      "command": [
+        "selark",
+        "doctor",
+        "--json"
+      ],
+      "exit_code": 0,
+      "result": {
+        "ok": true,
+        "checks": [
+          {
+            "check": "server_config",
+            "ok": true,
+            "connection_enabled": true
+          },
+          {
+            "check": "client_config",
+            "ok": true
+          },
+          {
+            "check": "storage",
+            "ok": true,
+            "integrity": "ok",
+            "records": 17,
+            "running_records": 0,
+            "path": "/home/nbcctwya/.local/share/selark/records.sqlite3"
+          },
+          {
+            "check": "client_token",
+            "ok": true,
+            "caller_id": "legacy",
+            "message": "本地客户端令牌有效"
+          },
+          {
+            "check": "service",
+            "ok": true,
+            "version": "0.2.0",
+            "message": "服务正常"
+          }
+        ],
+        "model_generation_requests": 0,
+        "note": "doctor 不执行真实连通性探测；使用 connection probe 显式生成。"
+      }
+    },
+    {
+      "command": [
+        "selark",
+        "connection",
+        "show",
+        "--json"
+      ],
+      "exit_code": 0,
+      "result": {
+        "schema_version": 2,
+        "connection_id": "mimo-default",
+        "enabled": true,
+        "config_revision": 3,
+        "base_url": "https://api.xiaomimimo.com/v1",
+        "allowed_models": [
+          "mimo-v2.6-flash"
+        ],
+        "default_model": "mimo-v2.6-flash",
+        "host": "127.0.0.1",
+        "port": 8787,
+        "timeout_seconds": 60.0,
+        "configured": true,
+        "api_key": "[REDACTED]",
+        "verification": {
+          "connection_id": "mimo-default",
+          "verified_at": "2026-10-27T09:41:30.050292+00:00",
+          "state": "success",
+          "request_id": "135939de9f1c488b97f36e7d4bfc6653",
+          "error_code": null
+        }
+      }
+    },
+    {
+      "command": [
+        "selark",
+        "tokens",
+        "list",
+        "--json"
+      ],
+      "exit_code": 0,
+      "result": [
+        {
+          "id": "legacy",
+          "name": "Legacy client (0.1.x)",
+          "created_at": "2026-10-27T09:37:33.550270+00:00",
+          "revoked_at": null,
+          "active": true
+        },
+        {
+          "id": "caller_4da97eb817564eb3af607afd48190c83",
+          "name": "Management verification A",
+          "created_at": "2026-10-27T09:41:30.240308+00:00",
+          "revoked_at": "2026-10-27T09:41:40.930254+00:00",
+          "active": false
+        },
+        {
+          "id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+          "name": "Management verification B",
+          "created_at": "2026-10-27T09:41:30.432328+00:00",
+          "revoked_at": null,
+          "active": true
+        }
+      ]
+    },
+    {
+      "command": [
+        "selark",
+        "records",
+        "list",
+        "--limit",
+        "3",
+        "--json"
+      ],
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "records": [
+          {
+            "request_id": "47e24a20ca78480591756025db426320",
+            "original_request_id": "47e24a20ca78480591756025db426320",
+            "started_at": "2026-10-27T09:41:43.170046+00:00",
+            "finished_at": "2026-10-27T09:41:44.101806+00:00",
+            "caller_id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+            "connection_id": "mimo-default",
+            "session_id": "management-round-one",
+            "model": "mimo-v2.6-flash",
+            "requested_model": "mimo-v2.6-flash",
+            "purpose": "chat",
+            "status": "success",
+            "http_status": 200,
+            "upstream_status": 200,
+            "duration_ms": 931.76,
+            "upstream_attempts": 1,
+            "usage_final": true,
+            "prompt_tokens": 18,
+            "completion_tokens": 6,
+            "total_tokens": 24,
+            "error_code": null,
+            "error_message": null,
+            "origin": "live",
+            "reported_usage": {
+              "prompt_tokens": 18,
+              "completion_tokens": 6,
+              "total_tokens": 24,
+              "prompt_tokens_details": null,
+              "completion_tokens_details": {
+                "reasoning_tokens": 0
+              }
+            },
+            "usage_known": true
+          },
+          {
+            "request_id": "6368930d422a4bc0b42f04ec58163d04",
+            "original_request_id": "6368930d422a4bc0b42f04ec58163d04",
+            "started_at": "2026-10-27T09:41:42.987092+00:00",
+            "finished_at": "2026-10-27T09:41:42.989523+00:00",
+            "caller_id": null,
+            "connection_id": "mimo-default",
+            "session_id": null,
+            "model": null,
+            "requested_model": null,
+            "purpose": "chat",
+            "status": "failed",
+            "http_status": 401,
+            "upstream_status": null,
+            "duration_ms": 2.44,
+            "upstream_attempts": 0,
+            "usage_final": false,
+            "prompt_tokens": null,
+            "completion_tokens": null,
+            "total_tokens": null,
+            "error_code": "invalid_token",
+            "error_message": "Selark 访问令牌无效、已撤销或缺失。",
+            "origin": "live",
+            "reported_usage": null,
+            "usage_known": false
+          },
+          {
+            "request_id": "00f6e247014146a68336b2dcfbe41649",
+            "original_request_id": "00f6e247014146a68336b2dcfbe41649",
+            "started_at": "2026-10-27T09:41:40.967712+00:00",
+            "finished_at": "2026-10-27T09:41:40.970210+00:00",
+            "caller_id": null,
+            "connection_id": "mimo-default",
+            "session_id": null,
+            "model": null,
+            "requested_model": null,
+            "purpose": "chat",
+            "status": "failed",
+            "http_status": 401,
+            "upstream_status": null,
+            "duration_ms": 2.5,
+            "upstream_attempts": 0,
+            "usage_final": false,
+            "prompt_tokens": null,
+            "completion_tokens": null,
+            "total_tokens": null,
+            "error_code": "invalid_token",
+            "error_message": "Selark 访问令牌无效、已撤销或缺失。",
+            "origin": "live",
+            "reported_usage": null,
+            "usage_known": false
+          }
+        ]
+      }
+    },
+    {
+      "command": [
+        "selark",
+        "usage",
+        "--today",
+        "--tz",
+        "Asia/Shanghai",
+        "--group-by",
+        "caller",
+        "--json"
+      ],
+      "exit_code": 0,
+      "result": {
+        "timezone": "Asia/Shanghai",
+        "filters": {
+          "since": "2026-10-26T16:00:00.000000+00:00",
+          "until": "2026-10-27T16:00:00.000000+00:00"
+        },
+        "summary": {
+          "requests": 16,
+          "known_usage_requests": 11,
+          "missing_usage_requests": 5,
+          "upstream_attempts": 6,
+          "unknown_attempt_count_requests": 7,
+          "unknown_time_requests": 0,
+          "status_counts": {
+            "failed": 5,
+            "success": 11
+          },
+          "known_tokens": {
+            "prompt_tokens": 348,
+            "completion_tokens": 94,
+            "total_tokens": 442
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 5,
+            "completion_tokens": 5,
+            "total_tokens": 5
+          }
+        },
+        "group_by": "caller",
+        "groups": [
+          {
+            "caller_id": null,
+            "requests": 9,
+            "known_usage_requests": 5,
+            "missing_usage_requests": 4,
+            "upstream_attempts": 0,
+            "unknown_attempt_count_requests": 7,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "failed": 4,
+              "success": 5
+            },
+            "known_tokens": {
+              "prompt_tokens": 242,
+              "completion_tokens": 60,
+              "total_tokens": 302
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 4,
+              "completion_tokens": 4,
+              "total_tokens": 4
+            }
+          },
+          {
+            "caller_id": "legacy",
+            "requests": 1,
+            "known_usage_requests": 1,
+            "missing_usage_requests": 0,
+            "upstream_attempts": 1,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 17,
+              "completion_tokens": 5,
+              "total_tokens": 22
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0
+            }
+          },
+          {
+            "caller_id": "local-probe",
+            "requests": 2,
+            "known_usage_requests": 2,
+            "missing_usage_requests": 0,
+            "upstream_attempts": 2,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 2
+            },
+            "known_tokens": {
+              "prompt_tokens": 34,
+              "completion_tokens": 10,
+              "total_tokens": 44
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0
+            }
+          },
+          {
+            "caller_id": "caller_4da97eb817564eb3af607afd48190c83",
+            "requests": 1,
+            "known_usage_requests": 1,
+            "missing_usage_requests": 0,
+            "upstream_attempts": 1,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 18,
+              "completion_tokens": 6,
+              "total_tokens": 24
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0
+            }
+          },
+          {
+            "caller_id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+            "requests": 3,
+            "known_usage_requests": 2,
+            "missing_usage_requests": 1,
+            "upstream_attempts": 2,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 2,
+              "failed": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 37,
+              "completion_tokens": 13,
+              "total_tokens": 50
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 1,
+              "completion_tokens": 1,
+              "total_tokens": 1
+            }
+          }
+        ]
+      }
+    },
+    {
+      "command": [
+        "selark",
+        "sessions",
+        "list",
+        "--json"
+      ],
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {
+          "sessions_only": true
+        },
+        "summary": {
+          "requests": 3,
+          "known_usage_requests": 3,
+          "missing_usage_requests": 0,
+          "upstream_attempts": 3,
+          "unknown_attempt_count_requests": 0,
+          "unknown_time_requests": 0,
+          "status_counts": {
+            "success": 3
+          },
+          "known_tokens": {
+            "prompt_tokens": 55,
+            "completion_tokens": 19,
+            "total_tokens": 74
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "group_by": "session",
+        "groups": [
+          {
+            "caller_id": "caller_4da97eb817564eb3af607afd48190c83",
+            "session_id": "management-round-one",
+            "requests": 1,
+            "known_usage_requests": 1,
+            "missing_usage_requests": 0,
+            "upstream_attempts": 1,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 18,
+              "completion_tokens": 6,
+              "total_tokens": 24
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0
+            }
+          },
+          {
+            "caller_id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+            "session_id": "management-round-one",
+            "requests": 2,
+            "known_usage_requests": 2,
+            "missing_usage_requests": 0,
+            "upstream_attempts": 2,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 2
+            },
+            "known_tokens": {
+              "prompt_tokens": 37,
+              "completion_tokens": 13,
+              "total_tokens": 50
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "command": [
+        "selark",
+        "migrate",
+        "--json"
+      ],
+      "exit_code": 0,
+      "result": {
+        "schema_version": 2,
+        "database": "/home/nbcctwya/.local/share/selark/records.sqlite3",
+        "backup": null,
+        "migrated": false
+      }
+    },
+    {
+      "command": [
+        "selark",
+        "usage",
+        "--json"
+      ],
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 17,
+          "known_usage_requests": 12,
+          "missing_usage_requests": 5,
+          "upstream_attempts": 6,
+          "unknown_attempt_count_requests": 8,
+          "unknown_time_requests": 1,
+          "status_counts": {
+            "failed": 5,
+            "success": 12
+          },
+          "known_tokens": {
+            "prompt_tokens": 364,
+            "completion_tokens": 98,
+            "total_tokens": 462
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 5,
+            "completion_tokens": 5,
+            "total_tokens": 5
+          }
+        },
+        "group_by": null,
+        "groups": []
+      }
+    },
+    {
+      "command": [
+        "selark",
+        "--config-dir",
+        "/tmp/selark-installed-init-eg94bysp/config",
+        "init"
+      ],
+      "exit_code": 0,
+      "result": "私有配置已创建：/tmp/selark-installed-init-eg94bysp/config\n服务端使用 server.json；CLI 和外部程序仅使用 client.json。"
+    },
+    {
+      "command": [
+        "selark",
+        "--config-dir",
+        "/tmp/selark-installed-init-eg94bysp/config",
+        "connection",
+        "show",
+        "--json"
+      ],
+      "exit_code": 0,
+      "result": {
+        "schema_version": 2,
+        "connection_id": "mimo-default",
+        "enabled": true,
+        "config_revision": 1,
+        "base_url": "https://api.xiaomimimo.com/v1",
+        "allowed_models": [
+          "mimo-v2.6-flash"
+        ],
+        "default_model": "mimo-v2.6-flash",
+        "host": "127.0.0.1",
+        "port": 8787,
+        "timeout_seconds": 60.0,
+        "configured": true,
+        "api_key": "[REDACTED]",
+        "verification": {
+          "state": "never",
+          "verified_at": null
+        }
+      }
+    },
+    {
+      "command": [
+        "selark",
+        "--config-dir",
+        "/tmp/selark-installed-init-eg94bysp/config",
+        "init"
+      ],
+      "exit_code": 1,
+      "result": ""
+    }
+  ],
+  "service_running_after_acceptance": false,
+  "stopped_service_checks": [
+    {
+      "command": [
+        "selark",
+        "models"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "错误：无法连接 Selark 或连接中断，请确认 selark serve 已启动及客户端地址正确。"
+    },
+    {
+      "command": [
+        "selark",
+        "ask",
+        "offline connection check",
+        "--max-tokens",
+        "1"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "错误：无法连接 Selark 或连接中断，请确认 selark serve 已启动及客户端地址正确。"
+    },
+    {
+      "command": [
+        "selark",
+        "doctor",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"ok\": false, \"checks\": [{\"check\": \"server_config\", \"ok\": true, \"connection_enabled\": true}, {\"check\": \"client_config\", \"ok\": true}, {\"check\": \"storage\", \"ok\": true, \"integrity\": \"ok\", \"records\": 17, \"running_records\": 0, \"path\": \"/home/nbcctwya/.local/share/selark/records.sqlite3\"}, {\"check\": \"client_token\", \"ok\": true, \"caller_id\": \"legacy\", \"message\": \"本地客户端令牌有效\"}, {\"check\": \"service\", \"ok\": false, \"message\": \"无法连接本机服务，请运行 selark serve。\"}], \"model_generation_requests\": 0, \"note\": \"doctor 不执行真实连通性探测；使用 connection probe 显式生成。\"}",
+      "stderr": ""
+    }
+  ],
+  "final_summary": {
+    "requests": 17,
+    "known_usage_requests": 12,
+    "missing_usage_requests": 5,
+    "upstream_attempts": 6,
+    "unknown_attempt_count_requests": 8,
+    "unknown_time_requests": 1,
+    "status_counts": {
+      "failed": 5,
+      "success": 12
+    },
+    "known_tokens": {
+      "prompt_tokens": 364,
+      "completion_tokens": 98,
+      "total_tokens": 462
+    },
+    "missing_field_requests": {
+      "prompt_tokens": 5,
+      "completion_tokens": 5,
+      "total_tokens": 5
+    }
+  }
+}

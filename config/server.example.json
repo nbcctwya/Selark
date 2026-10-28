@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "connection_id": "mimo-default",
+  "enabled": true,
+  "config_revision": 1,
+  "base_url": "https://api.xiaomimimo.com/v1",
+  "api_key": "YOUR_MIMO_API_KEY",
+  "allowed_models": ["mimo-v2.6-flash"],
+  "default_model": "mimo-v2.6-flash",
+  "host": "127.0.0.1",
+  "port": 8787,
+  "timeout_seconds": 60.0
+}

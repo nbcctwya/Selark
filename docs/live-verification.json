@@ -1,0 +1,274 @@
+{
+  "checks": [
+    {
+      "check": "health_start_1",
+      "http_status": 200,
+      "body": {
+        "status": "ok",
+        "version": "0.1.0"
+      }
+    },
+    {
+      "check": "cli_models",
+      "exit_code": 0,
+      "duration_ms": 217,
+      "stdout": "{\n  \"object\": \"list\",\n  \"data\": [\n    {\n      \"id\": \"mimo-v2.6-flash\",\n      \"object\": \"model\",\n      \"created\": 0,\n      \"owned_by\": \"xiaomi\"\n    }\n  ],\n  \"default_model\": \"mimo-v2.6-flash\"\n}",
+      "stderr": ""
+    },
+    {
+      "check": "local_auth_and_validation",
+      "wrong_token": 401,
+      "invalid_messages": 400,
+      "upstream_requests": 0
+    },
+    {
+      "check": "cli_regular",
+      "exit_code": 0,
+      "duration_ms": 1615,
+      "stdout": "Selark HTTP OK",
+      "stderr": "{\"request_id\": \"0d4b0f66dc1c49a7ba2a4369b18e149f\", \"model\": \"mimo-v2.6-flash\", \"duration_ms\": 1410.98, \"finish_reason\": \"stop\", \"usage\": {\"completion_tokens\": 5, \"prompt_tokens\": 17, \"total_tokens\": 22, \"completion_tokens_details\": {\"reasoning_tokens\": 0}, \"prompt_tokens_details\": null}}",
+      "usage": {
+        "completion_tokens": 5,
+        "prompt_tokens": 17,
+        "total_tokens": 22,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": null
+      },
+      "model": "mimo-v2.6-flash"
+    },
+    {
+      "check": "cli_stream",
+      "exit_code": 0,
+      "duration_ms": 1078,
+      "stdout": "Selark 流式调用成功。",
+      "stderr": "{\"request_id\": \"6775e0ebe5a34612a33adfbeb98f33b6\", \"model\": \"mimo-v2.6-flash\", \"duration_ms\": 828.35, \"finish_reason\": \"stop\", \"usage\": {\"completion_tokens\": 10, \"prompt_tokens\": 22, \"total_tokens\": 32, \"completion_tokens_details\": {\"reasoning_tokens\": 0}, \"prompt_tokens_details\": null}}",
+      "usage": {
+        "completion_tokens": 10,
+        "prompt_tokens": 22,
+        "total_tokens": 32,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": null
+      },
+      "model": "mimo-v2.6-flash"
+    },
+    {
+      "check": "standalone_example",
+      "exit_code": 0,
+      "duration_ms": 1899,
+      "stdout": "Selark 是统一模型接入服务，集中管理 API Key，支持命令行及程序调用，提供流式与多轮对话，并持久化保存模型配置。",
+      "stderr": "{\"model\": \"mimo-v2.6-flash\", \"usage\": {\"completion_tokens\": 36, \"prompt_tokens\": 133, \"total_tokens\": 169, \"completion_tokens_details\": {\"reasoning_tokens\": 0}, \"prompt_tokens_details\": null}}",
+      "usage": {
+        "completion_tokens": 36,
+        "prompt_tokens": 133,
+        "total_tokens": 169,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": null
+      },
+      "model": "mimo-v2.6-flash"
+    },
+    {
+      "check": "health_start_2",
+      "http_status": 200,
+      "body": {
+        "status": "ok",
+        "version": "0.1.0"
+      }
+    },
+    {
+      "check": "restart_multiturn",
+      "exit_code": 0,
+      "duration_ms": 1862,
+      "stdout": "Selark",
+      "stderr": "{\"request_id\": \"d88815c6a9d84cc0abacbd68623ac4d4\", \"model\": \"mimo-v2.6-flash\", \"duration_ms\": 1639.88, \"finish_reason\": \"stop\", \"usage\": {\"completion_tokens\": 3, \"prompt_tokens\": 52, \"total_tokens\": 55, \"completion_tokens_details\": {\"reasoning_tokens\": 0}, \"prompt_tokens_details\": null}}",
+      "usage": {
+        "completion_tokens": 3,
+        "prompt_tokens": 52,
+        "total_tokens": 55,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": null
+      },
+      "model": "mimo-v2.6-flash"
+    },
+    {
+      "check": "offline_cli_ask",
+      "exit_code": 1,
+      "duration_ms": 204,
+      "stdout": "",
+      "stderr": "错误：无法连接 Selark 或连接中断，请确认 selark serve 已启动及客户端地址正确。"
+    },
+    {
+      "check": "offline_cli_models",
+      "exit_code": 1,
+      "duration_ms": 213,
+      "stdout": "",
+      "stderr": "错误：无法连接 Selark 或连接中断，请确认 selark serve 已启动及客户端地址正确。"
+    }
+  ],
+  "server_requests": [
+    {
+      "timestamp": "2026-10-27T07:50:44.205551+00:00",
+      "request_id": "b1c9fd686c884c009daf85c0b93dd6f6",
+      "path": "/health",
+      "model": null,
+      "status": 200,
+      "upstream_status": null,
+      "duration_ms": 0.78,
+      "stream_status": null,
+      "error_code": null,
+      "usage": null
+    },
+    {
+      "timestamp": "2026-10-27T07:50:44.395617+00:00",
+      "request_id": "f820f7b475504e43a297528e38a75b98",
+      "path": "/v1/models",
+      "model": null,
+      "status": 200,
+      "upstream_status": null,
+      "duration_ms": 0.5,
+      "stream_status": null,
+      "error_code": null,
+      "usage": null
+    },
+    {
+      "timestamp": "2026-10-27T07:50:44.429613+00:00",
+      "request_id": "98286005879b497b8bed0f41fef54c74",
+      "path": "/v1/chat/completions",
+      "model": null,
+      "status": 401,
+      "upstream_status": null,
+      "duration_ms": 0.27,
+      "stream_status": null,
+      "error_code": "invalid_token",
+      "usage": null
+    },
+    {
+      "timestamp": "2026-10-27T07:50:44.431586+00:00",
+      "request_id": "1ad40d2e8cbb403a92753f94a5fcd6b8",
+      "path": "/v1/chat/completions",
+      "model": null,
+      "status": 400,
+      "upstream_status": null,
+      "duration_ms": 0.85,
+      "stream_status": null,
+      "error_code": "invalid_request",
+      "usage": null
+    },
+    {
+      "timestamp": "2026-10-27T07:50:46.018519+00:00",
+      "request_id": "0d4b0f66dc1c49a7ba2a4369b18e149f",
+      "path": "/v1/chat/completions",
+      "model": "mimo-v2.6-flash",
+      "status": 200,
+      "upstream_status": 200,
+      "duration_ms": 1408.32,
+      "stream_status": null,
+      "error_code": null,
+      "usage": {
+        "prompt_tokens": 17,
+        "completion_tokens": 5,
+        "total_tokens": 22,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    },
+    {
+      "timestamp": "2026-10-27T07:50:47.095342+00:00",
+      "request_id": "6775e0ebe5a34612a33adfbeb98f33b6",
+      "path": "/v1/chat/completions",
+      "model": "mimo-v2.6-flash",
+      "status": 200,
+      "upstream_status": 200,
+      "duration_ms": 826.63,
+      "stream_status": "completed",
+      "error_code": null,
+      "usage": {
+        "prompt_tokens": 22,
+        "completion_tokens": 10,
+        "total_tokens": 32,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    },
+    {
+      "timestamp": "2026-10-27T07:50:49.016097+00:00",
+      "request_id": "a083f7df0a3d47008434eaba0c0e8eea",
+      "path": "/v1/chat/completions",
+      "model": "mimo-v2.6-flash",
+      "status": 200,
+      "upstream_status": 200,
+      "duration_ms": 1818.35,
+      "stream_status": null,
+      "error_code": null,
+      "usage": {
+        "prompt_tokens": 133,
+        "completion_tokens": 36,
+        "total_tokens": 169,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    },
+    {
+      "timestamp": "2026-10-27T07:50:49.650350+00:00",
+      "request_id": "6ae74326325349ffb72fa938b25cd295",
+      "path": "/health",
+      "model": null,
+      "status": 200,
+      "upstream_status": null,
+      "duration_ms": 1.39,
+      "stream_status": null,
+      "error_code": null,
+      "usage": null
+    },
+    {
+      "timestamp": "2026-10-27T07:50:51.484757+00:00",
+      "request_id": "d88815c6a9d84cc0abacbd68623ac4d4",
+      "path": "/v1/chat/completions",
+      "model": "mimo-v2.6-flash",
+      "status": 200,
+      "upstream_status": 200,
+      "duration_ms": 1636.31,
+      "stream_status": null,
+      "error_code": null,
+      "usage": {
+        "prompt_tokens": 52,
+        "completion_tokens": 3,
+        "total_tokens": 55,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    }
+  ],
+  "failure": null,
+  "initial_probe": {
+    "check": "initial_direct_probe",
+    "http_status": 200,
+    "model": "mimo-v2.6-flash",
+    "output": "Selark OK",
+    "usage": {
+      "completion_tokens": 4,
+      "prompt_tokens": 16,
+      "total_tokens": 20,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "prompt_tokens_details": null
+    },
+    "elapsed_ms": 1629
+  }
+}

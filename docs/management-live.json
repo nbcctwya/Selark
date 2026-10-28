@@ -1,0 +1,1693 @@
+{
+  "verified_at": "2026-10-27T09:41:44.653831+00:00",
+  "version": "0.2.0",
+  "python_executable": "/home/nbcctwya/.local/share/pipx/venvs/selark/bin/python",
+  "module_file": "/home/nbcctwya/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark/__init__.py",
+  "cwd": "/tmp/selark-management-client",
+  "virtual_env_active": false,
+  "conda_environment_active": false,
+  "generation_reservations": 6,
+  "failure": null,
+  "initial_issue": "The first successful probe returned before its verification commit. Fixed and regression tested before resuming; no generation was repeated.",
+  "checks": [
+    {
+      "check": "migrate",
+      "exit_code": 0,
+      "result": {
+        "schema_version": 2,
+        "database": "/home/nbcctwya/.local/share/selark/records.sqlite3",
+        "backup": "/home/nbcctwya/.local/share/selark/backups/2026-10-27T09-37-33.525472+00-00-be570c5b",
+        "migrated": true
+      },
+      "stderr": ""
+    },
+    {
+      "check": "migrate_again",
+      "exit_code": 0,
+      "result": {
+        "schema_version": 2,
+        "database": "/home/nbcctwya/.local/share/selark/records.sqlite3",
+        "backup": null,
+        "migrated": false
+      },
+      "stderr": ""
+    },
+    {
+      "check": "import_initial_history",
+      "exit_code": 0,
+      "result": {
+        "added": 7,
+        "already_imported": false,
+        "backup": "/home/nbcctwya/.local/share/selark/backups/2026-10-27T09-37-33.945192+00-00-9fa93bcd"
+      },
+      "stderr": ""
+    },
+    {
+      "check": "import_pipx_history",
+      "exit_code": 0,
+      "result": {
+        "added": 1,
+        "already_imported": false,
+        "backup": "/home/nbcctwya/.local/share/selark/backups/2026-10-27T09-37-34.158348+00-00-8379f359"
+      },
+      "stderr": ""
+    },
+    {
+      "check": "reimport_history",
+      "exit_code": 0,
+      "result": {
+        "added": 0,
+        "already_imported": true,
+        "original_added": 7
+      },
+      "stderr": ""
+    },
+    {
+      "check": "history_usage",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 8,
+          "known_usage_requests": 6,
+          "missing_usage_requests": 2,
+          "upstream_attempts": 0,
+          "unknown_attempt_count_requests": 8,
+          "unknown_time_requests": 1,
+          "status_counts": {
+            "failed": 2,
+            "success": 6
+          },
+          "known_tokens": {
+            "prompt_tokens": 258,
+            "completion_tokens": 64,
+            "total_tokens": 322
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 2,
+            "completion_tokens": 2,
+            "total_tokens": 2
+          }
+        },
+        "group_by": null,
+        "groups": []
+      },
+      "stderr": ""
+    },
+    {
+      "check": "help",
+      "exit_code": 0,
+      "result": "usage: selark [-h] [--config-dir CONFIG_DIR]\n              {init,serve,models,ask,connection,tokens,records,usage,sessions,migrate,doctor}\n              ...\n\nSelark MiMo HTTP 服务与客户端\n\npositional arguments:\n  {init,serve,models,ask,connection,tokens,records,usage,sessions,migrate,doctor}\n    init                创建私有配置，自动生成独立访问令牌\n    serve               按持久配置启动 HTTP 服务\n    models              通过 Selark HTTP 获取允许模型\n    ask                 通过 Selark HTTP 发起文本对话\n    connection          本机管理 MiMo 连接；show 不生成模型请求\n    tokens              本机管理调用方令牌；普通令牌无管理权限\n    records             查询元数据或显式导入旧日志，不保存对话正文\n    usage               汇总已知用量及未知请求数；默认所有时间、UTC\n    sessions            按调用方和 session_id 归组，不保存或拼接历史\n    migrate             备份并幂等迁移旧配置；不生成模型请求\n    doctor              检查配置、记录库及本机服务；不生成模型请求\n\noptions:\n  -h, --help            show this help message and exit\n  --config-dir CONFIG_DIR\n                        私有配置的绝对路径（默认 ~/.config/selark）",
+      "stderr": ""
+    },
+    {
+      "check": "start_1",
+      "health": {
+        "status": "ok",
+        "version": "0.2.0"
+      }
+    },
+    {
+      "check": "attempt_count",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 8,
+          "known_usage_requests": 6,
+          "missing_usage_requests": 2,
+          "upstream_attempts": 0,
+          "unknown_attempt_count_requests": 8,
+          "unknown_time_requests": 1,
+          "status_counts": {
+            "failed": 2,
+            "success": 6
+          },
+          "known_tokens": {
+            "prompt_tokens": 258,
+            "completion_tokens": 64,
+            "total_tokens": 322
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 2,
+            "completion_tokens": 2,
+            "total_tokens": 2
+          }
+        },
+        "group_by": null,
+        "groups": []
+      },
+      "stderr": ""
+    },
+    {
+      "check": "models_legacy",
+      "exit_code": 0,
+      "result": {
+        "object": "list",
+        "data": [
+          {
+            "id": "mimo-v2.6-flash",
+            "object": "model",
+            "created": 0,
+            "owned_by": "xiaomi"
+          }
+        ],
+        "default_model": "mimo-v2.6-flash",
+        "connection_enabled": true
+      },
+      "stderr": ""
+    },
+    {
+      "check": "doctor_before",
+      "exit_code": 0,
+      "result": {
+        "ok": true,
+        "checks": [
+          {
+            "check": "server_config",
+            "ok": true,
+            "connection_enabled": true
+          },
+          {
+            "check": "client_config",
+            "ok": true
+          },
+          {
+            "check": "storage",
+            "ok": true,
+            "integrity": "ok",
+            "records": 8,
+            "running_records": 0,
+            "path": "/home/nbcctwya/.local/share/selark/records.sqlite3"
+          },
+          {
+            "check": "client_token",
+            "ok": true,
+            "caller_id": "legacy",
+            "message": "本地客户端令牌有效"
+          },
+          {
+            "check": "service",
+            "ok": true,
+            "version": "0.2.0",
+            "message": "服务正常"
+          }
+        ],
+        "model_generation_requests": 0,
+        "note": "doctor 不执行真实连通性探测；使用 connection probe 显式生成。"
+      },
+      "stderr": ""
+    },
+    {
+      "check": "connection_before",
+      "exit_code": 0,
+      "result": {
+        "schema_version": 2,
+        "connection_id": "mimo-default",
+        "enabled": true,
+        "config_revision": 1,
+        "base_url": "https://api.xiaomimimo.com/v1",
+        "allowed_models": [
+          "mimo-v2.6-flash"
+        ],
+        "default_model": "mimo-v2.6-flash",
+        "host": "127.0.0.1",
+        "port": 8787,
+        "timeout_seconds": 60.0,
+        "configured": true,
+        "api_key": "[REDACTED]",
+        "verification": {
+          "state": "never",
+          "verified_at": null
+        }
+      },
+      "stderr": ""
+    },
+    {
+      "check": "attempt_count",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 8,
+          "known_usage_requests": 6,
+          "missing_usage_requests": 2,
+          "upstream_attempts": 0,
+          "unknown_attempt_count_requests": 8,
+          "unknown_time_requests": 1,
+          "status_counts": {
+            "failed": 2,
+            "success": 6
+          },
+          "known_tokens": {
+            "prompt_tokens": 258,
+            "completion_tokens": 64,
+            "total_tokens": 322
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 2,
+            "completion_tokens": 2,
+            "total_tokens": 2
+          }
+        },
+        "group_by": null,
+        "groups": []
+      },
+      "stderr": ""
+    },
+    {
+      "check": "legacy_real",
+      "exit_code": 0,
+      "result": "Selark legacy OK",
+      "stderr": "{\"request_id\": \"7816fb1b89b841a7b5ef6d0425b0d8a9\", \"model\": \"mimo-v2.6-flash\", \"duration_ms\": 1901.77, \"finish_reason\": \"stop\", \"usage\": {\"completion_tokens\": 5, \"prompt_tokens\": 17, \"total_tokens\": 22, \"completion_tokens_details\": {\"reasoning_tokens\": 0}, \"prompt_tokens_details\": null}}",
+      "metadata": {
+        "request_id": "7816fb1b89b841a7b5ef6d0425b0d8a9",
+        "model": "mimo-v2.6-flash",
+        "duration_ms": 1901.77,
+        "finish_reason": "stop",
+        "usage": {
+          "completion_tokens": 5,
+          "prompt_tokens": 17,
+          "total_tokens": 22,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    },
+    {
+      "check": "probe_initial",
+      "exit_code": 0,
+      "result": {
+        "request_id": "a6dd9b48662943c1b09c83575e0d11e4",
+        "purpose": "connection_probe",
+        "model": "mimo-v2.6-flash",
+        "usage": {
+          "completion_tokens": 5,
+          "prompt_tokens": 17,
+          "total_tokens": 22,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "prompt_tokens_details": null
+        },
+        "verification": {
+          "state": "never",
+          "verified_at": null
+        }
+      },
+      "stderr": ""
+    },
+    {
+      "check": "probe_persisted_after_initial_process_exit",
+      "exit_code": 0,
+      "result": {
+        "schema_version": 2,
+        "connection_id": "mimo-default",
+        "enabled": true,
+        "config_revision": 1,
+        "base_url": "https://api.xiaomimimo.com/v1",
+        "allowed_models": [
+          "mimo-v2.6-flash"
+        ],
+        "default_model": "mimo-v2.6-flash",
+        "host": "127.0.0.1",
+        "port": 8787,
+        "timeout_seconds": 60.0,
+        "configured": true,
+        "api_key": "[REDACTED]",
+        "verification": {
+          "connection_id": "mimo-default",
+          "verified_at": "2026-10-27T09:37:41.990294+00:00",
+          "state": "success",
+          "request_id": "a6dd9b48662943c1b09c83575e0d11e4",
+          "error_code": null
+        }
+      },
+      "stderr": ""
+    },
+    {
+      "check": "help_after_fix",
+      "exit_code": 0,
+      "result": "usage: selark [-h] [--config-dir CONFIG_DIR]\n              {init,serve,models,ask,connection,tokens,records,usage,sessions,migrate,doctor}\n              ...\n\nSelark MiMo HTTP 服务与客户端\n\npositional arguments:\n  {init,serve,models,ask,connection,tokens,records,usage,sessions,migrate,doctor}\n    init                创建私有配置，自动生成独立访问令牌\n    serve               按持久配置启动 HTTP 服务\n    models              通过 Selark HTTP 获取允许模型\n    ask                 通过 Selark HTTP 发起文本对话\n    connection          本机管理 MiMo 连接；show 不生成模型请求\n    tokens              本机管理调用方令牌；普通令牌无管理权限\n    records             查询元数据或显式导入旧日志，不保存对话正文\n    usage               汇总已知用量及未知请求数；默认所有时间、UTC\n    sessions            按调用方和 session_id 归组，不保存或拼接历史\n    migrate             备份并幂等迁移旧配置；不生成模型请求\n    doctor              检查配置、记录库及本机服务；不生成模型请求\n\noptions:\n  -h, --help            show this help message and exit\n  --config-dir CONFIG_DIR\n                        私有配置的绝对路径（默认 ~/.config/selark）",
+      "stderr": ""
+    },
+    {
+      "check": "start_2",
+      "health": {
+        "status": "ok",
+        "version": "0.2.0"
+      }
+    },
+    {
+      "check": "attempt_count",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 10,
+          "known_usage_requests": 8,
+          "missing_usage_requests": 2,
+          "upstream_attempts": 2,
+          "unknown_attempt_count_requests": 8,
+          "unknown_time_requests": 1,
+          "status_counts": {
+            "failed": 2,
+            "success": 8
+          },
+          "known_tokens": {
+            "prompt_tokens": 292,
+            "completion_tokens": 74,
+            "total_tokens": 366
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 2,
+            "completion_tokens": 2,
+            "total_tokens": 2
+          }
+        },
+        "group_by": null,
+        "groups": []
+      },
+      "stderr": ""
+    },
+    {
+      "check": "modify_connection",
+      "exit_code": 0,
+      "result": {
+        "schema_version": 2,
+        "connection_id": "mimo-default",
+        "enabled": true,
+        "config_revision": 2,
+        "base_url": "https://api.xiaomimimo.com/v1",
+        "allowed_models": [
+          "mimo-v2.6-flash"
+        ],
+        "default_model": "mimo-v2.6-flash",
+        "host": "127.0.0.1",
+        "port": 8787,
+        "timeout_seconds": 61.0,
+        "configured": true,
+        "api_key": "[REDACTED]",
+        "verification": {
+          "connection_id": "mimo-default",
+          "verified_at": "2026-10-27T09:37:41.990294+00:00",
+          "state": "stale",
+          "request_id": "a6dd9b48662943c1b09c83575e0d11e4",
+          "error_code": null,
+          "previous_state": "success"
+        }
+      },
+      "stderr": ""
+    },
+    {
+      "check": "restore_connection",
+      "exit_code": 0,
+      "result": {
+        "schema_version": 2,
+        "connection_id": "mimo-default",
+        "enabled": true,
+        "config_revision": 3,
+        "base_url": "https://api.xiaomimimo.com/v1",
+        "allowed_models": [
+          "mimo-v2.6-flash"
+        ],
+        "default_model": "mimo-v2.6-flash",
+        "host": "127.0.0.1",
+        "port": 8787,
+        "timeout_seconds": 60.0,
+        "configured": true,
+        "api_key": "[REDACTED]",
+        "verification": {
+          "connection_id": "mimo-default",
+          "verified_at": "2026-10-27T09:37:41.990294+00:00",
+          "state": "stale",
+          "request_id": "a6dd9b48662943c1b09c83575e0d11e4",
+          "error_code": null,
+          "previous_state": "success"
+        }
+      },
+      "stderr": ""
+    },
+    {
+      "check": "probe_current",
+      "exit_code": 0,
+      "result": {
+        "request_id": "135939de9f1c488b97f36e7d4bfc6653",
+        "purpose": "connection_probe",
+        "model": "mimo-v2.6-flash",
+        "usage": {
+          "completion_tokens": 5,
+          "prompt_tokens": 17,
+          "total_tokens": 22,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "verification": {
+          "connection_id": "mimo-default",
+          "verified_at": "2026-10-27T09:41:30.050292+00:00",
+          "state": "success",
+          "request_id": "135939de9f1c488b97f36e7d4bfc6653",
+          "error_code": null
+        }
+      },
+      "stderr": ""
+    },
+    {
+      "check": "create_A",
+      "exit_code": 0,
+      "result": {
+        "id": "caller_4da97eb817564eb3af607afd48190c83",
+        "name": "Management verification A",
+        "created_at": "2026-10-27T09:41:30.240308+00:00",
+        "client_config": "/home/nbcctwya/.config/selark/clients/management-verification-a/client.json"
+      }
+    },
+    {
+      "check": "create_B",
+      "exit_code": 0,
+      "result": {
+        "id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+        "name": "Management verification B",
+        "created_at": "2026-10-27T09:41:30.432328+00:00",
+        "client_config": "/home/nbcctwya/.config/selark/clients/management-verification-b/client.json"
+      }
+    },
+    {
+      "check": "A_spoofs_B",
+      "http_status": 200,
+      "request_id": "a1d6fa3ce3834b6b8f4ef8be99287e49",
+      "response": {
+        "id": "bf1d775b-8714-4255-a309-b8afc5d505bb_92fd4390c3a34f14b1e2fce906789052",
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "content": "Selark caller A OK",
+              "role": "assistant",
+              "tool_calls": null
+            }
+          }
+        ],
+        "created": 1793094097,
+        "model": "mimo-v2.6-flash",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 6,
+          "prompt_tokens": 18,
+          "total_tokens": 24,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    },
+    {
+      "check": "B_stream",
+      "exit_code": 0,
+      "result": "Selark caller B stream OK",
+      "stderr": "{\"request_id\": \"6c92b81cfbd946bda6ded7d7b37effc7\", \"model\": \"mimo-v2.6-flash\", \"duration_ms\": 715.92, \"finish_reason\": \"stop\", \"usage\": {\"completion_tokens\": 7, \"prompt_tokens\": 19, \"total_tokens\": 26, \"completion_tokens_details\": {\"reasoning_tokens\": 0}, \"prompt_tokens_details\": null}}",
+      "metadata": {
+        "request_id": "6c92b81cfbd946bda6ded7d7b37effc7",
+        "model": "mimo-v2.6-flash",
+        "duration_ms": 715.92,
+        "finish_reason": "stop",
+        "usage": {
+          "completion_tokens": 7,
+          "prompt_tokens": 19,
+          "total_tokens": 26,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    },
+    {
+      "check": "sessions_before_revoke",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {
+          "session_id": "management-round-one",
+          "sessions_only": true
+        },
+        "summary": {
+          "requests": 2,
+          "known_usage_requests": 2,
+          "missing_usage_requests": 0,
+          "upstream_attempts": 2,
+          "unknown_attempt_count_requests": 0,
+          "unknown_time_requests": 0,
+          "status_counts": {
+            "success": 2
+          },
+          "known_tokens": {
+            "prompt_tokens": 37,
+            "completion_tokens": 13,
+            "total_tokens": 50
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "group_by": "session",
+        "groups": [
+          {
+            "caller_id": "caller_4da97eb817564eb3af607afd48190c83",
+            "session_id": "management-round-one",
+            "requests": 1,
+            "known_usage_requests": 1,
+            "missing_usage_requests": 0,
+            "upstream_attempts": 1,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 18,
+              "completion_tokens": 6,
+              "total_tokens": 24
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0
+            }
+          },
+          {
+            "caller_id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+            "session_id": "management-round-one",
+            "requests": 1,
+            "known_usage_requests": 1,
+            "missing_usage_requests": 0,
+            "upstream_attempts": 1,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 19,
+              "completion_tokens": 7,
+              "total_tokens": 26
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0
+            }
+          }
+        ]
+      },
+      "stderr": ""
+    },
+    {
+      "check": "records_A",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {
+          "caller_id": "caller_4da97eb817564eb3af607afd48190c83",
+          "session_id": "management-round-one"
+        },
+        "records": [
+          {
+            "request_id": "a1d6fa3ce3834b6b8f4ef8be99287e49",
+            "original_request_id": "a1d6fa3ce3834b6b8f4ef8be99287e49",
+            "started_at": "2026-10-27T09:41:30.475084+00:00",
+            "finished_at": "2026-10-27T09:41:38.418871+00:00",
+            "caller_id": "caller_4da97eb817564eb3af607afd48190c83",
+            "connection_id": "mimo-default",
+            "session_id": "management-round-one",
+            "model": "mimo-v2.6-flash",
+            "requested_model": "mimo-v2.6-flash",
+            "purpose": "chat",
+            "status": "success",
+            "http_status": 200,
+            "upstream_status": 200,
+            "duration_ms": 7943.79,
+            "upstream_attempts": 1,
+            "usage_final": true,
+            "prompt_tokens": 18,
+            "completion_tokens": 6,
+            "total_tokens": 24,
+            "error_code": null,
+            "error_message": null,
+            "origin": "live",
+            "reported_usage": {
+              "prompt_tokens": 18,
+              "completion_tokens": 6,
+              "total_tokens": 24,
+              "prompt_tokens_details": null,
+              "completion_tokens_details": {
+                "reasoning_tokens": 0
+              }
+            },
+            "usage_known": true
+          }
+        ]
+      },
+      "stderr": ""
+    },
+    {
+      "check": "records_B",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {
+          "caller_id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+          "session_id": "management-round-one"
+        },
+        "records": [
+          {
+            "request_id": "6c92b81cfbd946bda6ded7d7b37effc7",
+            "original_request_id": "6c92b81cfbd946bda6ded7d7b37effc7",
+            "started_at": "2026-10-27T09:41:38.602847+00:00",
+            "finished_at": "2026-10-27T09:41:39.314143+00:00",
+            "caller_id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+            "connection_id": "mimo-default",
+            "session_id": "management-round-one",
+            "model": "mimo-v2.6-flash",
+            "requested_model": "mimo-v2.6-flash",
+            "purpose": "chat",
+            "status": "success",
+            "http_status": 200,
+            "upstream_status": 200,
+            "duration_ms": 711.3,
+            "upstream_attempts": 1,
+            "usage_final": true,
+            "prompt_tokens": 19,
+            "completion_tokens": 7,
+            "total_tokens": 26,
+            "error_code": null,
+            "error_message": null,
+            "origin": "live",
+            "reported_usage": {
+              "prompt_tokens": 19,
+              "completion_tokens": 7,
+              "total_tokens": 26,
+              "prompt_tokens_details": null,
+              "completion_tokens_details": {
+                "reasoning_tokens": 0
+              }
+            },
+            "usage_known": true
+          }
+        ]
+      },
+      "stderr": ""
+    },
+    {
+      "check": "attempt_count",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 13,
+          "known_usage_requests": 11,
+          "missing_usage_requests": 2,
+          "upstream_attempts": 5,
+          "unknown_attempt_count_requests": 8,
+          "unknown_time_requests": 1,
+          "status_counts": {
+            "failed": 2,
+            "success": 11
+          },
+          "known_tokens": {
+            "prompt_tokens": 346,
+            "completion_tokens": 92,
+            "total_tokens": 438
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 2,
+            "completion_tokens": 2,
+            "total_tokens": 2
+          }
+        },
+        "group_by": null,
+        "groups": []
+      },
+      "stderr": ""
+    },
+    {
+      "check": "disable",
+      "exit_code": 0,
+      "result": {
+        "schema_version": 2,
+        "connection_id": "mimo-default",
+        "enabled": false,
+        "config_revision": 3,
+        "base_url": "https://api.xiaomimimo.com/v1",
+        "allowed_models": [
+          "mimo-v2.6-flash"
+        ],
+        "default_model": "mimo-v2.6-flash",
+        "host": "127.0.0.1",
+        "port": 8787,
+        "timeout_seconds": 60.0,
+        "configured": true,
+        "api_key": "[REDACTED]",
+        "verification": {
+          "connection_id": "mimo-default",
+          "verified_at": "2026-10-27T09:41:30.050292+00:00",
+          "state": "success",
+          "request_id": "135939de9f1c488b97f36e7d4bfc6653",
+          "error_code": null
+        }
+      },
+      "stderr": ""
+    },
+    {
+      "check": "disabled_B_blocked",
+      "http_status": 503,
+      "request_id": "85b8a6d80da1424586d4a697aa7324a5",
+      "response": {
+        "error": {
+          "message": "MiMo 连接已停用，请由本机管理员启用连接。",
+          "type": "upstream_error",
+          "code": "connection_disabled"
+        }
+      }
+    },
+    {
+      "check": "attempt_count",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 14,
+          "known_usage_requests": 11,
+          "missing_usage_requests": 3,
+          "upstream_attempts": 5,
+          "unknown_attempt_count_requests": 8,
+          "unknown_time_requests": 1,
+          "status_counts": {
+            "failed": 3,
+            "success": 11
+          },
+          "known_tokens": {
+            "prompt_tokens": 346,
+            "completion_tokens": 92,
+            "total_tokens": 438
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 3,
+            "completion_tokens": 3,
+            "total_tokens": 3
+          }
+        },
+        "group_by": null,
+        "groups": []
+      },
+      "stderr": ""
+    },
+    {
+      "check": "enable",
+      "exit_code": 0,
+      "result": {
+        "schema_version": 2,
+        "connection_id": "mimo-default",
+        "enabled": true,
+        "config_revision": 3,
+        "base_url": "https://api.xiaomimimo.com/v1",
+        "allowed_models": [
+          "mimo-v2.6-flash"
+        ],
+        "default_model": "mimo-v2.6-flash",
+        "host": "127.0.0.1",
+        "port": 8787,
+        "timeout_seconds": 60.0,
+        "configured": true,
+        "api_key": "[REDACTED]",
+        "verification": {
+          "connection_id": "mimo-default",
+          "verified_at": "2026-10-27T09:41:30.050292+00:00",
+          "state": "success",
+          "request_id": "135939de9f1c488b97f36e7d4bfc6653",
+          "error_code": null
+        }
+      },
+      "stderr": ""
+    },
+    {
+      "check": "revoke_A",
+      "exit_code": 0,
+      "result": {
+        "id": "caller_4da97eb817564eb3af607afd48190c83",
+        "revoked": true,
+        "in_flight_policy": "already_admitted_requests_continue"
+      },
+      "stderr": ""
+    },
+    {
+      "check": "revoked_A_blocked",
+      "http_status": 401,
+      "request_id": "00f6e247014146a68336b2dcfbe41649",
+      "response": {
+        "error": {
+          "message": "Selark 访问令牌无效、已撤销或缺失。",
+          "type": "invalid_request_error",
+          "code": "invalid_token"
+        }
+      }
+    },
+    {
+      "check": "attempt_count",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 15,
+          "known_usage_requests": 11,
+          "missing_usage_requests": 4,
+          "upstream_attempts": 5,
+          "unknown_attempt_count_requests": 8,
+          "unknown_time_requests": 1,
+          "status_counts": {
+            "failed": 4,
+            "success": 11
+          },
+          "known_tokens": {
+            "prompt_tokens": 346,
+            "completion_tokens": 92,
+            "total_tokens": 438
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 4,
+            "completion_tokens": 4,
+            "total_tokens": 4
+          }
+        },
+        "group_by": null,
+        "groups": []
+      },
+      "stderr": ""
+    },
+    {
+      "check": "doctor_after",
+      "exit_code": 0,
+      "result": {
+        "ok": true,
+        "checks": [
+          {
+            "check": "server_config",
+            "ok": true,
+            "connection_enabled": true
+          },
+          {
+            "check": "client_config",
+            "ok": true
+          },
+          {
+            "check": "storage",
+            "ok": true,
+            "integrity": "ok",
+            "records": 15,
+            "running_records": 0,
+            "path": "/home/nbcctwya/.local/share/selark/records.sqlite3"
+          },
+          {
+            "check": "client_token",
+            "ok": true,
+            "caller_id": "legacy",
+            "message": "本地客户端令牌有效"
+          },
+          {
+            "check": "service",
+            "ok": true,
+            "version": "0.2.0",
+            "message": "服务正常"
+          }
+        ],
+        "model_generation_requests": 0,
+        "note": "doctor 不执行真实连通性探测；使用 connection probe 显式生成。"
+      },
+      "stderr": ""
+    },
+    {
+      "check": "connection_after",
+      "exit_code": 0,
+      "result": {
+        "schema_version": 2,
+        "connection_id": "mimo-default",
+        "enabled": true,
+        "config_revision": 3,
+        "base_url": "https://api.xiaomimimo.com/v1",
+        "allowed_models": [
+          "mimo-v2.6-flash"
+        ],
+        "default_model": "mimo-v2.6-flash",
+        "host": "127.0.0.1",
+        "port": 8787,
+        "timeout_seconds": 60.0,
+        "configured": true,
+        "api_key": "[REDACTED]",
+        "verification": {
+          "connection_id": "mimo-default",
+          "verified_at": "2026-10-27T09:41:30.050292+00:00",
+          "state": "success",
+          "request_id": "135939de9f1c488b97f36e7d4bfc6653",
+          "error_code": null
+        }
+      },
+      "stderr": ""
+    },
+    {
+      "check": "tokens_safe_list",
+      "exit_code": 0,
+      "result": [
+        {
+          "id": "legacy",
+          "name": "Legacy client (0.1.x)",
+          "created_at": "2026-10-27T09:37:33.550270+00:00",
+          "revoked_at": null,
+          "active": true
+        },
+        {
+          "id": "caller_4da97eb817564eb3af607afd48190c83",
+          "name": "Management verification A",
+          "created_at": "2026-10-27T09:41:30.240308+00:00",
+          "revoked_at": "2026-10-27T09:41:40.930254+00:00",
+          "active": false
+        },
+        {
+          "id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+          "name": "Management verification B",
+          "created_at": "2026-10-27T09:41:30.432328+00:00",
+          "revoked_at": null,
+          "active": true
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "check": "attempt_count",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 15,
+          "known_usage_requests": 11,
+          "missing_usage_requests": 4,
+          "upstream_attempts": 5,
+          "unknown_attempt_count_requests": 8,
+          "unknown_time_requests": 1,
+          "status_counts": {
+            "failed": 4,
+            "success": 11
+          },
+          "known_tokens": {
+            "prompt_tokens": 346,
+            "completion_tokens": 92,
+            "total_tokens": 438
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 4,
+            "completion_tokens": 4,
+            "total_tokens": 4
+          }
+        },
+        "group_by": null,
+        "groups": []
+      },
+      "stderr": ""
+    },
+    {
+      "check": "before_restart_summary",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 15,
+          "known_usage_requests": 11,
+          "missing_usage_requests": 4,
+          "upstream_attempts": 5,
+          "unknown_attempt_count_requests": 8,
+          "unknown_time_requests": 1,
+          "status_counts": {
+            "failed": 4,
+            "success": 11
+          },
+          "known_tokens": {
+            "prompt_tokens": 346,
+            "completion_tokens": 92,
+            "total_tokens": 438
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 4,
+            "completion_tokens": 4,
+            "total_tokens": 4
+          }
+        },
+        "group_by": null,
+        "groups": []
+      },
+      "stderr": ""
+    },
+    {
+      "check": "start_3",
+      "health": {
+        "status": "ok",
+        "version": "0.2.0"
+      }
+    },
+    {
+      "check": "after_restart_summary",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 15,
+          "known_usage_requests": 11,
+          "missing_usage_requests": 4,
+          "upstream_attempts": 5,
+          "unknown_attempt_count_requests": 8,
+          "unknown_time_requests": 1,
+          "status_counts": {
+            "failed": 4,
+            "success": 11
+          },
+          "known_tokens": {
+            "prompt_tokens": 346,
+            "completion_tokens": 92,
+            "total_tokens": 438
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 4,
+            "completion_tokens": 4,
+            "total_tokens": 4
+          }
+        },
+        "group_by": null,
+        "groups": []
+      },
+      "stderr": ""
+    },
+    {
+      "check": "after_restart_sessions",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {
+          "session_id": "management-round-one",
+          "sessions_only": true
+        },
+        "summary": {
+          "requests": 2,
+          "known_usage_requests": 2,
+          "missing_usage_requests": 0,
+          "upstream_attempts": 2,
+          "unknown_attempt_count_requests": 0,
+          "unknown_time_requests": 0,
+          "status_counts": {
+            "success": 2
+          },
+          "known_tokens": {
+            "prompt_tokens": 37,
+            "completion_tokens": 13,
+            "total_tokens": 50
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "group_by": "session",
+        "groups": [
+          {
+            "caller_id": "caller_4da97eb817564eb3af607afd48190c83",
+            "session_id": "management-round-one",
+            "requests": 1,
+            "known_usage_requests": 1,
+            "missing_usage_requests": 0,
+            "upstream_attempts": 1,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 18,
+              "completion_tokens": 6,
+              "total_tokens": 24
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0
+            }
+          },
+          {
+            "caller_id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+            "session_id": "management-round-one",
+            "requests": 1,
+            "known_usage_requests": 1,
+            "missing_usage_requests": 0,
+            "upstream_attempts": 1,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 19,
+              "completion_tokens": 7,
+              "total_tokens": 26
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0
+            }
+          }
+        ]
+      },
+      "stderr": ""
+    },
+    {
+      "check": "revoked_A_after_restart",
+      "http_status": 401,
+      "request_id": "6368930d422a4bc0b42f04ec58163d04",
+      "response": {
+        "error": {
+          "message": "Selark 访问令牌无效、已撤销或缺失。",
+          "type": "invalid_request_error",
+          "code": "invalid_token"
+        }
+      }
+    },
+    {
+      "check": "B_after_restart",
+      "exit_code": 0,
+      "result": "Selark B restart OK",
+      "stderr": "{\"request_id\": \"47e24a20ca78480591756025db426320\", \"model\": \"mimo-v2.6-flash\", \"duration_ms\": 936.94, \"finish_reason\": \"stop\", \"usage\": {\"completion_tokens\": 6, \"prompt_tokens\": 18, \"total_tokens\": 24, \"completion_tokens_details\": {\"reasoning_tokens\": 0}, \"prompt_tokens_details\": null}}",
+      "metadata": {
+        "request_id": "47e24a20ca78480591756025db426320",
+        "model": "mimo-v2.6-flash",
+        "duration_ms": 936.94,
+        "finish_reason": "stop",
+        "usage": {
+          "completion_tokens": 6,
+          "prompt_tokens": 18,
+          "total_tokens": 24,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    },
+    {
+      "check": "session_B_detail",
+      "exit_code": 0,
+      "result": {
+        "records": [
+          {
+            "request_id": "47e24a20ca78480591756025db426320",
+            "original_request_id": "47e24a20ca78480591756025db426320",
+            "started_at": "2026-10-27T09:41:43.170046+00:00",
+            "finished_at": "2026-10-27T09:41:44.101806+00:00",
+            "caller_id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+            "connection_id": "mimo-default",
+            "session_id": "management-round-one",
+            "model": "mimo-v2.6-flash",
+            "requested_model": "mimo-v2.6-flash",
+            "purpose": "chat",
+            "status": "success",
+            "http_status": 200,
+            "upstream_status": 200,
+            "duration_ms": 931.76,
+            "upstream_attempts": 1,
+            "usage_final": true,
+            "prompt_tokens": 18,
+            "completion_tokens": 6,
+            "total_tokens": 24,
+            "error_code": null,
+            "error_message": null,
+            "origin": "live",
+            "reported_usage": {
+              "prompt_tokens": 18,
+              "completion_tokens": 6,
+              "total_tokens": 24,
+              "prompt_tokens_details": null,
+              "completion_tokens_details": {
+                "reasoning_tokens": 0
+              }
+            },
+            "usage_known": true
+          },
+          {
+            "request_id": "6c92b81cfbd946bda6ded7d7b37effc7",
+            "original_request_id": "6c92b81cfbd946bda6ded7d7b37effc7",
+            "started_at": "2026-10-27T09:41:38.602847+00:00",
+            "finished_at": "2026-10-27T09:41:39.314143+00:00",
+            "caller_id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+            "connection_id": "mimo-default",
+            "session_id": "management-round-one",
+            "model": "mimo-v2.6-flash",
+            "requested_model": "mimo-v2.6-flash",
+            "purpose": "chat",
+            "status": "success",
+            "http_status": 200,
+            "upstream_status": 200,
+            "duration_ms": 711.3,
+            "upstream_attempts": 1,
+            "usage_final": true,
+            "prompt_tokens": 19,
+            "completion_tokens": 7,
+            "total_tokens": 26,
+            "error_code": null,
+            "error_message": null,
+            "origin": "live",
+            "reported_usage": {
+              "prompt_tokens": 19,
+              "completion_tokens": 7,
+              "total_tokens": 26,
+              "prompt_tokens_details": null,
+              "completion_tokens_details": {
+                "reasoning_tokens": 0
+              }
+            },
+            "usage_known": true
+          }
+        ],
+        "usage": {
+          "timezone": "UTC",
+          "filters": {
+            "caller_id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+            "session_id": "management-round-one"
+          },
+          "summary": {
+            "requests": 2,
+            "known_usage_requests": 2,
+            "missing_usage_requests": 0,
+            "upstream_attempts": 2,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 2
+            },
+            "known_tokens": {
+              "prompt_tokens": 37,
+              "completion_tokens": 13,
+              "total_tokens": 50
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0
+            }
+          },
+          "group_by": null,
+          "groups": []
+        }
+      },
+      "stderr": ""
+    },
+    {
+      "check": "final_usage",
+      "exit_code": 0,
+      "result": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 17,
+          "known_usage_requests": 12,
+          "missing_usage_requests": 5,
+          "upstream_attempts": 6,
+          "unknown_attempt_count_requests": 8,
+          "unknown_time_requests": 1,
+          "status_counts": {
+            "failed": 5,
+            "success": 12
+          },
+          "known_tokens": {
+            "prompt_tokens": 364,
+            "completion_tokens": 98,
+            "total_tokens": 462
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 5,
+            "completion_tokens": 5,
+            "total_tokens": 5
+          }
+        },
+        "group_by": null,
+        "groups": []
+      },
+      "stderr": ""
+    },
+    {
+      "check": "configuration_and_credential_preservation",
+      "legacy_client_unchanged": true,
+      "upstream_credentials_and_original_settings_unchanged": true,
+      "server_token_storage": "irreversible_sha256",
+      "connection_enabled": true
+    }
+  ],
+  "server_records": [
+    {
+      "timestamp": "2026-10-27T09:37:35.312756+00:00",
+      "request_id": "4d76168c882b4bc0ae19419c84e8863f",
+      "path": "/health",
+      "caller_id": null,
+      "connection_id": "mimo-default",
+      "session_id": null,
+      "purpose": "chat",
+      "model": null,
+      "status": 200,
+      "upstream_status": null,
+      "upstream_attempts": 0,
+      "duration_ms": 1.2,
+      "stream_status": null,
+      "error_code": null,
+      "usage": null,
+      "usage_final": false
+    },
+    {
+      "timestamp": "2026-10-27T09:37:35.651273+00:00",
+      "request_id": "f380854aca01489c9174f5cc32aeac58",
+      "path": "/v1/models",
+      "caller_id": "legacy",
+      "connection_id": "mimo-default",
+      "session_id": null,
+      "purpose": "chat",
+      "model": null,
+      "status": 200,
+      "upstream_status": null,
+      "upstream_attempts": 0,
+      "duration_ms": 1.3,
+      "stream_status": null,
+      "error_code": null,
+      "usage": null,
+      "usage_final": false
+    },
+    {
+      "timestamp": "2026-10-27T09:37:35.854558+00:00",
+      "request_id": "66e0aed9cee14ad295d4b3a337fdb1df",
+      "path": "/health",
+      "caller_id": null,
+      "connection_id": "mimo-default",
+      "session_id": null,
+      "purpose": "chat",
+      "model": null,
+      "status": 200,
+      "upstream_status": null,
+      "upstream_attempts": 0,
+      "duration_ms": 0.36,
+      "stream_status": null,
+      "error_code": null,
+      "usage": null,
+      "usage_final": false
+    },
+    {
+      "timestamp": "2026-10-27T09:37:36.523039+00:00",
+      "request_id": "7816fb1b89b841a7b5ef6d0425b0d8a9",
+      "path": "/v1/chat/completions",
+      "caller_id": "legacy",
+      "connection_id": "mimo-default",
+      "session_id": null,
+      "purpose": "chat",
+      "model": "mimo-v2.6-flash",
+      "status": 200,
+      "upstream_status": 200,
+      "upstream_attempts": 1,
+      "duration_ms": 1898.38,
+      "stream_status": null,
+      "error_code": null,
+      "usage": {
+        "prompt_tokens": 17,
+        "completion_tokens": 5,
+        "total_tokens": 22,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "usage_final": true
+    },
+    {
+      "timestamp": "2026-10-27T09:37:38.634005+00:00",
+      "request_id": "a6dd9b48662943c1b09c83575e0d11e4",
+      "path": "/v1/chat/completions",
+      "caller_id": "local-probe",
+      "connection_id": "mimo-default",
+      "session_id": null,
+      "purpose": "connection_probe",
+      "model": "mimo-v2.6-flash",
+      "status": 200,
+      "upstream_status": 200,
+      "upstream_attempts": 1,
+      "duration_ms": 3356.21,
+      "stream_status": null,
+      "error_code": null,
+      "usage": {
+        "prompt_tokens": 17,
+        "completion_tokens": 5,
+        "total_tokens": 22,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "usage_final": true
+    },
+    {
+      "timestamp": "2026-10-27T09:41:27.144697+00:00",
+      "request_id": "f176b5c99ffa40f8bf2f2e6f6cd9c704",
+      "path": "/health",
+      "caller_id": null,
+      "connection_id": "mimo-default",
+      "session_id": null,
+      "purpose": "chat",
+      "model": null,
+      "status": 200,
+      "upstream_status": null,
+      "upstream_attempts": 0,
+      "duration_ms": 3.01,
+      "stream_status": null,
+      "error_code": null,
+      "usage": null,
+      "usage_final": false
+    },
+    {
+      "timestamp": "2026-10-27T09:41:27.982643+00:00",
+      "request_id": "135939de9f1c488b97f36e7d4bfc6653",
+      "path": "/v1/chat/completions",
+      "caller_id": "local-probe",
+      "connection_id": "mimo-default",
+      "session_id": null,
+      "purpose": "connection_probe",
+      "model": "mimo-v2.6-flash",
+      "status": 200,
+      "upstream_status": 200,
+      "upstream_attempts": 1,
+      "duration_ms": 2070.07,
+      "stream_status": null,
+      "error_code": null,
+      "usage": {
+        "prompt_tokens": 17,
+        "completion_tokens": 5,
+        "total_tokens": 22,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "usage_final": true
+    },
+    {
+      "timestamp": "2026-10-27T09:41:30.475084+00:00",
+      "request_id": "a1d6fa3ce3834b6b8f4ef8be99287e49",
+      "path": "/v1/chat/completions",
+      "caller_id": "caller_4da97eb817564eb3af607afd48190c83",
+      "connection_id": "mimo-default",
+      "session_id": "management-round-one",
+      "purpose": "chat",
+      "model": "mimo-v2.6-flash",
+      "status": 200,
+      "upstream_status": 200,
+      "upstream_attempts": 1,
+      "duration_ms": 7946.49,
+      "stream_status": null,
+      "error_code": null,
+      "usage": {
+        "prompt_tokens": 18,
+        "completion_tokens": 6,
+        "total_tokens": 24,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "usage_final": true
+    },
+    {
+      "timestamp": "2026-10-27T09:41:38.602847+00:00",
+      "request_id": "6c92b81cfbd946bda6ded7d7b37effc7",
+      "path": "/v1/chat/completions",
+      "caller_id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+      "connection_id": "mimo-default",
+      "session_id": "management-round-one",
+      "purpose": "chat",
+      "model": "mimo-v2.6-flash",
+      "status": 200,
+      "upstream_status": 200,
+      "upstream_attempts": 1,
+      "duration_ms": 713.65,
+      "stream_status": "completed",
+      "error_code": null,
+      "usage": {
+        "prompt_tokens": 19,
+        "completion_tokens": 7,
+        "total_tokens": 26,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "usage_final": true
+    },
+    {
+      "timestamp": "2026-10-27T09:41:40.339997+00:00",
+      "request_id": "85b8a6d80da1424586d4a697aa7324a5",
+      "path": "/v1/chat/completions",
+      "caller_id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+      "connection_id": "mimo-default",
+      "session_id": null,
+      "purpose": "chat",
+      "model": null,
+      "status": 503,
+      "upstream_status": null,
+      "upstream_attempts": 0,
+      "duration_ms": 4.21,
+      "stream_status": null,
+      "error_code": "connection_disabled",
+      "usage": null,
+      "usage_final": false
+    },
+    {
+      "timestamp": "2026-10-27T09:41:40.967712+00:00",
+      "request_id": "00f6e247014146a68336b2dcfbe41649",
+      "path": "/v1/chat/completions",
+      "caller_id": null,
+      "connection_id": "mimo-default",
+      "session_id": null,
+      "purpose": "chat",
+      "model": null,
+      "status": 401,
+      "upstream_status": null,
+      "upstream_attempts": 0,
+      "duration_ms": 4.4,
+      "stream_status": null,
+      "error_code": "invalid_token",
+      "usage": null,
+      "usage_final": false
+    },
+    {
+      "timestamp": "2026-10-27T09:41:41.350189+00:00",
+      "request_id": "f17cbbc1c0ad404fa28009a537e8890a",
+      "path": "/health",
+      "caller_id": null,
+      "connection_id": "mimo-default",
+      "session_id": null,
+      "purpose": "chat",
+      "model": null,
+      "status": 200,
+      "upstream_status": null,
+      "upstream_attempts": 0,
+      "duration_ms": 0.32,
+      "stream_status": null,
+      "error_code": null,
+      "usage": null,
+      "usage_final": false
+    },
+    {
+      "timestamp": "2026-10-27T09:41:42.628940+00:00",
+      "request_id": "e04393a2ce134f31b62ccbe502784c06",
+      "path": "/health",
+      "caller_id": null,
+      "connection_id": "mimo-default",
+      "session_id": null,
+      "purpose": "chat",
+      "model": null,
+      "status": 200,
+      "upstream_status": null,
+      "upstream_attempts": 0,
+      "duration_ms": 0.92,
+      "stream_status": null,
+      "error_code": null,
+      "usage": null,
+      "usage_final": false
+    },
+    {
+      "timestamp": "2026-10-27T09:41:42.987092+00:00",
+      "request_id": "6368930d422a4bc0b42f04ec58163d04",
+      "path": "/v1/chat/completions",
+      "caller_id": null,
+      "connection_id": "mimo-default",
+      "session_id": null,
+      "purpose": "chat",
+      "model": null,
+      "status": 401,
+      "upstream_status": null,
+      "upstream_attempts": 0,
+      "duration_ms": 4.7,
+      "stream_status": null,
+      "error_code": "invalid_token",
+      "usage": null,
+      "usage_final": false
+    },
+    {
+      "timestamp": "2026-10-27T09:41:43.170046+00:00",
+      "request_id": "47e24a20ca78480591756025db426320",
+      "path": "/v1/chat/completions",
+      "caller_id": "caller_cfa93f0f6cf54f21bd43ed6d0755f976",
+      "connection_id": "mimo-default",
+      "session_id": "management-round-one",
+      "purpose": "chat",
+      "model": "mimo-v2.6-flash",
+      "status": 200,
+      "upstream_status": 200,
+      "upstream_attempts": 1,
+      "duration_ms": 933.8,
+      "stream_status": null,
+      "error_code": null,
+      "usage": {
+        "prompt_tokens": 18,
+        "completion_tokens": 6,
+        "total_tokens": 24,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "usage_final": true
+    }
+  ],
+  "service_running_after_acceptance": false
+}

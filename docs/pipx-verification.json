@@ -1,0 +1,123 @@
+{
+  "verified_at": "2026-10-27T08:19:56.485622+00:00",
+  "version": "0.1.1",
+  "pipx_version": "1.18.4",
+  "scope": "current WSL user nbcctwya; not system-wide",
+  "command_path": "/home/nbcctwya/.local/bin/selark",
+  "login_terminal": {
+    "cwd": "/tmp/selark-pipx-terminal-one",
+    "virtual_env_active": false,
+    "conda_environment_active": false,
+    "pythonpath_set": false,
+    "configuration_override_set": false,
+    "config_directory": "/home/nbcctwya/.config/selark",
+    "executable": "/home/nbcctwya/.local/share/pipx/venvs/selark/bin/python",
+    "module_file": "/home/nbcctwya/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark/__init__.py",
+    "version": "0.1.1",
+    "entry_point": "selark.cli:main",
+    "editable_install": false,
+    "source_directory_on_sys_path": false
+  },
+  "nonlogin_terminal": {
+    "cwd": "/tmp/selark-pipx-terminal-two",
+    "virtual_env_active": false,
+    "conda_environment_active": false,
+    "pythonpath_set": false,
+    "configuration_override_set": false,
+    "config_directory": "/home/nbcctwya/.config/selark",
+    "executable": "/home/nbcctwya/.local/share/pipx/venvs/selark/bin/python",
+    "module_file": "/home/nbcctwya/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark/__init__.py",
+    "version": "0.1.1",
+    "entry_point": "selark.cli:main",
+    "editable_install": false,
+    "source_directory_on_sys_path": false
+  },
+  "help_exit_code": 0,
+  "server_started": true,
+  "server_stopped_cleanly": true,
+  "models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "mimo-v2.6-flash",
+        "object": "model",
+        "created": 0,
+        "owned_by": "xiaomi"
+      }
+    ],
+    "default_model": "mimo-v2.6-flash"
+  },
+  "additional_real_requests": 1,
+  "ask_output": "Selark pipx OK",
+  "ask_metadata": {
+    "request_id": "1f62e4b7a2c9436c98b1904ac373fd5c",
+    "model": "mimo-v2.6-flash",
+    "duration_ms": 1743.63,
+    "finish_reason": "stop",
+    "usage": {
+      "completion_tokens": 6,
+      "prompt_tokens": 18,
+      "total_tokens": 24,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "prompt_tokens_details": null
+    }
+  },
+  "server_requests": [
+    {
+      "timestamp": "2026-10-27T08:18:06.365038+00:00",
+      "request_id": "d1309615db12404d894a5c0dda2cbbdd",
+      "path": "/v1/models",
+      "model": null,
+      "status": 200,
+      "upstream_status": null,
+      "duration_ms": 4.06,
+      "stream_status": null,
+      "error_code": null,
+      "usage": null
+    },
+    {
+      "timestamp": "2026-10-27T08:18:08.938058+00:00",
+      "request_id": "1f62e4b7a2c9436c98b1904ac373fd5c",
+      "path": "/v1/chat/completions",
+      "model": "mimo-v2.6-flash",
+      "status": 200,
+      "upstream_status": 200,
+      "duration_ms": 1734.18,
+      "stream_status": null,
+      "error_code": null,
+      "usage": {
+        "prompt_tokens": 18,
+        "completion_tokens": 6,
+        "total_tokens": 24,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    }
+  ],
+  "existing_configuration_unchanged": {
+    "server.json": true,
+    "client.json": true
+  },
+  "configuration_modes": {
+    "server.json": "0o600",
+    "client.json": "0o600"
+  },
+  "runtime_file_access_audit": {
+    "server": {
+      "source_directory_accesses": 0,
+      "expected_config_opened": "server.json",
+      "file_operations_checked": 685
+    },
+    "client": {
+      "source_directory_accesses": 0,
+      "expected_config_opened": "client.json",
+      "file_operations_checked": 422
+    }
+  },
+  "simulated_tests_passed": 94,
+  "path_configuration": "Existing ~/.bashrc and ~/.profile contain ~/.local/bin; pipx ensurepath and fresh shells verified; no duplicate additions."
+}

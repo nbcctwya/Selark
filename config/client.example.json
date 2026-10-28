@@ -1,0 +1,5 @@
+{
+  "url": "http://127.0.0.1:8787",
+  "access_token": "YOUR_SEPARATE_SELARK_TOKEN_AT_LEAST_32_CHARS",
+  "model": "mimo-v2.6-flash"
+}

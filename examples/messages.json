@@ -1,0 +1,6 @@
+[
+  {"role": "system", "content": "请简短回答。"},
+  {"role": "user", "content": "项目名称是 Selark，请记住。"},
+  {"role": "assistant", "content": "好的，项目名称是 Selark。"},
+  {"role": "user", "content": "项目叫什么？只回答名称。"}
+]
