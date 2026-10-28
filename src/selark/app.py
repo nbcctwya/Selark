@@ -18,9 +18,11 @@ from starlette.requests import ClientDisconnect
 from selark import __version__
 from selark.admission import Admission
 from selark.config import ConfigError, ServerConfig
+from selark.connections import legacy_connection, resolve_model
 from selark.errors import GatewayError
 from selark.persistence import AsyncLedger, Journal
-from selark.providers.mimo import MiMoProvider, reported_usage
+from selark.providers.factory import provider_for
+from selark.providers.mimo import reported_usage
 from selark.runtime import Runtime, fingerprint
 from selark.schemas import ChatRequest
 from selark.storage import Store, request_status, utc_now
@@ -56,7 +58,7 @@ class RequestMiddleware:
             usage_final=False,
             upstream_status=None,
             stream_status=None,
-            connection_id="mimo-default",
+            connection_id=None,
             purpose="chat",
             upstream_attempts=0,
             caller_id=None,
@@ -80,6 +82,10 @@ class RequestMiddleware:
                 message["headers"] = list(message.get("headers", [])) + [
                     (b"x-request-id", state["request_id"].encode())
                 ]
+                if chat and state.get("connection_id"):
+                    message["headers"].append(
+                        (b"x-selark-connection", state["connection_id"].encode())
+                    )
             if (
                 chat
                 and reserved
@@ -383,8 +389,12 @@ def create_app(
     )
     gate = Admission(limits)
 
-    async def settings():
-        return await asyncio.to_thread(runtime.settings) if runtime else config
+    async def connections():
+        return (
+            await asyncio.to_thread(runtime.connection_settings)
+            if runtime
+            else [legacy_connection(config)]
+        )
 
     @asynccontextmanager
     async def lifespan(app):
@@ -449,28 +459,51 @@ def create_app(
         }
 
     @app.get("/v1/models")
-    async def models():
-        current = await settings()
+    async def models(connection_id: str | None = None):
+        available = await connections()
+        current = available[0]
+        if connection_id is not None:
+            selected, _ = resolve_model(available, connection_id, None)
+            available = [selected]
+            current = selected
         return {
             "object": "list",
             "data": [
-                {"id": m, "object": "model", "created": 0, "owned_by": "xiaomi"}
-                for m in current.allowed_models
+                {
+                    "id": m if c.connection_id == "mimo-default" else f"{c.connection_id}::{m}",
+                    "qualified_id": f"{c.connection_id}::{m}",
+                    "upstream_model": m,
+                    "object": "model",
+                    "created": 0,
+                    "owned_by": c.provider,
+                    "connection_id": c.connection_id,
+                    "connection_name": c.name,
+                    "connection_enabled": c.enabled,
+                }
+                for c in available
+                for m in c.allowed_models
             ],
             "default_model": current.default_model,
             "connection_enabled": current.enabled,
+            "default_connection": current.connection_id,
         }
 
     @app.post("/v1/chat/completions")
     async def chat(request: Request):
         data = request.state.chat_input
-        current = await settings()
+        current, model = resolve_model(await connections(), data.connection_id, data.model)
+        request.state.connection_id = current.connection_id
         request.state.session_id = data.session_id
         if not current.enabled:
             raise GatewayError(
-                503, "connection_disabled", "MiMo 连接已停用，请由本机管理员启用连接。"
+                503, "connection_disabled", "所选连接已停用，请由本机管理员启用连接。"
             )
-        model = data.model if data.model is not None else current.default_model
+        if model is None:
+            raise GatewayError(
+                400,
+                "no_default_model",
+                "该连接尚未选择默认模型；请指定 model 或用 connection set --default-model 配置。",
+            )
         if model not in current.allowed_models:
             raise GatewayError(
                 400, "model_not_allowed", "该模型不在允许列表中，请查看 GET /v1/models。"
@@ -482,11 +515,13 @@ def create_app(
             and request.state.probe_fingerprint != request.state.fingerprint
         ):
             raise GatewayError(409, "probe_config_changed", "连接配置已改变，请重新显式探测。")
-        await storage.call("attempt", request.state.request_id, model, data.session_id)
+        provider = provider_for(current.model_copy(update={"limits": limits}), app.state.http)
+        payload = provider.prepare(data, model)
+        await storage.call(
+            "attempt", request.state.request_id, model, data.session_id, current.connection_id
+        )
         request.state.upstream_attempts = 1
         request.state.upstream_result = "in_progress"
-        provider = MiMoProvider(current.model_copy(update={"limits": limits}), app.state.http)
-        payload = data.upstream_payload(model)
         if not data.stream:
             result = await provider.complete(payload)
             request.state.upstream_status = 200

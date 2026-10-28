@@ -15,9 +15,17 @@ class TextPart(StrictModel):
 class Message(StrictModel):
     role: Literal["system", "developer", "user", "assistant"]
     content: str | list[TextPart]
+    reasoning_content: str | None = None
+
+    @model_validator(mode="after")
+    def reasoning_role(self):
+        if self.reasoning_content is not None and self.role != "assistant":
+            raise ValueError("reasoning_content 仅用于调用方明确提供的 assistant 思考历史")
+        return self
 
 
 class ChatRequest(StrictModel):
+    connection_id: str | None = Field(default=None, pattern=r"^[a-z][a-z0-9_-]{0,63}$")
     session_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$")
     model: str | None = None
     messages: list[Message] = Field(min_length=1, max_length=256)
@@ -48,7 +56,7 @@ class ChatRequest(StrictModel):
         return self
 
     def upstream_payload(self, model: str) -> dict:
-        data = self.model_dump(exclude_none=True, exclude={"session_id"})
+        data = self.model_dump(exclude_none=True, exclude={"session_id", "connection_id"})
         data["model"] = model
         data["max_completion_tokens"] = data.pop("max_tokens", None) or data.get(
             "max_completion_tokens", 1024

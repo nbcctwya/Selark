@@ -22,7 +22,12 @@ from selark.config import (
 
 
 def parser() -> argparse.ArgumentParser:
-    result = argparse.ArgumentParser(prog="selark", description="Selark MiMo HTTP 服务与客户端")
+    result = argparse.ArgumentParser(
+        prog="selark", description="Selark 多连接文本模型 HTTP 服务与客户端"
+    )
+    from selark import __version__
+
+    result.add_argument("--version", action="version", version="Selark " + __version__)
     result.add_argument(
         "--config-dir", type=Path, help="私有配置的绝对路径（默认 ~/.config/selark）"
     )
@@ -35,11 +40,13 @@ def parser() -> argparse.ArgumentParser:
     commands.add_parser("serve", help="按持久配置启动 HTTP 服务")
     models = commands.add_parser("models", help="通过 Selark HTTP 获取允许模型")
     models.add_argument("--json", action="store_true")
+    models.add_argument("--connection", help="仅查看指定连接的本地模型列表")
     ask = commands.add_parser("ask", help="通过 Selark HTTP 发起文本对话")
     ask.add_argument("prompt", nargs="?", help="文本；省略或使用 - 时从 stdin 读取")
     ask.add_argument("--messages", type=Path, help="多轮 messages JSON 数组文件")
     ask.add_argument("--system", help="系统消息")
     ask.add_argument("--model", help="覆盖客户端默认模型")
+    ask.add_argument("--connection", help="明确选择连接 ID；不指定模型时使用该连接默认模型")
     ask.add_argument("--session", help="可选会话归组标识；不保存或拼接 messages")
     ask.add_argument("--stream", action="store_true")
     ask.add_argument("--max-tokens", type=int, default=1024)
@@ -108,13 +115,26 @@ def main(argv: list[str] | None = None) -> int:
         config = load_config(directory / "client.json", ClientConfig)
         with SelarkClient(config) as client:
             if args.command == "models":
-                data = client.models()
+                data = client.models(args.connection)
                 if args.json:
                     print(json.dumps(data, ensure_ascii=False, indent=2))
                 else:
                     for entry in data["data"]:
-                        suffix = " (默认)" if entry["id"] == data.get("default_model") else ""
-                        print(entry["id"] + suffix)
+                        suffix = (
+                            " (默认)"
+                            if (
+                                entry.get("upstream_model", entry["id"])
+                                == data.get("default_model")
+                                and entry.get("connection_id") == data.get("default_connection")
+                            )
+                            else ""
+                        )
+                        origin = (
+                            f" [{entry['connection_name']} / {entry['connection_id']}]"
+                            if "connection_id" in entry
+                            else ""
+                        )
+                        print(entry["id"] + suffix + origin)
                 return 0
             if args.json and args.stream:
                 raise ClientError("--json 仅用于普通响应，不能与 --stream 同时使用。")
@@ -135,7 +155,8 @@ def main(argv: list[str] | None = None) -> int:
                 messages.append({"role": "user", "content": prompt})
             client.ask(
                 {
-                    "model": args.model or config.model,
+                    "model": args.model or (None if args.connection else config.model),
+                    "connection_id": args.connection or config.connection_id,
                     "messages": messages,
                     "stream": args.stream,
                     "max_completion_tokens": args.max_tokens,

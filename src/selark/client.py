@@ -7,7 +7,7 @@ import time
 import httpx
 
 from selark.config import ClientConfig
-from selark.sse import SSEDecoder
+from selark.sse import SSEDecoder, sse_lines
 
 
 class ClientError(ValueError):
@@ -44,8 +44,10 @@ class SelarkClient:
             message = "Selark 返回了错误响应。"
         raise ClientError(f"HTTP {response.status_code}：{message}")
 
-    def models(self) -> dict:
-        response = self.http.get("/v1/models")
+    def models(self, connection_id=None) -> dict:
+        response = self.http.get(
+            "/v1/models", params={"connection_id": connection_id} if connection_id else None
+        )
         self.check(response)
         try:
             data = response.json()
@@ -60,18 +62,20 @@ class SelarkClient:
         usage = None
         model = payload.get("model")
         finish_reason = None
+        connection = payload.get("connection_id")
         if payload.get("stream"):
             done = False
             decoder = SSEDecoder()
             with self.http.stream("POST", "/v1/chat/completions", json=payload) as response:
                 request_id = response.headers.get("x-request-id")
+                connection = response.headers.get("x-selark-connection", connection)
                 if response.status_code != 200:
                     response.read()
                     self.check(response)
                 if not response.headers.get("content-type", "").startswith("text/event-stream"):
                     raise ClientError("Selark 未返回 SSE 流。")
                 try:
-                    for line in response.iter_lines():
+                    for line in sse_lines(response):
                         event = decoder.feed(line)
                         if event is None:
                             continue
@@ -106,6 +110,7 @@ class SelarkClient:
         else:
             response = self.http.post("/v1/chat/completions", json=payload)
             request_id = response.headers.get("x-request-id")
+            connection = response.headers.get("x-selark-connection", connection)
             self.check(response)
             try:
                 data = response.json()
@@ -123,6 +128,7 @@ class SelarkClient:
                 {
                     "request_id": request_id,
                     "model": model,
+                    "connection_id": connection,
                     "duration_ms": round((time.monotonic() - started) * 1000, 2),
                     "finish_reason": finish_reason,
                     "usage": usage,

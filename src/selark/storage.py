@@ -251,12 +251,15 @@ class Store:
                 (request_id, request_id, started_at, caller_id, connection_id, purpose),
             )
 
-    def attempt(self, request_id: str, requested_model: str, session_id: str | None):
+    def attempt(
+        self, request_id: str, requested_model: str, session_id: str | None, connection_id=None
+    ):
         with self.transaction() as db:
             db.execute(
-                "UPDATE requests SET upstream_attempts=1,requested_model=?,session_id=? "
+                "UPDATE requests SET upstream_attempts=1,requested_model=?,session_id=?,"
+                "connection_id=COALESCE(?,connection_id) "
                 "WHERE request_id=?",
-                (requested_model, session_id, request_id),
+                (requested_model, session_id, connection_id, request_id),
             )
 
     def finish(self, request_id: str, *, state: dict, http_status: int, duration_ms: float):
@@ -286,7 +289,8 @@ class Store:
                 "prompt_tokens=?,"
                 "completion_tokens=?,total_tokens=?,error_code=?,error_message=?,"
                 "upstream_result=?,delivery_status=?,upstream_error_code=?,delivery_error_code=?,"
-                "queue_ms=?,upstream_attempts=COALESCE(?,upstream_attempts),record_revision=? "
+                "queue_ms=?,upstream_attempts=COALESCE(?,upstream_attempts),"
+                "connection_id=?,record_revision=? "
                 "WHERE request_id=? AND record_revision<=?",
                 (
                     None if status == "running" else state.get("finished_at", utc_now()),
@@ -308,6 +312,7 @@ class Store:
                     state.get("delivery_error_code"),
                     state.get("queue_ms"),
                     state.get("upstream_attempts"),
+                    state.get("connection_id"),
                     state.get("record_revision", 2),
                     request_id,
                     state.get("record_revision", 2),
@@ -317,7 +322,7 @@ class Store:
                 return  # A stale receipt cannot undo a later settled delivery.
             upstream = state.get("upstream_result")
             if (
-                state.get("purpose") == "connection_probe"
+                state.get("fingerprint")
                 and state.get("upstream_attempts")
                 and upstream in {None, "success", "failed"}
             ):
@@ -394,6 +399,7 @@ class Store:
         result["reported_usage"] = json.loads(raw) if raw else None
         result["usage_final"] = bool(result["usage_final"])
         result["usage_known"] = all(result[f] is not None for f in USAGE_FIELDS)
+        result["usage_received"] = result["reported_usage"] is not None
         return result
 
     def records(self, filters: dict, *, limit: int = 20, offset: int = 0) -> list[dict]:
@@ -419,6 +425,7 @@ class Store:
                 "requests": 0,
                 "known_usage_requests": 0,
                 "missing_usage_requests": 0,
+                "reported_usage_requests": 0,
                 "upstream_attempts": 0,
                 "unknown_attempt_count_requests": 0,
                 "unknown_time_requests": 0,
@@ -431,6 +438,7 @@ class Store:
             agg["requests"] += 1
             complete = all(row[f] is not None for f in USAGE_FIELDS)
             agg["known_usage_requests" if complete else "missing_usage_requests"] += 1
+            agg["reported_usage_requests"] += int(row["usage_json"] is not None)
             if row["upstream_attempts"] is None:
                 agg["unknown_attempt_count_requests"] += 1
             else:
@@ -451,6 +459,9 @@ class Store:
                     if group_by == "session":
                         key = (row["caller_id"], row["session_id"])
                         dimensions = {"caller_id": key[0], "session_id": key[1]}
+                    elif group_by == "model":
+                        key = (row["connection_id"], row["model"])
+                        dimensions = {"connection_id": key[0], "model": key[1]}
                     elif group_by == "day":
                         key = (
                             datetime.fromisoformat(row["started_at"])
@@ -462,7 +473,7 @@ class Store:
                         )
                         dimensions = {"day": key}
                     else:
-                        field = {"caller": "caller_id", "model": "model"}[group_by]
+                        field = {"caller": "caller_id", "connection": "connection_id"}[group_by]
                         key, dimensions = row[field], {field: row[field]}
                     aggregate = groups.setdefault(key, dimensions | empty())
                     add(aggregate, row)

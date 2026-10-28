@@ -1,6 +1,6 @@
-# Selark 0.3.0 · 个人模型接入中间件
+# Selark 0.4.1 · 个人模型接入中间件
 
-独立的 MiMo HTTP 接入服务：`CLI / 外部程序 → Selark → 小米 MiMo`。
+独立的文本模型 HTTP 接入服务：`CLI / 外部程序 → Selark → 指定模型连接`。
 Python 3.11+，FastAPI + HTTPX + Uvicorn；默认仅监听 `127.0.0.1:8787`。
 
 ## 日常安装：pipx（当前用户）
@@ -76,6 +76,27 @@ selark serve
 默认最多 4 个请求执行、16 个等待；数据库锁等待在后台线程执行，不阻塞其他流式输出。
 上游结果、下游交付和用量分别记录。完整行为见 [稳定性说明](docs/stability.md)。
 
+0.4 修复运行中备份的 SQLite/pending 竞态及旧 access_token + schema 1 的中断迁移问题，
+支持 MiMo、DeepSeek、智谱、Kimi、OpenAI、Anthropic 和 OpenAI 兼容中转，多连接可属于同一厂商。
+新增连接使用私有 `connections.json`；原 MiMo 配置和默认调用保持兼容。
+命令、官方协议适配范围与用量差异见 [多连接说明](docs/connections.md)。
+
+0.4.1 修复追加压力测试发现的 SSE 无换行缓存、过深 JSON 和非有限数字处理问题。
+205 项回归、275 次本地 API 压力请求及新增 8 次真实并发/边界调用结果见 [API 压力验收](docs/api-stress-verification.md)。
+其中 7 次完整调用取得 145 tokens；1 次主动取消的最终用量未知。
+
+```bash
+selark connection list --json
+selark models --connection deepseek-personal
+selark ask '只回复 OK' --connection deepseek-personal --max-tokens 16
+selark ask '只回复 OK' --model relay-personal::claude-sonnet-4-6 --stream --max-tokens 16
+selark usage --group-by connection --json
+selark backup --json
+```
+
+`connection discover ID` 显式读取并保存模型列表，不生成内容；生成验证由实际调用或 `connection probe ID` 完成。
+本轮已真实验证 MiMo、DeepSeek 和指定中转站，其余厂商仅经过模拟验证。
+
 仅首次使用、尚无配置时运行 `selark init`。
 `init` 在终端安全询问 MiMo Key（不回显），自动生成独立的 Selark 令牌。也可从
 `MIMO_API_KEY` 环境变量读入；不要把真实密钥直接写入 shell 命令历史。
@@ -118,10 +139,11 @@ python -m pip install --no-build-isolation --no-deps -e .
 | 文件 | 使用者 | 字段 |
 | --- | --- | --- |
 | `server.json` | 服务端 | 稳定 `connection_id`、`enabled`、`config_revision`、`base_url`、`api_key`、模型列表、监听设置、读取空闲超时和 `limits` 运行限制 |
-| `client.json` | CLI / 外部程序 | `url`、`access_token`、`model` |
+| `client.json` | CLI / 外部程序 | `url`、`access_token`、`model`，可选 `connection_id` |
+| `connections.json` | 服务端 / 本机管理 CLI | 新连接的名称、类型、地址、Key、模型、启停与发现状态；文件不存在时只有原 MiMo |
 
 仓库的 [服务端配置示例](config/server.example.json) 与 [客户端配置示例](config/client.example.json)
-只有占位值。实际配置不放入源码库；文件内容为明文，依赖操作系统访问权限保护。
+以及 [多连接配置示例](config/connections.example.json) 只有占位值。实际配置不放入源码库；文件内容为明文，依赖操作系统访问权限保护。
 CLI 的 `ask` / `models` 只读取客户端文件，绝不读取或使用 MiMo Key。
 外部程序可以使用单独保存的 `client.json`：
 
@@ -154,18 +176,18 @@ selark --config-dir /private/new-selark init \
 | 接口 | 认证 | 行为 |
 | --- | --- | --- |
 | `GET /health` | 无 | 本进程存活，不访问 MiMo，不代表上游可用 |
-| `GET /v1/models` | `Authorization: Bearer <SELARK_TOKEN>` | 本地允许列表，附加 `default_model`；不代表上游模型发现或账户可用性检查 |
+| `GET /v1/models` | `Authorization: Bearer <SELARK_TOKEN>` | 各连接本地允许列表及明确来源；不发起上游发现或生成 |
 | `POST /v1/chat/completions` | 同上 | `Content-Type: application/json`；普通 JSON 或 SSE |
 
 实现 OpenAI Chat Completions 的**文本子集**，不声称完整兼容：
 
 - `messages` 支持 `system/developer/user/assistant`，字符串或仅含 `{"type":"text","text":"..."}` 的数组；多轮历史由调用方每次传入。
 - 可选 `session_id` 仅在 Selark 内按 `(鉴权调用方, session_id)` 归组，不传给 MiMo，也不修改 messages。
-- `model` 省略或为 null 时使用服务端默认模型；指定模型须在允许列表中。
+- `connection_id` 或 `连接ID::模型ID` 明确选连接；裸模型名继续指向原 MiMo。model 省略或 null 使用所选连接默认模型，指定模型须在该连接允许列表中。
 - `stream` 默认为 false。流式 `data: <JSON>` 逐事件转发，以 `data: [DONE]` 结束；保持上游分片和实际 usage。
 - 支持 `max_completion_tokens`，以及映射到它的别名 `max_tokens`（两者不可同时给出，范围 1–131072，省略默认 1024）。
 - 支持 `temperature`（0–1.5）、`top_p`（0.01–1）、`stop`（字符串或最多四个字符串）、`presence_penalty/frequency_penalty`（-2–2）。
-- 第一阶段统一向 MiMo 发送 `thinking.type=disabled`，专注文本最终回复。
+- MiMo/DeepSeek 及可关闭思考的 GLM/Kimi 模式关闭 thinking；Kimi K3 等保留调用方显式提供的 assistant reasoning_content，不自动管理历史。原生 Anthropic 转换为统一文本响应。
 - 普通响应保留上游 `id/model/choices/usage` 等字段。不会生成、估算或补零 usage；上游缺失时日志标记 null。
 - 不支持工具调用、图片/音视频、Responses API、对话正文存储、`n`、`stream_options`、`response_format`、用户可调 thinking；未知请求字段返回 400。
 - 单请求体上限 1 MiB，最多 256 条消息；普通上游响应上限 8 MiB；SSE 单事件上限约 1 MiB。
@@ -182,7 +204,7 @@ Content-Type: application/json
 ```
 
 错误统一为 `{"error":{"message":"可理解说明","type":"...","code":"..."}}`。
-无效参数/模型 400，Selark 鉴权失败 401，过大请求 413，错误媒体类型 415，MiMo 限流 429，
+无效参数/连接/模型 400，Selark 鉴权失败 401，过大请求 413，错误媒体类型 415，上游限流 429，
 上游鉴权/额度/网络/协议失败 502，等待上游超时 504。错误信息不透传上游原始正文，以免泄露凭据。
 连接停用或本地记录库不可用时返回 503；撤销后的调用方令牌返回 401。管理操作仅通过本机 CLI 提供。
 执行与等待名额用尽返回 429，排队超时返回 503，请求体超时返回 408，请求总时限返回 504。
@@ -238,9 +260,13 @@ ruff check .
 0.2 管理功能的迁移与验收见 [本轮验收](docs/management-verification.md)。
 0.2 的 114 项模拟测试及 6 次真实 MiMo 请求（140 tokens）记录保持不变。
 0.3 的并发、断连、存储竞争、进程退出和安装验收见 [稳定性验收](docs/stability-verification.md)。
-本轮 156 项自动测试通过，安装后的本地 TCP 与进程恢复验收通过；真实 MiMo 请求为 0 次。
+该轮 156 项自动测试通过，安装后的本地 TCP 与进程恢复验收通过；真实 MiMo 请求为 0 次。
 
-仅本机单实例，可有多个独立调用方令牌；没有网页、其他供应商、ChatGPT 登录、远程管理接口、配额限流或生产托管。
+0.4 的备份修复、多平台模拟测试、三个连接的 6 次真实生成和安装核对见 [多连接验收](docs/multiconnection-verification.md)。
+187 项自动测试及安装后的本地 TCP 验收通过；真实调用共取得输入 113、输出 16、合计 129 tokens。
+未对发现的全部模型进行生成测试。
+
+仅本机单实例，可有多个连接和独立调用方令牌；没有网页、订阅登录、远程管理接口、配额路由或生产托管。
 
 2026-10-27 核对的官方来源：[首次调用](https://mimo.mi.com/docs/en-US/quick-start/summary/first-api-call)、
 [Chat Completions 协议](https://mimo.mi.com/docs/api/text-generation/openai-api)、

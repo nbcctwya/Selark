@@ -1,6 +1,7 @@
 """Local-only management commands. Remote callers receive no administrative API."""
 
 import argparse
+import asyncio
 import getpass
 import json
 import os
@@ -23,6 +24,8 @@ from selark.config import (
     data_directory,
     load_config,
 )
+from selark.connections import PRESETS, ConnectionsConfig, require_connection
+from selark.errors import GatewayError
 from selark.history import import_history
 from selark.runtime import Runtime, fingerprint
 from selark.storage import token_digest
@@ -36,6 +39,7 @@ MANAGEMENT_COMMANDS = {
     "migrate",
     "doctor",
     "limits",
+    "backup",
 }
 
 
@@ -50,12 +54,35 @@ def positive(value):
     return result
 
 
+def read_key(provider, variable=None):
+    defaults = {
+        "mimo": "MIMO_API_KEY",
+        "deepseek": "DEEPSEEK_API_KEY",
+        "zhipu": "ZHIPU_API_KEY",
+        "kimi": "MOONSHOT_API_KEY",
+        "openai": "OPENAI_API_KEY",
+        "anthropic": "ANTHROPIC_API_KEY",
+        "openai-compatible": "SELARK_API_KEY",
+    }
+    key = os.environ.get(variable or defaults[provider])
+    if key is None and variable is None:
+        key = os.environ.get("SELARK_API_KEY")
+    if key is None:
+        if not sys.stdin.isatty():
+            raise ConfigError(
+                "请使用 --api-key-env 指定已设置的环境变量，或在交互终端隐藏输入 API Key。"
+            )
+        key = getpass.getpass("连接 API Key（不回显）: ").strip()
+    return key
+
+
 def add_filters(parser):
     parser.add_argument("--since", help="起始时间，包含；无时区时按 --tz 解释")
     parser.add_argument("--until", help="结束时间，不包含")
     parser.add_argument("--today", action="store_true", help="查询 --tz 时区的今天")
     parser.add_argument("--tz", default="UTC", help="IANA 时区，默认 UTC，如 Asia/Shanghai")
     parser.add_argument("--model")
+    parser.add_argument("--connection", help="按实际连接 ID 筛选")
     parser.add_argument("--caller", help="鉴权确定的调用方 ID")
     parser.add_argument("--session", help="仅筛选归组标签；跨调用方仍分别汇总")
     parser.add_argument("--purpose", choices=["chat", "connection_probe"])
@@ -72,23 +99,52 @@ def add_commands(commands):
     for name, field in ServiceLimits.model_fields.items():
         settings.add_argument("--" + name.replace("_", "-"), type=field.annotation)
     settings.add_argument("--json", action="store_true")
-    conn = commands.add_parser("connection", help="本机管理 MiMo 连接；show 不生成模型请求")
+    conn = commands.add_parser("connection", help="本机管理连接；show/list/discover 不生成模型请求")
     actions = conn.add_subparsers(dest="action", required=True)
     for name, help_text in [
-        ("show", "显示脱敏配置和最近显式探测状态"),
+        ("show", "显示脱敏配置、模型发现和最近真实调用状态"),
         ("enable", "启用连接，新请求立即生效"),
         ("disable", "停用连接，拒绝新的上游调用"),
         ("probe", "显式发送一次真实短请求，有用量；必须先启动服务"),
     ]:
-        actions.add_parser(name, help=help_text).add_argument("--json", action="store_true")
+        action = actions.add_parser(name, help=help_text)
+        action.add_argument(
+            "id", nargs="?", default="mimo-default", help="连接 ID，默认保留原 MiMo"
+        )
+        action.add_argument("--json", action="store_true")
+    actions.add_parser("list", help="列出所有连接与脱敏状态").add_argument(
+        "--json", action="store_true"
+    )
+    actions.add_parser("providers", help="查看厂商预设与协议范围").add_argument(
+        "--json", action="store_true"
+    )
+    discover = actions.add_parser("discover", help="读取并保存上游模型列表；不生成，失败保留旧列表")
+    discover.add_argument("id", nargs="?", default="mimo-default")
+    discover.add_argument("--json", action="store_true")
+    add = actions.add_parser("add", help="新增独立连接；Key 从环境变量或隐藏输入读取")
+    add.add_argument("id", help="稳定连接 ID，如 deepseek-personal")
+    add.add_argument("--provider", required=True, choices=[*PRESETS, "glm"])
+    add.add_argument("--name")
+    add.add_argument("--base-url")
+    add.add_argument("--models", nargs="+")
+    add.add_argument("--default-model")
+    add.add_argument("--api-key-env", help="读取指定环境变量中的 Key，不接受命令行明文 Key")
+    add.add_argument("--workspace-id", help="Anthropic 非工作区专属 Key 所需的 workspace ID")
+    add.add_argument("--json", action="store_true")
     change = actions.add_parser("set", help="修改连接并热生效；关键修改使旧验证失效")
+    change.add_argument("id", nargs="?", default="mimo-default")
+    change.add_argument("--name")
     change.add_argument("--base-url")
     change.add_argument("--models", nargs="+")
     change.add_argument("--default-model")
     change.add_argument("--timeout", type=float)
     change.add_argument(
-        "--api-key", action="store_true", help="从 MIMO_API_KEY 或隐藏输入读取新 Key"
+        "--api-key", action="store_true", help="从厂商环境变量、SELARK_API_KEY 或隐藏输入读取新 Key"
     )
+    change.add_argument("--api-key-env")
+    change.add_argument("--stream-usage", action=argparse.BooleanOptionalAction, default=None)
+    change.add_argument("--token-parameter", choices=["max_tokens", "max_completion_tokens"])
+    change.add_argument("--workspace-id")
     change.add_argument("--json", action="store_true")
 
     tokens = commands.add_parser("tokens", help="本机管理调用方令牌；普通令牌无管理权限")
@@ -121,7 +177,7 @@ def add_commands(commands):
 
     usage = commands.add_parser("usage", help="汇总已知用量及未知请求数；默认所有时间、UTC")
     add_filters(usage)
-    usage.add_argument("--group-by", choices=["model", "caller", "session", "day"])
+    usage.add_argument("--group-by", choices=["model", "caller", "session", "day", "connection"])
     usage.add_argument("--json", action="store_true")
     sessions = commands.add_parser("sessions", help="按调用方和 session_id 归组，不保存或拼接历史")
     actions = sessions.add_subparsers(dest="action", required=True)
@@ -137,6 +193,9 @@ def add_commands(commands):
         "--json", action="store_true"
     )
     commands.add_parser("doctor", help="检查配置、记录库及本机服务；不生成模型请求").add_argument(
+        "--json", action="store_true"
+    )
+    commands.add_parser("backup", help="创建配置、SQLite 和 pending 的一致恢复备份").add_argument(
         "--json", action="store_true"
     )
 
@@ -168,6 +227,7 @@ def query_filters(args) -> dict:
         "caller_id": args.caller,
         "session_id": args.session,
         "model": args.model,
+        "connection_id": getattr(args, "connection", None),
         "purpose": args.purpose,
         "status": args.status,
         "since": since.astimezone(UTC).isoformat(timespec="microseconds") if since else None,
@@ -181,21 +241,26 @@ def server_url(config: ServerConfig) -> str:
     return f"http://{host}:{config.port}"
 
 
-def probe(runtime: Runtime) -> dict:
-    config = runtime.settings()
+def probe(runtime: Runtime, identity="mimo-default") -> dict:
+    config = require_connection(runtime.connection_settings(), identity)
     if not config.enabled:
         raise ConfigError("连接已停用；请先启用，再显式探测。")
+    if not config.default_model:
+        raise ConfigError("连接尚无默认模型，请先 discover 或手动配置模型。")
     ticket = runtime.store.create_token(
         "Local explicit connection probe", probe_fingerprint=fingerprint(config)
     )
     try:
         profile = ClientConfig(
-            url=server_url(config), access_token=ticket["token"], model=config.default_model
+            url=server_url(runtime.settings()),
+            access_token=ticket["token"],
+            model=config.default_model,
         )
         with SelarkClient(profile) as client:
             response = client.http.post(
                 "/v1/chat/completions",
                 json={
+                    "connection_id": config.connection_id,
                     "messages": [
                         {"role": "user", "content": "Reply with exactly: Selark probe OK"}
                     ],
@@ -210,7 +275,8 @@ def probe(runtime: Runtime) -> dict:
             "purpose": "connection_probe",
             "model": data.get("model"),
             "usage": data.get("usage"),
-            "verification": runtime.connection()["verification"],
+            "connection_id": config.connection_id,
+            "verification": runtime.connection(config.connection_id)["verification"],
         }
     finally:
         runtime.store.revoke(ticket["id"])
@@ -224,6 +290,18 @@ def doctor(directory: Path) -> dict:
         checks.append({"check": "server_config", "ok": True, "connection_enabled": config.enabled})
     except ConfigError as exc:
         checks.append({"check": "server_config", "ok": False, "message": str(exc)})
+    try:
+        path = directory / "connections.json"
+        registry = load_config(path, ConnectionsConfig) if path.exists() else ConnectionsConfig()
+        checks.append(
+            {
+                "check": "connections_config",
+                "ok": True,
+                "configured_connections": 1 + len(registry.connections),
+            }
+        )
+    except ConfigError as exc:
+        checks.append({"check": "connections_config", "ok": False, "message": str(exc)})
     try:
         client = load_config(directory / "client.json", ClientConfig)
         checks.append({"check": "client_config", "ok": True})
@@ -377,7 +455,15 @@ def run(args, directory: Path) -> int:
         return 0 if result["ok"] else 1
     with Runtime(directory) as runtime:
         store = runtime.store
-        if args.command == "limits":
+        if args.command == "backup":
+            from selark.locking import file_lock
+
+            with file_lock(runtime.data_dir / "management.lock"):
+                result = {
+                    "backup": str(runtime.backup("explicit-backup")),
+                    "recovery_consistent": True,
+                }
+        elif args.command == "limits":
             result = (
                 {"limits": runtime.settings().limits.model_dump(), "applied_on": "service_start"}
                 if args.action == "show"
@@ -402,12 +488,63 @@ def run(args, directory: Path) -> int:
                 "migrated": runtime.migration_backup is not None,
             }
         elif args.command == "connection":
-            if args.action == "show":
-                result = runtime.connection()
+            identity = getattr(args, "id", "mimo-default")
+            if args.action == "list":
+                result = {
+                    "default_connection": "mimo-default",
+                    "connections": [
+                        runtime.connection(c.connection_id) for c in runtime.connection_settings()
+                    ],
+                }
+            elif args.action == "providers":
+                result = [
+                    {
+                        "provider": key,
+                        "name": name,
+                        "base_url": url,
+                        "protocol": "anthropic-messages"
+                        if key == "anthropic"
+                        else "chat-completions",
+                        "scope": "text subset; model availability requires account verification",
+                    }
+                    for key, (name, url) in PRESETS.items()
+                ]
+            elif args.action == "add":
+                provider = "zhipu" if args.provider == "glm" else args.provider
+                result = runtime.add_connection(
+                    identity,
+                    provider,
+                    read_key(provider, args.api_key_env),
+                    name=args.name,
+                    base_url=args.base_url,
+                    allowed_models=args.models,
+                    default_model=args.default_model,
+                    workspace_id=args.workspace_id,
+                )
+            elif args.action == "discover":
+                from selark.providers.discovery import discover
+
+                original = require_connection(runtime.connection_settings(), identity)
+                try:
+                    models = asyncio.run(discover(original))
+                    result = runtime.save_discovery(original, models)
+                except GatewayError as error:
+                    if error.upstream_status:
+                        error = GatewayError(
+                            error.status,
+                            "discovery_http_error",
+                            f"模型列表接口返回 HTTP {error.upstream_status}；"
+                            "请检查地址/权限或使用 connection set --models 手动配置。",
+                        )
+                    result = runtime.save_discovery(original, [], error)
+                    emit(result, args.json)
+                    return 1
+            elif args.action == "show":
+                result = runtime.connection(identity)
             elif args.action in {"enable", "disable"}:
-                result = runtime.change_connection({"enabled": args.action == "enable"})
+                result = runtime.change_connection({"enabled": args.action == "enable"}, identity)
             elif args.action == "probe":
-                result = probe(runtime)
+                result = probe(runtime, identity)
             else:
                 changes = {
                     field: value
@@ -416,17 +553,17 @@ def run(args, directory: Path) -> int:
                         ("allowed_models", args.models),
                         ("default_model", args.default_model),
                         ("timeout_seconds", args.timeout),
+                        ("name", args.name),
+                        ("stream_usage", args.stream_usage),
+                        ("token_parameter", args.token_parameter),
+                        ("workspace_id", args.workspace_id),
                     )
                     if value is not None
                 }
-                if args.api_key:
-                    key = os.environ.get("MIMO_API_KEY")
-                    if key is None:
-                        if not sys.stdin.isatty():
-                            raise ConfigError("请在交互终端输入新 MiMo Key，或设置 MIMO_API_KEY。")
-                        key = getpass.getpass("新 MiMo API Key（不回显）: ").strip()
-                    changes["api_key"] = key
-                result = runtime.change_connection(changes)
+                if args.api_key or args.api_key_env:
+                    current = require_connection(runtime.connection_settings(), identity)
+                    changes["api_key"] = read_key(current.provider, args.api_key_env)
+                result = runtime.change_connection(changes, identity)
         elif args.command == "tokens":
             if args.action == "create":
                 target = args.client_config.expanduser() if args.client_config else None

@@ -1,0 +1,66 @@
+{
+  "verified_at": "2026-10-28T08:48:05.195941+00:00",
+  "version": "0.4.1",
+  "installed_source_files_match": 24,
+  "scope": "current WSL user only",
+  "editable": false,
+  "working_directory": "outside repository",
+  "activated_environment": false,
+  "real_generation_requests": 0,
+  "records_after": 31,
+  "known_cumulative_tokens": {
+    "prompt_tokens": 605,
+    "completion_tokens": 131,
+    "total_tokens": 736
+  },
+  "new_cancelled_request_usage": "unknown; preserved after restart",
+  "service_after": "stopped",
+  "checks": [
+    {
+      "command": "selark doctor --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark connection list --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark models --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark usage --session api-stress-0.4.1 --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark usage --session api-stress-0.4.1-output_limit --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark records list --session api-stress-0.4.1-disconnect --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark sessions list --session api-stress-0.4.1 --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark doctor --json",
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "command": "selark records recover --json",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "dependency_check": "No broken requirements found."
+}

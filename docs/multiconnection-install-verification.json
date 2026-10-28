@@ -1,0 +1,170 @@
+{
+  "verified_at": "2026-10-28T08:06:45.721454+00:00",
+  "version": "0.4.0",
+  "installation_scope": "current WSL user nbcctwya; not system-wide",
+  "entrypoint": "/home/nbcctwya/.local/bin/selark",
+  "installed_module": "/home/nbcctwya/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark",
+  "installed_source_files_match": 23,
+  "editable_install": false,
+  "activated_environment": false,
+  "working_directory": "/tmp and temporary outside-repository directories",
+  "dependency_check": "No broken requirements found.",
+  "original_configuration_files_preserved": 4,
+  "original_requests_preserved": 17,
+  "token_rows_and_revocations_preserved": true,
+  "history_imports_preserved": true,
+  "database_schema_before": 2,
+  "database_schema_after": 2,
+  "records_after": 23,
+  "historical_known_tokens_before": {
+    "prompt_tokens": 364,
+    "completion_tokens": 98,
+    "total_tokens": 462
+  },
+  "known_tokens_after": {
+    "prompt_tokens": 477,
+    "completion_tokens": 114,
+    "total_tokens": 591
+  },
+  "new_real_generation_requests_during_this_passive_check": 0,
+  "connections": [
+    {
+      "id": "mimo-default",
+      "provider": "mimo",
+      "models": 1,
+      "default_model": "mimo-v2.6-flash",
+      "discovery": "never",
+      "verification": "success"
+    },
+    {
+      "id": "deepseek-personal",
+      "provider": "deepseek",
+      "models": 2,
+      "default_model": "deepseek-flash",
+      "discovery": "success",
+      "verification": "success"
+    },
+    {
+      "id": "relay-personal",
+      "provider": "openai-compatible",
+      "models": 8,
+      "default_model": "claude-sonnet-4-6",
+      "discovery": "success",
+      "verification": "success"
+    }
+  ],
+  "protected_backup": "/home/nbcctwya/.local/share/selark/backups/2026-10-28T08-06-44.317323+00-00-60a60be0",
+  "backup_recovery_consistent": true,
+  "protected_permissions": true,
+  "service_before": "stopped",
+  "service_after": "stopped",
+  "recovery": {
+    "restored": 0,
+    "invalid": 0,
+    "failed": 0,
+    "pending": 0,
+    "interrupted": 0
+  },
+  "checks": [
+    {
+      "command": "selark --version",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark --help",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark migrate --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark connection list --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark connection providers --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark models --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark models --connection deepseek-personal --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark doctor --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark limits show --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark records list --session multiconnection-0.4-verification --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark usage --session multiconnection-0.4-verification --group-by connection --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark sessions list --session multiconnection-0.4-verification --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark --config-dir /home/nbcctwya/.config/selark/clients/management-verification-a models",
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "command": "selark --config-dir /home/nbcctwya/.config/selark/clients/management-verification-b models",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark backup --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark records recover --json",
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "command": "selark models",
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "command": "selark doctor --json",
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "command": "selark records recover --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark records recover --json",
+      "exit_code": 0,
+      "passed": true
+    }
+  ]
+}

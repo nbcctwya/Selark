@@ -133,6 +133,7 @@ class ClientConfig(StrictConfig):
     url: str = "http://127.0.0.1:8787"
     access_token: SecretStr
     model: str = DEFAULT_MODEL
+    connection_id: str | None = Field(default=None, pattern=r"^[a-z][a-z0-9_-]{0,63}$")
 
     _url = field_validator("url")(validate_url)
 

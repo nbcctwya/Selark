@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 from selark.config import ConfigError, _write_private, private_directory
+from selark.locking import file_lock
 from selark.storage import utc_now
 
 logger = logging.getLogger("selark.storage")
@@ -76,10 +77,15 @@ class Journal:
         identity = document["state"]["request_id"]
         if not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", identity):
             raise ValueError("invalid receipt identity")
-        _write_private(self.directory / (identity + ".json"), document)
-        sync_directory(self.directory)
+        with file_lock(self.directory.parent / "recovery.lock"):
+            _write_private(self.directory / (identity + ".json"), document)
+            sync_directory(self.directory)
 
     def remove(self, identity):
+        with file_lock(self.directory.parent / "recovery.lock"):
+            self._remove(identity)
+
+    def _remove(self, identity):
         (self.directory / (identity + ".json")).unlink(missing_ok=True)
         sync_directory(self.directory)
 
@@ -146,6 +152,10 @@ class Journal:
         return value
 
     def replay(self, store, *, include_unsettled=False, limit=None):
+        with file_lock(self.directory.parent / "recovery.lock"):
+            return self._replay(store, include_unsettled=include_unsettled, limit=limit)
+
+    def _replay(self, store, *, include_unsettled=False, limit=None):
         restored, invalid, failed = 0, 0, 0
         paths = self.entries()
         for path in paths:
@@ -168,7 +178,7 @@ class Journal:
                 )
             try:
                 apply_document(store, document)
-                self.remove(path.stem)
+                self._remove(path.stem)
                 restored += 1
             except (sqlite3.Error, OSError):
                 failed += 1

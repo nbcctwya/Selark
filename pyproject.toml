@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "selark"
-version = "0.3.0"
-description = "A small authenticated HTTP gateway for Xiaomi MiMo"
+version = "0.4.1"
+description = "A local authenticated multi-provider text model gateway"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

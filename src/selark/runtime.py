@@ -1,6 +1,5 @@
 """Local administrative state, protected migration, and live connection settings."""
 
-import fcntl
 import hashlib
 import json
 import os
@@ -21,27 +20,48 @@ from selark.config import (
     private_directory,
     server_document,
 )
+from selark.connections import (
+    PRESETS,
+    ConnectionConfig,
+    ConnectionsConfig,
+    connection_document,
+    legacy_connection,
+    registry_document,
+    require_connection,
+)
+from selark.locking import file_lock
 from selark.storage import Store, utc_now
 
 
 def fingerprint(config: ServerConfig) -> str:
+    if isinstance(config, ConnectionConfig):
+        data = connection_document(config)
+        for field in ("name", "enabled", "discovery", "limits"):
+            data.pop(field, None)
+        if config.connection_id == "mimo-default":
+            # Preserve pre-0.4 verification fingerprints exactly.
+            for field in (
+                "connection_id",
+                "provider",
+                "stream_usage",
+                "token_parameter",
+                "workspace_id",
+            ):
+                data.pop(field, None)
+        return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
     data = server_document(config)
     for field in ("enabled", "host", "port", "schema_version", "connection_id", "limits"):
         data.pop(field, None)
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
 
-@contextmanager
-def file_lock(path: Path, *, nonblocking=False):
-    fd = os.open(path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
-    try:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | (fcntl.LOCK_NB if nonblocking else 0))
-        except BlockingIOError:
-            raise ConfigError("该配置的 Selark 服务已在运行。") from None
-        yield
-    finally:
-        os.close(fd)
+def discovery_fingerprint(config):
+    document = connection_document(config)
+    data = {
+        key: document[key]
+        for key in ("connection_id", "provider", "base_url", "api_key", "workspace_id")
+    }
+    return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
 
 class Runtime:
@@ -60,34 +80,28 @@ class Runtime:
                 raise ConfigError(
                     "已迁移配置的记录库缺失；请恢复匹配的受保护备份，避免复活已撤销令牌。"
                 )
-            if config.access_token is not None:
-                self.migration_backup = self.backup("before-migration")
             version = 0
             if database.exists():
                 with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as old:
                     version = old.execute("PRAGMA user_version").fetchone()[0]
-            if version == 1:
+            if version == 1 or config.access_token is not None:
                 with file_lock(self.data_dir / "service.lock", nonblocking=True):
-                    self.migration_backup = self.backup("before-stability-schema")
-                    target = self.migration_backup / "records.sqlite3"
-                    target.touch(mode=0o600)
-                    with (
-                        closing(sqlite3.connect(database)) as source,
-                        closing(sqlite3.connect(target)) as dest,
-                    ):
-                        source.backup(dest)
+                    self.migration_backup = self.backup("before-migration")
                     self.store = Store(database)
+                    try:
+                        if config.access_token is not None:
+                            self.store.seed_legacy(config.access_token.get_secret_value())
+                            # A fresh legacy installation has no pre-migration database.
+                            # Existing databases already have a protected pre-upgrade snapshot.
+                            target = self.migration_backup / "records.sqlite3"
+                            if not target.exists():
+                                self.store.backup(target)
+                            _write_private(self.config_path, server_document(config))
+                    except Exception:
+                        self.store.close()
+                        raise
             else:
                 self.store = Store(database)
-            try:
-                if config.access_token is not None:
-                    self.store.seed_legacy(config.access_token.get_secret_value())
-                    # Retrying after a crash never resets a revocation.
-                    self.store.backup(self.migration_backup / "records.sqlite3")
-                    _write_private(self.config_path, server_document(config))
-            except Exception:
-                self.store.close()
-                raise
 
     def __enter__(self):
         return self
@@ -98,12 +112,60 @@ class Runtime:
     def settings(self) -> ServerConfig:
         return load_config(self.config_path, ServerConfig)
 
+    def registry(self):
+        path = self.directory / "connections.json"
+        return load_config(path, ConnectionsConfig) if path.exists() else ConnectionsConfig()
+
+    def connection_settings(self):
+        server, registry = self.settings(), self.registry()
+        return [
+            legacy_connection(server, registry),
+            *[c.model_copy(update={"limits": server.limits}) for c in registry.connections],
+        ]
+
+    def add_connection(self, identity, provider, key, **options):
+        if provider not in PRESETS:
+            raise ConfigError("不支持的供应商类型，请查看 connection providers。")
+        name, url = PRESETS[provider]
+        if options.get("allowed_models") and options.get("default_model") is None:
+            options["default_model"] = options["allowed_models"][0]
+        try:
+            config = ConnectionConfig.model_validate(
+                {
+                    "connection_id": identity,
+                    "provider": provider,
+                    "api_key": key,
+                    "name": name,
+                    "base_url": url,
+                    **{k: v for k, v in options.items() if v is not None},
+                }
+            )
+        except ValidationError:
+            raise ConfigError("连接参数无效；请检查 ID、名称、地址、Key 和模型列表。") from None
+        with file_lock(self.data_dir / "management.lock"):
+            registry = self.registry()
+            try:
+                updated = ConnectionsConfig.model_validate(
+                    registry.model_dump() | {"connections": [*registry.connections, config]}
+                )
+            except ValidationError:
+                raise ConfigError("连接 ID 已存在、使用了保留 ID 或超过 32 个连接上限。") from None
+            self.backup("before-connection-add")
+            _write_private(self.directory / "connections.json", registry_document(updated))
+        return self.connection(identity)
+
     def backup(self, reason: str) -> Path:
+        # Receipts cannot be replaced/deleted between the SQLite snapshot and file copy.
+        # Database writes may continue: copied receipts plus revision checks close that gap.
+        with file_lock(self.data_dir / "recovery.lock"):
+            return self._backup(reason)
+
+    def _backup(self, reason: str) -> Path:
         root = self.data_dir / "backups"
         private_directory(root)
         target = root / (utc_now().replace(":", "-") + "-" + uuid4().hex[:8])
         private_directory(target)
-        for name in ("server.json", "client.json"):
+        for name in ("server.json", "client.json", "connections.json"):
             source = self.directory / name
             if source.is_symlink():
                 raise ConfigError("待备份的配置不能是符号链接。")
@@ -115,16 +177,22 @@ class Runtime:
                     os.fsync(handle.fileno())
         if self.store is not None:
             self.store.backup(target / "records.sqlite3")
+        elif (self.data_dir / "records.sqlite3").exists():
+            database = self.data_dir / "records.sqlite3"
+            destination = target / "records.sqlite3"
+            destination.touch(mode=0o600, exist_ok=False)
+            with (
+                closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as source,
+                closing(sqlite3.connect(destination)) as dest,
+            ):
+                source.backup(dest)
         pending = self.data_dir / "pending"
         if pending.exists():
             private_directory(target / "pending")
             for source in pending.glob("*.json"):
                 if source.is_symlink():
                     raise ConfigError("落账文件不能为符号链接。")
-                try:
-                    content = source.read_bytes()
-                except FileNotFoundError:
-                    continue  # The running service may have just settled this receipt.
+                content = source.read_bytes()
                 fd = os.open(
                     target / "pending" / source.name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
                 )
@@ -132,7 +200,16 @@ class Runtime:
                     output.write(content)
                     output.flush()
                     os.fsync(output.fileno())
-        _write_private(target / "manifest.json", {"reason": reason, "created_at": utc_now()})
+        _write_private(
+            target / "manifest.json",
+            {"reason": reason, "created_at": utc_now(), "recovery_consistent": True},
+        )
+        from selark.persistence import sync_directory
+
+        if (target / "pending").exists():
+            sync_directory(target / "pending")
+        sync_directory(target)
+        sync_directory(root)
         return target
 
     @contextmanager
@@ -170,16 +247,27 @@ class Runtime:
                 _write_private(self.config_path, server_document(config))
         return {"limits": limits.model_dump(), "restart_required": True}
 
-    def connection(self) -> dict:
-        config = self.settings()
-        result = config.model_dump(mode="json", exclude={"access_token", "api_key"})
+    def connection(self, identity="mimo-default") -> dict:
+        config = require_connection(self.connection_settings(), identity)
+        result = config.model_dump(mode="json", exclude={"api_key"})
         result.update(configured=True, api_key="[REDACTED]")
         result["verification"] = self.store.verification(config.connection_id, fingerprint(config))
+        discovery = result["discovery"]
+        old = discovery.pop("source_fingerprint", None)
+        if old and old != discovery_fingerprint(config):
+            discovery["previous_state"], discovery["state"] = discovery["state"], "stale"
+        result["models_configured"] = bool(config.allowed_models)
+        result["protocol"] = (
+            "anthropic-messages" if config.provider == "anthropic" else "chat-completions"
+        )
         return result
 
-    def change_connection(self, changes: dict) -> dict:
+    def change_connection(self, changes: dict, identity="mimo-default") -> dict:
+        if identity != "mimo-default":
+            return self._change_extra(changes, identity)
         with file_lock(self.data_dir / "management.lock"):
             current = self.settings()
+            registry = self.registry()
             document = server_document(current)
             allowed = {
                 "base_url",
@@ -188,20 +276,127 @@ class Runtime:
                 "default_model",
                 "timeout_seconds",
                 "enabled",
+                "name",
             }
             if not changes or set(changes) - allowed:
                 raise ConfigError("未提供有效的连接修改参数。")
             try:
-                updated = ServerConfig.model_validate(document | changes)
+                update_fields = {k: v for k, v in changes.items() if k != "name"}
+                updated = ServerConfig.model_validate(document | update_fields)
+                renamed = ConnectionsConfig.model_validate(
+                    registry.model_dump()
+                    | {"legacy_name": changes.get("name", registry.legacy_name)}
+                )
             except ValidationError:
                 raise ConfigError("连接配置无效；请检查地址、凭据、允许模型和默认模型。") from None
-            if server_document(updated) != document:
+            if server_document(updated) != document or renamed != registry:
                 if any(
                     server_document(updated)[key] != document[key]
-                    for key in changes
+                    for key in update_fields
                     if key != "enabled"
                 ):
                     updated.config_revision = current.config_revision + 1
                 self.backup("before-connection-change")
-                _write_private(self.config_path, server_document(updated))
+                if server_document(updated) != document:
+                    _write_private(self.config_path, server_document(updated))
+                if renamed != registry:
+                    _write_private(self.directory / "connections.json", registry_document(renamed))
         return self.connection()
+
+    def _change_extra(self, changes, identity):
+        allowed = {
+            "name",
+            "base_url",
+            "api_key",
+            "allowed_models",
+            "default_model",
+            "enabled",
+            "timeout_seconds",
+            "stream_usage",
+            "token_parameter",
+            "workspace_id",
+        }
+        if not changes or set(changes) - allowed:
+            raise ConfigError("未提供有效的连接修改参数。")
+        with file_lock(self.data_dir / "management.lock"):
+            registry = self.registry()
+            current = require_connection(registry.connections, identity)
+            document = connection_document(current)
+            try:
+                updated = ConnectionConfig.model_validate(document | changes)
+            except ValidationError:
+                raise ConfigError("连接配置无效，请检查模型、默认模型、地址和凭据。") from None
+            if connection_document(updated) != document:
+                if any(
+                    connection_document(updated)[k] != document[k]
+                    for k in changes
+                    if k not in {"name", "enabled"}
+                ):
+                    updated.config_revision += 1
+                registry.connections = [
+                    updated if c.connection_id == identity else c for c in registry.connections
+                ]
+                self.backup("before-connection-change")
+                _write_private(self.directory / "connections.json", registry_document(registry))
+        return self.connection(identity)
+
+    def save_discovery(self, original, models, error=None):
+        from selark.connections import Discovery
+
+        with file_lock(self.data_dir / "management.lock"):
+            current = require_connection(self.connection_settings(), original.connection_id)
+            if fingerprint(current) != fingerprint(original):
+                raise ConfigError("发现期间连接配置已改变；结果未应用，请重新发现。")
+            registry = self.registry()
+            if error is None:
+                if not models:
+                    raise ConfigError("发现结果为空，原模型列表保留。")
+                current.allowed_models = models
+                current.default_model = (
+                    current.default_model if current.default_model in models else None
+                )
+                if (current.allowed_models, current.default_model) != (
+                    original.allowed_models,
+                    original.default_model,
+                ):
+                    current.config_revision += 1
+                try:
+                    ConnectionConfig.model_validate(connection_document(current))
+                    if current.connection_id == "mimo-default":
+                        ServerConfig.model_validate(
+                            server_document(self.settings())
+                            | {
+                                "allowed_models": current.allowed_models,
+                                "default_model": current.default_model,
+                            }
+                        )
+                except ValidationError:
+                    raise ConfigError(
+                        "发现的模型不符合本地配置格式；原列表保留，请手动配置。"
+                    ) from None
+            current.discovery = Discovery(
+                state="failure" if error else "success",
+                checked_at=utc_now(),
+                source_fingerprint=discovery_fingerprint(current),
+                models=models or original.discovery.models,
+                error_code=error.code if error else None,
+                error_message=error.message if error else None,
+            )
+            self.backup("before-model-discovery")
+            if current.connection_id == "mimo-default":
+                registry.legacy_discovery = current.discovery
+                if error is None:
+                    server = self.settings()
+                    server.allowed_models, server.default_model = (
+                        current.allowed_models,
+                        current.default_model,
+                    )
+                    server.config_revision = current.config_revision
+                    _write_private(self.config_path, server_document(server))
+            else:
+                registry.connections = [
+                    current if c.connection_id == current.connection_id else c
+                    for c in registry.connections
+                ]
+            _write_private(self.directory / "connections.json", registry_document(registry))
+        return self.connection(original.connection_id)

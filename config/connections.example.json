@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "legacy_name": "MiMo",
+  "connections": [
+    {
+      "connection_id": "deepseek-example",
+      "name": "DeepSeek example",
+      "provider": "deepseek",
+      "base_url": "https://api.deepseek.com/v1",
+      "api_key": "YOUR_DEEPSEEK_API_KEY",
+      "allowed_models": ["YOUR_TEXT_MODEL"],
+      "default_model": "YOUR_TEXT_MODEL",
+      "enabled": true
+    },
+    {
+      "connection_id": "relay-example",
+      "name": "Relay example",
+      "provider": "openai-compatible",
+      "base_url": "https://relay.example/v1",
+      "api_key": "YOUR_RELAY_API_KEY",
+      "allowed_models": [],
+      "default_model": null,
+      "enabled": true,
+      "token_parameter": "max_tokens",
+      "stream_usage": true
+    }
+  ]
+}

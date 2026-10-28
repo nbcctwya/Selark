@@ -12,6 +12,10 @@ dist/
 .selark/
 server.json
 client.json
+connections.json
+# Local recovery receipts and protected configuration/database backups.
+pending/
+backups/
 *.log
 *.jsonl
 *.sqlite3
