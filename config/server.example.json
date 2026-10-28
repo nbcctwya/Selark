@@ -5,9 +5,25 @@
   "config_revision": 1,
   "base_url": "https://api.xiaomimimo.com/v1",
   "api_key": "YOUR_MIMO_API_KEY",
-  "allowed_models": ["mimo-v2.6-flash"],
+  "allowed_models": [
+    "mimo-v2.6-flash"
+  ],
   "default_model": "mimo-v2.6-flash",
   "host": "127.0.0.1",
   "port": 8787,
-  "timeout_seconds": 60.0
+  "timeout_seconds": 60.0,
+  "limits": {
+    "max_concurrent_requests": 4,
+    "max_queued_requests": 16,
+    "queue_timeout_seconds": 10.0,
+    "request_timeout_seconds": 120.0,
+    "body_timeout_seconds": 10.0,
+    "connect_timeout_seconds": 10.0,
+    "pool_timeout_seconds": 5.0,
+    "write_timeout_seconds": 10.0,
+    "send_timeout_seconds": 15.0,
+    "shutdown_grace_seconds": 15.0,
+    "storage_busy_timeout_seconds": 0.1,
+    "max_pending_records": 256
+  }
 }

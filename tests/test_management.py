@@ -692,7 +692,10 @@ def test_final_record_is_visible_before_client_receives_completion(runtime, stre
                 observer = Store(runtime.store.path)
                 try:
                     row = observer.records({})[0]
-                    assert row["status"] == "success" and row["total_tokens"] == 14
+                    # Upstream completion is durable; downstream delivery can still fail.
+                    assert row["status"] == "running" and row["total_tokens"] == 14
+                    assert row["upstream_result"] == "success"
+                    assert row["delivery_status"] == "pending"
                     verification = observer.verification(
                         "mimo-default", fingerprint(runtime.settings())
                     )
@@ -721,6 +724,7 @@ def test_final_record_is_visible_before_client_receives_completion(runtime, stre
         async with app.router.lifespan_context(app):
             await asyncio.wait_for(app(scope, receive, send), timeout=2)
         assert observed
+        assert runtime.store.records({})[0]["delivery_status"] == "sent"
         assert runtime.store.summary({})["summary"]["known_tokens"]["total_tokens"] == 14
 
     asyncio.run(scenario())

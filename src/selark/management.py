@@ -6,6 +6,7 @@ import json
 import os
 import sqlite3
 import sys
+from contextlib import closing
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -18,6 +19,7 @@ from selark.config import (
     ClientConfig,
     ConfigError,
     ServerConfig,
+    ServiceLimits,
     data_directory,
     load_config,
 )
@@ -25,7 +27,16 @@ from selark.history import import_history
 from selark.runtime import Runtime, fingerprint
 from selark.storage import token_digest
 
-MANAGEMENT_COMMANDS = {"connection", "tokens", "records", "usage", "sessions", "migrate", "doctor"}
+MANAGEMENT_COMMANDS = {
+    "connection",
+    "tokens",
+    "records",
+    "usage",
+    "sessions",
+    "migrate",
+    "doctor",
+    "limits",
+}
 
 
 def emit(data, compact=False):
@@ -54,6 +65,13 @@ def add_filters(parser):
 
 
 def add_commands(commands):
+    limits = commands.add_parser("limits", help="本机查看/修改并发和超时；修改后重启服务生效")
+    actions = limits.add_subparsers(dest="action", required=True)
+    actions.add_parser("show").add_argument("--json", action="store_true")
+    settings = actions.add_parser("set", help="设置运行限制；未指定的参数保留")
+    for name, field in ServiceLimits.model_fields.items():
+        settings.add_argument("--" + name.replace("_", "-"), type=field.annotation)
+    settings.add_argument("--json", action="store_true")
     conn = commands.add_parser("connection", help="本机管理 MiMo 连接；show 不生成模型请求")
     actions = conn.add_subparsers(dest="action", required=True)
     for name, help_text in [
@@ -89,6 +107,9 @@ def add_commands(commands):
 
     records = commands.add_parser("records", help="查询元数据或显式导入旧日志，不保存对话正文")
     actions = records.add_subparsers(dest="action", required=True)
+    actions.add_parser("recover", help="停服后重放落账文件；不重发模型请求").add_argument(
+        "--json", action="store_true"
+    )
     recent = actions.add_parser("list")
     add_filters(recent)
     recent.add_argument("--limit", type=positive, default=20)
@@ -210,6 +231,28 @@ def doctor(directory: Path) -> dict:
         client = None
         checks.append({"check": "client_config", "ok": False, "message": str(exc)})
     database = data_directory(directory) / "records.sqlite3"
+    from selark.persistence import Journal
+
+    pending = database.parent / "pending"
+    if pending.exists():
+        count = invalid = 0
+        for path in pending.glob("*.json"):
+            count += 1
+            try:
+                Journal.load(path)
+            except (ValueError, OSError, TypeError, AttributeError):
+                invalid += 1
+        checks.append(
+            {
+                "check": "recovery_receipts",
+                "ok": count == 0,
+                "pending": count,
+                "invalid": invalid,
+                "message": "没有待恢复记录"
+                if not count
+                else "有待恢复落账；运行中自动重放，停服后可用 selark records recover。",
+            }
+        )
     if not database.exists():
         checks.append(
             {
@@ -229,10 +272,15 @@ def doctor(directory: Path) -> dict:
                 active = db.execute(
                     "SELECT COUNT(*) FROM requests WHERE status='running'"
                 ).fetchone()[0]
+                schema = db.execute("PRAGMA user_version").fetchone()[0]
                 checks.append(
                     {
                         "check": "storage",
-                        "ok": integrity == "ok" and os.access(database, os.W_OK),
+                        "ok": integrity == "ok" and schema == 2 and os.access(database, os.W_OK),
+                        "schema_version": schema,
+                        "message": "记录库正常"
+                        if schema == 2 and integrity == "ok"
+                        else "记录库需升级或修复；停服后运行 selark migrate，损坏时恢复备份。",
                         "integrity": integrity,
                         "records": count,
                         "running_records": active,
@@ -256,6 +304,27 @@ def doctor(directory: Path) -> dict:
                     )
             finally:
                 db.close()
+            try:
+                with closing(
+                    sqlite3.connect(database.as_uri() + "?mode=rw", uri=True, timeout=0.05)
+                ) as writer:
+                    writer.execute("BEGIN IMMEDIATE")
+                    writer.rollback()
+                checks.append({"check": "storage_writer", "ok": True})
+            except sqlite3.Error as exc:
+                busy = getattr(exc, "sqlite_errorcode", None) in {
+                    sqlite3.SQLITE_BUSY,
+                    sqlite3.SQLITE_LOCKED,
+                }
+                checks.append(
+                    {
+                        "check": "storage_writer",
+                        "ok": False,
+                        "message": "记录库写锁繁忙，请检查长事务或正在执行的管理操作。"
+                        if busy
+                        else "记录库不能写入，请检查权限、可用空间和文件系统。",
+                    }
+                )
         except (sqlite3.Error, ConfigError, OSError):
             checks.append(
                 {
@@ -273,6 +342,7 @@ def doctor(directory: Path) -> dict:
                 response.status_code == 200
                 and health.get("status") == "ok"
                 and health.get("version") == __version__
+                and not health.get("storage", {}).get("degraded", False)
             )
             checks.append(
                 {
@@ -307,9 +377,26 @@ def run(args, directory: Path) -> int:
         return 0 if result["ok"] else 1
     with Runtime(directory) as runtime:
         store = runtime.store
-        if args.command == "migrate":
+        if args.command == "limits":
+            result = (
+                {"limits": runtime.settings().limits.model_dump(), "applied_on": "service_start"}
+                if args.action == "show"
+                else runtime.change_limits(
+                    {
+                        k: getattr(args, k)
+                        for k in ServiceLimits.model_fields
+                        if getattr(args, k) is not None
+                    }
+                )
+            )
+        elif args.command == "records" and args.action == "recover":
+            result = runtime.recover_records()
+            emit(result, args.json)
+            return 1 if result["invalid"] or result["failed"] else 0
+        elif args.command == "migrate":
             result = {
                 "schema_version": 2,
+                "database_schema_version": 2,
                 "database": str(store.path),
                 "backup": str(runtime.migration_backup) if runtime.migration_backup else None,
                 "migrated": runtime.migration_backup is not None,

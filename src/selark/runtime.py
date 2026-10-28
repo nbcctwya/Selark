@@ -4,7 +4,8 @@ import fcntl
 import hashlib
 import json
 import os
-from contextlib import contextmanager
+import sqlite3
+from contextlib import closing, contextmanager
 from pathlib import Path
 from uuid import uuid4
 
@@ -13,6 +14,7 @@ from pydantic import ValidationError
 from selark.config import (
     ConfigError,
     ServerConfig,
+    ServiceLimits,
     _write_private,
     data_directory,
     load_config,
@@ -24,7 +26,7 @@ from selark.storage import Store, utc_now
 
 def fingerprint(config: ServerConfig) -> str:
     data = server_document(config)
-    for field in ("enabled", "host", "port", "schema_version", "connection_id"):
+    for field in ("enabled", "host", "port", "schema_version", "connection_id", "limits"):
         data.pop(field, None)
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
@@ -60,7 +62,23 @@ class Runtime:
                 )
             if config.access_token is not None:
                 self.migration_backup = self.backup("before-migration")
-            self.store = Store(database)
+            version = 0
+            if database.exists():
+                with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as old:
+                    version = old.execute("PRAGMA user_version").fetchone()[0]
+            if version == 1:
+                with file_lock(self.data_dir / "service.lock", nonblocking=True):
+                    self.migration_backup = self.backup("before-stability-schema")
+                    target = self.migration_backup / "records.sqlite3"
+                    target.touch(mode=0o600)
+                    with (
+                        closing(sqlite3.connect(database)) as source,
+                        closing(sqlite3.connect(target)) as dest,
+                    ):
+                        source.backup(dest)
+                    self.store = Store(database)
+            else:
+                self.store = Store(database)
             try:
                 if config.access_token is not None:
                     self.store.seed_legacy(config.access_token.get_secret_value())
@@ -97,14 +115,60 @@ class Runtime:
                     os.fsync(handle.fileno())
         if self.store is not None:
             self.store.backup(target / "records.sqlite3")
+        pending = self.data_dir / "pending"
+        if pending.exists():
+            private_directory(target / "pending")
+            for source in pending.glob("*.json"):
+                if source.is_symlink():
+                    raise ConfigError("落账文件不能为符号链接。")
+                try:
+                    content = source.read_bytes()
+                except FileNotFoundError:
+                    continue  # The running service may have just settled this receipt.
+                fd = os.open(
+                    target / "pending" / source.name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
+                )
+                with os.fdopen(fd, "wb") as output:
+                    output.write(content)
+                    output.flush()
+                    os.fsync(output.fileno())
         _write_private(target / "manifest.json", {"reason": reason, "created_at": utc_now()})
         return target
 
     @contextmanager
     def service(self):
         with file_lock(self.data_dir / "service.lock", nonblocking=True):
-            self.store.recover_interrupted()
+            report = self.recover_records(locked=True)
+            if report["failed"] or report["invalid"]:
+                raise ConfigError("待恢复落账文件无法处理，请运行 selark doctor；未重发模型请求。")
             yield
+
+    def recover_records(self, *, locked=False):
+        from selark.persistence import Journal
+
+        if not locked:
+            with file_lock(self.data_dir / "service.lock", nonblocking=True):
+                return self.recover_records(locked=True)
+        report = Journal(self.data_dir / "pending").replay(self.store, include_unsettled=True)
+        report["interrupted"] = (
+            0 if report["failed"] or report["invalid"] else self.store.recover_interrupted()
+        )
+        return report
+
+    def change_limits(self, changes):
+        if not changes or set(changes) - ServiceLimits.model_fields.keys():
+            raise ConfigError("请提供有效的运行限制参数。")
+        with file_lock(self.data_dir / "management.lock"):
+            config = self.settings()
+            try:
+                limits = ServiceLimits.model_validate(config.limits.model_dump() | changes)
+            except ValidationError:
+                raise ConfigError("运行限制无效，请检查并发数、队列大小和超时范围。") from None
+            if limits != config.limits:
+                self.backup("before-limits-change")
+                config.limits = limits
+                _write_private(self.config_path, server_document(config))
+        return {"limits": limits.model_dump(), "restart_required": True}
 
     def connection(self) -> dict:
         config = self.settings()

@@ -94,6 +94,15 @@ def main(argv: list[str] | None = None) -> int:
                     port=config.port,
                     access_log=False,
                     server_header=False,
+                    timeout_graceful_shutdown=config.limits.shutdown_grace_seconds,
+                    timeout_keep_alive=5,
+                    backlog=128,
+                    limit_concurrency=max(
+                        128,
+                        config.limits.max_concurrent_requests
+                        + config.limits.max_queued_requests
+                        + 32,
+                    ),
                 )
             return 0
         config = load_config(directory / "client.json", ClientConfig)

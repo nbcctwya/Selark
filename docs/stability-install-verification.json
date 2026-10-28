@@ -1,0 +1,228 @@
+{
+  "verified_at": "2026-10-28T05:22:14.948597+00:00",
+  "installed_version": "0.3.0",
+  "installation_scope": "current WSL user nbcctwya; not system-wide",
+  "installed_module": "/home/nbcctwya/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark",
+  "installed_source_files_match": 17,
+  "editable_install": false,
+  "dependency_check": "No broken requirements found.",
+  "working_directory": "/tmp and temporary outside-repository directories",
+  "shell": "fresh interactive Bash; system initial PATH; VIRTUAL_ENV and CONDA_PREFIX absent",
+  "migration": {
+    "database_schema_before": 1,
+    "database_schema_after": 2,
+    "backup": "/home/nbcctwya/.local/share/selark/backups/2026-10-28T05-22-03.445664+00-00-4b09576d",
+    "backup_schema": 1,
+    "protected_permissions": true,
+    "configuration_files_unchanged": 4,
+    "original_table_counts": {
+      "requests": 17,
+      "tokens": 5,
+      "imports": 2,
+      "verifications": 1
+    },
+    "original_table_values_preserved": true,
+    "historical_lifecycle_fields_remain_unknown": 17,
+    "repeated_migration_is_noop": true,
+    "legacy_and_active_caller_tokens_work": true,
+    "revoked_caller_stays_rejected": true,
+    "existing_successful_verification_preserved": true
+  },
+  "historical_usage_unchanged": {
+    "requests": 17,
+    "known_usage_requests": 12,
+    "missing_usage_requests": 5,
+    "upstream_attempts": 6,
+    "unknown_attempt_count_requests": 8,
+    "unknown_time_requests": 1,
+    "status_counts": {
+      "failed": 5,
+      "success": 12
+    },
+    "known_tokens": {
+      "prompt_tokens": 364,
+      "completion_tokens": 98,
+      "total_tokens": 462
+    },
+    "missing_field_requests": {
+      "prompt_tokens": 5,
+      "completion_tokens": 5,
+      "total_tokens": 5
+    }
+  },
+  "running_health": {
+    "status": "ok",
+    "version": "0.3.0",
+    "capacity": {
+      "active": 0,
+      "queued": 0,
+      "admitted": 0,
+      "max_active": 4,
+      "max_queued": 16,
+      "accepting": true
+    },
+    "storage": {
+      "degraded": false,
+      "pending_records": 0,
+      "invalid_records": 0,
+      "accepting": true
+    }
+  },
+  "offline_recovery": {
+    "restored": 0,
+    "invalid": 0,
+    "failed": 0,
+    "pending": 0,
+    "interrupted": 0
+  },
+  "service_before": "stopped",
+  "service_after": "stopped",
+  "real_mimo_requests": 0,
+  "new_real_usage": null,
+  "checks": [
+    {
+      "command": "selark migrate --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark migrate --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark connection show --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark limits show --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark serve (separate fresh shell, outside repository)",
+      "passed": true
+    },
+    {
+      "command": "selark --help",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark models --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark doctor --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark records list --limit 20 --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark usage --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark sessions list --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark tokens list --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark connection show --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark --config-dir /home/nbcctwya/.config/selark/clients/management-verification-a models --json",
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "command": "selark --config-dir /home/nbcctwya/.config/selark/clients/management-verification-b models --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark models --json",
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "command": "selark doctor --json",
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "command": "selark records recover --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark records recover --json",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "final_revalidated_at": "2026-10-28T05:29:20.986228+00:00",
+  "final_installed_source_files_match": 17,
+  "final_passive_checks": [
+    {
+      "command": "selark migrate --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark --help",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark models --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark doctor --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark limits show --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark connection show --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark usage --json",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "command": "selark models",
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "command": "selark records recover --json",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "configuration_and_historical_state_still_unchanged": true
+}

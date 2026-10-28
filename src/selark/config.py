@@ -80,6 +80,21 @@ class StrictConfig(BaseModel):
         return value
 
 
+class ServiceLimits(StrictConfig):
+    max_concurrent_requests: int = Field(default=4, ge=1, le=64)
+    max_queued_requests: int = Field(default=16, ge=0, le=256)
+    queue_timeout_seconds: float = Field(default=10.0, ge=0.01, le=600)
+    request_timeout_seconds: float = Field(default=120.0, ge=0.05, le=3600)
+    body_timeout_seconds: float = Field(default=10.0, ge=0.01, le=600)
+    connect_timeout_seconds: float = Field(default=10.0, ge=0.01, le=600)
+    pool_timeout_seconds: float = Field(default=5.0, ge=0.01, le=600)
+    write_timeout_seconds: float = Field(default=10.0, ge=0.01, le=600)
+    send_timeout_seconds: float = Field(default=15.0, ge=0.01, le=600)
+    shutdown_grace_seconds: float = Field(default=15.0, ge=0.1, le=600)
+    storage_busy_timeout_seconds: float = Field(default=0.1, ge=0.01, le=1)
+    max_pending_records: int = Field(default=256, ge=1, le=4096)
+
+
 class ServerConfig(StrictConfig):
     schema_version: Literal[2] = 2
     connection_id: Literal["mimo-default"] = "mimo-default"
@@ -93,6 +108,7 @@ class ServerConfig(StrictConfig):
     host: str = "127.0.0.1"
     port: int = Field(default=8787, ge=1, le=65535)
     timeout_seconds: float = Field(default=60.0, ge=1, le=600)
+    limits: ServiceLimits = Field(default_factory=ServiceLimits)
 
     _url = field_validator("base_url")(validate_url)
 

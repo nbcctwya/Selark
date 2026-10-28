@@ -1,8 +1,11 @@
 """The only module that knows MiMo's authentication and wire protocol."""
 
+import asyncio
+import contextlib
 import json
 from collections.abc import AsyncIterator
 
+import anyio
 import httpx
 
 from selark.config import ServerConfig
@@ -12,6 +15,12 @@ from selark.sse import SSEDecoder
 
 def protocol_error(message: str = "MiMo 返回了无效响应。") -> GatewayError:
     return GatewayError(502, "upstream_protocol_error", message, 200)
+
+
+async def close_response(response):
+    with anyio.CancelScope(shield=True):
+        with contextlib.suppress(TimeoutError, httpx.HTTPError):
+            await asyncio.wait_for(response.aclose(), timeout=2)
 
 
 def reported_usage(data: dict) -> dict | None:
@@ -52,10 +61,22 @@ class MiMoProvider:
             self.config.base_url + "/chat/completions",
             headers={"api-key": self.config.api_key.get_secret_value()},
             json=payload,
-            timeout=httpx.Timeout(self.config.timeout_seconds, connect=10, pool=10),
+            timeout=httpx.Timeout(
+                self.config.timeout_seconds,
+                connect=self.config.limits.connect_timeout_seconds,
+                pool=self.config.limits.pool_timeout_seconds,
+                write=self.config.limits.write_timeout_seconds,
+            ),
         )
         try:
             response = await self.client.send(request, stream=True, follow_redirects=False)
+        except (httpx.ConnectTimeout, httpx.PoolTimeout, httpx.WriteTimeout) as exc:
+            code = {
+                httpx.ConnectTimeout: "upstream_connect_timeout",
+                httpx.PoolTimeout: "upstream_pool_timeout",
+                httpx.WriteTimeout: "upstream_write_timeout",
+            }[type(exc)]
+            raise GatewayError(504, code, "建立连接、等待连接池或发送 MiMo 请求超时。") from None
         except httpx.TimeoutException:
             raise GatewayError(
                 504, "upstream_timeout", "等待 MiMo 响应超时，请稍后重试。"
@@ -66,7 +87,7 @@ class MiMoProvider:
             ) from None
         status = response.status_code
         if status != 200:
-            await response.aclose()
+            await close_response(response)
             if status in {401, 403}:
                 raise GatewayError(
                     502,
@@ -94,7 +115,7 @@ class MiMoProvider:
         if payload["stream"] and not response.headers.get("content-type", "").startswith(
             "text/event-stream"
         ):
-            await response.aclose()
+            await close_response(response)
             raise protocol_error("MiMo 未返回预期的 SSE 流。")
         return response
 
@@ -133,7 +154,7 @@ class MiMoProvider:
         except (ValueError, UnicodeError):
             raise protocol_error() from None
         finally:
-            await response.aclose()
+            await close_response(response)
 
     async def events(self, response: httpx.Response) -> AsyncIterator[dict | str]:
         decoder = SSEDecoder()
@@ -177,4 +198,4 @@ class MiMoProvider:
         except (ValueError, UnicodeError):
             raise protocol_error("MiMo 返回了无法解析的 SSE 事件。") from None
         finally:
-            await response.aclose()
+            await close_response(response)

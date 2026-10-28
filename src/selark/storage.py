@@ -60,8 +60,17 @@ CREATE TABLE IF NOT EXISTS verifications (
 CREATE TABLE IF NOT EXISTS imports (
  content_hash TEXT PRIMARY KEY, imported_at TEXT NOT NULL, records_added INTEGER NOT NULL
 );
-PRAGMA user_version=1;
 """
+
+
+def request_status(state: dict, http_status: int) -> str:
+    if state.get("record_status"):
+        return state["record_status"]
+    if state.get("cancelled") or state.get("delivery_status") == "disconnected":
+        return "cancelled"
+    if state.get("delivery_status") == "failed" or state.get("error_code"):
+        return "failed"
+    return "success" if http_status == 200 else "failed"
 
 
 class Store:
@@ -80,13 +89,45 @@ class Store:
             str(path) if path else ":memory:", check_same_thread=False, timeout=5
         )
         self.db.row_factory = sqlite3.Row
-        if self.db.execute("PRAGMA user_version").fetchone()[0] not in {0, 1}:
+        try:
+            self._initialize_schema(path)
+        except Exception:
             self.db.close()
+            raise
+
+    def _initialize_schema(self, path):
+        version = self.db.execute("PRAGMA user_version").fetchone()[0]
+        if version not in {0, 1, 2}:
             raise ConfigError("数据库版本高于当前程序支持范围，请使用匹配的 Selark 版本。")
         if path:
             self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA synchronous=FULL")
-        self.db.executescript(SCHEMA)
+        if version != 2:
+            self.db.executescript(SCHEMA)
+            with self.db:
+                self.db.execute("BEGIN IMMEDIATE")
+                for name, kind in (
+                    ("upstream_result", "TEXT"),
+                    ("delivery_status", "TEXT"),
+                    ("upstream_error_code", "TEXT"),
+                    ("delivery_error_code", "TEXT"),
+                    ("queue_ms", "REAL"),
+                    ("record_revision", "INTEGER NOT NULL DEFAULT 0"),
+                ):
+                    self.db.execute(f"ALTER TABLE requests ADD COLUMN {name} {kind}")
+                self.db.execute("ALTER TABLE verifications RENAME TO old_verifications")
+                self.db.execute(
+                    "CREATE TABLE verifications (connection_id TEXT, fingerprint TEXT, "
+                    "verified_at TEXT NOT NULL, state TEXT NOT NULL, request_id TEXT NOT NULL, "
+                    "error_code TEXT, order_key TEXT NOT NULL, "
+                    "PRIMARY KEY(connection_id,fingerprint))"
+                )
+                self.db.execute(
+                    "INSERT INTO verifications SELECT connection_id,fingerprint,verified_at,"
+                    "state,request_id,error_code,verified_at FROM old_verifications"
+                )
+                self.db.execute("DROP TABLE old_verifications")
+                self.db.execute("PRAGMA user_version=2")
 
     @contextmanager
     def transaction(self):
@@ -96,6 +137,10 @@ class Store:
     def close(self):
         with self.lock:
             self.db.close()
+
+    def set_busy_timeout(self, seconds):
+        with self.lock:
+            self.db.execute(f"PRAGMA busy_timeout={int(seconds * 1000)}")
 
     def backup(self, path: Path):
         path.touch(mode=0o600, exist_ok=False)
@@ -169,16 +214,21 @@ class Store:
             digest = token_digest(credential.decode("ascii"))
         except UnicodeError:
             return None
-        # SQLite's write transaction makes consuming a one-use probe atomic across processes.
+        # Ordinary callers only read; consuming a probe uses a conditional atomic update.
         with self.transaction() as db:
-            db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT * FROM tokens WHERE digest=?", (digest,)).fetchone()
             if not row or row["revoked_at"] or not secrets.compare_digest(row["digest"], digest):
                 return None
             if row["kind"] == "probe":
                 if not chat or row["consumed_at"] or row["expires_at"] < utc_now():
                     return None
-                db.execute("UPDATE tokens SET consumed_at=? WHERE id=?", (utc_now(), row["id"]))
+                result = db.execute(
+                    "UPDATE tokens SET consumed_at=? WHERE id=? AND consumed_at IS NULL "
+                    "AND revoked_at IS NULL AND expires_at>=?",
+                    (utc_now(), row["id"], utc_now()),
+                )
+                if result.rowcount != 1:
+                    return None
             return {
                 "caller_id": "local-probe" if row["kind"] == "probe" else row["id"],
                 "purpose": "connection_probe" if row["kind"] == "probe" else "chat",
@@ -210,23 +260,36 @@ class Store:
             )
 
     def finish(self, request_id: str, *, state: dict, http_status: int, duration_ms: float):
-        stream_status = state.get("stream_status")
-        status = "success" if http_status == 200 and not state.get("error_code") else "failed"
-        if stream_status == "disconnected" or state.get("cancelled"):
-            status = "cancelled"
+        status = request_status(state, http_status)
         final = bool(state.get("usage_final"))
         usage = state.get("usage")
         values = usage_values(usage, final)
         with self.transaction() as db:
-            db.execute(
+            if state.get("started_at"):
+                db.execute(
+                    "INSERT OR IGNORE INTO requests(request_id,original_request_id,started_at,"
+                    "caller_id,connection_id,purpose,status,usage_final) "
+                    "VALUES(?,?,?,?,?,?,'running',0)",
+                    (
+                        request_id,
+                        request_id,
+                        state["started_at"],
+                        state.get("caller_id"),
+                        state.get("connection_id"),
+                        state.get("purpose"),
+                    ),
+                )
+            result = db.execute(
                 "UPDATE requests SET finished_at=?,status=?,http_status=?,upstream_status=?,"
                 "duration_ms=?,"
                 "model=?,requested_model=?,session_id=?,usage_json=?,usage_final=?,"
                 "prompt_tokens=?,"
-                "completion_tokens=?,total_tokens=?,error_code=?,error_message=? "
-                "WHERE request_id=?",
+                "completion_tokens=?,total_tokens=?,error_code=?,error_message=?,"
+                "upstream_result=?,delivery_status=?,upstream_error_code=?,delivery_error_code=?,"
+                "queue_ms=?,upstream_attempts=COALESCE(?,upstream_attempts),record_revision=? "
+                "WHERE request_id=? AND record_revision<=?",
                 (
-                    utc_now(),
+                    None if status == "running" else state.get("finished_at", utc_now()),
                     status,
                     http_status,
                     state.get("upstream_status"),
@@ -239,19 +302,42 @@ class Store:
                     *values.values(),
                     state.get("error_code"),
                     state.get("error_message"),
+                    state.get("upstream_result"),
+                    state.get("delivery_status"),
+                    state.get("upstream_error_code"),
+                    state.get("delivery_error_code"),
+                    state.get("queue_ms"),
+                    state.get("upstream_attempts"),
+                    state.get("record_revision", 2),
                     request_id,
+                    state.get("record_revision", 2),
                 ),
             )
-            if state.get("purpose") == "connection_probe" and state.get("upstream_attempts"):
+            if not result.rowcount:
+                return  # A stale receipt cannot undo a later settled delivery.
+            upstream = state.get("upstream_result")
+            if (
+                state.get("purpose") == "connection_probe"
+                and state.get("upstream_attempts")
+                and upstream in {None, "success", "failed"}
+            ):
                 db.execute(
-                    "INSERT OR REPLACE INTO verifications VALUES(?,?,?,?,?,?)",
+                    "INSERT INTO verifications VALUES(?,?,?,?,?,?,?) "
+                    "ON CONFLICT(connection_id,fingerprint) DO UPDATE SET "
+                    "verified_at=excluded.verified_at,state=excluded.state,"
+                    "request_id=excluded.request_id,error_code=excluded.error_code,"
+                    "order_key=excluded.order_key "
+                    "WHERE excluded.order_key>=verifications.order_key",
                     (
                         state["connection_id"],
                         state["fingerprint"],
-                        utc_now(),
-                        "success" if status == "success" else "failure",
+                        state.get("upstream_completed_at", utc_now()),
+                        "success"
+                        if upstream == "success" or (upstream is None and status == "success")
+                        else "failure",
                         request_id,
-                        state.get("error_code"),
+                        state.get("upstream_error_code", state.get("error_code")),
+                        state.get("started_at", utc_now()) + ":" + request_id,
                     ),
                 )
 
@@ -260,7 +346,10 @@ class Store:
             result = db.execute(
                 "UPDATE requests SET status='interrupted',finished_at=?,"
                 "error_code='service_restarted',"
-                "error_message='服务在请求完成前退出，用量未知。' WHERE status='running'",
+                "error_message='服务在交付确认前退出；已取得的用量保留，其他用量未知。',"
+                "delivery_status=CASE WHEN delivery_status='sent' THEN 'sent' ELSE 'unknown' END,"
+                "upstream_result=CASE WHEN upstream_result IN ('success','failed','not_started') "
+                "THEN upstream_result ELSE 'unknown' END WHERE status='running'",
                 (utc_now(),),
             )
             return result.rowcount
@@ -268,12 +357,15 @@ class Store:
     def verification(self, connection_id: str, fingerprint: str) -> dict:
         with self.lock:
             row = self.db.execute(
-                "SELECT * FROM verifications WHERE connection_id=?", (connection_id,)
+                "SELECT * FROM verifications WHERE connection_id=? "
+                "ORDER BY (fingerprint=?) DESC,order_key DESC LIMIT 1",
+                (connection_id, fingerprint),
             ).fetchone()
         if row is None:
             return {"state": "never", "verified_at": None}
         result = dict(row)
         previous = result.pop("fingerprint")
+        result.pop("order_key", None)
         if previous != fingerprint:
             result["previous_state"] = result["state"]
             result["state"] = "stale"
@@ -297,6 +389,7 @@ class Store:
     @staticmethod
     def public_record(row) -> dict:
         result = dict(row)
+        result.pop("record_revision", None)
         raw = result.pop("usage_json")
         result["reported_usage"] = json.loads(raw) if raw else None
         result["usage_final"] = bool(result["usage_final"])

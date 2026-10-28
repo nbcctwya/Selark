@@ -1,4 +1,4 @@
-# Selark 0.2.0 · 个人模型接入中间件
+# Selark 0.3.0 · 个人模型接入中间件
 
 独立的 MiMo HTTP 接入服务：`CLI / 外部程序 → Selark → 小米 MiMo`。
 Python 3.11+，FastAPI + HTTPX + Uvicorn；默认仅监听 `127.0.0.1:8787`。
@@ -46,8 +46,11 @@ pipx 环境仍依赖安装时选择的 Python 解释器，请保留该解释器�
 修改源码后要重新安装才会生效，例如：
 
 ```bash
-pipx install --force --python "$SELARK_PYTHON" /absolute/path/to/Selark
+pipx install --force /absolute/path/to/Selark
 ```
+
+`--force` 沿用该 pipx 环境原有的 Python；如需更换解释器，使用
+`pipx reinstall selark --python "$SELARK_PYTHON"`。
 
 安装、重新安装和卸载软件包均不改写 `~/.config/selark` 中的配置或凭据。
 
@@ -68,6 +71,10 @@ selark serve
 0.2 增加连接管理、独立调用方令牌、SQLite 调用记录、用量汇总和轻量会话归组。
 升级后原有客户端继续使用 `legacy` 身份；首次迁移会先创建受保护的本地备份。
 新增命令和完整口径见 [管理功能说明](docs/management.md)。
+
+0.3 增加有界并发与排队、分阶段超时、断连取消和落账恢复。
+默认最多 4 个请求执行、16 个等待；数据库锁等待在后台线程执行，不阻塞其他流式输出。
+上游结果、下游交付和用量分别记录。完整行为见 [稳定性说明](docs/stability.md)。
 
 仅首次使用、尚无配置时运行 `selark init`。
 `init` 在终端安全询问 MiMo Key（不回显），自动生成独立的 Selark 令牌。也可从
@@ -110,7 +117,7 @@ python -m pip install --no-build-isolation --no-deps -e .
 
 | 文件 | 使用者 | 字段 |
 | --- | --- | --- |
-| `server.json` | 服务端 | 稳定 `connection_id`、`enabled`、`config_revision`、`base_url`、`api_key`、模型列表和默认模型、监听与超时设置 |
+| `server.json` | 服务端 | 稳定 `connection_id`、`enabled`、`config_revision`、`base_url`、`api_key`、模型列表、监听设置、读取空闲超时和 `limits` 运行限制 |
 | `client.json` | CLI / 外部程序 | `url`、`access_token`、`model` |
 
 仓库的 [服务端配置示例](config/server.example.json) 与 [客户端配置示例](config/client.example.json)
@@ -178,6 +185,8 @@ Content-Type: application/json
 无效参数/模型 400，Selark 鉴权失败 401，过大请求 413，错误媒体类型 415，MiMo 限流 429，
 上游鉴权/额度/网络/协议失败 502，等待上游超时 504。错误信息不透传上游原始正文，以免泄露凭据。
 连接停用或本地记录库不可用时返回 503；撤销后的调用方令牌返回 401。管理操作仅通过本机 CLI 提供。
+执行与等待名额用尽返回 429，排队超时返回 503，请求体超时返回 408，请求总时限返回 504。
+本地过载和不可用响应附带 `Retry-After`；服务不会自行重试模型生成。
 流开始之后无法修改 HTTP 状态：发送 `event: error` 及同形 JSON，不发送成功 `[DONE]`；CLI 非零退出。
 断流或缺少结束标记不会被视作成功。已输出文本可能不完整；请求不会自动重试，避免重复计费。
 
@@ -185,10 +194,13 @@ Content-Type: application/json
 
 服务向 stderr 输出每次请求的 JSON 日志：时间、请求 ID、模型、HTTP 状态、上游状态、耗时、
 流完成/失败状态和实际用量。响应头包含 `X-Request-ID`。不记录凭据、请求头、提示词或回复内容。
-`timeout_seconds` 是上游读取空闲超时（连接/连接池等待 10 秒），不是整个流的总时长上限。
+`timeout_seconds` 是上游读取空闲超时；另有独立的连接、连接池、写入、下游发送和总时限。
+请求总时限默认 120 秒，包含接收请求体、排队、上游调用和终止响应交付；结束后的资源清理单独收尾。
 日志还包括鉴权调用方、连接、可选会话和用途。对话调用元数据持久存入
 `~/.local/share/selark/records.sqlite3`，可通过 `records`、`usage`、`sessions` 查询。
 stdout/stderr 仍可由进程管理器收集；不估算金额，不自动轮转或删除记录。
+SQLite 最终写入失败时，受保护的 `pending/` 落账文件保留已取得用量，后台或重启时按请求 ID 重放。
+重放只更新记录，不再次调用 MiMo；数据库和落账文件同时无法写入时拒绝后续生成并报告异常。
 
 ```bash
 selark connection show
@@ -197,9 +209,20 @@ selark tokens list
 selark records list --limit 20 --json
 selark usage --today --tz Asia/Shanghai --group-by caller --json
 selark sessions list --json
+selark limits show --json
 ```
 
 以上命令不生成模型请求。`selark connection probe` 才会显式进行一次有用量的真实探测。
+
+运行限制修改后重启生效，例如：
+
+```bash
+selark limits set --max-concurrent-requests 4 --max-queued-requests 16 \
+  --request-timeout-seconds 120 --queue-timeout-seconds 10
+```
+
+首次升级 0.3 前先停止旧服务。首次 `serve` 或 `migrate` 先备份再升级数据库，保留配置、凭据和旧记录。
+如需手工恢复待落账文件，先停止服务，再执行 `selark records recover --json`。
 
 ```bash
 source .venv/bin/activate
@@ -213,10 +236,11 @@ ruff check .
 首次交付已完成 5 次真实 MiMo 请求（输入 240、输出 58、合计 298 tokens）和 84 项模拟测试。
 后续 pipx 安装及新终端验收见 [pipx 安装验收](docs/pipx-verification.md)，与首次交付用量分开记录。
 0.2 管理功能的迁移与验收见 [本轮验收](docs/management-verification.md)。
-本轮 114 项模拟测试通过，新增 6 次真实 MiMo 请求，输入 106、输出 34、合计 140 tokens；
-已更新当前用户的 pipx 安装，验收结束后服务已停止，可直接运行 `selark serve`。
+0.2 的 114 项模拟测试及 6 次真实 MiMo 请求（140 tokens）记录保持不变。
+0.3 的并发、断连、存储竞争、进程退出和安装验收见 [稳定性验收](docs/stability-verification.md)。
+本轮 156 项自动测试通过，安装后的本地 TCP 与进程恢复验收通过；真实 MiMo 请求为 0 次。
 
-仅本机单实例，可有多个独立调用方令牌；没有网页、其他供应商、ChatGPT 登录、远程管理接口、限流器或生产托管。
+仅本机单实例，可有多个独立调用方令牌；没有网页、其他供应商、ChatGPT 登录、远程管理接口、配额限流或生产托管。
 
 2026-10-27 核对的官方来源：[首次调用](https://mimo.mi.com/docs/en-US/quick-start/summary/first-api-call)、
 [Chat Completions 协议](https://mimo.mi.com/docs/api/text-generation/openai-api)、
