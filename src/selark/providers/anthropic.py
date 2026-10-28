@@ -39,7 +39,7 @@ class AnthropicProvider(MiMoProvider):
     def headers(self):
         headers = {
             "x-api-key": self.config.api_key.get_secret_value(),
-            "anthropic-version": "2026-10-21",
+            "anthropic-version": self.config.anthropic_version,
         }
         if self.config.workspace_id:
             headers["anthropic-workspace-id"] = self.config.workspace_id
@@ -49,6 +49,10 @@ class AnthropicProvider(MiMoProvider):
         if any(m.reasoning_content is not None for m in request.messages):
             unsupported("Anthropic 思考块需要原生结构；当前文本接口不接收 reasoning_content。")
         data = request.upstream_payload(model)
+        if self.config.anthropic_version == "2026-10-21" and any(
+            key in data for key in ("temperature", "top_p")
+        ):
+            unsupported("Anthropic API 2026-10-21 已移除 temperature / top_p；请省略这些参数。")
         for key in ("presence_penalty", "frequency_penalty"):
             if key in data:
                 unsupported("Anthropic Messages 不支持 presence_penalty / frequency_penalty。")

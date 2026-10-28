@@ -73,4 +73,15 @@ class CompatibleProvider(MiMoProvider):
         # The official GLM schema can omit OpenAI's object discriminator.
         if self.config.provider == "zhipu" and isinstance(data, dict) and "object" not in data:
             data = data | {"object": "chat.completion.chunk" if stream else "chat.completion"}
+        # OpenAI may return a refusal with null content. Keep the refusal and reported
+        # usage, but normalize null text for the common text-only response contract.
+        if not stream and isinstance(data, dict) and isinstance(data.get("choices"), list):
+            for choice in data["choices"]:
+                message = choice.get("message") if isinstance(choice, dict) else None
+                if (
+                    isinstance(message, dict)
+                    and message.get("content") is None
+                    and isinstance(message.get("refusal"), str)
+                ):
+                    message["content"] = ""
         return data

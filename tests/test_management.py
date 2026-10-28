@@ -353,7 +353,7 @@ def test_storage_failure_prevents_generation(runtime, monkeypatch):
     caller = runtime.store.create_token("storage")
     calls = []
 
-    def fail(*args):
+    def fail(*args, **kwargs):
         raise sqlite3.OperationalError("simulated storage failure")
 
     monkeypatch.setattr(runtime.store, "attempt", fail)

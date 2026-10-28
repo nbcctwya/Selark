@@ -20,6 +20,7 @@ from selark.admission import Admission
 from selark.config import ConfigError, ServerConfig
 from selark.connections import legacy_connection, resolve_model
 from selark.errors import GatewayError
+from selark.governance import Policy, ResourcesConfig, enforce_access, input_estimate, permitted
 from selark.persistence import AsyncLedger, Journal
 from selark.providers.factory import provider_for
 from selark.providers.mimo import reported_usage
@@ -42,8 +43,9 @@ async def close_upstream(response):
 
 
 class RequestMiddleware:
-    def __init__(self, app, storage, gate, limits):
+    def __init__(self, app, storage, gate, limits, route):
         self.app, self.storage, self.gate, self.limits = app, storage, gate, limits
+        self.route = route
         self.metadata_requests = 0
 
     async def __call__(self, scope, receive, send):
@@ -74,6 +76,7 @@ class RequestMiddleware:
         process_task = watcher = None
         deadline = None
         deadline_active = False
+        caller_reserved = False
 
         async def send_logged(message):
             nonlocal status, sent, checkpointed
@@ -174,7 +177,7 @@ class RequestMiddleware:
                 await asyncio.sleep(0)
 
         async def process(body):
-            nonlocal slot
+            nonlocal slot, caller_reserved
             if path.startswith("/v1/"):
                 values = [v for k, v in scope["headers"] if k == b"authorization"]
                 identity = (
@@ -203,6 +206,14 @@ class RequestMiddleware:
                     state["chat_input"] = data
                     state["session_id"] = data.session_id
                     state["model"] = data.model
+                    policy = Policy.model_validate(
+                        await self.storage.call("policy", state["caller_id"])
+                    )
+                    selected, model, alias, _ = await self.route(data)
+                    enforce_access(policy, selected.connection_id, model)
+                    state["requested_alias"] = alias
+                    self.gate.acquire_caller(state["caller_id"], policy.max_concurrent_requests)
+                    caller_reserved = True
                     waiting = time.monotonic()
                     try:
                         await self.gate.acquire()
@@ -315,6 +326,8 @@ class RequestMiddleware:
             finally:
                 if slot:
                     self.gate.release()
+                if caller_reserved:
+                    self.gate.release_caller(state["caller_id"])
                 if reserved:
                     self.gate.leave()
                 if metadata:
@@ -329,6 +342,7 @@ class RequestMiddleware:
                         else "unknown",
                         "caller_id": state.get("caller_id"),
                         "connection_id": state["connection_id"],
+                        "requested_alias": state.get("requested_alias"),
                         "session_id": state.get("session_id"),
                         "purpose": state["purpose"],
                         "model": state.get("actual_model") or state.get("model"),
@@ -396,6 +410,23 @@ def create_app(
             else [legacy_connection(config)]
         )
 
+    async def resources():
+        return await asyncio.to_thread(runtime.resources) if runtime else ResourcesConfig()
+
+    async def route(data):
+        settings = await resources()
+        model, selected, alias = data.model, data.connection_id, None
+        if model and model.startswith("@"):
+            alias = model[1:]
+            target = settings.aliases.get(alias)
+            if target is None:
+                raise GatewayError(400, "unknown_model_alias", "未找到该模型别名。")
+            if selected is not None and selected != target.connection_id:
+                raise GatewayError(400, "conflicting_connection", "连接参数与别名目标不一致。")
+            selected, model = target.connection_id, target.model
+        current, model = resolve_model(await connections(), selected, model)
+        return current, model, alias, settings
+
     @asynccontextmanager
     async def lifespan(app):
         await storage.start()
@@ -432,7 +463,7 @@ def create_app(
         openapi_url=None,
     )
     app.state.store, app.state.storage, app.state.admission = ledger, storage, gate
-    app.add_middleware(RequestMiddleware, storage=storage, gate=gate, limits=limits)
+    app.add_middleware(RequestMiddleware, storage=storage, gate=gate, limits=limits, route=route)
 
     @app.exception_handler(GatewayError)
     async def gateway_error(request, exc):
@@ -442,7 +473,13 @@ def create_app(
         if request.state.upstream_attempts:
             request.state.upstream_result = "failed"
             request.state.upstream_error_code = exc.code
-        return JSONResponse(exc.body(), status_code=exc.status)
+        return JSONResponse(
+            exc.body(),
+            status_code=exc.status,
+            headers={"Retry-After": "60" if exc.code == "caller_rate_limit" else "1"}
+            if exc.status in {429, 503}
+            else None,
+        )
 
     @app.exception_handler(HTTPException)
     async def http_error(request, exc):
@@ -459,39 +496,73 @@ def create_app(
         }
 
     @app.get("/v1/models")
-    async def models(connection_id: str | None = None):
+    async def models(request: Request, connection_id: str | None = None):
+        policy = Policy.model_validate(await storage.call("policy", request.state.caller_id))
         available = await connections()
         current = available[0]
         if connection_id is not None:
             selected, _ = resolve_model(available, connection_id, None)
             available = [selected]
             current = selected
+        entries = [
+            {
+                "id": m if c.connection_id == "mimo-default" else f"{c.connection_id}::{m}",
+                "qualified_id": f"{c.connection_id}::{m}",
+                "upstream_model": m,
+                "object": "model",
+                "created": 0,
+                "owned_by": c.provider,
+                "connection_id": c.connection_id,
+                "connection_name": c.name,
+                "connection_enabled": c.enabled,
+            }
+            for c in available
+            for m in c.allowed_models
+            if permitted(policy, c.connection_id, m)
+        ]
+        settings = await resources()
+        by_id = {c.connection_id: c for c in available}
+        for alias, target in settings.aliases.items():
+            c = by_id.get(target.connection_id)
+            if (
+                c
+                and target.model in c.allowed_models
+                and permitted(policy, c.connection_id, target.model)
+            ):
+                entries.append(
+                    {
+                        "id": "@" + alias,
+                        "qualified_id": f"{c.connection_id}::{target.model}",
+                        "upstream_model": target.model,
+                        "object": "model",
+                        "created": 0,
+                        "owned_by": c.provider,
+                        "connection_id": c.connection_id,
+                        "connection_name": c.name,
+                        "connection_enabled": c.enabled,
+                        "alias": alias,
+                    }
+                )
         return {
             "object": "list",
-            "data": [
-                {
-                    "id": m if c.connection_id == "mimo-default" else f"{c.connection_id}::{m}",
-                    "qualified_id": f"{c.connection_id}::{m}",
-                    "upstream_model": m,
-                    "object": "model",
-                    "created": 0,
-                    "owned_by": c.provider,
-                    "connection_id": c.connection_id,
-                    "connection_name": c.name,
-                    "connection_enabled": c.enabled,
-                }
-                for c in available
-                for m in c.allowed_models
-            ],
-            "default_model": current.default_model,
-            "connection_enabled": current.enabled,
-            "default_connection": current.connection_id,
+            "data": entries,
+            "default_model": current.default_model
+            if permitted(policy, current.connection_id, current.default_model)
+            else None,
+            "connection_enabled": current.enabled
+            and permitted(policy, current.connection_id, current.default_model),
+            "default_connection": current.connection_id
+            if permitted(policy, current.connection_id, current.default_model)
+            else None,
         }
 
     @app.post("/v1/chat/completions")
     async def chat(request: Request):
         data = request.state.chat_input
-        current, model = resolve_model(await connections(), data.connection_id, data.model)
+        current, model, alias, settings = await route(data)
+        policy = Policy.model_validate(await storage.call("policy", request.state.caller_id))
+        enforce_access(policy, current.connection_id, model)
+        request.state.requested_alias = alias
         request.state.connection_id = current.connection_id
         request.state.session_id = data.session_id
         if not current.enabled:
@@ -516,9 +587,39 @@ def create_app(
         ):
             raise GatewayError(409, "probe_config_changed", "连接配置已改变，请重新显式探测。")
         provider = provider_for(current.model_copy(update={"limits": limits}), app.state.http)
+        if (
+            data.max_tokens is None
+            and data.max_completion_tokens is None
+            and policy.max_output_tokens
+        ):
+            data = data.model_copy(
+                update={"max_completion_tokens": min(1024, policy.max_output_tokens)}
+            )
         payload = provider.prepare(data, model)
+        estimate = input_estimate(payload)
+        output = payload.get("max_tokens", payload.get("max_completion_tokens"))
+        price = next(
+            (
+                p
+                for p in settings.prices
+                if p.connection_id == current.connection_id and p.model == model
+            ),
+            None,
+        )
         await storage.call(
-            "attempt", request.state.request_id, model, data.session_id, current.connection_id
+            "attempt",
+            request.state.request_id,
+            model,
+            data.session_id,
+            current.connection_id,
+            resource={
+                "caller": request.state.caller_id,
+                "provider": current.provider,
+                "estimate": estimate,
+                "output": output,
+                "price": price,
+                "alias": alias,
+            },
         )
         request.state.upstream_attempts = 1
         request.state.upstream_result = "in_progress"

@@ -11,9 +11,27 @@ from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from pydantic import ValidationError
+
 from selark.config import ConfigError, private_directory
+from selark.governance import Policy, allocations, policy_for, public_allocation, reserve, settle
 
 USAGE_FIELDS = ("prompt_tokens", "completion_tokens", "total_tokens")
+SCHEMA_VERSION = 3
+ALLOCATION_FIELDS = (
+    "state",
+    "quota_tokens",
+    "token_basis",
+    "quota_cost",
+    "currency",
+    "cost_status",
+    "estimated_cost",
+)
+SELECT_RECORDS = (
+    "SELECT requests.*,a.document AS allocation_json,"
+    + ",".join(f"a.{field} AS allocation_{field}" for field in ALLOCATION_FIELDS)
+    + " FROM requests LEFT JOIN allocations a ON a.request_id=requests.request_id"
+)
 
 
 def utc_now() -> str:
@@ -97,12 +115,12 @@ class Store:
 
     def _initialize_schema(self, path):
         version = self.db.execute("PRAGMA user_version").fetchone()[0]
-        if version not in {0, 1, 2}:
+        if version not in {0, 1, 2, 3}:
             raise ConfigError("数据库版本高于当前程序支持范围，请使用匹配的 Selark 版本。")
         if path:
             self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA synchronous=FULL")
-        if version != 2:
+        if version < 2:
             self.db.executescript(SCHEMA)
             with self.db:
                 self.db.execute("BEGIN IMMEDIATE")
@@ -128,6 +146,25 @@ class Store:
                 )
                 self.db.execute("DROP TABLE old_verifications")
                 self.db.execute("PRAGMA user_version=2")
+        if version < 3:
+            with self.db:
+                self.db.execute("BEGIN IMMEDIATE")
+                self.db.execute(
+                    "ALTER TABLE tokens ADD COLUMN policy_json TEXT NOT NULL DEFAULT '{}'"
+                )
+                self.db.execute("ALTER TABLE requests ADD COLUMN requested_alias TEXT")
+                self.db.execute(
+                    "CREATE TABLE allocations (request_id TEXT PRIMARY KEY,caller_id TEXT NOT NULL,"
+                    "day TEXT NOT NULL,created_at TEXT NOT NULL,state TEXT NOT NULL,"
+                    "quota_tokens INTEGER NOT NULL,token_basis TEXT NOT NULL,quota_cost TEXT,"
+                    "currency TEXT,cost_status TEXT NOT NULL,estimated_cost TEXT,"
+                    "document TEXT NOT NULL)"
+                )
+                self.db.execute("CREATE INDEX allocations_day ON allocations(caller_id,day)")
+                self.db.execute(
+                    "CREATE INDEX allocations_rate ON allocations(caller_id,created_at)"
+                )
+                self.db.execute("PRAGMA user_version=3")
 
     @contextmanager
     def transaction(self):
@@ -162,9 +199,13 @@ class Store:
                 ("legacy", "Legacy client (0.1.x)", digest, utc_now()),
             )
 
-    def create_token(self, name: str, *, probe_fingerprint: str | None = None) -> dict:
+    def create_token(self, name: str, *, probe_fingerprint: str | None = None, policy=None) -> dict:
         if not name.strip() or len(name) > 80 or any(ord(c) < 32 for c in name):
             raise ConfigError("令牌名称需为 1–80 个可打印字符。")
+        try:
+            policy = Policy.model_validate(policy if policy is not None else {})
+        except ValidationError:
+            raise ConfigError("调用方策略无效，请检查允许列表、限额和金额字符串。") from None
         identity = ("probe_" if probe_fingerprint else "caller_") + uuid4().hex
         token = "slk_" + secrets.token_urlsafe(32)
         created = utc_now()
@@ -173,8 +214,9 @@ class Store:
         )
         with self.transaction() as db:
             db.execute(
-                "INSERT INTO tokens(id,name,digest,created_at,kind,expires_at,fingerprint) "
-                "VALUES(?,?,?,?,?,?,?)",
+                "INSERT INTO tokens(id,name,digest,created_at,kind,expires_at,"
+                "fingerprint,policy_json) "
+                "VALUES(?,?,?,?,?,?,?,?)",
                 (
                     identity,
                     name,
@@ -183,19 +225,89 @@ class Store:
                     "probe" if probe_fingerprint else "caller",
                     expires,
                     probe_fingerprint,
+                    policy.model_dump_json(),
                 ),
             )
-        return {"id": identity, "name": name, "token": token, "created_at": created}
+        return {
+            "id": identity,
+            "name": name,
+            "token": token,
+            "created_at": created,
+            "policy": policy.model_dump(),
+        }
 
     def tokens(self) -> list[dict]:
         with self.lock:
             return [
-                dict(row) | {"active": row["revoked_at"] is None}
+                dict(row) | {"active": row["revoked_at"] is None, "policy": self.policy(row["id"])}
                 for row in self.db.execute(
                     "SELECT id,name,created_at,revoked_at FROM tokens "
                     "WHERE kind='caller' ORDER BY created_at"
                 )
             ]
+
+    def policy(self, caller):
+        with self.lock:
+            return policy_for(self.db, caller).model_dump()
+
+    def set_policy(self, caller, patch):
+        if not isinstance(patch, dict) or not patch:
+            raise ConfigError("策略修改必须是非空 JSON 对象。")
+        with self.transaction() as db:
+            row = db.execute(
+                "SELECT policy_json FROM tokens WHERE id=? AND kind='caller'", (caller,)
+            ).fetchone()
+            if row is None:
+                raise ConfigError("未找到普通调用方 ID。")
+            try:
+                policy = Policy.model_validate(json.loads(row[0]) | patch)
+            except (ValidationError, ValueError, TypeError):
+                raise ConfigError("调用方策略无效；null 清除限制、空允许列表拒绝全部。") from None
+            db.execute(
+                "UPDATE tokens SET policy_json=? WHERE id=?", (policy.model_dump_json(), caller)
+            )
+        return self.policy(caller)
+
+    def quota(self, caller):
+        from selark.governance import money_sum
+
+        with self.lock:
+            policy = self.policy(caller)
+            day = utc_now()[:10]
+            rows = allocations(self.db, caller, day)
+            currencies = {r["currency"] for r in rows if r["currency"] is not None}
+            return {
+                "day": day,
+                "timezone": "UTC",
+                "policy": policy,
+                "requests": len(rows),
+                "historical_requests_excluded": self.db.execute(
+                    "SELECT COUNT(*) FROM requests WHERE caller_id=? AND substr(started_at,1,10)=?"
+                    " AND upstream_attempts IS NOT 0 AND NOT EXISTS"
+                    " (SELECT 1 FROM allocations a WHERE a.request_id=requests.request_id)",
+                    (caller, day),
+                ).fetchone()[0],
+                "charged_or_reserved_tokens": sum(r["quota_tokens"] for r in rows),
+                "unknown_token_requests": sum(r["token_basis"] == "unknown_hold" for r in rows),
+                "estimated_reserved_tokens": sum(
+                    r["quota_tokens"]
+                    for r in rows
+                    if r["token_basis"] in {"unknown_hold", "estimated_reservation"}
+                ),
+                "estimated_cost_or_reservation": {
+                    currency: money_sum(
+                        r["quota_cost"]
+                        for r in rows
+                        if r["currency"] == currency and r["quota_cost"] is not None
+                    )
+                    for currency in currencies
+                },
+                "unknown_cost_requests": sum(
+                    r["cost_status"] in {"unknown", "not_priced"} for r in rows
+                ),
+                "billed_cost": None,
+                "scope": "Selark 0.5+ admissions; historical usage remains in usage queries",
+            }
 
     def revoke(self, identity: str):
         with self.transaction() as db:
@@ -252,9 +364,24 @@ class Store:
             )
 
     def attempt(
-        self, request_id: str, requested_model: str, session_id: str | None, connection_id=None
+        self,
+        request_id: str,
+        requested_model: str,
+        session_id: str | None,
+        connection_id=None,
+        resource=None,
     ):
         with self.transaction() as db:
+            if resource is not None:
+                db.execute("BEGIN IMMEDIATE")
+                reserve(
+                    db,
+                    request_id,
+                    connection=connection_id,
+                    model=requested_model,
+                    now=utc_now(),
+                    **resource,
+                )
             db.execute(
                 "UPDATE requests SET upstream_attempts=1,requested_model=?,session_id=?,"
                 "connection_id=COALESCE(?,connection_id) "
@@ -290,7 +417,7 @@ class Store:
                 "completion_tokens=?,total_tokens=?,error_code=?,error_message=?,"
                 "upstream_result=?,delivery_status=?,upstream_error_code=?,delivery_error_code=?,"
                 "queue_ms=?,upstream_attempts=COALESCE(?,upstream_attempts),"
-                "connection_id=?,record_revision=? "
+                "connection_id=?,record_revision=?,requested_alias=? "
                 "WHERE request_id=? AND record_revision<=?",
                 (
                     None if status == "running" else state.get("finished_at", utc_now()),
@@ -314,12 +441,14 @@ class Store:
                     state.get("upstream_attempts"),
                     state.get("connection_id"),
                     state.get("record_revision", 2),
+                    state.get("requested_alias"),
                     request_id,
                     state.get("record_revision", 2),
                 ),
             )
             if not result.rowcount:
                 return  # A stale receipt cannot undo a later settled delivery.
+            settle(db, request_id, state)
             upstream = state.get("upstream_result")
             if (
                 state.get("fingerprint")
@@ -357,6 +486,10 @@ class Store:
                 "THEN upstream_result ELSE 'unknown' END WHERE status='running'",
                 (utc_now(),),
             )
+            for row in db.execute(
+                "SELECT request_id FROM allocations WHERE state='reserved'"
+            ).fetchall():
+                settle(db, row[0], {})
             return result.rowcount
 
     def verification(self, connection_id: str, fingerprint: str) -> dict:
@@ -380,14 +513,14 @@ class Store:
     def where(filters: dict) -> tuple[str, list]:
         clauses, params = [], []
         if filters.get("sessions_only"):
-            clauses.append("session_id IS NOT NULL")
+            clauses.append("requests.session_id IS NOT NULL")
         for field in ("caller_id", "session_id", "model", "purpose", "status", "connection_id"):
             if filters.get(field) is not None:
-                clauses.append(field + " = ?")
+                clauses.append("requests." + field + " = ?")
                 params.append(filters[field])
         for key, op in (("since", ">="), ("until", "<")):
             if filters.get(key):
-                clauses.append("started_at " + op + " ?")
+                clauses.append("requests.started_at " + op + " ?")
                 params.append(filters[key])
         return (" WHERE " + " AND ".join(clauses) if clauses else ""), params
 
@@ -400,6 +533,11 @@ class Store:
         result["usage_final"] = bool(result["usage_final"])
         result["usage_known"] = all(result[f] is not None for f in USAGE_FIELDS)
         result["usage_received"] = result["reported_usage"] is not None
+        document = result.pop("allocation_json", None)
+        allocation = {field: result.pop("allocation_" + field, None) for field in ALLOCATION_FIELDS}
+        result["resources"] = (
+            public_allocation(allocation | {"document": document}) if document else None
+        )
         return result
 
     def records(self, filters: dict, *, limit: int = 20, offset: int = 0) -> list[dict]:
@@ -408,9 +546,9 @@ class Store:
             return [
                 self.public_record(r)
                 for r in self.db.execute(
-                    "SELECT * FROM requests"
+                    SELECT_RECORDS
                     + where
-                    + " ORDER BY started_at DESC,request_id LIMIT ? OFFSET ?",
+                    + " ORDER BY requests.started_at DESC,requests.request_id LIMIT ? OFFSET ?",
                     [*params, limit, offset],
                 )
             ]
@@ -432,6 +570,14 @@ class Store:
                 "status_counts": {},
                 "known_tokens": dict.fromkeys(USAGE_FIELDS, None),
                 "missing_field_requests": dict.fromkeys(USAGE_FIELDS, 0),
+                "estimated_cost_by_currency": {},
+                "unknown_cost_requests": 0,
+                "billed_cost": None,
+                "resource_accounting": {
+                    "scope": "Selark 0.5+ admissions",
+                    "requests": 0,
+                    "tokens_by_basis": {},
+                },
             }
 
         def add(agg, row):
@@ -439,6 +585,22 @@ class Store:
             complete = all(row[f] is not None for f in USAGE_FIELDS)
             agg["known_usage_requests" if complete else "missing_usage_requests"] += 1
             agg["reported_usage_requests"] += int(row["usage_json"] is not None)
+            if row["allocation_token_basis"] is not None:
+                accounting = agg["resource_accounting"]
+                accounting["requests"] += 1
+                basis = row["allocation_token_basis"]
+                values = accounting["tokens_by_basis"]
+                values[basis] = values.get(basis, 0) + row["allocation_quota_tokens"]
+            if row["allocation_estimated_cost"] is not None:
+                from selark.governance import money_sum
+
+                currency = row["allocation_currency"]
+                previous = agg["estimated_cost_by_currency"].get(currency, "0")
+                agg["estimated_cost_by_currency"][currency] = money_sum(
+                    [previous, row["allocation_estimated_cost"]]
+                )
+            elif row["upstream_attempts"] != 0:
+                agg["unknown_cost_requests"] += 1
             if row["upstream_attempts"] is None:
                 agg["unknown_attempt_count_requests"] += 1
             else:
@@ -453,7 +615,7 @@ class Store:
 
         total = empty()
         with self.lock:
-            for row in self.db.execute("SELECT * FROM requests" + where, params):
+            for row in self.db.execute(SELECT_RECORDS + where, params):
                 add(total, row)
                 if group_by:
                     if group_by == "session":

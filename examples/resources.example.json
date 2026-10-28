@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "aliases": {
+    "fast": {"connection_id": "mimo-default", "model": "mimo-v2.6-flash"}
+  },
+  "prices": []
+}

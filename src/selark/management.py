@@ -26,9 +26,11 @@ from selark.config import (
 )
 from selark.connections import PRESETS, ConnectionsConfig, require_connection
 from selark.errors import GatewayError
+from selark.governance import ResourcesConfig
 from selark.history import import_history
+from selark.protocol import strict_json
 from selark.runtime import Runtime, fingerprint
-from selark.storage import token_digest
+from selark.storage import SCHEMA_VERSION, token_digest
 
 MANAGEMENT_COMMANDS = {
     "connection",
@@ -40,6 +42,9 @@ MANAGEMENT_COMMANDS = {
     "doctor",
     "limits",
     "backup",
+    "aliases",
+    "prices",
+    "costs",
 }
 
 
@@ -92,6 +97,36 @@ def add_filters(parser):
 
 
 def add_commands(commands):
+    aliases = commands.add_parser("aliases", help="本机管理显式模型别名；不会自动切换供应商")
+    actions = aliases.add_subparsers(dest="action", required=True)
+    actions.add_parser("list").add_argument("--json", action="store_true")
+    alias = actions.add_parser(
+        "set", help="映射 NAME 到唯一连接与模型；调用使用 --alias NAME 或 @NAME"
+    )
+    alias.add_argument("name")
+    alias.add_argument("connection")
+    alias.add_argument("model")
+    alias.add_argument("--json", action="store_true")
+    remove = actions.add_parser("remove")
+    remove.add_argument("name")
+    remove.add_argument("--json", action="store_true")
+    prices = commands.add_parser(
+        "prices", help="本机配置每百万 Token 的十进制价格；费用只估算，不是账单"
+    )
+    actions = prices.add_subparsers(dest="action", required=True)
+    actions.add_parser("list").add_argument("--json", action="store_true")
+    for name in ("set", "remove"):
+        price = actions.add_parser(name)
+        price.add_argument("connection")
+        price.add_argument("model")
+        price.add_argument("--json", action="store_true")
+        if name == "set":
+            price.add_argument("--currency", required=True, help="如 USD/CNY，不做汇率换算")
+            price.add_argument("--input", required=True, help="每百万输入 Token 价格，十进制字符串")
+            price.add_argument("--output", required=True)
+            price.add_argument("--cached-input")
+            price.add_argument("--cache-write")
+            price.add_argument("--note", default="", help="价格来源或说明，不填入凭据")
     limits = commands.add_parser("limits", help="本机查看/修改并发和超时；修改后重启服务生效")
     actions = limits.add_subparsers(dest="action", required=True)
     actions.add_parser("show").add_argument("--json", action="store_true")
@@ -130,6 +165,7 @@ def add_commands(commands):
     add.add_argument("--default-model")
     add.add_argument("--api-key-env", help="读取指定环境变量中的 Key，不接受命令行明文 Key")
     add.add_argument("--workspace-id", help="Anthropic 非工作区专属 Key 所需的 workspace ID")
+    add.add_argument("--anthropic-version", choices=["2023-06-01", "2026-10-21"])
     add.add_argument("--json", action="store_true")
     change = actions.add_parser("set", help="修改连接并热生效；关键修改使旧验证失效")
     change.add_argument("id", nargs="?", default="mimo-default")
@@ -145,12 +181,16 @@ def add_commands(commands):
     change.add_argument("--stream-usage", action=argparse.BooleanOptionalAction, default=None)
     change.add_argument("--token-parameter", choices=["max_tokens", "max_completion_tokens"])
     change.add_argument("--workspace-id")
+    change.add_argument("--anthropic-version", choices=["2023-06-01", "2026-10-21"])
     change.add_argument("--json", action="store_true")
 
     tokens = commands.add_parser("tokens", help="本机管理调用方令牌；普通令牌无管理权限")
     actions = tokens.add_subparsers(dest="action", required=True)
     create = actions.add_parser("create", help="创建调用方；仅本次完整显示令牌")
     create.add_argument("name")
+    create.add_argument(
+        "--policy", type=Path, help="从 JSON 文件设置连接/模型、频率、并发、Token 和估算预算限制"
+    )
     create.add_argument(
         "--client-config", type=Path, help="另存仅含 Selark 凭据的 0600 客户端配置；绝对路径"
     )
@@ -160,6 +200,15 @@ def add_commands(commands):
             action.add_argument("id", help="稳定调用方 ID；可使用 legacy")
         action.add_argument("--json", action="store_true")
     create.add_argument("--json", action="store_true")
+    policy = actions.add_parser(
+        "policy", help="按 JSON 对象部分修改策略；null 清除限制、[] 拒绝全部"
+    )
+    policy.add_argument("id")
+    policy.add_argument("--file", required=True, type=Path)
+    policy.add_argument("--json", action="store_true")
+    quota = actions.add_parser("quota", help="查看 UTC 今日额度、在途预留和未知消耗；不生成")
+    quota.add_argument("id")
+    quota.add_argument("--json", action="store_true")
 
     records = commands.add_parser("records", help="查询元数据或显式导入旧日志，不保存对话正文")
     actions = records.add_subparsers(dest="action", required=True)
@@ -179,6 +228,12 @@ def add_commands(commands):
     add_filters(usage)
     usage.add_argument("--group-by", choices=["model", "caller", "session", "day", "connection"])
     usage.add_argument("--json", action="store_true")
+    costs = commands.add_parser(
+        "costs", help="按调用时价格快照汇总估算费用；缺价/未知用量不会当作零"
+    )
+    add_filters(costs)
+    costs.add_argument("--group-by", choices=["model", "caller", "session", "day", "connection"])
+    costs.add_argument("--json", action="store_true")
     sessions = commands.add_parser("sessions", help="按调用方和 session_id 归组，不保存或拼接历史")
     actions = sessions.add_subparsers(dest="action", required=True)
     listing = actions.add_parser("list")
@@ -234,6 +289,18 @@ def query_filters(args) -> dict:
         "until": until.astimezone(UTC).isoformat(timespec="microseconds") if until else None,
     }
     return {key: value for key, value in result.items() if value is not None}
+
+
+def policy_file(path):
+    try:
+        if path.stat().st_size > 1024 * 1024:
+            raise ValueError
+        data = strict_json(path.read_bytes())
+        if not isinstance(data, dict):
+            raise ValueError
+        return data
+    except (OSError, ValueError):
+        raise ConfigError("无法读取策略 JSON 对象，请检查路径、大小与格式。") from None
 
 
 def server_url(config: ServerConfig) -> str:
@@ -303,6 +370,23 @@ def doctor(directory: Path) -> dict:
     except ConfigError as exc:
         checks.append({"check": "connections_config", "ok": False, "message": str(exc)})
     try:
+        path = directory / "resources.json"
+        settings = (
+            load_config(path, ResourcesConfig)
+            if path.exists() or path.is_symlink()
+            else ResourcesConfig()
+        )
+        checks.append(
+            {
+                "check": "resources_config",
+                "ok": True,
+                "aliases": len(settings.aliases),
+                "prices": len(settings.prices),
+            }
+        )
+    except ConfigError as exc:
+        checks.append({"check": "resources_config", "ok": False, "message": str(exc)})
+    try:
         client = load_config(directory / "client.json", ClientConfig)
         checks.append({"check": "client_config", "ok": True})
     except ConfigError as exc:
@@ -354,10 +438,12 @@ def doctor(directory: Path) -> dict:
                 checks.append(
                     {
                         "check": "storage",
-                        "ok": integrity == "ok" and schema == 2 and os.access(database, os.W_OK),
+                        "ok": integrity == "ok"
+                        and schema == SCHEMA_VERSION
+                        and os.access(database, os.W_OK),
                         "schema_version": schema,
                         "message": "记录库正常"
-                        if schema == 2 and integrity == "ok"
+                        if schema == SCHEMA_VERSION and integrity == "ok"
                         else "记录库需升级或修复；停服后运行 selark migrate，损坏时恢复备份。",
                         "integrity": integrity,
                         "records": count,
@@ -482,11 +568,43 @@ def run(args, directory: Path) -> int:
         elif args.command == "migrate":
             result = {
                 "schema_version": 2,
-                "database_schema_version": 2,
+                "database_schema_version": SCHEMA_VERSION,
                 "database": str(store.path),
                 "backup": str(runtime.migration_backup) if runtime.migration_backup else None,
                 "migrated": runtime.migration_backup is not None,
             }
+        elif args.command == "aliases":
+            if args.action == "list":
+                result = {"aliases": runtime.resources().model_dump(mode="json")["aliases"]}
+            else:
+                result = runtime.edit_resource(
+                    "alias",
+                    args.name,
+                    {"connection_id": args.connection, "model": args.model}
+                    if args.action == "set"
+                    else None,
+                )
+        elif args.command == "prices":
+            if args.action == "list":
+                result = {
+                    "prices": runtime.resources().model_dump(mode="json")["prices"],
+                    "billing_cost": None,
+                }
+            else:
+                result = runtime.edit_resource(
+                    "price",
+                    (args.connection, args.model),
+                    {
+                        "currency": args.currency,
+                        "input_per_million": args.input,
+                        "output_per_million": args.output,
+                        "cached_input_per_million": args.cached_input,
+                        "cache_write_per_million": args.cache_write,
+                        "note": args.note,
+                    }
+                    if args.action == "set"
+                    else None,
+                )
         elif args.command == "connection":
             identity = getattr(args, "id", "mimo-default")
             if args.action == "list":
@@ -520,6 +638,7 @@ def run(args, directory: Path) -> int:
                     allowed_models=args.models,
                     default_model=args.default_model,
                     workspace_id=args.workspace_id,
+                    anthropic_version=args.anthropic_version,
                 )
             elif args.action == "discover":
                 from selark.providers.discovery import discover
@@ -557,6 +676,7 @@ def run(args, directory: Path) -> int:
                         ("stream_usage", args.stream_usage),
                         ("token_parameter", args.token_parameter),
                         ("workspace_id", args.workspace_id),
+                        ("anthropic_version", args.anthropic_version),
                     )
                     if value is not None
                 }
@@ -571,7 +691,9 @@ def run(args, directory: Path) -> int:
                     raise ConfigError(
                         "客户端配置必须使用尚不存在的绝对文件路径，避免覆盖已有凭据。"
                     )
-                result = store.create_token(args.name)
+                result = store.create_token(
+                    args.name, policy=policy_file(args.policy) if args.policy else None
+                )
                 if target:
                     try:
                         target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -591,6 +713,14 @@ def run(args, directory: Path) -> int:
                         store.revoke(result["id"])
                         raise
                     result["client_config"] = str(target)
+            elif args.action == "policy":
+                result = {
+                    "id": args.id,
+                    "policy": runtime.change_policy(args.id, policy_file(args.file)),
+                    "quota": store.quota(args.id),
+                }
+            elif args.action == "quota":
+                result = {"id": args.id, **store.quota(args.id)}
             elif args.action == "revoke":
                 store.revoke(args.id)
                 result = {

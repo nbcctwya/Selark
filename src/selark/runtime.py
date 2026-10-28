@@ -29,8 +29,9 @@ from selark.connections import (
     registry_document,
     require_connection,
 )
+from selark.governance import Price, ResourcesConfig, Target
 from selark.locking import file_lock
-from selark.storage import Store, utc_now
+from selark.storage import SCHEMA_VERSION, Store, utc_now
 
 
 def fingerprint(config: ServerConfig) -> str:
@@ -38,6 +39,8 @@ def fingerprint(config: ServerConfig) -> str:
         data = connection_document(config)
         for field in ("name", "enabled", "discovery", "limits"):
             data.pop(field, None)
+        if config.provider != "anthropic" or config.anthropic_version == "2026-10-21":
+            data.pop("anthropic_version", None)  # Existing 0.4 fingerprints remain valid.
         if config.connection_id == "mimo-default":
             # Preserve pre-0.4 verification fingerprints exactly.
             for field in (
@@ -84,7 +87,7 @@ class Runtime:
             if database.exists():
                 with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as old:
                     version = old.execute("PRAGMA user_version").fetchone()[0]
-            if version == 1 or config.access_token is not None:
+            if (database.exists() and version < SCHEMA_VERSION) or config.access_token is not None:
                 with file_lock(self.data_dir / "service.lock", nonblocking=True):
                     self.migration_backup = self.backup("before-migration")
                     self.store = Store(database)
@@ -122,6 +125,58 @@ class Runtime:
             legacy_connection(server, registry),
             *[c.model_copy(update={"limits": server.limits}) for c in registry.connections],
         ]
+
+    def resources(self):
+        path = self.directory / "resources.json"
+        return (
+            load_config(path, ResourcesConfig)
+            if path.exists() or path.is_symlink()
+            else ResourcesConfig()
+        )
+
+    def edit_resource(self, kind, identity, document=None):
+        with file_lock(self.data_dir / "management.lock"):
+            current = self.resources().model_dump(mode="json")
+            try:
+                if kind == "alias":
+                    if document is None:
+                        if identity not in current["aliases"]:
+                            raise ConfigError("未找到别名。")
+                        del current["aliases"][identity]
+                    else:
+                        target = Target.model_validate(document)
+                        connection = require_connection(
+                            self.connection_settings(), target.connection_id
+                        )
+                        if target.model not in connection.allowed_models:
+                            raise ConfigError("别名目标不在该连接允许模型列表中。")
+                        current["aliases"][identity] = target.model_dump()
+                elif kind == "price":
+                    connection_id, model = identity
+                    current["prices"] = [
+                        p for p in current["prices"] if (p["connection_id"], p["model"]) != identity
+                    ]
+                    if document is not None:
+                        price = Price.model_validate(
+                            document | {"connection_id": connection_id, "model": model}
+                        )
+                        connection = require_connection(self.connection_settings(), connection_id)
+                        if model not in connection.allowed_models:
+                            raise ConfigError("价格目标不在该连接允许模型列表中。")
+                        current["prices"].append(price.model_dump())
+                else:
+                    raise ConfigError("未知资源设置。")
+                updated = ResourcesConfig.model_validate(current)
+            except ValidationError:
+                raise ConfigError("资源配置无效，请检查别名、模型、币种与十进制价格。") from None
+            self.backup("before-resource-change")
+            _write_private(self.directory / "resources.json", updated.model_dump(mode="json"))
+        return updated.model_dump(mode="json")
+
+    def change_policy(self, caller, patch):
+        with file_lock(self.data_dir / "management.lock"):
+            self.backup("before-caller-policy-change")
+            return self.store.set_policy(caller, patch)
 
     def add_connection(self, identity, provider, key, **options):
         if provider not in PRESETS:
@@ -165,7 +220,7 @@ class Runtime:
         private_directory(root)
         target = root / (utc_now().replace(":", "-") + "-" + uuid4().hex[:8])
         private_directory(target)
-        for name in ("server.json", "client.json", "connections.json"):
+        for name in ("server.json", "client.json", "connections.json", "resources.json"):
             source = self.directory / name
             if source.is_symlink():
                 raise ConfigError("待备份的配置不能是符号链接。")
@@ -315,6 +370,7 @@ class Runtime:
             "stream_usage",
             "token_parameter",
             "workspace_id",
+            "anthropic_version",
         }
         if not changes or set(changes) - allowed:
             raise ConfigError("未提供有效的连接修改参数。")

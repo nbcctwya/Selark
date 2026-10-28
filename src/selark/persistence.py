@@ -27,6 +27,7 @@ FIELDS = frozenset(
         "purpose",
         "model",
         "actual_model",
+        "requested_alias",
         "session_id",
         "fingerprint",
         "upstream_attempts",
@@ -180,7 +181,7 @@ class Journal:
                 apply_document(store, document)
                 self._remove(path.stem)
                 restored += 1
-            except (sqlite3.Error, OSError):
+            except (sqlite3.Error, OSError, ConfigError):
                 failed += 1
                 break  # No busy retry loop or model regeneration.
         return {
@@ -316,7 +317,7 @@ class AsyncLedger:
             await asyncio.sleep(1)
             try:
                 await self.replay()
-            except (sqlite3.Error, OSError, ValueError):
+            except (sqlite3.Error, OSError, ValueError, ConfigError):
                 self.degraded = True
 
     async def close(self):

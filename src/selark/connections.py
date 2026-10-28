@@ -57,6 +57,7 @@ class ConnectionConfig(StrictConfig):
     stream_usage: bool = True
     token_parameter: Literal["max_tokens", "max_completion_tokens"] = "max_tokens"
     workspace_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{1,128}$")
+    anthropic_version: Literal["2023-06-01", "2026-10-21"] = "2026-10-21"
     discovery: Discovery = Field(default_factory=Discovery)
     limits: ServiceLimits = Field(default_factory=ServiceLimits, exclude=True)
 

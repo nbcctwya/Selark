@@ -13,6 +13,7 @@ dist/
 server.json
 client.json
 connections.json
+resources.json
 # Local recovery receipts and protected configuration/database backups.
 pending/
 backups/

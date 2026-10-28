@@ -152,7 +152,9 @@ Anthropic 按 [鉴权与版本](https://platform.claude.com/docs/en/api/overview
 [Messages](https://platform.claude.com/docs/en/api/messages/create)、
 [流式事件](https://platform.claude.com/docs/en/build-with-claude/streaming) 和
 [模型列表](https://platform.claude.com/docs/en/api/models/list) 实现。
-支持开头的 system/developer、user/assistant、文本块、max_tokens、temperature 或 top_p、stop_sequences；
+支持开头的 system/developer、user/assistant、文本块、max_tokens、stop_sequences；
+0.5 按当前官方版本修正采样参数：默认 `2026-10-21` 拒绝 temperature/top_p，
+仅显式 `--anthropic-version 2023-06-01` 时保留旧版采样参数。详见 [兼容与资源说明](governance.md)。
 拒绝未支持的惩罚参数和对话中途的 system 消息。非工作区专属 Key 可用 `--workspace-id` 配置所需工作区。
 `message_start` 与后续 `message_delta` 用量按字段覆盖；只有 `message_stop` 才转换为成功 `[DONE]`。
 

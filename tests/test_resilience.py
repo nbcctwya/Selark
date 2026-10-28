@@ -858,7 +858,7 @@ def test_version_one_database_migration_preserves_unknowns_and_backup(tmp_path, 
         db.execute("PRAGMA user_version=1")
         db.commit()
     with Runtime(directory) as migrated:
-        assert migrated.store.db.execute("PRAGMA user_version").fetchone()[0] == 2
+        assert migrated.store.db.execute("PRAGMA user_version").fetchone()[0] == 3
         backup = migrated.migration_backup
         with contextlib.closing(sqlite3.connect(backup / "records.sqlite3")) as old:
             assert old.execute("PRAGMA user_version").fetchone()[0] == 1
@@ -966,7 +966,7 @@ def test_schema_migration_rolls_back_all_ddl_on_failure(tmp_path, monkeypatch):
         assert "order_key" not in {r[1] for r in db.execute("PRAGMA table_info(verifications)")}
     monkeypatch.setattr(sqlite3, "connect", connect)
     store = Store(path)
-    assert store.db.execute("PRAGMA user_version").fetchone()[0] == 2
+    assert store.db.execute("PRAGMA user_version").fetchone()[0] == 3
     store.close()
 
 

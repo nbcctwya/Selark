@@ -1,0 +1,106 @@
+{
+  "version": "0.5.0",
+  "started_at": "2026-10-28T12:48:37.031505+00:00",
+  "planned_max_generations": 3,
+  "cli_generation_invocations": 3,
+  "checks": [
+    "fresh_login_and_interactive_shell_outside_repo_without_virtualenv",
+    "legacy_auth_restricted_model_list_and_passive_checks_no_generation",
+    "restart_retains_success_timeout_unknown_hold_aliases_and_revocation",
+    "all_new_and_old_passive_cli_commands_no_extra_generation",
+    "stopped_service_reports_connection_failure_without_upstream_bypass"
+  ],
+  "calls": [
+    {
+      "request_id": "4821cc1644174638919688fca7e7a891",
+      "caller_id": "legacy",
+      "connection_id": "mimo-default",
+      "requested_alias": "fast",
+      "model": "mimo-v2.6-flash",
+      "session_id": "governance-050-mimo",
+      "duration_ms": 2399.06,
+      "prompt_tokens": 13,
+      "completion_tokens": 2,
+      "total_tokens": 15,
+      "status": "success",
+      "delivery_status": "sent",
+      "upstream_result": "success",
+      "upstream_attempts": 1,
+      "mode": "ordinary",
+      "multi_turn": false,
+      "estimated_cost": null
+    },
+    {
+      "request_id": "a5bfe060ace8461393a2d71df82fef00",
+      "caller_id": "caller_ddfed6e99429413788eed07c8474cb29",
+      "connection_id": "deepseek-personal",
+      "requested_alias": "coding",
+      "model": "deepseek-flash",
+      "session_id": "governance-050-deepseek",
+      "duration_ms": 914.61,
+      "prompt_tokens": 8,
+      "completion_tokens": 1,
+      "total_tokens": 9,
+      "status": "success",
+      "delivery_status": "sent",
+      "upstream_result": "success",
+      "upstream_attempts": 1,
+      "mode": "stream",
+      "multi_turn": false,
+      "estimated_cost": null
+    },
+    {
+      "request_id": "06b18d47890c4ecaafec14ea3017685e",
+      "caller_id": "caller_ddfed6e99429413788eed07c8474cb29",
+      "connection_id": "relay-personal",
+      "requested_alias": null,
+      "model": null,
+      "requested_model": "claude-sonnet-4-6",
+      "session_id": "governance-050-relay",
+      "duration_ms": 61685.09,
+      "prompt_tokens": null,
+      "completion_tokens": null,
+      "total_tokens": null,
+      "status": "failed",
+      "http_status": 504,
+      "error_code": "upstream_timeout",
+      "delivery_status": "sent",
+      "upstream_result": "failed",
+      "upstream_attempts": 1,
+      "mode": "ordinary",
+      "multi_turn": true,
+      "estimated_cost": null
+    }
+  ],
+  "upstream_attempts_before": 20,
+  "aliases": {
+    "mimo-default": "fast",
+    "deepseek-personal": "coding"
+  },
+  "verification_caller_id": "caller_ddfed6e99429413788eed07c8474cb29",
+  "verification_caller_revoked": true,
+  "service_running": false,
+  "upstream_attempts_after": 23,
+  "actual_upstream_attempt_delta": 3,
+  "known_tokens": {
+    "prompt_tokens": 21,
+    "completion_tokens": 3,
+    "total_tokens": 24
+  },
+  "post_restart_quota": {
+    "requests": 2,
+    "charged_or_reserved_tokens": 544,
+    "unknown_token_requests": 1,
+    "estimated_reserved_tokens": 535,
+    "unknown_cost_requests": 2,
+    "billed_cost": null
+  },
+  "completed": true,
+  "all_connections_succeeded": false,
+  "real_generation_outcomes": {
+    "success": 2,
+    "upstream_timeout": 1,
+    "unknown_usage_requests": 1,
+    "automatic_retries": 0
+  }
+}

@@ -14,6 +14,22 @@ class Admission:
         self.waiters = deque()
         self.tasks = set()
         self.accepting = True
+        self.callers = {}
+
+    def acquire_caller(self, caller, maximum):
+        active = self.callers.get(caller, 0)
+        if maximum is not None and active >= maximum:
+            raise GatewayError(
+                429, "caller_concurrency_limit", "此调用方的在途请求数已达上限（包含排队）。"
+            )
+        self.callers[caller] = active + 1
+
+    def release_caller(self, caller):
+        remaining = self.callers[caller] - 1
+        if remaining:
+            self.callers[caller] = remaining
+        else:
+            del self.callers[caller]
 
     def reserve(self):
         if not self.accepting:

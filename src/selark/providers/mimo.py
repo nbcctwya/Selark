@@ -45,7 +45,7 @@ def reported_usage(data: dict) -> dict | None:
     for key, fields in (
         (
             "prompt_tokens_details",
-            ("cached_tokens", "audio_tokens", "image_tokens", "video_tokens"),
+            ("cached_tokens", "cache_write_tokens", "audio_tokens", "image_tokens", "video_tokens"),
         ),
         ("completion_tokens_details", ("reasoning_tokens", "audio_tokens")),
         ("cache_creation", ("ephemeral_5m_input_tokens", "ephemeral_1h_input_tokens")),

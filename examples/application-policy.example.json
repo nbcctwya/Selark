@@ -1,0 +1,11 @@
+{
+  "allowed_connections": ["mimo-default"],
+  "allowed_models": ["mimo-default::mimo-v2.6-flash"],
+  "requests_per_minute": 10,
+  "max_concurrent_requests": 2,
+  "max_output_tokens": 1024,
+  "max_estimated_input_tokens": 16000,
+  "daily_token_limit": 100000,
+  "daily_budget": null,
+  "budget_currency": "USD"
+}

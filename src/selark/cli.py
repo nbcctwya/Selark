@@ -46,6 +46,7 @@ def parser() -> argparse.ArgumentParser:
     ask.add_argument("--messages", type=Path, help="多轮 messages JSON 数组文件")
     ask.add_argument("--system", help="系统消息")
     ask.add_argument("--model", help="覆盖客户端默认模型")
+    ask.add_argument("--alias", help="使用本机管理员配置的模型别名，等价于 --model @NAME")
     ask.add_argument("--connection", help="明确选择连接 ID；不指定模型时使用该连接默认模型")
     ask.add_argument("--session", help="可选会话归组标识；不保存或拼接 messages")
     ask.add_argument("--stream", action="store_true")
@@ -153,10 +154,21 @@ def main(argv: list[str] | None = None) -> int:
                 if args.system:
                     messages.append({"role": "system", "content": args.system})
                 messages.append({"role": "user", "content": prompt})
+            if args.alias and args.model:
+                raise ClientError("--alias 与 --model 不能同时设置。")
+            selected_model = (
+                "@" + args.alias
+                if args.alias
+                else args.model or (None if args.connection else config.model)
+            )
+            explicit_route = selected_model and (
+                selected_model.startswith("@") or "::" in selected_model
+            )
             client.ask(
                 {
-                    "model": args.model or (None if args.connection else config.model),
-                    "connection_id": args.connection or config.connection_id,
+                    "model": selected_model,
+                    "connection_id": args.connection
+                    or (None if explicit_route else config.connection_id),
                     "messages": messages,
                     "stream": args.stream,
                     "max_completion_tokens": args.max_tokens,

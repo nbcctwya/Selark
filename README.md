@@ -1,4 +1,4 @@
-# Selark 0.4.1 · 个人模型接入中间件
+# Selark 0.5.0 · 个人模型接入中间件
 
 独立的文本模型 HTTP 接入服务：`CLI / 外部程序 → Selark → 指定模型连接`。
 Python 3.11+，FastAPI + HTTPX + Uvicorn；默认仅监听 `127.0.0.1:8787`。
@@ -84,6 +84,25 @@ selark serve
 0.4.1 修复追加压力测试发现的 SSE 无换行缓存、过深 JSON 和非有限数字处理问题。
 205 项回归、275 次本地 API 压力请求及新增 8 次真实并发/边界调用结果见 [API 压力验收](docs/api-stress-verification.md)。
 其中 7 次完整调用取得 145 tokens；1 次主动取消的最终用量未知。
+
+0.5 增加应用级连接/模型权限、滚动请求频率、并发和 UTC 日 Token/估算预算限制，
+显式模型别名、价格快照和按应用/连接/模型的费用估算。升级保留旧令牌权限与历史用量，
+首次打开数据库前备份并迁移 schema 2 → 3。Anthropic 按当前官方版本修复参数兼容。
+命令与统计口径见 [应用资源管理](docs/governance.md)，本轮结果见 [0.5 验收](docs/governance-verification.md)。
+
+```bash
+selark tokens create my-app --policy /absolute/path/application-policy.json
+selark tokens policy CALLER_ID --file /absolute/path/policy-patch.json --json
+selark tokens quota CALLER_ID --json
+selark aliases set fast mimo-default mimo-v2.6-flash
+selark ask --alias fast --max-tokens 32 '只回复 OK'
+selark prices list --json
+selark costs --today --tz Asia/Shanghai --group-by connection --json
+```
+
+策略模板：[application-policy.example.json](examples/application-policy.example.json)。
+别名映射到唯一来源，没有自动付费切换；预算基于手工价格和用量估算，**不是供应商账单或绝对费用上限**。
+未知消耗保留预留，受日限额约束的调用方暂停当天后续生成。日额度固定 UTC，查询窗口可另选时区。
 
 ```bash
 selark connection list --json
@@ -243,7 +262,7 @@ selark limits set --max-concurrent-requests 4 --max-queued-requests 16 \
   --request-timeout-seconds 120 --queue-timeout-seconds 10
 ```
 
-首次升级 0.3 前先停止旧服务。首次 `serve` 或 `migrate` 先备份再升级数据库，保留配置、凭据和旧记录。
+首次升级 0.5 前先停止旧服务。首次 `serve` 或 `migrate` 先备份再升级数据库，保留配置、凭据和旧记录。
 如需手工恢复待落账文件，先停止服务，再执行 `selark records recover --json`。
 
 ```bash
@@ -251,6 +270,7 @@ source .venv/bin/activate
 python -m pip install -r requirements-dev.lock
 pytest -q
 ruff check .
+ruff format --check .
 ```
 
 常规测试使用模拟上游，不读取真实配置、不产生 MiMo 费用。
@@ -266,7 +286,10 @@ ruff check .
 187 项自动测试及安装后的本地 TCP 验收通过；真实调用共取得输入 113、输出 16、合计 129 tokens。
 未对发现的全部模型进行生成测试。
 
-仅本机单实例，可有多个连接和独立调用方令牌；没有网页、订阅登录、远程管理接口、配额路由或生产托管。
+0.5 的权限、并发额度预留、费用估算、恢复和安装验收见 [资源管理验收](docs/governance-verification.md)。
+GitHub Actions 自动运行模拟测试与代码检查，不使用供应商凭据。
+
+仅本机单实例，可有多个连接和独立调用方令牌；没有网页、订阅登录、远程管理接口、自动路由或生产托管。
 
 2026-10-27 核对的官方来源：[首次调用](https://mimo.mi.com/docs/en-US/quick-start/summary/first-api-call)、
 [Chat Completions 协议](https://mimo.mi.com/docs/api/text-generation/openai-api)、
