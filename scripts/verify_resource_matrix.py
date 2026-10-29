@@ -30,6 +30,7 @@ from selark.persistence import Journal
 from selark.storage import Store, utc_now
 
 ROOT = Path(__file__).resolve().parents[1]
+CLIENT_KEEPALIVE_SECONDS = 0.5  # Retire idle sockets before the fixture's 2 s timeout.
 
 
 async def wait_for(check):
@@ -63,6 +64,110 @@ async def serve(app, runtime, sock):
         finally:
             server.should_exit = True
             await asyncio.wait_for(task, 5)
+
+
+async def mixed_burst(cycle, url, post, health, idle, upstream, gate, output):
+    """One pool per burst; preserve the first failure and settle every submitted task."""
+    from tests.four_resources import PLAN, RESOURCES
+
+    identities = list(RESOURCES)
+    upstream.hold.clear()
+    start = len(upstream.calls)
+    jobs, results = [], []
+    primary = None
+    phase = "four_active"
+    async with httpx.AsyncClient(
+        base_url=url,
+        trust_env=False,
+        timeout=10,
+        limits=httpx.Limits(max_connections=100, keepalive_expiry=CLIENT_KEEPALIVE_SECONDS),
+    ) as burst:
+
+        def submit(i):
+            return asyncio.create_task(
+                post(
+                    identities[i % 4],
+                    mode="hold",
+                    stream=bool(i % 2),
+                    who=i % 2,
+                    session=f"burst-{cycle}",
+                    http=burst,
+                )
+            )
+
+        async def four_active():
+            return all(upstream.active[k] == 1 for k in identities)
+
+        async def settled_queue():
+            h = await health()
+            return (
+                sum(t.done() for t in jobs) + h["capacity"]["active"] + h["capacity"]["queued"]
+                == 64
+            )
+
+        try:
+            jobs = [submit(i) for i in range(4)]
+            await wait_for(four_active)
+            phase = "settled_queue"
+            jobs += [submit(i) for i in range(4, 64)]
+            await wait_for(settled_queue)
+            phase = "health_at_capacity"
+            start_health = time.monotonic()
+            h = await health()
+            latency = round((time.monotonic() - start_health) * 1000, 2)
+            assert h["capacity"]["active"] == 4 and h["capacity"]["queued"] <= 8
+        except Exception as exc:
+            primary = exc
+        finally:
+            before_release = gate.health()
+            upstream.hold.set()
+            # A second exception here used to hide the phase that first failed,
+            # and leave sibling requests running during service shutdown.
+            results = await asyncio.gather(*jobs, return_exceptions=True)
+        errors = [
+            {"client": i, "exception": type(r).__name__}
+            for i, r in enumerate(results)
+            if isinstance(r, BaseException)
+        ]
+        counts = Counter(r.status_code for r in results if isinstance(r, httpx.Response))
+        try:
+            if primary:
+                raise primary
+            assert not errors, f"Client transport failures: {errors}"
+            phase = "post_burst_accounting"
+            await wait_for(idle)
+            assert set(counts) == {200, 429} and 4 <= counts[200] <= 12, counts
+            assert len(upstream.calls) - start == counts[200]
+            assert upstream.peak[PLAN] == 1 and upstream.peak_total == 4
+        except Exception as exc:
+            diagnostic = {
+                "cycle": cycle + 1,
+                "phase": phase,
+                "exception": type(exc).__name__,
+                "clients_submitted": len(jobs),
+                "clients_settled": len(results),
+                "client_errors": errors,
+                "status_counts": dict(counts),
+                "before_release": before_release,
+                "after_release": gate.health(),
+                "upstream_calls": len(upstream.calls) - start,
+                "real_generation_requests": 0,
+            }
+            failure = output.with_suffix(".failure.json")
+            failure.write_text(json.dumps(diagnostic, indent=2) + "\n")
+            print(json.dumps(diagnostic), file=sys.stderr)
+            raise
+    return {
+        "check": f"64_mixed_clients_cycle_{cycle + 1}",
+        "passed": True,
+        "status_counts": dict(counts),
+        "upstream_calls": counts[200],
+        "peak_active": 4,
+        "peak_plan_active": 1,
+        "health_latency_ms": latency,
+        "client_transport_errors": 0,
+        "generation_retries": 0,
+    }
 
 
 async def run(args):
@@ -118,7 +223,9 @@ async def run(args):
                     base_url=url,
                     trust_env=False,
                     timeout=10,
-                    limits=httpx.Limits(max_connections=100),
+                    limits=httpx.Limits(
+                        max_connections=100, keepalive_expiry=CLIENT_KEEPALIVE_SECONDS
+                    ),
                 ) as client,
             ):
 
@@ -131,10 +238,10 @@ async def run(args):
                     h = await health()
                     return h["capacity"]["admitted"] == 0 and h["storage"]["pending_records"] == 0
 
-                async def post(identity, *, who=0, session="matrix", **options):
+                async def post(identity, *, who=0, session="matrix", http=None, **options):
                     nonlocal http_requests
                     http_requests += 1
-                    return await client.post(
+                    return await (http or client).post(
                         "/v1/chat/completions",
                         headers=auth(tokens[who]),
                         json=payload(identity, **options) | {"session_id": session},
@@ -274,72 +381,18 @@ async def run(args):
                     }
                 )
 
-                for cycle in range(3):
-                    upstream.hold.clear()
-                    start = len(upstream.calls)
-                    jobs = [
-                        asyncio.create_task(
-                            post(
-                                identity,
-                                mode="hold",
-                                stream=bool(i % 2),
-                                who=i % 2,
-                                session=f"burst-{cycle}",
-                            )
-                        )
-                        for i, identity in enumerate(ids)
-                    ]
-
-                    async def four_active():
-                        return all(upstream.active[k] == 1 for k in ids)
-
-                    try:
-                        await wait_for(four_active)
-                        jobs += [
-                            asyncio.create_task(
-                                post(
-                                    ids[i % 4],
-                                    mode="hold",
-                                    stream=bool(i % 2),
-                                    who=i % 2,
-                                    session=f"burst-{cycle}",
-                                )
-                            )
-                            for i in range(60)
-                        ]
-
-                        async def settled_queue(jobs=jobs):
-                            h = await health()
-                            return (
-                                sum(t.done() for t in jobs)
-                                + h["capacity"]["active"]
-                                + h["capacity"]["queued"]
-                                == 64
-                            )
-
-                        await wait_for(settled_queue)
-                        start_health = time.monotonic()
-                        h = await health()
-                        latency = round((time.monotonic() - start_health) * 1000, 2)
-                        assert h["capacity"]["active"] == 4 and h["capacity"]["queued"] <= 8
-                    finally:
-                        upstream.hold.set()
-                        results = await asyncio.gather(*jobs)
-                    await wait_for(idle)
-                    counts = Counter(r.status_code for r in results)
-                    assert set(counts) == {200, 429} and 4 <= counts[200] <= 12, counts
-                    assert len(upstream.calls) - start == counts[200]
-                    assert upstream.peak[PLAN] == 1 and upstream.peak_total == 4
+                for cycle in range(args.cycles):
                     checks.append(
-                        {
-                            "check": f"64_mixed_clients_cycle_{cycle + 1}",
-                            "passed": True,
-                            "status_counts": dict(counts),
-                            "upstream_calls": counts[200],
-                            "peak_active": 4,
-                            "peak_plan_active": 1,
-                            "health_latency_ms": latency,
-                        }
+                        await mixed_burst(
+                            cycle,
+                            url,
+                            post,
+                            health,
+                            idle,
+                            upstream,
+                            app.state.admission,
+                            args.output,
+                        )
                     )
 
                 # One caller's pending token reservation is shared across all four resources.
@@ -366,7 +419,7 @@ async def run(args):
                     await wait_for(limited_ready)
                 finally:
                     upstream.hold.set()
-                    results = await asyncio.gather(*jobs)
+                    results = await asyncio.gather(*jobs, return_exceptions=True)
                 assert Counter(r.status_code for r in results) == {200: 1, 429: 3}
                 await wait_for(idle)
                 assert runtime.store.quota(limited["id"])["charged_or_reserved_tokens"] == 14
@@ -534,4 +587,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--selark", type=Path)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--cycles", type=int, default=3, choices=range(1, 51))
     asyncio.run(run(parser.parse_args()))
