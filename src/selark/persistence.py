@@ -34,6 +34,8 @@ FIELDS = frozenset(
         "fingerprint",
         "upstream_attempts",
         "usage",
+        "usage_peak",
+        "usage_regressed",
         "usage_final",
         "upstream_status",
         "stream_status",
@@ -131,9 +133,9 @@ class Journal:
         for key, item in state.items():
             if item is None:
                 continue
-            if key == "usage":
+            if key in {"usage", "usage_peak"}:
                 valid = isinstance(item, dict)
-            elif key in {"usage_final", "cancelled"}:
+            elif key in {"usage_final", "cancelled", "usage_regressed"}:
                 valid = type(item) is bool
             elif key in {"upstream_attempts", "upstream_status", "record_revision"}:
                 valid = type(item) is int and 0 <= item <= 2**63 - 1

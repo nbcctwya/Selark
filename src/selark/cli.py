@@ -35,7 +35,7 @@ def parser() -> argparse.ArgumentParser:
     init = commands.add_parser("init", help="创建私有配置，自动生成独立访问令牌")
     init.add_argument("--base-url", default=DEFAULT_BASE_URL)
     init.add_argument("--models", nargs="+", help="允许模型列表")
-    init.add_argument("--default-model", default=DEFAULT_MODEL)
+    init.add_argument("--default-model", help="默认使用 --models 中第一个模型")
     init.add_argument("--port", type=int, default=8787)
     commands.add_parser("serve", help="按持久配置启动 HTTP 服务")
     models = commands.add_parser("models", help="通过 Selark HTTP 获取允许模型")
@@ -92,42 +92,57 @@ def main(argv: list[str] | None = None) -> int:
                         "请在交互终端运行 selark init，或通过 MIMO_API_KEY 环境变量传入密钥。"
                     )
                 key = getpass.getpass("MiMo API Key（输入不回显）: ").strip()
-            initialize(directory, key, args.base_url, args.models, args.default_model, args.port)
+            default_model = args.default_model or (args.models[0] if args.models else DEFAULT_MODEL)
+            initialize(directory, key, args.base_url, args.models, default_model, args.port)
             from selark.runtime import Runtime
 
             with Runtime(directory):
                 pass
             print(f"私有配置已创建：{directory}")
             print("服务端使用 server.json；CLI 和外部程序仅使用 client.json。")
+            print("下一步：selark service start；selark status 查看资源与授权。")
             return 0
         if args.command == "serve":
             # Keep all provider imports exclusively in the server command.
             import uvicorn
 
             from selark.app import create_app
+            from selark.logs import configure_logging
             from selark.runtime import Runtime
+            from selark.service import process_marker
 
             logging.basicConfig(level=logging.INFO, format="%(message)s")
             logging.getLogger("httpx").setLevel(logging.WARNING)
             logging.getLogger("httpcore").setLevel(logging.WARNING)
             with Runtime(directory) as runtime, runtime.service():
                 config = runtime.settings()
-                uvicorn.run(
-                    create_app(config, runtime=runtime),
-                    host=config.host,
-                    port=config.port,
-                    access_log=False,
-                    server_header=False,
-                    timeout_graceful_shutdown=config.limits.shutdown_grace_seconds,
-                    timeout_keep_alive=5,
-                    backlog=128,
-                    limit_concurrency=max(
-                        128,
-                        config.limits.max_concurrent_requests
-                        + config.limits.max_queued_requests
-                        + 32,
-                    ),
+                handler = configure_logging(
+                    runtime.data_dir,
+                    config.logging,
+                    background=bool(os.environ.get("SELARK_SERVICE_BACKEND")),
                 )
+                with process_marker(directory, runtime.data_dir):
+                    try:
+                        uvicorn.run(
+                            create_app(config, runtime=runtime),
+                            host=config.host,
+                            port=config.port,
+                            access_log=False,
+                            server_header=False,
+                            timeout_graceful_shutdown=config.limits.shutdown_grace_seconds,
+                            timeout_keep_alive=5,
+                            backlog=128,
+                            limit_concurrency=max(
+                                128,
+                                config.limits.max_concurrent_requests
+                                + config.limits.max_queued_requests
+                                + 32,
+                            ),
+                            log_config=None,
+                        )
+                    finally:
+                        logging.getLogger().removeHandler(handler)
+                        handler.close()
             return 0
         config = load_config(directory / "client.json", ClientConfig)
         with SelarkClient(config) as client:
@@ -165,6 +180,8 @@ def main(argv: list[str] | None = None) -> int:
                 except (ValueError, OSError):
                     raise ClientError("无法读取 messages JSON 文件。") from None
             else:
+                if args.prompt in {None, "-"} and sys.stdin.isatty():
+                    print("输入文本，按 Ctrl+D 发送；Ctrl+C 取消：", file=sys.stderr)
                 prompt = sys.stdin.read() if args.prompt in {None, "-"} else args.prompt
                 if not prompt.strip():
                     raise ClientError("请输入非空文本，或使用 --messages 提供多轮消息。")
@@ -209,7 +226,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     except httpx.RequestError:
         print(
-            "错误：无法连接 Selark 或连接中断，请确认 selark serve 已启动及客户端地址正确。",
+            "错误：无法连接 Selark 或连接中断；"
+            "用 selark service status / selark doctor 检查服务与地址。",
             file=sys.stderr,
         )
         return 1

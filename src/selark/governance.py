@@ -14,8 +14,7 @@ from pydantic import Field, ValidationError, field_validator, model_validator
 from selark.config import ConfigError, StrictConfig
 from selark.connections import valid_model
 from selark.errors import GatewayError
-
-MAX_COUNT = 2**63 - 1
+from selark.usage import MAX_COUNT, inconsistent_usage, observed_token_floor, valid_count
 
 
 def decimal_text(value):
@@ -179,12 +178,8 @@ def estimate_cost(price, input_count, output_count, cached=0, writes=0):
         return decimal_text(amount.quantize(Decimal("0.000000001"), rounding=ROUND_UP))
 
 
-def valid_count(value):
-    return type(value) is int and 0 <= value <= MAX_COUNT
-
-
 def measured_tokens(usage, provider):
-    if not isinstance(usage, dict):
+    if not isinstance(usage, dict) or inconsistent_usage(usage):
         return None, "unknown"
     if valid_count(usage.get("total_tokens")):
         return usage["total_tokens"], "reported_total"
@@ -203,7 +198,7 @@ def measured_tokens(usage, provider):
 
 
 def usage_cost(quote, usage, provider):
-    if not quote or not isinstance(usage, dict):
+    if not quote or not isinstance(usage, dict) or inconsistent_usage(usage):
         return None
     if provider == "anthropic":
         fields = (
@@ -427,22 +422,39 @@ def settle(db, request_id, state):
         "success",
         "failed",
     }
+    trustworthy = complete and not state.get("usage_regressed")
     tokens, basis = (
-        measured_tokens(state.get("usage"), document["provider"]) if complete else (None, "unknown")
+        measured_tokens(state.get("usage"), document["provider"])
+        if trustworthy
+        else (None, "unknown")
     )
     quote = document["price_snapshot"]
-    amount = usage_cost(quote, state.get("usage"), document["provider"]) if complete else None
+    amount = usage_cost(quote, state.get("usage"), document["provider"]) if trustworthy else None
     if state.get("actual_model") != document["requested_model"]:
         amount = None  # A different returned model has no safely matched price snapshot.
     token_basis = basis if tokens is not None else "unknown_hold"
     cost_status = "estimated" if amount is not None else "unknown" if quote else "not_priced"
-    document.update(estimated_cost=amount)
+    document.update(
+        estimated_cost=amount,
+        observed_usage_peak=state.get("usage_peak"),
+        usage_consistency="regressed"
+        if state.get("usage_regressed")
+        else "inconsistent"
+        if inconsistent_usage(state.get("usage"))
+        else "uncontradicted",
+    )
     db.execute(
         "UPDATE allocations SET state=?,quota_tokens=?,token_basis=?,quota_cost=?,cost_status=?,"
         "estimated_cost=?,document=? WHERE request_id=?",
         (
             "settled" if complete else "uncertain",
-            tokens if tokens is not None else document["reserved_tokens"],
+            tokens
+            if tokens is not None
+            else max(
+                document["reserved_tokens"],
+                observed_token_floor(state.get("usage"), document["provider"]),
+                observed_token_floor(state.get("usage_peak"), document["provider"]),
+            ),
             token_basis,
             amount if amount is not None else document["reserved_cost"],
             cost_status,

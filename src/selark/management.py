@@ -48,6 +48,9 @@ MANAGEMENT_COMMANDS = {
     "costs",
     "plans",
     "chatgpt",
+    "status",
+    "service",
+    "logs",
 }
 
 
@@ -86,6 +89,28 @@ def read_key(provider, variable=None):
     return key
 
 
+def configure_connection_interactively(args):
+    if not sys.stdin.isatty():
+        raise ConfigError("--interactive 需要交互终端；脚本请显式提供 --provider 和 --models。")
+    if not args.provider:
+        providers = [key for key in PRESETS if key != "chatgpt"]
+        print("可选平台：" + ", ".join(providers), file=sys.stderr)
+        args.provider = input("平台 ID: ").strip()
+        if args.provider not in providers:
+            raise ConfigError("平台 ID 无效；ChatGPT 继续使用原有 chatgpt 命令。")
+    if args.provider == "chatgpt":
+        raise ConfigError("ChatGPT 继续使用原有 chatgpt 命令；此向导不发起 OAuth。")
+    provider = "zhipu" if args.provider == "glm" else args.provider
+    if not args.name:
+        args.name = input(f"连接名称 [{PRESETS[provider][0]}]: ").strip() or None
+    if not args.base_url:
+        args.base_url = input(f"API 地址 [{PRESETS[provider][1]}]: ").strip() or None
+    if not args.models and provider not in PLAN_PRESETS:
+        args.models = input("允许模型 ID（空格分隔，可留空后显式 discover）: ").split() or None
+    if args.models and not args.default_model:
+        args.default_model = input(f"默认模型 [{args.models[0]}]: ").strip() or args.models[0]
+
+
 def add_filters(parser):
     parser.add_argument("--since", help="起始时间，包含；无时区时按 --tz 解释")
     parser.add_argument("--until", help="结束时间，不包含")
@@ -109,6 +134,19 @@ def add_commands(commands):
     from selark.chatgpt_cli import add_commands as chatgpt_commands
 
     chatgpt_commands(commands)
+    status = commands.add_parser("status", help="只读统一资源总览；不登录、刷新或调用供应商")
+    status.add_argument("--offline", action="store_true", help="也不请求本地 /health")
+    status.add_argument("--json", action="store_true")
+    service = commands.add_parser("service", help="WSL/Linux 后台服务与可选 systemd 用户自启动")
+    actions = service.add_subparsers(dest="action", required=True)
+    for name in ("start", "stop", "restart", "status", "enable", "disable"):
+        action = actions.add_parser(name)
+        action.add_argument("--json", action="store_true")
+        if name in {"start", "restart"}:
+            action.add_argument("--backend", choices=["auto", "systemd", "process"], default="auto")
+    logs = commands.add_parser("logs", help="查看最近持久日志（元数据，无提示词或凭据）")
+    logs.add_argument("--lines", type=positive, default=50)
+    logs.add_argument("--json", action="store_true")
     plans = commands.add_parser("plans", help="Token Plan 独立管理；默认查询不联网、不生成")
     actions = plans.add_subparsers(dest="action", required=True)
     actions.add_parser("list").add_argument("--json", action="store_true")
@@ -183,7 +221,10 @@ def add_commands(commands):
     discover.add_argument("--json", action="store_true")
     add = actions.add_parser("add", help="新增独立连接；Key 从环境变量或隐藏输入读取")
     add.add_argument("id", help="稳定连接 ID，如 deepseek-personal")
-    add.add_argument("--provider", required=True, choices=[*PRESETS, "glm"])
+    add.add_argument("--provider", choices=[*PRESETS, "glm"])
+    add.add_argument(
+        "--interactive", action="store_true", help="交互选择已有平台并配置模型；不发起网络请求"
+    )
     add.add_argument("--name")
     add.add_argument("--base-url")
     add.add_argument("--models", nargs="+")
@@ -246,6 +287,9 @@ def add_commands(commands):
     recent.add_argument("--limit", type=positive, default=20)
     recent.add_argument("--offset", type=int, default=0)
     recent.add_argument("--json", action="store_true")
+    detail = actions.add_parser("show", help="按请求 ID 查看故障、交付、用量及价格快照")
+    detail.add_argument("request_id")
+    detail.add_argument("--json", action="store_true")
     imports = actions.add_parser("import", help="备份后幂等导入旧 JSONL/验收 JSON")
     imports.add_argument("file", type=Path)
     imports.add_argument("--json", action="store_true")
@@ -282,9 +326,27 @@ def add_commands(commands):
     commands.add_parser("doctor", help="检查配置、记录库及本机服务；不生成模型请求").add_argument(
         "--json", action="store_true"
     )
-    commands.add_parser("backup", help="创建配置、SQLite 和 pending 的一致恢复备份").add_argument(
-        "--json", action="store_true"
-    )
+    backup = commands.add_parser("backup", help="一致备份、校验、保留管理及隔离恢复演练")
+    backup.add_argument("--json", action="store_true")
+    backup.set_defaults(action="create")
+    actions = backup.add_subparsers(dest="backup_action")
+    for name in ("create", "list", "verify", "restore", "drill", "prune"):
+        action = actions.add_parser(name)
+        action.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+        if name in {"verify", "restore", "drill"}:
+            action.add_argument("path", type=Path)
+            action.add_argument(
+                "--allow-legacy", action="store_true", help="旧备份仅校验结构，不声称有哈希证明"
+            )
+        if name == "restore":
+            action.add_argument(
+                "--to", required=True, type=Path, help="不存在的新实例目录；不覆盖原始数据"
+            )
+        if name == "prune":
+            action.add_argument("--keep", type=positive, default=10)
+            action.add_argument(
+                "--apply", action="store_true", help="默认只预览；显式执行后保留最新完整备份"
+            )
 
 
 def query_filters(args) -> dict:
@@ -580,6 +642,47 @@ def doctor(directory: Path) -> dict:
 
 
 def run(args, directory: Path) -> int:
+    if args.command == "status":
+        from selark.overview import overview, render_overview
+
+        result = overview(directory, offline=args.offline)
+        emit(result, True) if args.json else render_overview(result)
+        return 0 if result["ok"] else 1
+    if args.command == "service":
+        from selark.service import manage_service
+
+        result = manage_service(directory, args.action, backend=getattr(args, "backend", "auto"))
+        emit(result, args.json)
+        return 0
+    if args.command == "logs":
+        from selark.logs import read_logs
+
+        result = read_logs(data_directory(directory), lines=args.lines)
+        emit(result, True) if args.json else print(
+            "\n".join(result["lines"]) or result.get("note", "日志为空")
+        )
+        return 0
+    if args.command == "backup" and args.backup_action not in {None, "create"}:
+        from selark.backups import (
+            drill_backup,
+            list_backups,
+            prune_backups,
+            restore_backup,
+            verify_backup,
+        )
+
+        if args.backup_action == "list":
+            result = {"backups": list_backups(data_directory(directory))}
+        elif args.backup_action == "prune":
+            result = prune_backups(data_directory(directory), args.keep, apply=args.apply)
+        elif args.backup_action == "verify":
+            result = verify_backup(args.path, allow_legacy=args.allow_legacy)
+        elif args.backup_action == "drill":
+            result = drill_backup(args.path, allow_legacy=args.allow_legacy)
+        else:
+            result = restore_backup(args.path, args.to, allow_legacy=args.allow_legacy)
+        emit(result, args.json)
+        return 0
     if args.command == "chatgpt":
         from selark.chatgpt_cli import run as chatgpt_run
 
@@ -735,6 +838,12 @@ def run(args, directory: Path) -> int:
                     for key, (name, url) in PRESETS.items()
                 ]
             elif args.action == "add":
+                if args.interactive:
+                    configure_connection_interactively(args)
+                if not args.provider:
+                    raise ConfigError(
+                        "请指定 --provider，或用 connection add ID --interactive 交互配置。"
+                    )
                 provider = "zhipu" if args.provider == "glm" else args.provider
                 if provider == "chatgpt":
                     raise ConfigError("ChatGPT 订阅请用 selark chatgpt login [连接 ID]。")
@@ -851,6 +960,11 @@ def run(args, directory: Path) -> int:
                         raise ConfigError("未找到调用方 ID。")
         elif args.command == "records" and args.action == "import":
             result = import_history(runtime, args.file)
+        elif args.command == "records" and args.action == "show":
+            records = store.records({"request_id": args.request_id}, limit=1)
+            if not records:
+                raise ConfigError("未找到该请求 ID；请核对配置目录或查看 selark logs。")
+            result = records[0]
         elif args.command == "sessions" and args.action == "show":
             filters = {"caller_id": args.caller, "session_id": args.session_id}
             result = {

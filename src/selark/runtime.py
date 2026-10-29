@@ -59,7 +59,15 @@ def fingerprint(config: ServerConfig) -> str:
                 data.pop(field, None)
         return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
     data = server_document(config)
-    for field in ("enabled", "host", "port", "schema_version", "connection_id", "limits"):
+    for field in (
+        "enabled",
+        "host",
+        "port",
+        "schema_version",
+        "connection_id",
+        "limits",
+        "logging",
+    ):
         data.pop(field, None)
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
@@ -76,11 +84,15 @@ def discovery_fingerprint(config):
 
 
 class Runtime:
-    def __init__(self, directory: Path):
+    def __init__(self, directory: Path, *, readonly=False, data_path=None):
         self.directory = directory
-        self.data_dir = data_directory(directory)
+        self.data_dir = data_path if data_path is not None else data_directory(directory)
         self.config_path = directory / "server.json"
         config = self.settings()
+        if readonly:
+            self.migration_backup = None
+            self.store = Store(self.data_dir / "records.sqlite3", readonly=True)
+            return
         private_directory(self.data_dir)
         self.migration_backup = None
         self.store = None
@@ -107,6 +119,9 @@ class Runtime:
                             target = self.migration_backup / "records.sqlite3"
                             if not target.exists():
                                 self.store.backup(target)
+                                from selark.backups import seal_backup
+
+                                seal_backup(self.migration_backup)
                             _write_private(self.config_path, server_document(config))
                     except Exception:
                         self.store.close()
@@ -302,6 +317,9 @@ class Runtime:
                 "chatgpt_credentials": "registration_only_reauthorize_after_restore",
             },
         )
+        from selark.backups import seal_backup
+
+        seal_backup(target)
         from selark.persistence import sync_directory
 
         if (target / "pending").exists():
@@ -345,8 +363,12 @@ class Runtime:
                 _write_private(self.config_path, server_document(config))
         return {"limits": limits.model_dump(), "restart_required": True}
 
-    def connection(self, identity="mimo-default") -> dict:
-        config = require_connection(self.connection_settings(), identity)
+    def connection(self, identity="mimo-default", *, config=None) -> dict:
+        config = (
+            config
+            if config is not None
+            else require_connection(self.connection_settings(), identity)
+        )
         result = config.model_dump(mode="json", exclude={"api_key"})
         result.update(configured=True, api_key="[REDACTED]")
         if config.provider == "chatgpt":
@@ -369,7 +391,9 @@ class Runtime:
             else "chat-completions"
         )
         if config.resource_type == "token_plan":
-            result["plan_status"] = self.plan_status(config.connection_id)
+            result["plan_status"] = self.store.plan_status(
+                config.connection_id, fingerprint(config)
+            )
             result["generation_support"] = PLAN_PRESETS[config.provider]["generation_support"]
         return result
 

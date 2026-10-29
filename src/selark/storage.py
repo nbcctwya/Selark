@@ -15,6 +15,7 @@ from pydantic import ValidationError
 
 from selark.config import ConfigError, private_directory
 from selark.governance import Policy, allocations, policy_for, public_allocation, reserve, settle
+from selark.usage import inconsistent_usage
 
 USAGE_FIELDS = ("prompt_tokens", "completion_tokens", "total_tokens")
 SCHEMA_VERSION = 4
@@ -47,6 +48,7 @@ def usage_values(usage: dict | None, final: bool) -> dict:
         field: usage[field]
         if final
         and isinstance(usage, dict)
+        and not inconsistent_usage(usage)
         and type(usage.get(field)) is int
         and 0 <= usage[field] <= 2**63 - 1
         else None
@@ -92,23 +94,32 @@ def request_status(state: dict, http_status: int) -> str:
 
 
 class Store:
-    def __init__(self, path: Path | None = None):
+    def __init__(self, path: Path | None = None, *, readonly=False):
         self.path = path
         if path:
-            private_directory(path.parent)
+            if not readonly:
+                private_directory(path.parent)
             if path.is_symlink():
                 raise ConfigError("记录数据库不能是符号链接。")
-            if not path.exists():
+            if not path.exists() and not readonly:
                 path.touch(mode=0o600)
             if path.stat().st_mode & 0o077:
                 raise ConfigError("记录数据库权限过宽，请设置为 0600。")
         self.lock = threading.RLock()
         self.db = sqlite3.connect(
-            str(path) if path else ":memory:", check_same_thread=False, timeout=5
+            path.as_uri() + "?mode=ro" if readonly else str(path) if path else ":memory:",
+            uri=readonly,
+            check_same_thread=False,
+            timeout=0.1 if readonly else 5,
         )
         self.db.row_factory = sqlite3.Row
         try:
-            self._initialize_schema(path)
+            if readonly:
+                if self.db.execute("PRAGMA user_version").fetchone()[0] != SCHEMA_VERSION:
+                    raise ConfigError("记录库需要迁移；停服后运行 selark migrate。")
+                self.db.execute("PRAGMA query_only=ON")
+            else:
+                self._initialize_schema(path)
         except Exception:
             self.db.close()
             raise
@@ -318,11 +329,26 @@ class Store:
             day = utc_now()[:10]
             rows = allocations(self.db, caller, day)
             currencies = {r["currency"] for r in rows if r["currency"] is not None}
+            unknown_tokens = any(r["token_basis"] == "unknown_hold" for r in rows)
+            token_limit = policy["daily_token_limit"]
+            occupied = sum(r["quota_tokens"] for r in rows)
             return {
                 "day": day,
                 "timezone": "UTC",
                 "policy": policy,
                 "requests": len(rows),
+                "in_flight_requests": sum(r["state"] == "reserved" for r in rows),
+                "uncertain_requests": sum(r["state"] == "uncertain" for r in rows),
+                "remaining_tokens": max(0, token_limit - occupied)
+                if token_limit is not None and not unknown_tokens
+                else None,
+                "token_quota_state": "unlimited"
+                if token_limit is None
+                else "blocked_unknown_usage"
+                if unknown_tokens
+                else "exhausted"
+                if occupied >= token_limit
+                else "limited",
                 "historical_requests_excluded": self.db.execute(
                     "SELECT COUNT(*) FROM requests WHERE caller_id=? AND substr(started_at,1,10)=?"
                     " AND upstream_attempts IS NOT 0 AND NOT EXISTS"
@@ -450,7 +476,7 @@ class Store:
         status = request_status(state, http_status)
         final = bool(state.get("usage_final"))
         usage = state.get("usage")
-        values = usage_values(usage, final)
+        values = usage_values(usage, final and not state.get("usage_regressed"))
         with self.transaction() as db:
             if state.get("started_at"):
                 db.execute(
@@ -577,6 +603,7 @@ class Store:
             clauses.append("requests.session_id IS NOT NULL")
         for field in (
             "caller_id",
+            "request_id",
             "session_id",
             "model",
             "purpose",
@@ -600,6 +627,9 @@ class Store:
         result.pop("record_revision", None)
         raw = result.pop("usage_json")
         result["reported_usage"] = json.loads(raw) if raw else None
+        result["usage_consistency"] = (
+            "inconsistent" if inconsistent_usage(result["reported_usage"]) else "uncontradicted"
+        )
         result["usage_final"] = bool(result["usage_final"])
         result["usage_known"] = all(result[f] is not None for f in USAGE_FIELDS)
         result["usage_received"] = result["reported_usage"] is not None
@@ -608,6 +638,8 @@ class Store:
         result["resources"] = (
             public_allocation(allocation | {"document": document}) if document else None
         )
+        if result["resources"] and result["resources"].get("usage_consistency") == "regressed":
+            result["usage_consistency"] = "regressed"
         return result
 
     def records(self, filters: dict, *, limit: int = 20, offset: int = 0) -> list[dict]:
@@ -633,6 +665,9 @@ class Store:
                 "requests": 0,
                 "known_usage_requests": 0,
                 "missing_usage_requests": 0,
+                "local_rejected_requests": 0,
+                "unknown_consumption_requests": 0,
+                "in_flight_requests": 0,
                 "reported_usage_requests": 0,
                 "upstream_attempts": 0,
                 "unknown_attempt_count_requests": 0,
@@ -652,6 +687,19 @@ class Store:
 
         def add(agg, row):
             agg["requests"] += 1
+            agg["local_rejected_requests"] += int(
+                row["upstream_attempts"] == 0 and row["status"] != "running"
+            )
+            agg["in_flight_requests"] += int(row["status"] == "running")
+            agg["unknown_consumption_requests"] += int(
+                row["upstream_attempts"] != 0
+                and row["status"] != "running"
+                and (
+                    not row["usage_final"]
+                    or row["allocation_token_basis"] == "unknown_hold"
+                    or (row["allocation_token_basis"] is None and row["total_tokens"] is None)
+                )
+            )
             complete = all(row[f] is not None for f in USAGE_FIELDS)
             agg["known_usage_requests" if complete else "missing_usage_requests"] += 1
             agg["reported_usage_requests"] += int(row["usage_json"] is not None)

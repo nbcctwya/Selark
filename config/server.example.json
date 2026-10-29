@@ -12,6 +12,10 @@
   "host": "127.0.0.1",
   "port": 8787,
   "timeout_seconds": 60.0,
+  "logging": {
+    "max_bytes": 5242880,
+    "backup_count": 3
+  },
   "limits": {
     "max_concurrent_requests": 4,
     "max_queued_requests": 16,

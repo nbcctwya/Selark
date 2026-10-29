@@ -2,7 +2,10 @@
 
 import asyncio
 import contextlib
+import math
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 
 import anyio
 import httpx
@@ -13,8 +16,29 @@ from selark.protocol import strict_json
 from selark.sse import SSEDecoder, async_sse_lines
 
 
+def retry_after_seconds(value):
+    """Accept bounded standard Retry-After values, never arbitrary header text."""
+    if not isinstance(value, str) or len(value) > 128:
+        return None
+    try:
+        if value.isascii() and value.isdigit():
+            seconds = int(value)
+        else:
+            when = parsedate_to_datetime(value)
+            if when.tzinfo is None:
+                return None
+            seconds = math.ceil((when - datetime.now(UTC)).total_seconds())
+        return max(0, min(seconds, 86400))
+    except (ValueError, TypeError, OverflowError):
+        return None
+
+
 def protocol_error(message: str = "上游返回了无效响应。") -> GatewayError:
     return GatewayError(502, "upstream_protocol_error", message, 200)
+
+
+def response_identity(value):
+    return isinstance(value, str) and 0 < len(value) <= 256 and all(c.isprintable() for c in value)
 
 
 def text_choice(choice, *, stream=False):
@@ -135,6 +159,7 @@ class MiMoProvider:
             ) from None
         status = response.status_code
         if status != 200:
+            retry_after = retry_after_seconds(response.headers.get("retry-after"))
             await close_response(response)
             if status in {401, 403}:
                 raise GatewayError(
@@ -151,6 +176,7 @@ class MiMoProvider:
                     "upstream_rate_limit",
                     "上游请求限流或额度不足，请检查账户后重试。",
                     status,
+                    retry_after=retry_after,
                 )
             if status in {400, 404, 422}:
                 raise GatewayError(
@@ -159,7 +185,13 @@ class MiMoProvider:
                     "上游拒绝了请求，请检查模型权限、接入地址、上下文长度和生成参数。",
                     status,
                 )
-            raise GatewayError(502, "upstream_error", "上游暂时不可用，请稍后重试。", status)
+            raise GatewayError(
+                502,
+                "upstream_error",
+                "上游暂时不可用；未自动重试，请先核对本次请求状态。",
+                status,
+                retry_after=retry_after,
+            )
         return response
 
     async def open(self, payload: dict) -> httpx.Response:
@@ -183,8 +215,8 @@ class MiMoProvider:
             if (
                 not isinstance(data, dict)
                 or data.get("object") != "chat.completion"
-                or not isinstance(data.get("id"), str)
-                or not isinstance(data.get("model"), str)
+                or not response_identity(data.get("id"))
+                or not response_identity(data.get("model"))
                 or not isinstance(data.get("choices"), list)
                 or len(data["choices"]) != 1
             ):
@@ -206,13 +238,14 @@ class MiMoProvider:
         decoder = SSEDecoder()
         saw_choice = False
         finish_reason = None
+        identities = {}
         try:
             async for line in async_sse_lines(response):
                 raw = decoder.feed(line)
                 if raw is None:
                     continue
                 if raw == "[DONE]":
-                    if not saw_choice or finish_reason is None:
+                    if not saw_choice or finish_reason is None or "model" not in identities:
                         raise protocol_error("上游流缺少有效回复或结束原因。")
                     yield raw
                     return
@@ -225,6 +258,15 @@ class MiMoProvider:
                     or len(data["choices"]) > 1
                 ):
                     raise protocol_error()
+                for key in ("id", "model"):
+                    if key not in data:
+                        continue  # Some compatible relays omit metadata on usage-only chunks.
+                    value = data[key]
+                    if not response_identity(value) or (
+                        key in identities and identities[key] != value
+                    ):
+                        raise protocol_error("上游流的回复身份或模型发生变化，输出可能不完整。")
+                    identities[key] = value
                 for choice in data["choices"]:
                     part, finish = text_choice(choice, stream=True)
                     if finish_reason is not None and (

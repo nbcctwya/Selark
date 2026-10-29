@@ -44,6 +44,11 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           selark --help
+          selark --version
+          selark status --help
+          selark service --help
+          selark logs --help
+          selark backup drill --help
           selark plans --help
           selark chatgpt --help
           selark chatgpt login --help
@@ -65,6 +70,11 @@ jobs:
         shell: bash
         run: |
           python scripts/verify_resource_matrix.py --selark "$(command -v selark)" --cycles 10 --output "$RUNNER_TEMP/selark-resource-matrix.json" | tee "$RUNNER_TEMP/selark-resource-matrix.log"
+      - name: Background service, backup drill and 20k-row overview (fake upstream only)
+        if: matrix.python == '3.12'
+        shell: bash
+        run: |
+          python scripts/verify_operations.py --selark "$(command -v selark)" --output "$RUNNER_TEMP/selark-operations.json" | tee "$RUNNER_TEMP/selark-operations.log"
       - name: Preserve isolated socket diagnostics
         if: always() && matrix.python == '3.12'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

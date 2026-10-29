@@ -2,6 +2,7 @@ import asyncio
 import contextlib
 import json
 import logging
+import os
 import sqlite3
 import time
 from contextlib import asynccontextmanager
@@ -28,6 +29,7 @@ from selark.providers.mimo import reported_usage
 from selark.runtime import Runtime, fingerprint
 from selark.schemas import ChatRequest
 from selark.storage import Store, request_status, utc_now
+from selark.usage import observe_usage
 
 logger = logging.getLogger("selark.requests")
 MAX_BODY_BYTES = 1024 * 1024
@@ -134,9 +136,7 @@ class RequestMiddleware:
             nonlocal status
             state.update(error_code=error.code, error_message=error.message)
             if not sent:
-                extra = {"WWW-Authenticate": "Bearer"} if error.status == 401 else {}
-                if error.status in {429, 503}:
-                    extra["Retry-After"] = "1"
+                extra = error.headers()
                 await JSONResponse(error.body(), status_code=error.status, headers=extra)(
                     scope, receive, send_logged
                 )
@@ -377,6 +377,7 @@ class RequestMiddleware:
                         "delivery_error_code": state.get("delivery_error_code"),
                         "usage": state["usage"],
                         "usage_final": state["usage_final"],
+                        "usage_regressed": state.get("usage_regressed", False),
                         "persistence": state.get("persistence", "not_recorded"),
                     },
                     ensure_ascii=False,
@@ -493,9 +494,7 @@ def create_app(
         return JSONResponse(
             exc.body(),
             status_code=exc.status,
-            headers={"Retry-After": "60" if exc.code == "caller_rate_limit" else "1"}
-            if exc.status in {429, 503}
-            else None,
+            headers=exc.headers(),
         )
 
     @app.exception_handler(HTTPException)
@@ -508,6 +507,7 @@ def create_app(
         return {
             "status": "ok",
             "version": __version__,
+            "pid": os.getpid(),
             "capacity": gate.health(),
             "storage": storage.health(),
         }
@@ -776,7 +776,7 @@ def create_app(
                             request.state.actual_model = event["model"]
                         usage = reported_usage(event)
                         if usage is not None:
-                            request.state.usage = usage
+                            observe_usage(request.scope["state"], usage)
                         yield "data: " + json.dumps(event, ensure_ascii=False) + "\n\n"
             except GatewayError as exc:
                 preserve_outcome()

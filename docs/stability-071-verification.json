@@ -1,0 +1,1003 @@
+{
+  "version": "0.7.1",
+  "date_local": "2026-10-30",
+  "timezone": "Asia/Shanghai",
+  "baseline_tests": 474,
+  "regression_tests": 514,
+  "regression_result": "passed",
+  "regression_seconds": 55.74,
+  "ruff_check": "passed",
+  "ruff_format": "passed",
+  "git_diff_check": "passed",
+  "real_provider_requests": 0,
+  "real_oauth_operations": 0,
+  "oauth_implementation_changed": false,
+  "pipx": {
+    "version": "0.7.1",
+    "python": "3.12.2",
+    "pip_check": "passed",
+    "editable": false,
+    "outside_repository": true,
+    "login_shell": "passed",
+    "nonlogin_shell": "passed",
+    "configured_connections_read": 5,
+    "protected_original_files_checked": 11,
+    "original_files_and_permissions_unchanged": true,
+    "candidate_wheel_sha256": "720144b9e7822618cae68ed01adee21b86b678a2d47d849de58c5a83f4d6e6a1",
+    "final_install_source": "persistent local repository; non-editable"
+  },
+  "limitations": [
+    "systemd manager and WSL boot lifecycle simulated, not boot-tested",
+    "provider availability and subscription quota not live-verified",
+    "existing Starlette/httpx test client deprecation warning remains"
+  ],
+  "reports": {
+    "socket_stability": {
+      "verified_at": "2026-10-29T17:08:28.127885+00:00",
+      "version": "0.7.1",
+      "upstream": "temporary loopback fixture; invented credentials",
+      "real_mimo_requests": 0,
+      "simulated_upstream_requests": 9,
+      "checks": [
+        {
+          "check": "cli_and_passive_checks",
+          "passed": true,
+          "upstream_calls": 0
+        },
+        {
+          "check": "ordinary_and_sse_over_real_local_sockets",
+          "passed": true
+        },
+        {
+          "check": "bounded_queue_overload_and_wait_timeout",
+          "passed": true
+        },
+        {
+          "check": "actual_socket_read_idle_timeout",
+          "passed": true,
+          "elapsed_ms": 1033.08
+        },
+        {
+          "check": "trickling_stream_hits_total_deadline",
+          "passed": true,
+          "elapsed_ms": 1507.05
+        },
+        {
+          "check": "ordinary_client_socket_disconnect",
+          "passed": true
+        },
+        {
+          "check": "sigkill_restart_preserves_unknown_usage_without_retry",
+          "passed": true
+        },
+        {
+          "check": "bounded_sigterm_grace_and_accounting",
+          "passed": true,
+          "elapsed_ms": 424.54
+        },
+        {
+          "check": "post_recovery_call_and_usage_totals",
+          "passed": true,
+          "known_total_tokens": 56
+        }
+      ],
+      "request_records": [
+        {
+          "request_id": "01d1151e62524019952ec3c7ffab2d35",
+          "original_request_id": "01d1151e62524019952ec3c7ffab2d35",
+          "started_at": "2026-10-29T17:08:23.612213+00:00",
+          "finished_at": "2026-10-29T17:08:23.642249+00:00",
+          "caller_id": "legacy",
+          "connection_id": "mimo-default",
+          "session_id": "ordinary",
+          "model": "mimo-test",
+          "requested_model": "mimo-test",
+          "purpose": "chat",
+          "status": "success",
+          "http_status": 200,
+          "upstream_status": 200,
+          "duration_ms": 30.05,
+          "upstream_attempts": 1,
+          "usage_json": "{\"prompt_tokens\": 12, \"completion_tokens\": 2, \"total_tokens\": 14}",
+          "usage_final": 1,
+          "prompt_tokens": 12,
+          "completion_tokens": 2,
+          "total_tokens": 14,
+          "error_code": null,
+          "error_message": null,
+          "origin": "live",
+          "upstream_result": "success",
+          "delivery_status": "sent",
+          "upstream_error_code": null,
+          "delivery_error_code": null,
+          "queue_ms": 0.0,
+          "record_revision": 2,
+          "requested_alias": null,
+          "resource_type": "api",
+          "plan_id": null
+        },
+        {
+          "request_id": "06933e0f58954d489870e58b4d54f7f0",
+          "original_request_id": "06933e0f58954d489870e58b4d54f7f0",
+          "started_at": "2026-10-29T17:08:23.647760+00:00",
+          "finished_at": "2026-10-29T17:08:23.677624+00:00",
+          "caller_id": "legacy",
+          "connection_id": "mimo-default",
+          "session_id": "stream",
+          "model": "mimo-test",
+          "requested_model": "mimo-test",
+          "purpose": "chat",
+          "status": "success",
+          "http_status": 200,
+          "upstream_status": 200,
+          "duration_ms": 29.88,
+          "upstream_attempts": 1,
+          "usage_json": "{\"prompt_tokens\": 12, \"completion_tokens\": 2, \"total_tokens\": 14}",
+          "usage_final": 1,
+          "prompt_tokens": 12,
+          "completion_tokens": 2,
+          "total_tokens": 14,
+          "error_code": null,
+          "error_message": null,
+          "origin": "live",
+          "upstream_result": "success",
+          "delivery_status": "sent",
+          "upstream_error_code": null,
+          "delivery_error_code": null,
+          "queue_ms": 7.91,
+          "record_revision": 2,
+          "requested_alias": null,
+          "resource_type": "api",
+          "plan_id": null
+        },
+        {
+          "request_id": "8329e18c93c340fe92e49c5a93477ffb",
+          "original_request_id": "8329e18c93c340fe92e49c5a93477ffb",
+          "started_at": "2026-10-29T17:08:23.708624+00:00",
+          "finished_at": "2026-10-29T17:08:24.144930+00:00",
+          "caller_id": "legacy",
+          "connection_id": "mimo-default",
+          "session_id": "active",
+          "model": "mimo-test",
+          "requested_model": "mimo-test",
+          "purpose": "chat",
+          "status": "success",
+          "http_status": 200,
+          "upstream_status": 200,
+          "duration_ms": 436.32,
+          "upstream_attempts": 1,
+          "usage_json": "{\"prompt_tokens\": 12, \"completion_tokens\": 2, \"total_tokens\": 14}",
+          "usage_final": 1,
+          "prompt_tokens": 12,
+          "completion_tokens": 2,
+          "total_tokens": 14,
+          "error_code": null,
+          "error_message": null,
+          "origin": "live",
+          "upstream_result": "success",
+          "delivery_status": "sent",
+          "upstream_error_code": null,
+          "delivery_error_code": null,
+          "queue_ms": 0.0,
+          "record_revision": 2,
+          "requested_alias": null,
+          "resource_type": "api",
+          "plan_id": null
+        },
+        {
+          "request_id": "f2293cb4f2314aeda28f7a0772d41b38",
+          "original_request_id": "f2293cb4f2314aeda28f7a0772d41b38",
+          "started_at": "2026-10-29T17:08:23.725046+00:00",
+          "finished_at": "2026-10-29T17:08:24.127959+00:00",
+          "caller_id": "legacy",
+          "connection_id": "mimo-default",
+          "session_id": "queued",
+          "model": null,
+          "requested_model": null,
+          "purpose": "chat",
+          "status": "failed",
+          "http_status": 503,
+          "upstream_status": null,
+          "duration_ms": 402.92,
+          "upstream_attempts": 0,
+          "usage_json": null,
+          "usage_final": 0,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "error_code": "queue_timeout",
+          "error_message": "等待 Selark 执行名额超时，未发送上游。",
+          "origin": "live",
+          "upstream_result": "not_started",
+          "delivery_status": "sent",
+          "upstream_error_code": null,
+          "delivery_error_code": null,
+          "queue_ms": 400.96,
+          "record_revision": 2,
+          "requested_alias": null,
+          "resource_type": "api",
+          "plan_id": null
+        },
+        {
+          "request_id": "a156e196b0b744af8972bd5379e8ca2e",
+          "original_request_id": "a156e196b0b744af8972bd5379e8ca2e",
+          "started_at": "2026-10-29T17:08:24.151344+00:00",
+          "finished_at": "2026-10-29T17:08:25.179351+00:00",
+          "caller_id": "legacy",
+          "connection_id": "mimo-default",
+          "session_id": "idle",
+          "model": "mimo-test",
+          "requested_model": "mimo-test",
+          "purpose": "chat",
+          "status": "failed",
+          "http_status": 200,
+          "upstream_status": 200,
+          "duration_ms": 1028.02,
+          "upstream_attempts": 1,
+          "usage_json": null,
+          "usage_final": 0,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "error_code": "upstream_timeout",
+          "error_message": "上游流读取超时；输出可能不完整。",
+          "origin": "live",
+          "upstream_result": "failed",
+          "delivery_status": "sent",
+          "upstream_error_code": "upstream_timeout",
+          "delivery_error_code": null,
+          "queue_ms": 6.21,
+          "record_revision": 2,
+          "requested_alias": null,
+          "resource_type": "api",
+          "plan_id": null
+        },
+        {
+          "request_id": "11900cd37f96470fab2db02038ef93af",
+          "original_request_id": "11900cd37f96470fab2db02038ef93af",
+          "started_at": "2026-10-29T17:08:25.184743+00:00",
+          "finished_at": "2026-10-29T17:08:26.686257+00:00",
+          "caller_id": "legacy",
+          "connection_id": "mimo-default",
+          "session_id": "trickle",
+          "model": "mimo-test",
+          "requested_model": "mimo-test",
+          "purpose": "chat",
+          "status": "failed",
+          "http_status": 200,
+          "upstream_status": 200,
+          "duration_ms": 1501.52,
+          "upstream_attempts": 1,
+          "usage_json": null,
+          "usage_final": 0,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "error_code": "request_deadline_exceeded",
+          "error_message": "Selark 请求总时限已到，生成不会自动重试。",
+          "origin": "live",
+          "upstream_result": "cancelled",
+          "delivery_status": "sent",
+          "upstream_error_code": null,
+          "delivery_error_code": null,
+          "queue_ms": 0.77,
+          "record_revision": 2,
+          "requested_alias": null,
+          "resource_type": "api",
+          "plan_id": null
+        },
+        {
+          "request_id": "f159978afbb341b78b02c1c3f22150c8",
+          "original_request_id": "f159978afbb341b78b02c1c3f22150c8",
+          "started_at": "2026-10-29T17:08:26.687459+00:00",
+          "finished_at": "2026-10-29T17:08:26.710273+00:00",
+          "caller_id": "legacy",
+          "connection_id": "mimo-default",
+          "session_id": "cancel",
+          "model": null,
+          "requested_model": "mimo-test",
+          "purpose": "chat",
+          "status": "cancelled",
+          "http_status": 499,
+          "upstream_status": null,
+          "duration_ms": 22.82,
+          "upstream_attempts": 1,
+          "usage_json": null,
+          "usage_final": 0,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "error_code": "client_disconnected",
+          "error_message": "调用方已断开；已取得的真实用量保留。",
+          "origin": "live",
+          "upstream_result": "cancelled",
+          "delivery_status": "disconnected",
+          "upstream_error_code": null,
+          "delivery_error_code": "client_disconnected",
+          "queue_ms": 7.14,
+          "record_revision": 2,
+          "requested_alias": null,
+          "resource_type": "api",
+          "plan_id": null
+        },
+        {
+          "request_id": "5e0270ddb48e4050ad9912b33b26d747",
+          "original_request_id": "5e0270ddb48e4050ad9912b33b26d747",
+          "started_at": "2026-10-29T17:08:26.736604+00:00",
+          "finished_at": "2026-10-29T17:08:27.131163+00:00",
+          "caller_id": "legacy",
+          "connection_id": "mimo-default",
+          "session_id": "crash",
+          "model": null,
+          "requested_model": "mimo-test",
+          "purpose": "chat",
+          "status": "interrupted",
+          "http_status": null,
+          "upstream_status": null,
+          "duration_ms": null,
+          "upstream_attempts": 1,
+          "usage_json": null,
+          "usage_final": 0,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "error_code": "service_restarted",
+          "error_message": "服务在交付确认前退出；已取得的用量保留，其他用量未知。",
+          "origin": "live",
+          "upstream_result": "unknown",
+          "delivery_status": "unknown",
+          "upstream_error_code": null,
+          "delivery_error_code": null,
+          "queue_ms": null,
+          "record_revision": 0,
+          "requested_alias": null,
+          "resource_type": "api",
+          "plan_id": null
+        },
+        {
+          "request_id": "41a545e8b14542a2a379bbed9eb478fa",
+          "original_request_id": "41a545e8b14542a2a379bbed9eb478fa",
+          "started_at": "2026-10-29T17:08:27.214159+00:00",
+          "finished_at": "2026-10-29T17:08:27.586500+00:00",
+          "caller_id": "legacy",
+          "connection_id": "mimo-default",
+          "session_id": "shutdown",
+          "model": null,
+          "requested_model": "mimo-test",
+          "purpose": "chat",
+          "status": "interrupted",
+          "http_status": 500,
+          "upstream_status": null,
+          "duration_ms": 372.35,
+          "upstream_attempts": 1,
+          "usage_json": null,
+          "usage_final": 0,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "error_code": "service_shutdown",
+          "error_message": "服务关闭中断请求；不重试生成。",
+          "origin": "live",
+          "upstream_result": "cancelled",
+          "delivery_status": "unknown",
+          "upstream_error_code": null,
+          "delivery_error_code": null,
+          "queue_ms": 0.0,
+          "record_revision": 2,
+          "requested_alias": null,
+          "resource_type": "api",
+          "plan_id": null
+        },
+        {
+          "request_id": "b45da582d23449259e81d6b37250a8fb",
+          "original_request_id": "b45da582d23449259e81d6b37250a8fb",
+          "started_at": "2026-10-29T17:08:28.065410+00:00",
+          "finished_at": "2026-10-29T17:08:28.105951+00:00",
+          "caller_id": "legacy",
+          "connection_id": "mimo-default",
+          "session_id": "after-recovery",
+          "model": "mimo-test",
+          "requested_model": "mimo-test",
+          "purpose": "chat",
+          "status": "success",
+          "http_status": 200,
+          "upstream_status": 200,
+          "duration_ms": 40.55,
+          "upstream_attempts": 1,
+          "usage_json": "{\"prompt_tokens\": 12, \"completion_tokens\": 2, \"total_tokens\": 14}",
+          "usage_final": 1,
+          "prompt_tokens": 12,
+          "completion_tokens": 2,
+          "total_tokens": 14,
+          "error_code": null,
+          "error_message": null,
+          "origin": "live",
+          "upstream_result": "success",
+          "delivery_status": "sent",
+          "upstream_error_code": null,
+          "delivery_error_code": null,
+          "queue_ms": 0.0,
+          "record_revision": 2,
+          "requested_alias": null,
+          "resource_type": "api",
+          "plan_id": null
+        }
+      ]
+    },
+    "api_stress": {
+      "version": "0.7.1",
+      "verified_at": "2026-10-29T17:08:57.786688+00:00",
+      "scope": "temporary loopback upstream only; no real credentials or generations",
+      "real_generation_requests": 0,
+      "client_chat_requests": 275,
+      "simulated_upstream_requests": 50,
+      "peak_upstream_concurrency": 4,
+      "checks": [
+        {
+          "check": "80_simultaneous_clients_cycle_1",
+          "passed": true,
+          "status_counts": {
+            "200": 12,
+            "429": 68
+          },
+          "upstream_calls": 12,
+          "health_latency_ms": 2.05
+        },
+        {
+          "check": "80_simultaneous_clients_cycle_2",
+          "passed": true,
+          "status_counts": {
+            "200": 12,
+            "429": 68
+          },
+          "upstream_calls": 12,
+          "health_latency_ms": 1.86
+        },
+        {
+          "check": "80_simultaneous_clients_cycle_3",
+          "passed": true,
+          "status_counts": {
+            "200": 12,
+            "429": 68
+          },
+          "upstream_calls": 12,
+          "health_latency_ms": 1.95
+        },
+        {
+          "check": "12_simultaneous_disconnects_release_active_and_queued",
+          "passed": true
+        },
+        {
+          "check": "queued_revocation_and_connection_disable_follow_documented_rules",
+          "passed": true
+        },
+        {
+          "check": "10_invalid_or_slow_requests_generate_nothing",
+          "passed": true
+        },
+        {
+          "check": "4_live_streams_with_sqlite_writer_and_consistent_pending_backup",
+          "passed": true,
+          "data_events_per_stream": [
+            42,
+            42,
+            42,
+            42
+          ],
+          "pending_at_backup": 4,
+          "health_latency_ms": 2.5,
+          "recovered_tokens": 56
+        }
+      ],
+      "summary": {
+        "requests": 71,
+        "known_usage_requests": 46,
+        "missing_usage_requests": 25,
+        "local_rejected_requests": 21,
+        "unknown_consumption_requests": 4,
+        "in_flight_requests": 0,
+        "reported_usage_requests": 46,
+        "upstream_attempts": 50,
+        "unknown_attempt_count_requests": 0,
+        "unknown_time_requests": 0,
+        "status_counts": {
+          "success": 46,
+          "cancelled": 12,
+          "failed": 13
+        },
+        "known_tokens": {
+          "prompt_tokens": 552,
+          "completion_tokens": 92,
+          "total_tokens": 644
+        },
+        "missing_field_requests": {
+          "prompt_tokens": 25,
+          "completion_tokens": 25,
+          "total_tokens": 25
+        },
+        "estimated_cost_by_currency": {},
+        "unknown_cost_requests": 50,
+        "billed_cost": null,
+        "resource_accounting": {
+          "scope": "Selark 0.5+ admissions",
+          "requests": 50,
+          "tokens_by_basis": {
+            "reported_total": 644,
+            "unknown_hold": 1388
+          }
+        }
+      },
+      "final_health": {
+        "status": "ok",
+        "version": "0.7.1",
+        "capacity": {
+          "active": 0,
+          "queued": 0,
+          "admitted": 0,
+          "max_active": 4,
+          "max_queued": 8,
+          "accepting": true
+        },
+        "storage": {
+          "degraded": false,
+          "pending_records": 0,
+          "invalid_records": 0,
+          "accepting": true
+        }
+      },
+      "recovery_after_stop": {
+        "restored": 0,
+        "invalid": 0,
+        "failed": 0,
+        "pending": 0,
+        "interrupted": 0
+      }
+    },
+    "resource_matrix": {
+      "version": "0.7.1",
+      "verified_at": "2026-10-29T17:09:11.558958+00:00",
+      "scope": "temporary profiles; real loopback downstream; MockTransport upstream",
+      "real_generation_requests": 0,
+      "real_provider_metadata_requests": 0,
+      "http_chat_requests": 668,
+      "cli_and_example_generations": 14,
+      "simulated_upstream_generations": 143,
+      "simulated_quota_reads": 19,
+      "per_connection_generations": {
+        "mimo-default": 46,
+        "deepseek-test": 42,
+        "relay-test": 37,
+        "coding-test": 18
+      },
+      "peak_upstream_concurrency": 4,
+      "peak_per_connection": {
+        "mimo-default": 1,
+        "deepseek-test": 2,
+        "relay-test": 1,
+        "coding-test": 1
+      },
+      "checks": [
+        {
+          "check": "four_resources_http_multiturn_text_blocks_routes_sessions",
+          "passed": true,
+          "requests": 8
+        },
+        {
+          "check": "cli_inputs_routes_json_stream_and_external_program",
+          "passed": true,
+          "successful_generations": 14,
+          "noninteractive_plan_cli_rejected": true
+        },
+        {
+          "check": "64_mixed_clients_cycle_1",
+          "passed": true,
+          "status_counts": {
+            "200": 11,
+            "429": 53
+          },
+          "upstream_calls": 11,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 49.8,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_2",
+          "passed": true,
+          "status_counts": {
+            "200": 10,
+            "429": 54
+          },
+          "upstream_calls": 10,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 49.87,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_3",
+          "passed": true,
+          "status_counts": {
+            "200": 10,
+            "429": 54
+          },
+          "upstream_calls": 10,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 60.0,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_4",
+          "passed": true,
+          "status_counts": {
+            "200": 11,
+            "429": 53
+          },
+          "upstream_calls": 11,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 50.0,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_5",
+          "passed": true,
+          "status_counts": {
+            "200": 10,
+            "429": 54
+          },
+          "upstream_calls": 10,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 49.85,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_6",
+          "passed": true,
+          "status_counts": {
+            "200": 11,
+            "429": 53
+          },
+          "upstream_calls": 11,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 50.0,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_7",
+          "passed": true,
+          "status_counts": {
+            "200": 10,
+            "429": 54
+          },
+          "upstream_calls": 10,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 60.17,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_8",
+          "passed": true,
+          "status_counts": {
+            "200": 11,
+            "429": 53
+          },
+          "upstream_calls": 11,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 59.8,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_9",
+          "passed": true,
+          "status_counts": {
+            "200": 10,
+            "429": 54
+          },
+          "upstream_calls": 10,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 48.7,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_10",
+          "passed": true,
+          "status_counts": {
+            "200": 10,
+            "429": 54
+          },
+          "upstream_calls": 10,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 49.86,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "shared_caller_token_reservation_across_four_resources",
+          "passed": true,
+          "successful_generations": 1,
+          "quota_rejections": 3,
+          "settled_tokens": 14
+        },
+        {
+          "check": "four_resources_socket_disconnect_release",
+          "passed": true,
+          "unknown_usage_requests": 4
+        },
+        {
+          "check": "four_resource_streams_database_lock_backup_recovery",
+          "passed": true,
+          "restored_receipts": 4,
+          "known_total_tokens": 56,
+          "second_replay": 0
+        },
+        {
+          "check": "four_resources_zero_vs_missing_usage",
+          "passed": true
+        }
+      ],
+      "summary": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 162,
+          "known_usage_requests": 135,
+          "missing_usage_requests": 27,
+          "local_rejected_requests": 19,
+          "unknown_consumption_requests": 8,
+          "in_flight_requests": 0,
+          "reported_usage_requests": 135,
+          "upstream_attempts": 143,
+          "unknown_attempt_count_requests": 0,
+          "unknown_time_requests": 0,
+          "status_counts": {
+            "success": 139,
+            "failed": 19,
+            "cancelled": 4
+          },
+          "known_tokens": {
+            "prompt_tokens": 1310,
+            "completion_tokens": 524,
+            "total_tokens": 1834
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 27,
+            "completion_tokens": 27,
+            "total_tokens": 27
+          },
+          "estimated_cost_by_currency": {},
+          "unknown_cost_requests": 143,
+          "billed_cost": null,
+          "resource_accounting": {
+            "scope": "Selark 0.5+ admissions",
+            "requests": 143,
+            "tokens_by_basis": {
+              "reported_total": 1834,
+              "unknown_hold": 3668
+            }
+          }
+        },
+        "group_by": "connection",
+        "groups": [
+          {
+            "connection_id": "mimo-default",
+            "requests": 46,
+            "known_usage_requests": 44,
+            "missing_usage_requests": 2,
+            "local_rejected_requests": 0,
+            "unknown_consumption_requests": 2,
+            "in_flight_requests": 0,
+            "reported_usage_requests": 44,
+            "upstream_attempts": 46,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 45,
+              "cancelled": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 430,
+              "completion_tokens": 172,
+              "total_tokens": 602
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 2,
+              "completion_tokens": 2,
+              "total_tokens": 2
+            },
+            "estimated_cost_by_currency": {},
+            "unknown_cost_requests": 46,
+            "billed_cost": null,
+            "resource_accounting": {
+              "scope": "Selark 0.5+ admissions",
+              "requests": 46,
+              "tokens_by_basis": {
+                "reported_total": 602,
+                "unknown_hold": 917
+              }
+            }
+          },
+          {
+            "connection_id": "deepseek-test",
+            "requests": 43,
+            "known_usage_requests": 40,
+            "missing_usage_requests": 3,
+            "local_rejected_requests": 1,
+            "unknown_consumption_requests": 2,
+            "in_flight_requests": 0,
+            "reported_usage_requests": 40,
+            "upstream_attempts": 42,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 41,
+              "failed": 1,
+              "cancelled": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 390,
+              "completion_tokens": 156,
+              "total_tokens": 546
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 3,
+              "completion_tokens": 3,
+              "total_tokens": 3
+            },
+            "estimated_cost_by_currency": {},
+            "unknown_cost_requests": 42,
+            "billed_cost": null,
+            "resource_accounting": {
+              "scope": "Selark 0.5+ admissions",
+              "requests": 42,
+              "tokens_by_basis": {
+                "reported_total": 546,
+                "unknown_hold": 917
+              }
+            }
+          },
+          {
+            "connection_id": "relay-test",
+            "requests": 38,
+            "known_usage_requests": 35,
+            "missing_usage_requests": 3,
+            "local_rejected_requests": 1,
+            "unknown_consumption_requests": 2,
+            "in_flight_requests": 0,
+            "reported_usage_requests": 35,
+            "upstream_attempts": 37,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 36,
+              "failed": 1,
+              "cancelled": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 340,
+              "completion_tokens": 136,
+              "total_tokens": 476
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 3,
+              "completion_tokens": 3,
+              "total_tokens": 3
+            },
+            "estimated_cost_by_currency": {},
+            "unknown_cost_requests": 37,
+            "billed_cost": null,
+            "resource_accounting": {
+              "scope": "Selark 0.5+ admissions",
+              "requests": 37,
+              "tokens_by_basis": {
+                "reported_total": 476,
+                "unknown_hold": 917
+              }
+            }
+          },
+          {
+            "connection_id": "coding-test",
+            "requests": 35,
+            "known_usage_requests": 16,
+            "missing_usage_requests": 19,
+            "local_rejected_requests": 17,
+            "unknown_consumption_requests": 2,
+            "in_flight_requests": 0,
+            "reported_usage_requests": 16,
+            "upstream_attempts": 18,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 17,
+              "failed": 17,
+              "cancelled": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 150,
+              "completion_tokens": 60,
+              "total_tokens": 210
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 19,
+              "completion_tokens": 19,
+              "total_tokens": 19
+            },
+            "estimated_cost_by_currency": {},
+            "unknown_cost_requests": 18,
+            "billed_cost": null,
+            "resource_accounting": {
+              "scope": "Selark 0.5+ admissions",
+              "requests": 18,
+              "tokens_by_basis": {
+                "reported_total": 210,
+                "unknown_hold": 917
+              }
+            }
+          }
+        ]
+      },
+      "final_health": {
+        "status": "ok",
+        "version": "0.7.1",
+        "pid": 3680628,
+        "capacity": {
+          "active": 0,
+          "queued": 0,
+          "admitted": 0,
+          "max_active": 4,
+          "max_queued": 8,
+          "accepting": true
+        },
+        "storage": {
+          "degraded": false,
+          "pending_records": 0,
+          "invalid_records": 0,
+          "accepting": true
+        }
+      },
+      "restart_preserved_summary": true,
+      "temporary_service_stopped": true
+    },
+    "installed_operations": {
+      "version": "0.7.1",
+      "passed": true,
+      "checks": [
+        "background start confirms own health and repeated start is idempotent",
+        "two explicit fake generations recorded once with 28 tokens",
+        "online backup hash verification and isolated recovery preserve live ledger",
+        "persistent logs contain request metadata and no fake credentials",
+        "graceful restart preserves history without regenerating",
+        "crash restart and repeated stop are safe without extra generation",
+        "offline history overview is consistent on every repeated read"
+      ],
+      "real_provider_requests": 0,
+      "oauth_operations": 0,
+      "fake_generations": 2,
+      "known_tokens": 28,
+      "history_rows": 20000,
+      "overview_seconds": [
+        0.3256,
+        0.3432,
+        0.3182
+      ],
+      "service_backend": "process",
+      "systemd": "covered by unit simulation"
+    }
+  }
+}

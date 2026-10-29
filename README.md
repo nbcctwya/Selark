@@ -1,7 +1,37 @@
-# Selark 0.7.0 · 个人模型接入中间件
+# Selark 0.7.1 · 个人 AI 资源管理工具
 
 独立的文本模型 HTTP 接入服务：`CLI / 外部程序 → Selark → 指定模型连接`。
 Python 3.11+，FastAPI + HTTPX + Uvicorn；默认仅监听 `127.0.0.1:8787`。
+
+## 0.7.1：稳定性与日常管理
+
+```bash
+selark status                       # 所有资源、模型、历史验证、授权、用量及本地配额
+selark status --offline --json       # 完全离线只读，不迁移、不刷新 OAuth
+selark service start                 # 优先 systemd 用户服务，否则独立后台进程
+selark service status
+selark service restart
+selark service stop
+selark service enable                # 可选：systemd 用户服务自启动；默认不启用
+selark service disable
+selark logs --lines 30
+selark records show REQUEST_ID --json
+selark backup                        # 保留旧命令，新备份附 SHA-256 清单
+selark backup list --json
+selark backup verify /absolute/backup/path
+selark backup drill /absolute/backup/path  # 临时副本恢复演练，不启动服务
+```
+
+`status` 严格区分配置、历史验证、本地调用方权限、OAuth 本地状态和当前可用性；
+不会因曾经成功、持有 Key 或存在套餐快照就声称上游当前可用，也不会调用供应商。
+Token 矛盾、流式累计计数回退和不完整用量保留追溯信息与保守预留。
+费用仍按请求时价格快照估算，不是账单。限流等待提示保留，无自动重试或付费来源切换。
+
+新增 `connection add ID --interactive` 配置向导；日志默认按 5 MiB 轮转并保留 3 个历史文件。
+0.7.0 配置、数据库 schema 4、令牌、API、Token Plan 和 ChatGPT 连接继续兼容，
+OAuth 登录、授权、刷新和退出代码保持原样。
+操作说明及边界见 [0.7.1 使用说明](docs/stability-071.md)，
+测试、性能与 pipx 结果见 [0.7.1 验收](docs/stability-071-verification.md)。
 
 ## 日常安装：pipx（当前用户）
 
@@ -336,7 +366,8 @@ Content-Type: application/json
 请求总时限默认 120 秒，包含接收请求体、排队、上游调用和终止响应交付；结束后的资源清理单独收尾。
 日志还包括鉴权调用方、连接、可选会话和用途。对话调用元数据持久存入
 `~/.local/share/selark/records.sqlite3`，可通过 `records`、`usage`、`sessions` 查询。
-stdout/stderr 仍可由进程管理器收集；不估算金额，不自动轮转或删除记录。
+0.7.1 同时写入数据目录下的 `logs/selark.log` 并轮转，默认 5 MiB × 4 个文件；
+前台 stderr 仍可由进程管理器收集。记录库不会自动清理；费用按手工价格快照估算。
 SQLite 最终写入失败时，受保护的 `pending/` 落账文件保留已取得用量，后台或重启时按请求 ID 重放。
 重放只更新记录，不再次调用 MiMo；数据库和落账文件同时无法写入时拒绝后续生成并报告异常。
 

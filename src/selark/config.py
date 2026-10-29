@@ -95,6 +95,11 @@ class ServiceLimits(StrictConfig):
     max_pending_records: int = Field(default=256, ge=1, le=4096)
 
 
+class LogSettings(StrictConfig):
+    max_bytes: int = Field(default=5 * 1024 * 1024, ge=65536, le=64 * 1024 * 1024)
+    backup_count: int = Field(default=3, ge=1, le=20)
+
+
 class ServerConfig(StrictConfig):
     schema_version: Literal[2] = 2
     connection_id: Literal["mimo-default"] = "mimo-default"
@@ -109,6 +114,7 @@ class ServerConfig(StrictConfig):
     port: int = Field(default=8787, ge=1, le=65535)
     timeout_seconds: float = Field(default=60.0, ge=1, le=600)
     limits: ServiceLimits = Field(default_factory=ServiceLimits)
+    logging: LogSettings = Field(default_factory=LogSettings)
 
     _url = field_validator("base_url")(validate_url)
 

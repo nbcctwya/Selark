@@ -150,6 +150,8 @@ def parse_quota(data):
             for key in ("limit", "used", "remaining")
         ):
             result["invalid_fields"] = True
+        if detail.get("resetTime") is not None and timestamp(detail["resetTime"]) is None:
+            result["invalid_fields"] = True
         result["reported_counters"].append(
             {
                 "window": window,
@@ -161,6 +163,8 @@ def parse_quota(data):
     # Different serializers can contradict one another. Do not choose a favourable value.
     for record in result["reported_counters"]:
         limit, used, remaining = (record[key] for key in ("limit", "used", "remaining"))
+        if limit is not None and remaining is not None and int(remaining) > int(limit):
+            result["conflicting_fields"] = True
         if limit is not None and used is not None:
             limit, used = int(limit), int(used)
             if used > limit or (remaining is not None and int(remaining) + used != limit):
@@ -220,6 +224,14 @@ async def query_quota(config, *, client=None, transport=None):
                 await close_response(response)
         result["source"] = config.base_url + preset["quota_path"]
         return result
+    except GatewayError as error:
+        raise GatewayError(
+            error.status,
+            error.code,
+            "套餐额度查询失败；未生成。" + error.message,
+            error.upstream_status,
+            retry_after=error.retry_after,
+        ) from None
     except (TimeoutError, httpx.HTTPError):
         raise GatewayError(
             503, "plan_quota_unavailable", "套餐额度查询超时或不可达；未生成。"

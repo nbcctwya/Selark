@@ -1,6 +1,7 @@
 """HTTP-only Selark client. This module never imports a provider or reads server.json."""
 
 import json
+import re
 import sys
 import time
 
@@ -32,17 +33,34 @@ class SelarkClient:
     def __exit__(self, *args):
         self.http.close()
 
+    def failure(self, message, response, code=None):
+        message = str(message).replace(self.config.access_token.get_secret_value(), "[REDACTED]")
+        message = "".join(c for c in message if c.isprintable())[:800]
+        identity = response.headers.get("x-request-id", "")
+        suffix = ""
+        if isinstance(code, str) and re.fullmatch(r"[a-z0-9_]{1,80}", code):
+            suffix += f" [{code}]"
+        if re.fullmatch(r"[A-Za-z0-9_-]{1,100}", identity):
+            suffix += f"；请求 {identity}，本机可用 selark records show {identity} 查看"
+        retry = response.headers.get("retry-after", "")
+        if retry.isascii() and retry.isdigit() and len(retry) <= 6:
+            suffix += f"；建议等待 {retry} 秒后核对状态"
+        return ClientError(message + suffix)
+
     def check(self, response: httpx.Response) -> None:
         if response.status_code == 200:
             return
+        code = None
         try:
-            message = response.json()["error"]["message"]
+            error = response.json()["error"]
+            message = error["message"]
+            code = error.get("code")
             if not isinstance(message, str):
                 raise ValueError
             message = message.replace(self.config.access_token.get_secret_value(), "[REDACTED]")
         except (ValueError, KeyError, TypeError):
             message = "Selark 返回了错误响应。"
-        raise ClientError(f"HTTP {response.status_code}：{message}")
+        raise self.failure(f"HTTP {response.status_code}：{message}", response, code)
 
     def models(self, connection_id=None) -> dict:
         response = self.http.get(
@@ -85,11 +103,7 @@ class SelarkClient:
                         data = json.loads(event)
                         if "error" in data:
                             message = str(data["error"].get("message", "流式请求失败"))
-                            raise ClientError(
-                                message.replace(
-                                    self.config.access_token.get_secret_value(), "[REDACTED]"
-                                )
-                            )
+                            raise self.failure(message, response, data["error"].get("code"))
                         model = data.get("model", model)
                         if isinstance(data.get("usage"), dict):
                             usage = data["usage"]
@@ -103,10 +117,14 @@ class SelarkClient:
                     print(file=sys.stdout)
                     raise
                 except (ValueError, KeyError, TypeError, AttributeError):
-                    raise ClientError("Selark SSE 数据无效；输出可能不完整。") from None
+                    raise self.failure("Selark SSE 数据无效；输出可能不完整。", response) from None
+                except httpx.HTTPError:
+                    raise self.failure(
+                        "Selark 流连接中断或超时；输出可能不完整，未自动重发。", response
+                    ) from None
             print()
             if not done or finish_reason is None:
-                raise ClientError("Selark 流提前结束；输出可能不完整。")
+                raise self.failure("Selark 流提前结束；输出可能不完整。", response)
         else:
             response = self.http.post("/v1/chat/completions", json=payload)
             request_id = response.headers.get("x-request-id")
