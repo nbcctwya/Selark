@@ -1,4 +1,4 @@
-# Selark 0.6.3 · 个人模型接入中间件
+# Selark 0.7.0 · 个人模型接入中间件
 
 独立的文本模型 HTTP 接入服务：`CLI / 外部程序 → Selark → 指定模型连接`。
 Python 3.11+，FastAPI + HTTPX + Uvicorn；默认仅监听 `127.0.0.1:8787`。
@@ -134,6 +134,28 @@ selark ask --messages /absolute/path/to/messages.json --max-tokens 32
 `ask` 支持 `--model`、`--system`、`--messages`；省略文本或传 `-` 时读取 stdin。
 `Ctrl+C` 停止服务，再次 `selark serve` 使用原配置启动。服务停机时 CLI 以非零码明确报告连接失败。
 
+## ChatGPT 个人订阅：官方 OAuth
+
+0.7.0 增加独立 `chatgpt_subscription` 资源，使用 Selark 自己的官方开源客户端注册，
+支持浏览器登录、状态、到期刷新、退出、官方模型发现与文本推理。
+普通响应和流式调用继续经过 Selark HTTP；旧令牌默认没有新订阅权限，不自动切换收费 API。
+
+```bash
+selark chatgpt login
+selark chatgpt status --json
+selark connection discover chatgpt-personal
+selark chatgpt usage --json
+selark chatgpt refresh --json
+selark chatgpt logout
+```
+
+先按 [ChatGPT 接入说明](docs/chatgpt.md) 选择已发现模型，并用
+[专用策略模板](examples/chatgpt-policy.example.json) 创建受限的 Selark 调用方。
+官方订阅目前不支持硬输出 Token 上限，`chatgpt_output_reservation` 仅为本地估算；
+此连接不可传 `--max-tokens` 或采样参数。套餐剩余额度与刷新窗口保持未知，官方资格不足时明确失败。
+OAuth 凭据不进入源码、日志或备份；备份只保留注册身份，恢复后需要本人重新授权。
+完整真实／模拟结果见 [0.7 验收](docs/chatgpt-verification.md)。
+
 ## Token Plan：个人交互式使用
 
 0.6 将 `token_plan` 与普通 `api` 连接分开管理，接入 **Kimi Coding Plan** 的官方
@@ -248,7 +270,7 @@ python3 /absolute/path/to/Selark/examples/summarize.py \
 
 该示例仅依赖 Python 标准库，可以复制到其他目录、脱离 Selark 安装运行。
 `examples/` 是单独的小程序示例，不是已安装 `selark` 命令的运行依赖。
-只向外部调用方提供客户端配置；模型权限受该令牌策略约束，旧令牌默认无 Token Plan 权限。
+只向外部调用方提供客户端配置；模型权限受该令牌策略约束，旧令牌默认无 Token Plan 或 ChatGPT 订阅权限。
 
 初始化时可选择端口、地址和允许模型：
 
@@ -278,12 +300,12 @@ selark --config-dir /private/new-selark init \
 - 可选 `session_id` 仅在 Selark 内按 `(鉴权调用方, session_id)` 归组，不传给 MiMo，也不修改 messages。
 - `connection_id` 或 `连接ID::模型ID` 明确选连接；裸模型名继续指向原 MiMo。model 省略或 null 使用所选连接默认模型，指定模型须在该连接允许列表中。
 - `stream` 默认为 false。流式 `data: <JSON>` 逐事件转发，以 `data: [DONE]` 结束；保持上游分片和实际 usage。
-- 支持 `max_completion_tokens`，以及映射到它的别名 `max_tokens`（两者不可同时给出，范围 1–131072，省略默认 1024）。
+- 普通 API 支持 `max_completion_tokens`，以及映射到它的别名 `max_tokens`（两者不可同时给出，范围 1–131072，省略默认 1024）；ChatGPT 订阅拒绝这些参数。
 - 支持 `temperature`（0–1.5）、`top_p`（0.01–1）、`stop`（字符串或最多四个字符串）、`presence_penalty/frequency_penalty`（-2–2）。
 - MiMo/DeepSeek 及可关闭思考的 GLM/Kimi 模式关闭 thinking；Kimi K3 等保留调用方显式提供的 assistant reasoning_content，不自动管理历史。原生 Anthropic 转换为统一文本响应。
 - 普通响应保留上游 `id/model/choices/usage` 等字段。不会生成、估算或补零 usage；上游缺失时日志标记 null。
 - 上游回复只接受一条 `index=0` 的 assistant 文本 choice；结束原因必须是非空字符串。SSE 允许空 choices 的用量帧、重复累计用量和无新增文本的相同结束标记；结束后继续输出或改写结束原因视为协议错误。已经收到的有效部分用量保留，未完成的用量仍不作为最终消耗汇总。
-- 不支持工具调用、图片/音视频、Responses API、对话正文存储、`n`、`stream_options`、`response_format`、用户可调 thinking；未知请求字段返回 400。
+- 不支持工具调用、图片/音视频、原生 Responses HTTP 路由、对话正文存储、`n`、`stream_options`、`response_format`、用户可调 thinking；未知请求字段返回 400。ChatGPT 订阅服务端将官方 Responses SSE 转换为统一文本响应，具体参数限制见其接入说明。
 - 单请求体上限 1 MiB，最多 256 条消息；普通上游响应上限 8 MiB；SSE 单事件上限约 1 MiB。
 
 请求示例（令牌从你的客户端配置安全取得，下面只使用占位值）：

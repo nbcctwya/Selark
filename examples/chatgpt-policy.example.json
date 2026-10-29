@@ -1,0 +1,10 @@
+{
+  "allow_chatgpt_subscriptions": true,
+  "allowed_connections": ["chatgpt-personal"],
+  "allowed_models": ["chatgpt-personal::MODEL_FROM_DISCOVERY"],
+  "requests_per_minute": 5,
+  "max_concurrent_requests": 1,
+  "max_estimated_input_tokens": 10000,
+  "chatgpt_output_reservation": 4096,
+  "daily_token_limit": 20000
+}

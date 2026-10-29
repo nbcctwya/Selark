@@ -4,7 +4,11 @@ from selark.providers.compatible import CompatibleProvider
 from selark.providers.mimo import MiMoProvider
 
 
-def provider_for(config, client):
+def provider_for(config, client, *, auth=None):
+    if config.provider == "chatgpt":
+        from selark.providers.chatgpt import ChatGPTProvider
+
+        return ChatGPTProvider(config, client, auth)
     cls = {
         "mimo": MiMoProvider,
         "anthropic": AnthropicProvider,

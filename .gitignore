@@ -14,6 +14,8 @@ server.json
 client.json
 connections.json
 resources.json
+# OAuth registrations and rotating credentials belong only in user configuration.
+chatgpt-auth/
 # Local recovery receipts and protected configuration/database backups.
 pending/
 backups/

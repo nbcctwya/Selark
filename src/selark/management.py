@@ -47,6 +47,7 @@ MANAGEMENT_COMMANDS = {
     "prices",
     "costs",
     "plans",
+    "chatgpt",
 }
 
 
@@ -92,7 +93,7 @@ def add_filters(parser):
     parser.add_argument("--tz", default="UTC", help="IANA 时区，默认 UTC，如 Asia/Shanghai")
     parser.add_argument("--model")
     parser.add_argument("--connection", help="按实际连接 ID 筛选")
-    parser.add_argument("--resource-type", choices=["api", "token_plan"])
+    parser.add_argument("--resource-type", choices=["api", "token_plan", "chatgpt_subscription"])
     parser.add_argument("--plan", help="按套餐连接的稳定 ID 筛选")
     parser.add_argument("--caller", help="鉴权确定的调用方 ID")
     parser.add_argument("--session", help="仅筛选归组标签；跨调用方仍分别汇总")
@@ -105,6 +106,9 @@ def add_filters(parser):
 
 
 def add_commands(commands):
+    from selark.chatgpt_cli import add_commands as chatgpt_commands
+
+    chatgpt_commands(commands)
     plans = commands.add_parser("plans", help="Token Plan 独立管理；默认查询不联网、不生成")
     actions = plans.add_subparsers(dest="action", required=True)
     actions.add_parser("list").add_argument("--json", action="store_true")
@@ -340,10 +344,10 @@ def server_url(config: ServerConfig) -> str:
 
 def probe(runtime: Runtime, identity="mimo-default") -> dict:
     config = require_connection(runtime.connection_settings(), identity)
-    if config.resource_type == "token_plan":
+    if config.resource_type in {"token_plan", "chatgpt_subscription"}:
         raise ConfigError(
-            "套餐不执行通用生成探测。额度用 plans refresh；"
-            "编程调用用受限令牌与 ask --interactive-coding。"
+            "订阅资源不执行通用生成探测。ChatGPT 用 chatgpt status/usage 查询，"
+            "用专用受限令牌主动 ask 验证；Token Plan 参见 plans --help。"
         )
     if not config.enabled:
         raise ConfigError("连接已停用；请先启用，再显式探测。")
@@ -402,6 +406,12 @@ def doctor(directory: Path) -> dict:
                 "configured_connections": 1 + len(registry.connections),
             }
         )
+        from selark.chatgpt_auth import ChatGPTAuth
+
+        for connection in registry.connections:
+            if connection.provider == "chatgpt":
+                status = ChatGPTAuth(directory).status(connection.connection_id)
+                checks.append({"check": "chatgpt_authorization", "ok": status["ready"], **status})
     except ConfigError as exc:
         checks.append({"check": "connections_config", "ok": False, "message": str(exc)})
     try:
@@ -570,6 +580,10 @@ def doctor(directory: Path) -> dict:
 
 
 def run(args, directory: Path) -> int:
+    if args.command == "chatgpt":
+        from selark.chatgpt_cli import run as chatgpt_run
+
+        return chatgpt_run(args, directory)
     if args.command == "doctor":
         result = doctor(directory)
         emit(result, args.json)
@@ -703,11 +717,17 @@ def run(args, directory: Path) -> int:
                         "provider": key,
                         "name": name,
                         "base_url": url,
-                        "protocol": "anthropic-messages"
+                        "protocol": "responses"
+                        if key == "chatgpt"
+                        else "anthropic-messages"
                         if key == "anthropic"
                         else "chat-completions",
                         "scope": "text subset; model availability requires account verification",
-                        "resource_type": "token_plan" if key in PLAN_PRESETS else "api",
+                        "resource_type": "chatgpt_subscription"
+                        if key == "chatgpt"
+                        else "token_plan"
+                        if key in PLAN_PRESETS
+                        else "api",
                         "generation_support": PLAN_PRESETS[key]["generation_support"]
                         if key in PLAN_PRESETS
                         else "text",
@@ -716,6 +736,8 @@ def run(args, directory: Path) -> int:
                 ]
             elif args.action == "add":
                 provider = "zhipu" if args.provider == "glm" else args.provider
+                if provider == "chatgpt":
+                    raise ConfigError("ChatGPT 订阅请用 selark chatgpt login [连接 ID]。")
                 result = runtime.add_connection(
                     identity,
                     provider,
@@ -729,14 +751,15 @@ def run(args, directory: Path) -> int:
                     plan={"tier": args.plan_tier} if args.plan_tier is not None else None,
                 )
             elif args.action == "discover":
+                from selark.chatgpt_auth import ChatGPTAuth
                 from selark.providers.discovery import discover
 
                 original = require_connection(runtime.connection_settings(), identity)
                 try:
-                    models = asyncio.run(discover(original))
+                    models = asyncio.run(discover(original, auth=ChatGPTAuth(directory)))
                     result = runtime.save_discovery(original, models)
                 except GatewayError as error:
-                    if error.upstream_status:
+                    if error.upstream_status and original.provider != "chatgpt":
                         error = GatewayError(
                             error.status,
                             "discovery_http_error",
@@ -770,6 +793,10 @@ def run(args, directory: Path) -> int:
                 }
                 if args.api_key or args.api_key_env:
                     current = require_connection(runtime.connection_settings(), identity)
+                    if current.provider == "chatgpt":
+                        raise ConfigError(
+                            "ChatGPT 连接请通过 chatgpt login 更新授权，不能配置 API Key。"
+                        )
                     changes["api_key"] = read_key(current.provider, args.api_key_env)
                 result = runtime.change_connection(changes, identity)
         elif args.command == "tokens":

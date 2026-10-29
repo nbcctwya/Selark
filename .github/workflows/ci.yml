@@ -38,13 +38,16 @@ jobs:
         run: |
           ruff check .
           ruff format --check .
-      - name: Isolated regressions including Coding Plan safety (no provider keys)
+      - name: Isolated regressions including OAuth and subscription safety (no real credentials)
         run: pytest -q
       - name: Installed CLI outside repository
         working-directory: ${{ runner.temp }}
         run: |
           selark --help
           selark plans --help
+          selark chatgpt --help
+          selark chatgpt login --help
+          selark chatgpt logout --help
           selark ask --help
           selark ask --help | grep -- '--interactive'
           selark plans set --help | grep -- 'personal_interactive'

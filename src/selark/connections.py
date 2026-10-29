@@ -20,6 +20,7 @@ PRESETS = {
     "zhipu": ("GLM / 智谱", "https://open.bigmodel.cn/api/paas/v4"),
     "kimi": ("Kimi", "https://api.moonshot.ai/v1"),
     "openai": ("OpenAI", "https://api.openai.com/v1"),
+    "chatgpt": ("ChatGPT 个人订阅", "https://api.openai.com/v1"),
     "anthropic": ("Anthropic", "https://api.anthropic.com/v1"),
     "openai-compatible": ("OpenAI 兼容中转", None),
 }
@@ -34,6 +35,7 @@ ProviderName = Literal[
     "openai-compatible",
     "kimi-code",
     "glm-coding",
+    "chatgpt",
 ]
 
 
@@ -59,7 +61,7 @@ class ConnectionConfig(StrictConfig):
     name: str = Field(min_length=1, max_length=80)
     provider: ProviderName
     base_url: str
-    api_key: SecretStr
+    api_key: SecretStr | None = None
     allowed_models: list[str] = Field(default_factory=list, max_length=1000)
     default_model: str | None = None
     enabled: bool = True
@@ -69,16 +71,27 @@ class ConnectionConfig(StrictConfig):
     token_parameter: Literal["max_tokens", "max_completion_tokens"] = "max_tokens"
     workspace_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{1,128}$")
     anthropic_version: Literal["2023-06-01", "2026-10-21"] = "2026-10-21"
-    resource_type: Literal["api", "token_plan"] = "api"
+    resource_type: Literal["api", "token_plan", "chatgpt_subscription"] = "api"
     plan: PlanSettings | None = None
     discovery: Discovery = Field(default_factory=Discovery)
     limits: ServiceLimits = Field(default_factory=ServiceLimits, exclude=True)
+    oauth_generation: int = Field(default=0, ge=0, exclude=True)
 
     _url = field_validator("base_url")(validate_url)
 
     @model_validator(mode="after")
     def check_connection(self):
-        if self.provider in PLAN_PRESETS:
+        if self.provider == "chatgpt":
+            if (
+                self.resource_type != "chatgpt_subscription"
+                or self.base_url != PRESETS["chatgpt"][1]
+                or self.api_key is not None
+                or self.plan is not None
+            ):
+                raise ValueError("ChatGPT 订阅只允许独立官方 OAuth 与公共 Responses 地址")
+        elif self.api_key is None:
+            raise ValueError("API / Token Plan 连接必须提供 API Key")
+        elif self.provider in PLAN_PRESETS:
             preset = PLAN_PRESETS[self.provider]
             if self.resource_type != "token_plan" or self.plan is None:
                 raise ValueError("Coding Plan 必须使用 token_plan 资源与独立套餐配置")
@@ -126,7 +139,7 @@ class ConnectionsConfig(StrictConfig):
 
 def connection_document(config):
     data = config.model_dump(mode="json")
-    data["api_key"] = config.api_key.get_secret_value()
+    data["api_key"] = config.api_key.get_secret_value() if config.api_key else None
     return data
 
 

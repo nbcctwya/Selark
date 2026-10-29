@@ -214,7 +214,9 @@ class RequestMiddleware:
                     state["connection_id"] = selected.connection_id
                     state["resource_type"] = selected.resource_type
                     state["plan_id"] = (
-                        selected.connection_id if selected.resource_type == "token_plan" else None
+                        selected.connection_id
+                        if selected.resource_type in {"token_plan", "chatgpt_subscription"}
+                        else None
                     )
                     enforce_access(policy, selected.connection_id, model, selected.resource_type)
                     if selected.resource_type == "token_plan":
@@ -485,7 +487,7 @@ def create_app(
         request.state.error_code, request.state.error_message = exc.code, exc.message
         if exc.upstream_status is not None:
             request.state.upstream_status = exc.upstream_status
-        if request.state.upstream_attempts:
+        if request.state.upstream_attempts and request.state.upstream_result != "success":
             request.state.upstream_result = "failed"
             request.state.upstream_error_code = exc.code
         return JSONResponse(
@@ -531,7 +533,9 @@ def create_app(
                 "connection_name": c.name,
                 "connection_enabled": c.enabled,
                 "resource_type": c.resource_type,
-                "plan_id": c.connection_id if c.resource_type == "token_plan" else None,
+                "plan_id": c.connection_id
+                if c.resource_type in {"token_plan", "chatgpt_subscription"}
+                else None,
             }
             for c in available
             for m in c.allowed_models
@@ -559,7 +563,9 @@ def create_app(
                         "connection_enabled": c.enabled,
                         "alias": alias,
                         "resource_type": c.resource_type,
-                        "plan_id": c.connection_id if c.resource_type == "token_plan" else None,
+                        "plan_id": c.connection_id
+                        if c.resource_type in {"token_plan", "chatgpt_subscription"}
+                        else None,
                     }
                 )
         return {
@@ -591,7 +597,9 @@ def create_app(
         request.state.connection_id = current.connection_id
         request.state.resource_type = current.resource_type
         request.state.plan_id = (
-            current.connection_id if current.resource_type == "token_plan" else None
+            current.connection_id
+            if current.resource_type in {"token_plan", "chatgpt_subscription"}
+            else None
         )
         if current.resource_type != "token_plan" and request.state.purpose != "connection_probe":
             request.state.purpose = "chat"
@@ -617,11 +625,21 @@ def create_app(
             and request.state.probe_fingerprint != request.state.fingerprint
         ):
             raise GatewayError(409, "probe_config_changed", "连接配置已改变，请重新显式探测。")
-        provider = provider_for(current.model_copy(update={"limits": limits}), app.state.http)
+        if current.provider == "chatgpt":
+            from selark.chatgpt_auth import ChatGPTAuth
+
+            provider = provider_for(
+                current.model_copy(update={"limits": limits}),
+                app.state.http,
+                auth=ChatGPTAuth(runtime.directory) if runtime else None,
+            )
+        else:
+            provider = provider_for(current.model_copy(update={"limits": limits}), app.state.http)
         if (
             data.max_tokens is None
             and data.max_completion_tokens is None
             and policy.max_output_tokens
+            and current.provider != "chatgpt"
         ):
             data = data.model_copy(
                 update={"max_completion_tokens": min(1024, policy.max_output_tokens)}
@@ -671,6 +689,15 @@ def create_app(
                 )
         estimate = input_estimate(payload)
         output = payload.get("max_tokens", payload.get("max_completion_tokens"))
+        if current.provider == "chatgpt":
+            output = policy.chatgpt_output_reservation
+            if policy.max_output_tokens is not None or output is None:
+                raise GatewayError(
+                    403,
+                    "chatgpt_reservation_required",
+                    "此连接需要显式输出估算预留，且不能配置不受支持的 max_output_tokens 硬上限。",
+                )
+            await provider.authorize()
         price = next(
             (
                 p
@@ -702,8 +729,23 @@ def create_app(
         )
         request.state.upstream_attempts = 1
         request.state.upstream_result = "in_progress"
+
+        def preserve_outcome():
+            # A valid terminal response may carry real usage even when generation or
+            # downstream delivery fails. Never infer completion from partial chunks.
+            for key, value in getattr(provider, "outcome", {}).items():
+                setattr(request.state, key, value)
+            if getattr(provider, "outcome", {}).get("upstream_result") in {"success", "failed"}:
+                request.state.upstream_completed_at = utc_now()
+            if current.provider == "chatgpt" and not provider.dispatched:
+                request.state.upstream_attempts = 0
+                request.state.upstream_result = "not_started"
+
         if not data.stream:
-            result = await provider.complete(payload)
+            try:
+                result = await provider.complete(payload)
+            finally:
+                preserve_outcome()
             request.state.upstream_status = 200
             request.state.actual_model = result["model"]
             request.state.usage = reported_usage(result)
@@ -711,7 +753,10 @@ def create_app(
             request.state.upstream_result = "success"
             request.state.upstream_completed_at = utc_now()
             return JSONResponse(result)
-        response = await provider.open(payload)
+        try:
+            response = await provider.open(payload)
+        finally:
+            preserve_outcome()
         request.state.upstream_status = 200
         request.state.stream_status = "started"
 
@@ -719,6 +764,7 @@ def create_app(
             events = provider.events(response)
             try:
                 async for event in events:
+                    preserve_outcome()
                     if event == "[DONE]":
                         request.state.stream_status = "completed"
                         request.state.usage_final = True
@@ -733,12 +779,15 @@ def create_app(
                             request.state.usage = usage
                         yield "data: " + json.dumps(event, ensure_ascii=False) + "\n\n"
             except GatewayError as exc:
+                preserve_outcome()
                 request.state.stream_status = "error"
-                request.state.upstream_result = "failed"
+                if request.state.upstream_result != "success":
+                    request.state.upstream_result = "failed"
                 request.state.error_code, request.state.error_message = exc.code, exc.message
                 request.state.upstream_error_code = exc.code
                 yield "event: error\ndata: " + json.dumps(exc.body(), ensure_ascii=False) + "\n\n"
             finally:
+                preserve_outcome()
                 with anyio.CancelScope(shield=True):
                     await events.aclose()
                     await close_upstream(response)

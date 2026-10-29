@@ -66,7 +66,7 @@ def parser() -> argparse.ArgumentParser:
         choices=["low", "high", "max"],
         help="Kimi Code 思考强度；默认使用套餐设置",
     )
-    ask.add_argument("--max-tokens", type=int, default=1024)
+    ask.add_argument("--max-tokens", type=int, help="普通 API 默认 1024；ChatGPT 订阅不支持此参数")
     ask.add_argument("--json", action="store_true", help="普通响应输出完整 JSON")
     from selark.management import add_commands
 

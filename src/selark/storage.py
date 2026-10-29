@@ -437,7 +437,8 @@ class Store:
                     connection_id,
                     (resource or {}).get("resource_type", "api") if resource else None,
                     connection_id
-                    if (resource or {}).get("resource_type") == "token_plan"
+                    if (resource or {}).get("resource_type")
+                    in {"token_plan", "chatgpt_subscription"}
                     else None,
                     (resource or {}).get("resource_type"),
                     purpose or "interactive_coding",

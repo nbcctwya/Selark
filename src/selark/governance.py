@@ -42,6 +42,8 @@ def money(value):
 
 class Policy(StrictConfig):
     allow_token_plans: bool = False
+    allow_chatgpt_subscriptions: bool = False
+    chatgpt_output_reservation: int | None = Field(default=None, ge=1, le=131072)
     allowed_connections: list[str] | None = Field(default=None, max_length=32)
     allowed_models: list[str] | None = Field(default=None, max_length=1000)
     requests_per_minute: int | None = Field(default=None, ge=1, le=100000)
@@ -127,6 +129,14 @@ def permitted(policy, connection, model, resource_type="api"):
     )
     return (
         plan_allowed
+        and (
+            resource_type != "chatgpt_subscription"
+            or (
+                policy.allow_chatgpt_subscriptions
+                and policy.allowed_connections is not None
+                and connection in policy.allowed_connections
+            )
+        )
         and (policy.allowed_connections is None or connection in policy.allowed_connections)
         and (policy.allowed_models is None or f"{connection}::{model}" in policy.allowed_models)
     )
@@ -140,9 +150,18 @@ def enforce_access(policy, connection, model, resource_type="api"):
 def input_estimate(payload):
     # Deliberately conservative heuristic; not a model tokenizer or a guaranteed upper bound.
     text = json.dumps(
-        {key: payload[key] for key in ("messages", "system") if key in payload}, ensure_ascii=False
+        {
+            key: payload[key]
+            for key in ("messages", "system", "input", "instructions")
+            if key in payload
+        },
+        ensure_ascii=False,
     )
-    return len(text.encode("utf-8")) + 256 + 32 * len(payload["messages"])
+    return (
+        len(text.encode("utf-8"))
+        + 256
+        + 32 * len(payload.get("messages", payload.get("input", [])))
+    )
 
 
 def estimate_cost(price, input_count, output_count, cached=0, writes=0):
@@ -249,7 +268,7 @@ def reserve(
 ):
     policy = policy_for(db, caller)
     enforce_access(policy, connection, model, resource_type)
-    if resource_type == "token_plan":
+    if resource_type in {"token_plan", "chatgpt_subscription"}:
         if policy.daily_budget is not None:
             raise GatewayError(
                 403,
@@ -257,6 +276,19 @@ def reserve(
                 "订阅消耗不能折算为按量费用预算；请使用 Token、并发和频率限制。",
             )
         price = None
+    if resource_type == "chatgpt_subscription":
+        if policy.max_output_tokens is not None:
+            raise GatewayError(
+                403,
+                "chatgpt_output_cap_unsupported",
+                "官方订阅接口不支持硬输出上限；此调用方策略不兼容。",
+            )
+        if policy.chatgpt_output_reservation is None or output != policy.chatgpt_output_reservation:
+            raise GatewayError(
+                403,
+                "chatgpt_reservation_required",
+                "请明确配置 chatgpt_output_reservation；这是本地估算预留，不是上游输出硬限制。",
+            )
     if policy.max_output_tokens is not None and output > policy.max_output_tokens:
         raise GatewayError(403, "output_limit_exceeded", "请求输出上限超过此调用方允许值。")
     if (
@@ -332,19 +364,21 @@ def reserve(
             )
     document = {
         "resource_type": resource_type,
-        "plan_id": connection if resource_type == "token_plan" else None,
+        "plan_id": connection if resource_type in {"token_plan", "chatgpt_subscription"} else None,
         "plan_snapshot": plan,
         "provider": provider,
         "requested_model": model,
         "requested_alias": alias,
         "estimated_input_tokens": estimate,
-        "output_limit": output,
+        "output_limit": None if resource_type == "chatgpt_subscription" else output,
         "reserved_tokens": total,
         "reserved_cost": reserve_cost,
         "price_snapshot": quote,
         "estimated_cost": None,
         "billed_cost": None,
     }
+    if resource_type == "chatgpt_subscription":
+        document["estimated_output_reservation"] = output
     db.execute(
         "INSERT INTO allocations VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
         (
@@ -389,7 +423,10 @@ def settle(db, request_id, state):
             raise ValueError
     except ValueError:
         raise ConfigError("额度预留记录损坏，请检查记录库和备份；未重发上游请求。") from None
-    complete = bool(state.get("usage_final")) and state.get("upstream_result") == "success"
+    complete = bool(state.get("usage_final")) and state.get("upstream_result") in {
+        "success",
+        "failed",
+    }
     tokens, basis = (
         measured_tokens(state.get("usage"), document["provider"]) if complete else (None, "unknown")
     )

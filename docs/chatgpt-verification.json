@@ -1,0 +1,431 @@
+{
+  "version": "0.7.0",
+  "date": "2026-10-29",
+  "environment": "WSL/Linux; Python 3.12.2; current-user pipx",
+  "offline": {
+    "pytest_passed": 474,
+    "new_subscription_tests": 83,
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "pip_check": "passed",
+    "socket_acceptance": {
+      "stability": {
+        "version": "0.7.0",
+        "real_mimo_requests": 0,
+        "simulated_upstream_requests": 9,
+        "checks": [
+          {
+            "check": "cli_and_passive_checks",
+            "passed": true,
+            "upstream_calls": 0
+          },
+          {
+            "check": "ordinary_and_sse_over_real_local_sockets",
+            "passed": true
+          },
+          {
+            "check": "bounded_queue_overload_and_wait_timeout",
+            "passed": true
+          },
+          {
+            "check": "actual_socket_read_idle_timeout",
+            "passed": true,
+            "elapsed_ms": 1032.81
+          },
+          {
+            "check": "trickling_stream_hits_total_deadline",
+            "passed": true,
+            "elapsed_ms": 1507.39
+          },
+          {
+            "check": "ordinary_client_socket_disconnect",
+            "passed": true
+          },
+          {
+            "check": "sigkill_restart_preserves_unknown_usage_without_retry",
+            "passed": true
+          },
+          {
+            "check": "bounded_sigterm_grace_and_accounting",
+            "passed": true,
+            "elapsed_ms": 370.47
+          },
+          {
+            "check": "post_recovery_call_and_usage_totals",
+            "passed": true,
+            "known_total_tokens": 56
+          }
+        ]
+      },
+      "api-stress": {
+        "version": "0.7.0",
+        "real_generation_requests": 0,
+        "client_chat_requests": 275,
+        "simulated_upstream_requests": 50,
+        "peak_upstream_concurrency": 4,
+        "checks": [
+          {
+            "check": "80_simultaneous_clients_cycle_1",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 68
+            },
+            "upstream_calls": 12,
+            "health_latency_ms": 5.92
+          },
+          {
+            "check": "80_simultaneous_clients_cycle_2",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 68
+            },
+            "upstream_calls": 12,
+            "health_latency_ms": 2.3
+          },
+          {
+            "check": "80_simultaneous_clients_cycle_3",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 68
+            },
+            "upstream_calls": 12,
+            "health_latency_ms": 3.59
+          },
+          {
+            "check": "12_simultaneous_disconnects_release_active_and_queued",
+            "passed": true
+          },
+          {
+            "check": "queued_revocation_and_connection_disable_follow_documented_rules",
+            "passed": true
+          },
+          {
+            "check": "10_invalid_or_slow_requests_generate_nothing",
+            "passed": true
+          },
+          {
+            "check": "4_live_streams_with_sqlite_writer_and_consistent_pending_backup",
+            "passed": true,
+            "data_events_per_stream": [
+              42,
+              42,
+              42,
+              42
+            ],
+            "pending_at_backup": 4,
+            "health_latency_ms": 2.24,
+            "recovered_tokens": 56
+          }
+        ]
+      },
+      "resource-matrix": {
+        "version": "0.7.0",
+        "real_generation_requests": 0,
+        "http_chat_requests": 668,
+        "cli_and_example_generations": 14,
+        "simulated_upstream_generations": 147,
+        "peak_upstream_concurrency": 4,
+        "checks": [
+          {
+            "check": "four_resources_http_multiturn_text_blocks_routes_sessions",
+            "passed": true,
+            "requests": 8
+          },
+          {
+            "check": "cli_inputs_routes_json_stream_and_external_program",
+            "passed": true,
+            "successful_generations": 14,
+            "noninteractive_plan_cli_rejected": true
+          },
+          {
+            "check": "64_mixed_clients_cycle_1",
+            "passed": true,
+            "status_counts": {
+              "200": 10,
+              "429": 54
+            },
+            "upstream_calls": 10,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 50.3,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_2",
+            "passed": true,
+            "status_counts": {
+              "200": 10,
+              "429": 54
+            },
+            "upstream_calls": 10,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 50.02,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_3",
+            "passed": true,
+            "status_counts": {
+              "200": 10,
+              "429": 54
+            },
+            "upstream_calls": 10,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 50.48,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_4",
+            "passed": true,
+            "status_counts": {
+              "200": 11,
+              "429": 53
+            },
+            "upstream_calls": 11,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 60.08,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_5",
+            "passed": true,
+            "status_counts": {
+              "200": 11,
+              "429": 53
+            },
+            "upstream_calls": 11,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 50.11,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_6",
+            "passed": true,
+            "status_counts": {
+              "200": 11,
+              "429": 53
+            },
+            "upstream_calls": 11,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 49.9,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_7",
+            "passed": true,
+            "status_counts": {
+              "200": 11,
+              "429": 53
+            },
+            "upstream_calls": 11,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 50.36,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_8",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 52
+            },
+            "upstream_calls": 12,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 59.88,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_9",
+            "passed": true,
+            "status_counts": {
+              "200": 11,
+              "429": 53
+            },
+            "upstream_calls": 11,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 60.0,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_10",
+            "passed": true,
+            "status_counts": {
+              "200": 11,
+              "429": 53
+            },
+            "upstream_calls": 11,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 60.05,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "shared_caller_token_reservation_across_four_resources",
+            "passed": true,
+            "successful_generations": 1,
+            "quota_rejections": 3,
+            "settled_tokens": 14
+          },
+          {
+            "check": "four_resources_socket_disconnect_release",
+            "passed": true,
+            "unknown_usage_requests": 4
+          },
+          {
+            "check": "four_resource_streams_database_lock_backup_recovery",
+            "passed": true,
+            "restored_receipts": 4,
+            "known_total_tokens": 56,
+            "second_replay": 0
+          },
+          {
+            "check": "four_resources_zero_vs_missing_usage",
+            "passed": true
+          }
+        ],
+        "restart_preserved_summary": true,
+        "temporary_service_stopped": true
+      }
+    }
+  },
+  "real": {
+    "provider": "chatgpt",
+    "connection": "chatgpt-personal",
+    "model": "gpt-6-luna",
+    "oauth_login": "verified",
+    "models_discovered": 8,
+    "generation_requests": 6,
+    "successful_generations": 2,
+    "failed_generations": 4,
+    "usage_unknown_requests": 4,
+    "known_usage": {
+      "input_tokens": 75,
+      "output_tokens": 22,
+      "total_tokens": 97
+    },
+    "billed_cost": null,
+    "remaining_plan_tokens": null,
+    "reset_at": null,
+    "successful_calls": [
+      {
+        "mode": "ordinary",
+        "returncode": 0,
+        "meta": {
+          "request_id": "7770607a60484c809ccaea428d245e2e",
+          "model": "gpt-6-luna",
+          "connection_id": "chatgpt-personal",
+          "duration_ms": 3766.36,
+          "finish_reason": "stop",
+          "usage": {
+            "prompt_tokens": 14,
+            "completion_tokens": 9,
+            "total_tokens": 23,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          }
+        },
+        "text": "Selark subscription ready.",
+        "usage_matches_cli": true
+      },
+      {
+        "mode": "stream_multiturn_coding",
+        "returncode": 0,
+        "meta": {
+          "request_id": "ff0ae83ed1e14a6a81f99195b0c4cb65",
+          "model": "gpt-6-luna",
+          "connection_id": "chatgpt-personal",
+          "duration_ms": 3633.1,
+          "finish_reason": "stop",
+          "usage": {
+            "prompt_tokens": 61,
+            "completion_tokens": 13,
+            "total_tokens": 74,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          }
+        },
+        "text": "def squared(x):\n    return x * x"
+      }
+    ],
+    "failure_observations": [
+      "missing Content-Type with SSE body",
+      "response.metadata extension not listed in the public streaming event catalog"
+    ],
+    "logout_real_performed": false,
+    "other_provider_generation_requests": 0,
+    "refresh_real_verified": true,
+    "refresh_noop_before_due_verified": true
+  },
+  "compatibility": {
+    "preserved_requests": 209,
+    "preserved_original_callers": 7,
+    "preserved_allocations": 170,
+    "original_config_and_connections_unchanged": true,
+    "temporary_acceptance_callers_revoked": 5,
+    "active_personal_client_profile": "~/.config/selark/clients/chatgpt-personal",
+    "restart_preserved_authorization_revocations_usage_sessions": true
+  },
+  "ci": {
+    "workflow_updated": true,
+    "python_matrix": [
+      "3.11",
+      "3.12",
+      "3.13"
+    ],
+    "local_python": "3.12.2",
+    "github_run_for_this_change": "not triggered at the development verification snapshot; see subsequent GitHub Actions publication runs",
+    "workflow_runs_url": "https://github.com/nbcctwya/Selark/actions"
+  },
+  "limitations": [
+    "No hard upstream output-token cap in the official subscription route; local reservation is an estimate.",
+    "Four failed real requests have unknown usage and remain in accounting.",
+    "Only one discovered model was tested with short serial requests; no real load testing.",
+    "Text only; no tools, multimodal, automatic history, native Responses endpoint, paid fallback or reliable subscription-balance API.",
+    "Real token refresh succeeded when due; concurrent/crashed refresh recovery and logout used mocks. The real authorization is retained."
+  ],
+  "installation": {
+    "version": "0.7.0",
+    "scope": "current WSL user only",
+    "modules_matched_source": 30,
+    "service_final_state": "stopped after acceptance; authorization retained"
+  },
+  "security": {
+    "working_tree_files": 122,
+    "index_files": 113,
+    "history_blobs": 198,
+    "history_commits": 8,
+    "actual_credentials_compared": 18,
+    "ignore_cases_passed": 17,
+    "tracked_private_files": 0,
+    "findings": []
+  }
+}

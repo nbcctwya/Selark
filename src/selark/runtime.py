@@ -40,6 +40,8 @@ def fingerprint(config: ServerConfig) -> str:
         data = connection_document(config)
         for field in ("name", "enabled", "discovery", "limits"):
             data.pop(field, None)
+        if config.provider == "chatgpt":
+            data["oauth_generation"] = config.oauth_generation
         if config.resource_type == "api":
             data.pop("resource_type", None)
             data.pop("plan", None)
@@ -68,6 +70,8 @@ def discovery_fingerprint(config):
         key: document[key]
         for key in ("connection_id", "provider", "base_url", "api_key", "workspace_id")
     }
+    if config.provider == "chatgpt":
+        data["oauth_generation"] = config.oauth_generation
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
 
@@ -125,9 +129,22 @@ class Runtime:
 
     def connection_settings(self):
         server, registry = self.settings(), self.registry()
+        from selark.chatgpt_auth import ChatGPTAuth
+
+        auth = ChatGPTAuth(self.directory)
         return [
             legacy_connection(server, registry),
-            *[c.model_copy(update={"limits": server.limits}) for c in registry.connections],
+            *[
+                c.model_copy(
+                    update={
+                        "limits": server.limits,
+                        "oauth_generation": auth.read(c.connection_id).generation
+                        if c.provider == "chatgpt"
+                        else 0,
+                    }
+                )
+                for c in registry.connections
+            ],
         ]
 
     def resources(self):
@@ -165,7 +182,7 @@ class Runtime:
                             document | {"connection_id": connection_id, "model": model}
                         )
                         connection = require_connection(self.connection_settings(), connection_id)
-                        if connection.resource_type == "token_plan":
+                        if connection.resource_type in {"token_plan", "chatgpt_subscription"}:
                             raise ConfigError(
                                 "Token Plan 不使用按量单价；套餐剩余额度与 Token 用量分别记录。"
                             )
@@ -190,6 +207,8 @@ class Runtime:
         if provider not in PRESETS:
             raise ConfigError("不支持的供应商类型，请查看 connection providers。")
         name, url = PRESETS[provider]
+        if provider == "chatgpt":
+            options = {"resource_type": "chatgpt_subscription", **options}
         if provider in PLAN_PRESETS:
             preset = PLAN_PRESETS[provider]
             options = {
@@ -271,9 +290,17 @@ class Runtime:
                     output.write(content)
                     output.flush()
                     os.fsync(output.fileno())
+        from selark.chatgpt_auth import ChatGPTAuth
+
+        ChatGPTAuth(self.directory).backup_registrations(target / "chatgpt-registration")
         _write_private(
             target / "manifest.json",
-            {"reason": reason, "created_at": utc_now(), "recovery_consistent": True},
+            {
+                "reason": reason,
+                "created_at": utc_now(),
+                "recovery_consistent": True,
+                "chatgpt_credentials": "registration_only_reauthorize_after_restore",
+            },
         )
         from selark.persistence import sync_directory
 
@@ -322,6 +349,12 @@ class Runtime:
         config = require_connection(self.connection_settings(), identity)
         result = config.model_dump(mode="json", exclude={"api_key"})
         result.update(configured=True, api_key="[REDACTED]")
+        if config.provider == "chatgpt":
+            from selark.chatgpt_auth import ChatGPTAuth
+
+            result.pop("api_key")
+            result["authentication"] = "oauth"
+            result["authorization"] = ChatGPTAuth(self.directory).status(identity)
         result["verification"] = self.store.verification(config.connection_id, fingerprint(config))
         discovery = result["discovery"]
         old = discovery.pop("source_fingerprint", None)
@@ -329,7 +362,11 @@ class Runtime:
             discovery["previous_state"], discovery["state"] = discovery["state"], "stale"
         result["models_configured"] = bool(config.allowed_models)
         result["protocol"] = (
-            "anthropic-messages" if config.provider == "anthropic" else "chat-completions"
+            "responses"
+            if config.provider == "chatgpt"
+            else "anthropic-messages"
+            if config.provider == "anthropic"
+            else "chat-completions"
         )
         if config.resource_type == "token_plan":
             result["plan_status"] = self.plan_status(config.connection_id)
