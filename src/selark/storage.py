@@ -412,6 +412,7 @@ class Store:
         session_id: str | None,
         connection_id=None,
         resource=None,
+        purpose=None,
     ):
         with self.transaction() as db:
             if resource is not None:
@@ -427,7 +428,7 @@ class Store:
             db.execute(
                 "UPDATE requests SET upstream_attempts=1,requested_model=?,session_id=?,"
                 "connection_id=COALESCE(?,connection_id),resource_type=COALESCE(?,resource_type),"
-                "plan_id=?,purpose=CASE WHEN ?='token_plan' THEN 'interactive_coding' "
+                "plan_id=?,purpose=CASE WHEN ?='token_plan' THEN ? "
                 "ELSE purpose END "
                 "WHERE request_id=?",
                 (
@@ -439,6 +440,7 @@ class Store:
                     if (resource or {}).get("resource_type") == "token_plan"
                     else None,
                     (resource or {}).get("resource_type"),
+                    purpose or "interactive_coding",
                     request_id,
                 ),
             )

@@ -29,7 +29,7 @@ PLAN_PRESETS = {
         ],
         "default_model": "kimi-for-coding",
         "quota_path": "/usages",
-        "generation_support": "personal_interactive_coding",
+        "generation_support": "personal_interactive",
         "docs": "https://www.kimi.com/code/docs/",
     },
     "glm-coding": {
@@ -49,9 +49,25 @@ class PlanSettings(StrictConfig):
     tier: str | None = Field(
         default=None, min_length=1, max_length=80, pattern=r"^[^\x00-\x1f\x7f]+$"
     )
-    use: Literal["personal_interactive_coding"] = "personal_interactive_coding"
+    use: Literal["personal_interactive_coding", "personal_interactive"] = (
+        "personal_interactive_coding"
+    )
     reasoning_effort: Literal["low", "high", "max"] = "low"
     extra_usage_policy: Literal["forbid"] = "forbid"
+
+
+def interaction_purpose(config, interaction):
+    """Require an explicit purpose; old connections retain their narrower scope."""
+    if interaction == "personal_coding":
+        return "interactive_coding"
+    if interaction == "personal_interactive" and config.plan.use == "personal_interactive":
+        return "interactive_task"
+    raise GatewayError(
+        403,
+        "plan_interaction_required",
+        "套餐需明确声明个人交互用途；通用个人任务还需本机管理员启用 "
+        "plans set --use personal_interactive。既有编程用途可继续使用 personal_coding。",
+    )
 
 
 def empty_quota(state="never"):

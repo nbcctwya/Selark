@@ -1,4 +1,4 @@
-# Selark 0.6.0 · 个人模型接入中间件
+# Selark 0.6.3 · 个人模型接入中间件
 
 独立的文本模型 HTTP 接入服务：`CLI / 外部程序 → Selark → 指定模型连接`。
 Python 3.11+，FastAPI + HTTPX + Uvicorn；默认仅监听 `127.0.0.1:8787`。
@@ -134,7 +134,7 @@ selark ask --messages /absolute/path/to/messages.json --max-tokens 32
 `ask` 支持 `--model`、`--system`、`--messages`；省略文本或传 `-` 时读取 stdin。
 `Ctrl+C` 停止服务，再次 `selark serve` 使用原配置启动。服务停机时 CLI 以非零码明确报告连接失败。
 
-## Token Plan：个人交互式编程
+## Token Plan：个人交互式使用
 
 0.6 将 `token_plan` 与普通 `api` 连接分开管理，接入 **Kimi Coding Plan** 的官方
 Chat Completions 协议；`kimi-code` 与原有 Kimi 开放平台 `kimi` 是不同连接类型。
@@ -162,6 +162,51 @@ selark --config-dir "$HOME/.config/selark/clients/personal-coding" ask \
 官方剩余额度与本地 Token 统计分开显示，未报告的剩余 Token、套餐档位、账单均为未知。
 详细配置、协议范围和使用限制见 [Token Plan 说明](docs/token-plans.md)，
 验证结果见 [0.6 验收](docs/token-plans-verification.md)。
+
+0.6.1 补充 MiMo、DeepSeek、OpenAI 兼容中转与 Kimi Code 的交叉模拟，修复全局繁忙时
+同一套餐仍可多次排队的问题。套餐的单请求名额现在包含等待全局执行名额的阶段；取消、
+超时和别名变更均会正确释放或重新检查。可重复运行的模拟和结果见
+[四类资源模拟验收](docs/resource-simulation-verification.md)。
+
+随后在已安装的 0.6.1 上完成了 **8 次真实生成**：四类连接各一次普通响应、一次流式多轮，
+三个按量 API 进行两轮三路并发；Kimi 仅单独交互调用。全部成功，上游实际报告合计
+1,139 Token。真实调用、延迟、用量、错误请求拦截和重启结果见
+[四类资源真实验收](docs/resource-live-verification.md)，与上述模拟结果分开记录。
+
+进一步的长文本、编程与设计验收完成 **32 次真实上游生成**，最大单次输入 89,171 字符，
+已报告输入/输出合计 **256,532 Token**，另有 1 次中转断流用量未知。
+覆盖六客户端并发、三轮长文、可执行代码测试、设计变更及输出截断；发现的内容错误和
+真实故障均保留在 [扩展工作负载验收](docs/workload-live-verification.md) 中，
+另附 [实际回答片段](docs/workload-live-samples.md)。
+
+0.6.2 支持显式授权 Kimi 的个人交互式翻译、写作等任务，旧连接默认仍限于编程。
+根据 [Kimi Code 使用规范](https://www.kimi.com/code/docs/kimi-code/community-guidelines.html)，
+不用于批量自动调用、商业转售或伪造客户端身份。所有任务仍受套餐权限、官方额度和单连接并发限制。
+本机所有者授权扩展用途后，可执行：
+
+```bash
+selark plans set kimi-code-personal --use personal_interactive
+selark --config-dir "$HOME/.config/selark/clients/personal-coding" ask \
+  --interactive --max-tokens 512 '请把这句话译成自然英语：感谢你耐心解释这个问题。'
+selark records list --purpose interactive_task --json
+```
+
+`--interactive` 与 `--interactive-coding` 均要求交互终端；用途声明不等于对操作人的技术认证。
+个人套餐不加入批量验收脚本。普通 API 的批量场景与套餐的逐次交互验收分开记录。
+
+0.6.2 的 [六类应用场景验收](docs/application-live-verification.md)：**117 次真实上游请求**，
+已报告 **149,195 Token**。MiMo、DeepSeek、Kimi 均完成情绪分析、翻译、编程、文章、聊天、
+项目设计的三轮对话；中转站反复协议错误、超时及上游 400，六类虽均尝试但未完成三轮，
+另有 19 次用量未知。报告包含完整覆盖矩阵、并发观测、17 个代码版本的 4,479 项执行检查和
+[24 份实际回答](docs/application-live-samples.md)，不会将返回成功等同于内容正确。
+当前私有 Kimi 连接已获本人授权扩大用途，验收临时配额已恢复；当天累计超过原本地日限额时，
+新调用仍按原策略被限制，不能据此推断官方套餐耗尽。
+
+0.6.3 补充 40 项边界回归，修复取消发生于配额预留提交与上游发送之间时的配额误占用、
+排队别名从套餐转向 API 后的用途标签，以及异常单条/流式回复被误判成功的问题。
+覆盖四类连接的七个交错会话、逐轮传回上一次模拟回答、权限热更新、思考阶段截断、撤销与恢复；
+本轮没有新增真实供应商请求，完整结果和仍未验证的情况见
+[覆盖检查与修复验收](docs/coverage-review-verification.md)。
 
 ## 开发安装
 
@@ -237,6 +282,7 @@ selark --config-dir /private/new-selark init \
 - 支持 `temperature`（0–1.5）、`top_p`（0.01–1）、`stop`（字符串或最多四个字符串）、`presence_penalty/frequency_penalty`（-2–2）。
 - MiMo/DeepSeek 及可关闭思考的 GLM/Kimi 模式关闭 thinking；Kimi K3 等保留调用方显式提供的 assistant reasoning_content，不自动管理历史。原生 Anthropic 转换为统一文本响应。
 - 普通响应保留上游 `id/model/choices/usage` 等字段。不会生成、估算或补零 usage；上游缺失时日志标记 null。
+- 上游回复只接受一条 `index=0` 的 assistant 文本 choice；结束原因必须是非空字符串。SSE 允许空 choices 的用量帧、重复累计用量和无新增文本的相同结束标记；结束后继续输出或改写结束原因视为协议错误。已经收到的有效部分用量保留，未完成的用量仍不作为最终消耗汇总。
 - 不支持工具调用、图片/音视频、Responses API、对话正文存储、`n`、`stream_options`、`response_format`、用户可调 thinking；未知请求字段返回 400。
 - 单请求体上限 1 MiB，最多 256 条消息；普通上游响应上限 8 MiB；SSE 单事件上限约 1 MiB。
 

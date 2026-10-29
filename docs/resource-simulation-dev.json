@@ -1,0 +1,301 @@
+{
+  "version": "0.6.1",
+  "verified_at": "2026-10-29T03:32:59.752923+00:00",
+  "scope": "temporary profiles; real loopback downstream; MockTransport upstream",
+  "real_generation_requests": 0,
+  "real_provider_metadata_requests": 0,
+  "http_chat_requests": 220,
+  "cli_and_example_generations": 14,
+  "simulated_upstream_generations": 74,
+  "simulated_quota_reads": 12,
+  "per_connection_generations": {
+    "mimo-default": 25,
+    "deepseek-test": 18,
+    "relay-test": 20,
+    "coding-test": 11
+  },
+  "peak_upstream_concurrency": 4,
+  "peak_per_connection": {
+    "mimo-default": 1,
+    "deepseek-test": 2,
+    "relay-test": 1,
+    "coding-test": 1
+  },
+  "checks": [
+    {
+      "check": "four_resources_http_multiturn_text_blocks_routes_sessions",
+      "passed": true,
+      "requests": 8
+    },
+    {
+      "check": "cli_inputs_routes_json_stream_and_external_program",
+      "passed": true,
+      "successful_generations": 14,
+      "noninteractive_plan_cli_rejected": true
+    },
+    {
+      "check": "64_mixed_clients_cycle_1",
+      "passed": true,
+      "status_counts": {
+        "200": 11,
+        "429": 53
+      },
+      "upstream_calls": 11,
+      "peak_active": 4,
+      "peak_plan_active": 1,
+      "health_latency_ms": 50.02
+    },
+    {
+      "check": "64_mixed_clients_cycle_2",
+      "passed": true,
+      "status_counts": {
+        "200": 12,
+        "429": 52
+      },
+      "upstream_calls": 12,
+      "peak_active": 4,
+      "peak_plan_active": 1,
+      "health_latency_ms": 3.73
+    },
+    {
+      "check": "64_mixed_clients_cycle_3",
+      "passed": true,
+      "status_counts": {
+        "200": 12,
+        "429": 52
+      },
+      "upstream_calls": 12,
+      "peak_active": 4,
+      "peak_plan_active": 1,
+      "health_latency_ms": 49.82
+    },
+    {
+      "check": "shared_caller_token_reservation_across_four_resources",
+      "passed": true,
+      "successful_generations": 1,
+      "quota_rejections": 3,
+      "settled_tokens": 14
+    },
+    {
+      "check": "four_resources_socket_disconnect_release",
+      "passed": true,
+      "unknown_usage_requests": 4
+    },
+    {
+      "check": "four_resource_streams_database_lock_backup_recovery",
+      "passed": true,
+      "restored_receipts": 4,
+      "known_total_tokens": 56,
+      "second_replay": 0
+    },
+    {
+      "check": "four_resources_zero_vs_missing_usage",
+      "passed": true
+    }
+  ],
+  "summary": {
+    "timezone": "UTC",
+    "filters": {},
+    "summary": {
+      "requests": 85,
+      "known_usage_requests": 66,
+      "missing_usage_requests": 19,
+      "reported_usage_requests": 66,
+      "upstream_attempts": 74,
+      "unknown_attempt_count_requests": 0,
+      "unknown_time_requests": 0,
+      "status_counts": {
+        "success": 70,
+        "failed": 11,
+        "cancelled": 4
+      },
+      "known_tokens": {
+        "prompt_tokens": 620,
+        "completion_tokens": 248,
+        "total_tokens": 868
+      },
+      "missing_field_requests": {
+        "prompt_tokens": 19,
+        "completion_tokens": 19,
+        "total_tokens": 19
+      },
+      "estimated_cost_by_currency": {},
+      "unknown_cost_requests": 74,
+      "billed_cost": null,
+      "resource_accounting": {
+        "scope": "Selark 0.5+ admissions",
+        "requests": 74,
+        "tokens_by_basis": {
+          "reported_total": 868,
+          "unknown_hold": 3668
+        }
+      }
+    },
+    "group_by": "connection",
+    "groups": [
+      {
+        "connection_id": "mimo-default",
+        "requests": 25,
+        "known_usage_requests": 23,
+        "missing_usage_requests": 2,
+        "reported_usage_requests": 23,
+        "upstream_attempts": 25,
+        "unknown_attempt_count_requests": 0,
+        "unknown_time_requests": 0,
+        "status_counts": {
+          "success": 24,
+          "cancelled": 1
+        },
+        "known_tokens": {
+          "prompt_tokens": 220,
+          "completion_tokens": 88,
+          "total_tokens": 308
+        },
+        "missing_field_requests": {
+          "prompt_tokens": 2,
+          "completion_tokens": 2,
+          "total_tokens": 2
+        },
+        "estimated_cost_by_currency": {},
+        "unknown_cost_requests": 25,
+        "billed_cost": null,
+        "resource_accounting": {
+          "scope": "Selark 0.5+ admissions",
+          "requests": 25,
+          "tokens_by_basis": {
+            "reported_total": 308,
+            "unknown_hold": 917
+          }
+        }
+      },
+      {
+        "connection_id": "deepseek-test",
+        "requests": 19,
+        "known_usage_requests": 16,
+        "missing_usage_requests": 3,
+        "reported_usage_requests": 16,
+        "upstream_attempts": 18,
+        "unknown_attempt_count_requests": 0,
+        "unknown_time_requests": 0,
+        "status_counts": {
+          "success": 17,
+          "failed": 1,
+          "cancelled": 1
+        },
+        "known_tokens": {
+          "prompt_tokens": 150,
+          "completion_tokens": 60,
+          "total_tokens": 210
+        },
+        "missing_field_requests": {
+          "prompt_tokens": 3,
+          "completion_tokens": 3,
+          "total_tokens": 3
+        },
+        "estimated_cost_by_currency": {},
+        "unknown_cost_requests": 18,
+        "billed_cost": null,
+        "resource_accounting": {
+          "scope": "Selark 0.5+ admissions",
+          "requests": 18,
+          "tokens_by_basis": {
+            "reported_total": 210,
+            "unknown_hold": 917
+          }
+        }
+      },
+      {
+        "connection_id": "relay-test",
+        "requests": 21,
+        "known_usage_requests": 18,
+        "missing_usage_requests": 3,
+        "reported_usage_requests": 18,
+        "upstream_attempts": 20,
+        "unknown_attempt_count_requests": 0,
+        "unknown_time_requests": 0,
+        "status_counts": {
+          "success": 19,
+          "failed": 1,
+          "cancelled": 1
+        },
+        "known_tokens": {
+          "prompt_tokens": 170,
+          "completion_tokens": 68,
+          "total_tokens": 238
+        },
+        "missing_field_requests": {
+          "prompt_tokens": 3,
+          "completion_tokens": 3,
+          "total_tokens": 3
+        },
+        "estimated_cost_by_currency": {},
+        "unknown_cost_requests": 20,
+        "billed_cost": null,
+        "resource_accounting": {
+          "scope": "Selark 0.5+ admissions",
+          "requests": 20,
+          "tokens_by_basis": {
+            "reported_total": 238,
+            "unknown_hold": 917
+          }
+        }
+      },
+      {
+        "connection_id": "coding-test",
+        "requests": 20,
+        "known_usage_requests": 9,
+        "missing_usage_requests": 11,
+        "reported_usage_requests": 9,
+        "upstream_attempts": 11,
+        "unknown_attempt_count_requests": 0,
+        "unknown_time_requests": 0,
+        "status_counts": {
+          "success": 10,
+          "failed": 9,
+          "cancelled": 1
+        },
+        "known_tokens": {
+          "prompt_tokens": 80,
+          "completion_tokens": 32,
+          "total_tokens": 112
+        },
+        "missing_field_requests": {
+          "prompt_tokens": 11,
+          "completion_tokens": 11,
+          "total_tokens": 11
+        },
+        "estimated_cost_by_currency": {},
+        "unknown_cost_requests": 11,
+        "billed_cost": null,
+        "resource_accounting": {
+          "scope": "Selark 0.5+ admissions",
+          "requests": 11,
+          "tokens_by_basis": {
+            "reported_total": 112,
+            "unknown_hold": 917
+          }
+        }
+      }
+    ]
+  },
+  "final_health": {
+    "status": "ok",
+    "version": "0.6.1",
+    "capacity": {
+      "active": 0,
+      "queued": 0,
+      "admitted": 0,
+      "max_active": 4,
+      "max_queued": 8,
+      "accepting": true
+    },
+    "storage": {
+      "degraded": false,
+      "pending_records": 0,
+      "invalid_records": 0,
+      "accepting": true
+    }
+  },
+  "restart_preserved_summary": true,
+  "temporary_service_stopped": true
+}

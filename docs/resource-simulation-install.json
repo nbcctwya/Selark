@@ -1,0 +1,16 @@
+{
+  "version": "0.6.1",
+  "current_user_pipx": true,
+  "system_wide_install": false,
+  "python_source_files_matched": 27,
+  "private_configuration_and_data_files_unchanged": 10,
+  "real_generations": 0,
+  "real_provider_metadata_requests": 0,
+  "service_state": "not started; temporary test services stopped",
+  "pytest_passed": 335,
+  "new_cases": 67,
+  "ruff_check": "passed",
+  "ruff_format": "passed",
+  "pip_check": "passed",
+  "remote_ci": "workflow updated; not triggered in this task"
+}

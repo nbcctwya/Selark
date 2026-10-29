@@ -17,6 +17,27 @@ def protocol_error(message: str = "上游返回了无效响应。") -> GatewayEr
     return GatewayError(502, "upstream_protocol_error", message, 200)
 
 
+def text_choice(choice, *, stream=False):
+    """The supported subset is a single assistant text choice, at index zero."""
+    if not isinstance(choice, dict) or type(choice.get("index")) is not int or choice["index"] != 0:
+        raise protocol_error("上游返回了不支持的回复序号。")
+    part = choice.get("delta" if stream else "message")
+    if not isinstance(part, dict) or part.get("role") not in (
+        (None, "assistant") if stream else ("assistant",)
+    ):
+        raise protocol_error("上游返回了无效的 assistant 回复。")
+    for key in ("content", "reasoning_content"):
+        value = part.get(key)
+        if (value is not None and not isinstance(value, str)) or (
+            key == "content" and not stream and value is None
+        ):
+            raise protocol_error("上游返回了非文本回复。")
+    finish = choice.get("finish_reason")
+    if (finish is not None or not stream) and (not isinstance(finish, str) or not finish.strip()):
+        raise protocol_error("上游返回了无效的结束原因。")
+    return part, finish
+
+
 async def close_response(response):
     with anyio.CancelScope(shield=True):
         with contextlib.suppress(TimeoutError, httpx.HTTPError):
@@ -168,13 +189,7 @@ class MiMoProvider:
                 or len(data["choices"]) != 1
             ):
                 raise protocol_error()
-            choice = data["choices"][0]
-            if (
-                not isinstance(choice, dict)
-                or not isinstance(choice.get("message"), dict)
-                or not isinstance(choice["message"].get("content"), str)
-            ):
-                raise protocol_error()
+            text_choice(data["choices"][0])
             return data
         except httpx.TimeoutException:
             raise GatewayError(504, "upstream_timeout", "读取 上游响应超时。", 200) from None
@@ -190,32 +205,37 @@ class MiMoProvider:
     async def events(self, response: httpx.Response) -> AsyncIterator[dict | str]:
         decoder = SSEDecoder()
         saw_choice = False
-        saw_finish = False
+        finish_reason = None
         try:
             async for line in async_sse_lines(response):
                 raw = decoder.feed(line)
                 if raw is None:
                     continue
                 if raw == "[DONE]":
-                    if not saw_choice or not saw_finish:
+                    if not saw_choice or finish_reason is None:
                         raise protocol_error("上游流缺少有效回复或结束原因。")
                     yield raw
                     return
                 data = self.normalize(strict_json(raw), stream=True)
                 if not isinstance(data, dict) or "error" in data:
                     raise protocol_error("上游流返回错误。")
-                if data.get("object") != "chat.completion.chunk" or not isinstance(
-                    data.get("choices"), list
+                if (
+                    data.get("object") != "chat.completion.chunk"
+                    or not isinstance(data.get("choices"), list)
+                    or len(data["choices"]) > 1
                 ):
                     raise protocol_error()
                 for choice in data["choices"]:
-                    if not isinstance(choice, dict) or not isinstance(choice.get("delta"), dict):
-                        raise protocol_error()
-                    content = choice["delta"].get("content")
-                    if content is not None and not isinstance(content, str):
-                        raise protocol_error()
+                    part, finish = text_choice(choice, stream=True)
+                    if finish_reason is not None and (
+                        part.get("content")
+                        or part.get("reasoning_content")
+                        or (finish is not None and finish != finish_reason)
+                    ):
+                        raise protocol_error("上游在结束回复后继续输出或更改结束原因。")
                     saw_choice = True
-                    saw_finish = saw_finish or bool(choice.get("finish_reason"))
+                    if finish is not None:
+                        finish_reason = finish
                 yield data
             raise protocol_error("上游流提前结束，未收到 [DONE]；本次输出可能不完整。")
         except httpx.TimeoutException:

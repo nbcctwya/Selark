@@ -22,9 +22,12 @@ class KimiCodeProvider(CompatibleProvider):
             raise
 
     def headers(self):
-        return super().headers() | {
-            "User-Agent": f"Selark/{__version__} (personal interactive coding)"
-        }
+        use = (
+            "personal interactive use"
+            if self.config.plan.use == "personal_interactive"
+            else "personal interactive coding"
+        )
+        return super().headers() | {"User-Agent": f"Selark/{__version__} ({use})"}
 
     def prepare(self, request, model):
         if model not in PLAN_PRESETS["kimi-code"]["models"]:

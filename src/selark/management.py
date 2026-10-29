@@ -96,7 +96,9 @@ def add_filters(parser):
     parser.add_argument("--plan", help="按套餐连接的稳定 ID 筛选")
     parser.add_argument("--caller", help="鉴权确定的调用方 ID")
     parser.add_argument("--session", help="仅筛选归组标签；跨调用方仍分别汇总")
-    parser.add_argument("--purpose", choices=["chat", "connection_probe", "interactive_coding"])
+    parser.add_argument(
+        "--purpose", choices=["chat", "connection_probe", "interactive_coding", "interactive_task"]
+    )
     parser.add_argument(
         "--status", choices=["running", "success", "failed", "cancelled", "interrupted", "unknown"]
     )
@@ -110,10 +112,11 @@ def add_commands(commands):
         action = actions.add_parser(name, help="refresh 只查询官方套餐状态；usage 为本地调用统计")
         action.add_argument("id")
         action.add_argument("--json", action="store_true")
-    update = actions.add_parser("set", help="修改套餐标签或默认思考强度，不能伪造额度")
+    update = actions.add_parser("set", help="修改套餐用途、标签或默认思考强度，不能伪造额度")
     update.add_argument("id")
     update.add_argument("--tier", help="用户自填套餐名称；不表示官方会员认证")
     update.add_argument("--reasoning-effort", choices=["low", "high", "max"])
+    update.add_argument("--use", choices=["personal_interactive_coding", "personal_interactive"])
     update.add_argument("--json", action="store_true")
     aliases = commands.add_parser("aliases", help="本机管理显式模型别名；不会自动切换供应商")
     actions = aliases.add_subparsers(dest="action", required=True)
@@ -612,11 +615,12 @@ def run(args, directory: Path) -> int:
                         for key, value in (
                             ("tier", args.tier),
                             ("reasoning_effort", args.reasoning_effort),
+                            ("use", args.use),
                         )
                         if value is not None
                     }
                     if not patch:
-                        raise ConfigError("请指定 --tier 或 --reasoning-effort。")
+                        raise ConfigError("请指定 --use、--tier 或 --reasoning-effort。")
                     result = runtime.change_connection(
                         {"plan": current.plan.model_dump() | patch}, args.id
                     )

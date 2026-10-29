@@ -46,8 +46,11 @@ jobs:
           selark --help
           selark plans --help
           selark ask --help
+          selark ask --help | grep -- '--interactive'
+          selark plans set --help | grep -- 'personal_interactive'
       - name: Local TCP and process recovery (fake upstream only)
         if: matrix.python == '3.12'
         run: |
           python scripts/verify_stability.py
           python scripts/verify_api_stress.py --selark "$(command -v selark)" --output "$RUNNER_TEMP/api-stress.json"
+          python scripts/verify_resource_matrix.py --selark "$(command -v selark)" --output "$RUNNER_TEMP/resource-matrix.json"

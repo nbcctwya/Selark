@@ -6,7 +6,7 @@ Selark 面向本人使用的单机模型中间件。`resource_type=api` 表示�
 
 ## 官方协议与支持范围
 
-本轮核对日期：2026-10-28。
+协议核对日期：2026-10-28；个人交互式使用规范再次核对：2026-10-29。
 
 | provider | 地址 | 支持范围 |
 | --- | --- | --- |
@@ -83,9 +83,33 @@ selark --config-dir "$HOME/.config/selark/clients/personal-coding" ask \
 
 HTTP 文本请求须附 `"interaction":"personal_coding"`，身份仍只来自 Selark 令牌。
 CLI `--interactive-coding` 要求交互终端。该声明不能技术性证明人在操作；本机所有者负责
-只供本人交互式编程使用，不共享令牌、不商业转售、不批量自动调用。
+只供本人交互式使用，不共享令牌、不商业转售、不批量自动调用。
 Selark 发送真实 `Selark/版本` User-Agent，不透传或伪造 Claude/Codex 等客户端身份。
 参见 [Kimi Code 使用规范](https://www.kimi.com/code/docs/kimi-code/community-guidelines.html)。
+
+### 显式扩大个人交互任务范围（0.6.2）
+
+官方使用规范允许个人交互式使用。Selark 仍保留旧连接
+`plan.use=personal_interactive_coding` 的较窄默认值，不在升级时自动扩权。
+本人可以显式将连接设置为 `personal_interactive`，用于逐次主动进行的翻译、写作、
+聊天或设计等个人任务。该设置不提供批量脚本或转售许可。
+
+```bash
+selark plans set kimi-code-personal --use personal_interactive
+selark --config-dir "$HOME/.config/selark/clients/personal-coding" ask \
+  --interactive --max-tokens 512 '请帮助润色这句邮件：谢谢你检查这一问题。'
+selark records list --purpose interactive_task --json
+# 可以收窄回旧范围：
+selark plans set kimi-code-personal --use personal_interactive_coding
+```
+
+新 CLI 标志 `--interactive` 对应 HTTP `interaction=personal_interactive`，记录用途为
+`interactive_task`；旧 `--interactive-coding` / `personal_coding` 仍可用，记录用途仍为
+`interactive_coding`。二者互斥，CLI 均要求真实交互终端。仅修改连接用途不授予调用方套餐权限。
+普通令牌、缺少用途声明、批量用途值仍被拒绝。用途元数据不转发上游，User-Agent 如实标注
+Selark 及其个人用途。连接用途改变会使验证快照失效；额度查询期间发生配置变化时，生成被阻止。
+在途记录在上游尝试前保存真实用途，崩溃恢复也不会将一般任务错误标成编程。
+此次无数据库 schema 变更；原配置、令牌、撤销状态和历史统计保持兼容。
 
 ## 额度和费用口径
 
@@ -112,7 +136,9 @@ Kimi 额度查询使用官方客户端实际采用的 `GET /coding/v1/usages`，
 消耗不会出现在 Selark 本地记录中。
 
 原请求频率、全局并发/排队、调用方 Token 限额、取消、超时、撤销与落账恢复仍生效。
-每个套餐连接额外限制 1 个在途请求，超出直接 429。本地 Token 上限的预留是估算，不是套餐
+每个套餐连接额外限制 1 个在途请求，超出直接 429；从 0.6.1 起，此名额包含等待全局执行
+名额的阶段，同一套餐不会另外积压等待请求。取消/超时会释放名额，排队期间别名目标改变后
+重新检查目标套餐的名额与权限。本地 Token 上限的预留是估算，不是套餐
 计量；未知消耗保留预留并暂停受日限额约束的调用方。日额度 UTC，查询 `--today --tz` 可选时区。
 订阅固定费不能按请求摊成准确费用，Token Plan 拒绝按量单价配置与调用方金额预算，
 `estimated_cost/billed_cost` 保持未知。需要限制资源时使用 Token、频率、并发与输出上限。

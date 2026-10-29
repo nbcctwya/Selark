@@ -368,6 +368,12 @@ def settle(db, request_id, state):
     row = db.execute("SELECT * FROM allocations WHERE request_id=?", (request_id,)).fetchone()
     if row is None:
         return
+    if state.get("upstream_attempts") == 0 and state.get("upstream_result") == "not_started":
+        # A cancelled await can outlive the worker committing its reservation.
+        # Only an explicit no-dispatch receipt proves the reservation is unused;
+        # crash recovery without this evidence must retain its unknown hold.
+        db.execute("DELETE FROM allocations WHERE request_id=?", (request_id,))
+        return
     try:
         document = json.loads(row["document"])
         if not isinstance(document, dict) or not all(

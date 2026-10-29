@@ -22,7 +22,7 @@ from selark.connections import legacy_connection, resolve_model
 from selark.errors import GatewayError
 from selark.governance import Policy, ResourcesConfig, enforce_access, input_estimate, permitted
 from selark.persistence import AsyncLedger, Journal
-from selark.plans import PLAN_PRESETS, empty_quota, enforce_quota, query_quota
+from selark.plans import PLAN_PRESETS, empty_quota, enforce_quota, interaction_purpose, query_quota
 from selark.providers.factory import provider_for
 from selark.providers.mimo import reported_usage
 from selark.runtime import Runtime, fingerprint
@@ -217,19 +217,14 @@ class RequestMiddleware:
                         selected.connection_id if selected.resource_type == "token_plan" else None
                     )
                     enforce_access(policy, selected.connection_id, model, selected.resource_type)
-                    if (
-                        selected.resource_type == "token_plan"
-                        and data.interaction != "personal_coding"
-                    ):
-                        raise GatewayError(
-                            403,
-                            "plan_interaction_required",
-                            "Token Plan 仅用于本人交互式编程；"
-                            "请显式指定 interaction=personal_coding。",
-                        )
+                    if selected.resource_type == "token_plan":
+                        state["purpose"] = interaction_purpose(selected, data.interaction)
                     state["requested_alias"] = alias
                     self.gate.acquire_caller(state["caller_id"], policy.max_concurrent_requests)
                     caller_reserved = True
+                    if selected.resource_type == "token_plan":
+                        self.gate.acquire_plan(selected.connection_id)
+                        state["plan_slot"] = selected.connection_id
                     waiting = time.monotonic()
                     try:
                         await self.gate.acquire()
@@ -598,6 +593,8 @@ def create_app(
         request.state.plan_id = (
             current.connection_id if current.resource_type == "token_plan" else None
         )
+        if current.resource_type != "token_plan" and request.state.purpose != "connection_probe":
+            request.state.purpose = "chat"
         request.state.session_id = data.session_id
         if not current.enabled:
             raise GatewayError(
@@ -630,20 +627,25 @@ def create_app(
                 update={"max_completion_tokens": min(1024, policy.max_output_tokens)}
             )
         payload = provider.prepare(data, model)
+        # Aliases/config may change while waiting for a global slot. Reconcile the
+        # plan reservation before dispatch, without an await between release/acquire.
+        plan_slot = getattr(request.state, "plan_slot", None)
+        selected_plan = current.connection_id if current.resource_type == "token_plan" else None
+        if plan_slot != selected_plan:
+            if plan_slot:
+                gate.plans.discard(plan_slot)
+                request.state.plan_slot = None
+            if selected_plan:
+                gate.acquire_plan(selected_plan)
+                request.state.plan_slot = selected_plan
         if current.resource_type == "token_plan":
-            if data.interaction != "personal_coding":
-                raise GatewayError(
-                    403, "plan_interaction_required", "套餐只接受明确的个人交互式编程请求。"
-                )
+            request.state.purpose = interaction_purpose(current, data.interaction)
             if PLAN_PRESETS[current.provider]["generation_support"] == "preset_only":
                 raise GatewayError(
                     501,
                     "plan_preset_only",
                     "此套餐只有配置与模拟适配，尚未确认 Selark 的实际接入许可；禁止真实生成。",
                 )
-            request.state.purpose = "interactive_coding"
-            gate.acquire_plan(current.connection_id)
-            request.state.plan_slot = current.connection_id
             checked_at = utc_now()
             try:
                 quota = await query_quota(current, client=app.state.http)
@@ -683,6 +685,7 @@ def create_app(
             model,
             data.session_id,
             current.connection_id,
+            purpose=request.state.purpose,
             resource={
                 "caller": request.state.caller_id,
                 "provider": current.provider,
