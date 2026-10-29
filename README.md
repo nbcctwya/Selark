@@ -366,6 +366,10 @@ ruff format --check .
 0.5 的权限、并发额度预留、费用估算、恢复和安装验收见 [资源管理验收](docs/governance-verification.md)。
 GitHub Actions 自动运行模拟测试与代码检查，不使用供应商凭据。
 
+2026-10-29 修复 CI 混合并发夹具的连接池生命周期和异常收尾，Actions 增加十轮并发与
+失败诊断产物。391 项本地回归通过；中转 8 次定向真实调用成功，但历史 400、超时和协议
+错误的具体上游原因尚未确认。证据、实际用量和排查边界见 [CI 与中转排查](docs/ci-relay-verification.md)。
+
 0.6 的 268 项回归、安装与恢复核对，以及 2 次真实 Kimi Code 编程调用（453 Token）
 见 [Token Plan 验收](docs/token-plans-verification.md)。GLM Coding Plan 仅模拟验证。
 

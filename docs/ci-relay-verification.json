@@ -1,0 +1,780 @@
+{
+  "date": "2026-10-29",
+  "runtime_version": "0.6.3",
+  "ci": {
+    "original_failed_run": "https://github.com/nbcctwya/Selark/actions/runs/40844212546",
+    "fix_commit": "53964d32e8d4a1a23c127492a2b4b98f2c3d6701",
+    "green_run": "https://github.com/nbcctwya/Selark/actions/runs/40849968719",
+    "green_python_versions": [
+      "3.11",
+      "3.12",
+      "3.13"
+    ],
+    "original_transport_failure_reproduced_locally": false,
+    "original_harness_exploratory_burst_cycles": 30,
+    "fixed_local_burst_cycles": 10,
+    "fixed_local_clients_per_burst": 64,
+    "fixed_local_client_transport_errors": 0,
+    "fixed_local_http_chat_requests": 668,
+    "fixed_local_cli_example_requests": 14,
+    "fixed_local_fake_upstream_generations": 140,
+    "generation_retries": 0,
+    "real_generation_requests": 0
+  },
+  "local_regressions": {
+    "passed": 391,
+    "duration_seconds": 44.77,
+    "new_ci_harness_cases": 3,
+    "new_relay_cases": 7,
+    "ruff_check": "passed",
+    "ruff_format_check": "passed"
+  },
+  "official_references": [
+    "https://docs.newapi.ai/en/docs/api/ai-model/chat/openai/createchatcompletion",
+    "https://docs.newapi.ai/zh/docs/api/ai-model/chat/createmessage"
+  ],
+  "relay": {
+    "scope": "Eight explicit, bounded requests through Selark HTTP and its persistent ledger; no automatic retries/fallbacks.",
+    "base_url": "https://newapi.zahml.top/v1",
+    "discovery": {
+      "status": 200,
+      "models": [
+        "claude-opus-4-6",
+        "claude-opus-4-7",
+        "claude-opus-4-8",
+        "claude-opus-5",
+        "claude-opus-5-5",
+        "claude-sonnet-4-6",
+        "claude-sonnet-5",
+        "claude-sonnet-5-5"
+      ]
+    },
+    "calls": [
+      {
+        "case": "baseline-json",
+        "started_at": "2026-10-29T09:41:57.662074+00:00",
+        "request_id": "911fa8e267284ea9ac14911bab46a9e9",
+        "connection_id": "relay-personal",
+        "caller_id": "legacy",
+        "model": "claude-sonnet-4-6",
+        "actual_model": "claude-sonnet-4-6",
+        "stream": false,
+        "output_cap": 128,
+        "input_characters": 22,
+        "experimental_wire_override": false,
+        "http_status": 200,
+        "upstream_status": 200,
+        "status": "success",
+        "delivery_status": "sent",
+        "duration_ms": 28335.34,
+        "upstream_headers_ms": 28312.87,
+        "wait_after_body_sent_ms": 28312.03,
+        "first_body_ms": 28312.98,
+        "response_content_type": "application/json; charset=utf-8",
+        "response_content_encoding": null,
+        "upstream_request_ids": {
+          "cf-ray": "a5213a36ef948532-HKG",
+          "x-oneapi-request-id": "202610290941569202405508268d9d6HMBKJklK",
+          "x-request-id": "cc94af71-85a0-446c-a644-723644bdcf88"
+        },
+        "upstream_path": "/v1/chat/completions",
+        "wire_request": {
+          "keys": [
+            "max_tokens",
+            "messages",
+            "model",
+            "stream"
+          ],
+          "stream": false,
+          "message_roles": [
+            "user"
+          ],
+          "max_tokens": 128,
+          "max_completion_tokens": null,
+          "stream_options": null,
+          "model": "claude-sonnet-4-6",
+          "input_sha256": "32c0dfb1bd3b9893a2f76075c9740057787fa6301260698338f2407258a34317"
+        },
+        "response_structure": {
+          "object": "chat.completion",
+          "type": "None",
+          "id_type": "str",
+          "model": "claude-sonnet-4-6",
+          "usage": {
+            "prompt_tokens": 224,
+            "completion_tokens": 10,
+            "total_tokens": 234
+          },
+          "choices_type": "list",
+          "choices_count": 1,
+          "choices": [
+            {
+              "index": 0,
+              "finish_reason": "stop",
+              "message_type": "dict",
+              "message": {
+                "role": "assistant",
+                "content_type": "str",
+                "content_characters": 2,
+                "reasoning_type": "str",
+                "has_tool_calls": false
+              },
+              "delta_type": "NoneType"
+            }
+          ]
+        },
+        "reported_usage": {
+          "prompt_tokens": 224,
+          "completion_tokens": 10,
+          "total_tokens": 234
+        },
+        "usage_final": true,
+        "usage_known": true,
+        "usage_matches_response": true,
+        "upstream_attempts": 1,
+        "session_id": "relay-diagnosis-20261029-baseline-json"
+      },
+      {
+        "case": "baseline-sse",
+        "started_at": "2026-10-29T09:42:58.799576+00:00",
+        "request_id": "f944e4099dfe496e837221eaa54505fa",
+        "connection_id": "relay-personal",
+        "caller_id": "legacy",
+        "model": "claude-sonnet-4-6",
+        "actual_model": "claude-sonnet-4-6",
+        "stream": true,
+        "output_cap": 128,
+        "input_characters": 22,
+        "experimental_wire_override": false,
+        "http_status": 200,
+        "upstream_status": 200,
+        "status": "success",
+        "delivery_status": "sent",
+        "duration_ms": 4283.2,
+        "upstream_headers_ms": 3468.58,
+        "wait_after_body_sent_ms": 2173.5,
+        "first_body_ms": 3468.95,
+        "response_content_type": "text/event-stream",
+        "response_content_encoding": null,
+        "upstream_request_ids": {
+          "x-oneapi-request-id": "202610290942593399428808268d9d60UURlpQ8"
+        },
+        "upstream_path": "/v1/chat/completions",
+        "wire_request": {
+          "keys": [
+            "max_tokens",
+            "messages",
+            "model",
+            "stream",
+            "stream_options"
+          ],
+          "stream": true,
+          "message_roles": [
+            "user"
+          ],
+          "max_tokens": 128,
+          "max_completion_tokens": null,
+          "stream_options": {
+            "include_usage": true
+          },
+          "model": "claude-sonnet-4-6",
+          "input_sha256": "32c0dfb1bd3b9893a2f76075c9740057787fa6301260698338f2407258a34317"
+        },
+        "response_structure": {
+          "event_count": 4,
+          "done": true,
+          "last_event": {
+            "object": "chat.completion.chunk",
+            "type": "None",
+            "id_type": "str",
+            "model": "claude-sonnet-4-6",
+            "usage": {
+              "prompt_tokens": 224,
+              "completion_tokens": 3,
+              "total_tokens": 227
+            },
+            "choices_type": "list",
+            "choices_count": 0,
+            "choices": []
+          },
+          "observed_usage": {
+            "prompt_tokens": 224,
+            "completion_tokens": 3,
+            "total_tokens": 227
+          }
+        },
+        "reported_usage": {
+          "prompt_tokens": 224,
+          "completion_tokens": 3,
+          "total_tokens": 227
+        },
+        "usage_final": true,
+        "usage_known": true,
+        "usage_matches_response": true,
+        "upstream_attempts": 1,
+        "session_id": "relay-diagnosis-20261029-baseline-sse"
+      },
+      {
+        "case": "completion-json",
+        "started_at": "2026-10-29T09:43:44.763999+00:00",
+        "request_id": "cd3cb406bd7a4463ac33f2c93cd4c3af",
+        "connection_id": "relay-personal",
+        "caller_id": "legacy",
+        "model": "claude-sonnet-4-6",
+        "actual_model": "claude-sonnet-4-6",
+        "stream": false,
+        "output_cap": 128,
+        "input_characters": 22,
+        "experimental_wire_override": true,
+        "http_status": 200,
+        "upstream_status": 200,
+        "status": "success",
+        "delivery_status": "sent",
+        "duration_ms": 6523.63,
+        "upstream_headers_ms": 6488.44,
+        "wait_after_body_sent_ms": 4979.34,
+        "first_body_ms": 6488.62,
+        "response_content_type": "application/json; charset=utf-8",
+        "response_content_encoding": null,
+        "upstream_request_ids": {
+          "cf-ray": "a5213cdee8238532-HKG",
+          "x-oneapi-request-id": "202610290943457417838798268d9d6QmNTdcJ2",
+          "x-request-id": "341813d1-8397-4f2e-96bb-7aef5969adc5"
+        },
+        "upstream_path": "/v1/chat/completions",
+        "wire_request": {
+          "keys": [
+            "max_completion_tokens",
+            "messages",
+            "model",
+            "stream"
+          ],
+          "stream": false,
+          "message_roles": [
+            "user"
+          ],
+          "max_tokens": null,
+          "max_completion_tokens": 128,
+          "stream_options": null,
+          "model": "claude-sonnet-4-6",
+          "input_sha256": "32c0dfb1bd3b9893a2f76075c9740057787fa6301260698338f2407258a34317"
+        },
+        "response_structure": {
+          "object": "chat.completion",
+          "type": "None",
+          "id_type": "str",
+          "model": "claude-sonnet-4-6",
+          "usage": {
+            "prompt_tokens": 224,
+            "completion_tokens": 9,
+            "total_tokens": 233,
+            "prompt_tokens_details": {
+              "cached_tokens": 214
+            }
+          },
+          "choices_type": "list",
+          "choices_count": 1,
+          "choices": [
+            {
+              "index": 0,
+              "finish_reason": "stop",
+              "message_type": "dict",
+              "message": {
+                "role": "assistant",
+                "content_type": "str",
+                "content_characters": 2,
+                "reasoning_type": "str",
+                "has_tool_calls": false
+              },
+              "delta_type": "NoneType"
+            }
+          ]
+        },
+        "reported_usage": {
+          "prompt_tokens": 224,
+          "completion_tokens": 9,
+          "total_tokens": 233,
+          "prompt_tokens_details": {
+            "cached_tokens": 214
+          }
+        },
+        "usage_final": true,
+        "usage_known": true,
+        "usage_matches_response": true,
+        "upstream_attempts": 1,
+        "session_id": "relay-diagnosis-20261029-completion-json"
+      },
+      {
+        "case": "scenario-json",
+        "started_at": "2026-10-29T09:44:43.922824+00:00",
+        "request_id": "c2636e29f7c54ebd86ec97d84692ac54",
+        "connection_id": "relay-personal",
+        "caller_id": "legacy",
+        "model": "claude-sonnet-4-6",
+        "actual_model": "claude-sonnet-4-6",
+        "stream": false,
+        "output_cap": 2048,
+        "input_characters": 680,
+        "experimental_wire_override": false,
+        "http_status": 200,
+        "upstream_status": 200,
+        "status": "success",
+        "delivery_status": "sent",
+        "duration_ms": 32700.32,
+        "upstream_headers_ms": 32666.7,
+        "wait_after_body_sent_ms": 32066.43,
+        "first_body_ms": 32667.02,
+        "response_content_type": "application/json; charset=utf-8",
+        "response_content_encoding": "gzip",
+        "upstream_request_ids": {
+          "cf-ray": "a5213e495b9c8532-HKG",
+          "x-oneapi-request-id": "202610290944437337735528268d9d6qQ9xYVcm",
+          "x-request-id": "3bc23c50-26a1-469e-ae03-80ec1119c930"
+        },
+        "upstream_path": "/v1/chat/completions",
+        "wire_request": {
+          "keys": [
+            "max_tokens",
+            "messages",
+            "model",
+            "stream"
+          ],
+          "stream": false,
+          "message_roles": [
+            "system",
+            "user"
+          ],
+          "max_tokens": 2048,
+          "max_completion_tokens": null,
+          "stream_options": null,
+          "model": "claude-sonnet-4-6",
+          "input_sha256": "88e62f974209b598448b525c73d239f38160560f5ce01eac67a9daf2f80c515a"
+        },
+        "response_structure": {
+          "object": "chat.completion",
+          "type": "None",
+          "id_type": "str",
+          "model": "claude-sonnet-4-6",
+          "usage": {
+            "prompt_tokens": 336,
+            "completion_tokens": 370,
+            "total_tokens": 706,
+            "prompt_tokens_details": {
+              "cached_tokens": 192
+            }
+          },
+          "choices_type": "list",
+          "choices_count": 1,
+          "choices": [
+            {
+              "index": 0,
+              "finish_reason": "stop",
+              "message_type": "dict",
+              "message": {
+                "role": "assistant",
+                "content_type": "str",
+                "content_characters": 584,
+                "reasoning_type": "str",
+                "has_tool_calls": false
+              },
+              "delta_type": "NoneType"
+            }
+          ]
+        },
+        "reported_usage": {
+          "prompt_tokens": 336,
+          "completion_tokens": 370,
+          "total_tokens": 706,
+          "prompt_tokens_details": {
+            "cached_tokens": 192
+          }
+        },
+        "usage_final": true,
+        "usage_known": true,
+        "usage_matches_response": true,
+        "upstream_attempts": 1,
+        "session_id": "relay-diagnosis-20261029-scenario-json"
+      },
+      {
+        "case": "native-json",
+        "started_at": "2026-10-29T09:46:10.922656+00:00",
+        "request_id": "bc93fcc56bd643dfa54728cfb838cb87",
+        "connection_id": "relay-personal",
+        "caller_id": "legacy",
+        "model": "claude-sonnet-4-6",
+        "actual_model": "claude-sonnet-4-6",
+        "stream": false,
+        "output_cap": 128,
+        "input_characters": 22,
+        "experimental_wire_override": true,
+        "http_status": 200,
+        "upstream_status": 200,
+        "status": "success",
+        "delivery_status": "sent",
+        "duration_ms": 3299.02,
+        "upstream_headers_ms": 3259.02,
+        "wait_after_body_sent_ms": 2315.55,
+        "first_body_ms": 3259.19,
+        "response_content_type": "application/json; charset=utf-8",
+        "response_content_encoding": null,
+        "upstream_request_ids": {
+          "cf-ray": "a521406b58ca8532-HKG",
+          "x-oneapi-request-id": "202610290946110796240258268d9d6BGwjgabx",
+          "x-request-id": "76810ad2-5220-459c-bd86-a3e84fd9c049"
+        },
+        "upstream_path": "/v1/messages",
+        "wire_request": {
+          "keys": [
+            "max_tokens",
+            "messages",
+            "model",
+            "stream"
+          ],
+          "stream": false,
+          "message_roles": [
+            "user"
+          ],
+          "max_tokens": 128,
+          "max_completion_tokens": null,
+          "stream_options": null,
+          "model": "claude-sonnet-4-6",
+          "input_sha256": "24eb99d3e9dc14276d38baa0a02f0b44c1c291f7b8564161543ce3b8d1bb86b0"
+        },
+        "response_structure": {
+          "object": "None",
+          "type": "message",
+          "id_type": "str",
+          "model": "claude-sonnet-4-6",
+          "usage": {
+            "input_tokens": 224,
+            "output_tokens": 3,
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0
+          },
+          "choices_type": "NoneType",
+          "native_content_types": [
+            "text"
+          ],
+          "native_stop_reason": "end_turn"
+        },
+        "reported_usage": {
+          "prompt_tokens": 224,
+          "completion_tokens": 3,
+          "input_tokens": 224,
+          "output_tokens": 3,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0
+        },
+        "usage_final": true,
+        "usage_known": false,
+        "usage_matches_response": true,
+        "upstream_attempts": 1,
+        "session_id": "relay-diagnosis-20261029-native-json"
+      },
+      {
+        "case": "exact-rejection",
+        "started_at": "2026-10-29T09:47:54.501636+00:00",
+        "request_id": "523ff5da0f5c47209fa313d5c6025e37",
+        "connection_id": "relay-personal",
+        "caller_id": "legacy",
+        "model": "claude-sonnet-4-6",
+        "actual_model": "claude-sonnet-4-6",
+        "stream": false,
+        "output_cap": 32,
+        "input_characters": 14,
+        "experimental_wire_override": false,
+        "http_status": 200,
+        "upstream_status": 200,
+        "status": "success",
+        "delivery_status": "sent",
+        "duration_ms": 29506.3,
+        "upstream_headers_ms": 29471.67,
+        "wait_after_body_sent_ms": 28731.24,
+        "first_body_ms": 29472.44,
+        "response_content_type": "application/json; charset=utf-8",
+        "response_content_encoding": null,
+        "upstream_request_ids": {
+          "cf-ray": "a52142f429a1a7f5-LAX",
+          "x-oneapi-request-id": "202610290947544534944738268d9d6iydyHy88",
+          "x-request-id": "6078efbf-442f-4707-b51e-c75ba5c76e2c"
+        },
+        "upstream_path": "/v1/chat/completions",
+        "wire_request": {
+          "keys": [
+            "max_tokens",
+            "messages",
+            "model",
+            "stream"
+          ],
+          "stream": false,
+          "message_roles": [
+            "user"
+          ],
+          "max_tokens": 32,
+          "max_completion_tokens": null,
+          "stream_options": null,
+          "model": "claude-sonnet-4-6",
+          "input_sha256": "d5a8e1da6d37a426ba4e098e00e979c09fa1f29d224cf19d29b2385f98bab83d"
+        },
+        "response_structure": {
+          "object": "chat.completion",
+          "type": "None",
+          "id_type": "str",
+          "model": "claude-sonnet-4-6",
+          "usage": {
+            "prompt_tokens": 223,
+            "completion_tokens": 3,
+            "total_tokens": 226
+          },
+          "choices_type": "list",
+          "choices_count": 1,
+          "choices": [
+            {
+              "index": 0,
+              "finish_reason": "stop",
+              "message_type": "dict",
+              "message": {
+                "role": "assistant",
+                "content_type": "str",
+                "content_characters": 2,
+                "reasoning_type": "NoneType",
+                "has_tool_calls": false
+              },
+              "delta_type": "NoneType"
+            }
+          ]
+        },
+        "reported_usage": {
+          "prompt_tokens": 223,
+          "completion_tokens": 3,
+          "total_tokens": 226
+        },
+        "usage_final": true,
+        "usage_known": true,
+        "usage_matches_response": true,
+        "upstream_attempts": 1,
+        "session_id": "relay-diagnosis-20261029-exact-rejection"
+      },
+      {
+        "case": "parallel-json",
+        "started_at": "2026-10-29T09:49:02.366919+00:00",
+        "request_id": "423ebbfc6fd840ef84fed120c129da33",
+        "connection_id": "relay-personal",
+        "caller_id": "legacy",
+        "model": "claude-sonnet-4-6",
+        "actual_model": "claude-sonnet-4-6",
+        "stream": false,
+        "output_cap": 128,
+        "input_characters": 22,
+        "experimental_wire_override": false,
+        "http_status": 200,
+        "upstream_status": 200,
+        "status": "success",
+        "delivery_status": "sent",
+        "duration_ms": 2597.05,
+        "upstream_headers_ms": 2561.09,
+        "wait_after_body_sent_ms": 2182.72,
+        "first_body_ms": 2561.18,
+        "response_content_type": "application/json; charset=utf-8",
+        "response_content_encoding": null,
+        "upstream_request_ids": {
+          "cf-ray": "a5214497ba05a7f5-LAX",
+          "x-oneapi-request-id": "202610290949019549941508268d9d6snCordAL",
+          "x-request-id": "f6896486-a39a-4074-abd0-0b1a4675c037"
+        },
+        "upstream_path": "/v1/chat/completions",
+        "wire_request": {
+          "keys": [
+            "max_tokens",
+            "messages",
+            "model",
+            "stream"
+          ],
+          "stream": false,
+          "message_roles": [
+            "user"
+          ],
+          "max_tokens": 128,
+          "max_completion_tokens": null,
+          "stream_options": null,
+          "model": "claude-sonnet-4-6",
+          "input_sha256": "32c0dfb1bd3b9893a2f76075c9740057787fa6301260698338f2407258a34317"
+        },
+        "response_structure": {
+          "object": "chat.completion",
+          "type": "None",
+          "id_type": "str",
+          "model": "claude-sonnet-4-6",
+          "usage": {
+            "prompt_tokens": 224,
+            "completion_tokens": 3,
+            "total_tokens": 227
+          },
+          "choices_type": "list",
+          "choices_count": 1,
+          "choices": [
+            {
+              "index": 0,
+              "finish_reason": "stop",
+              "message_type": "dict",
+              "message": {
+                "role": "assistant",
+                "content_type": "str",
+                "content_characters": 2,
+                "reasoning_type": "NoneType",
+                "has_tool_calls": false
+              },
+              "delta_type": "NoneType"
+            }
+          ]
+        },
+        "reported_usage": {
+          "prompt_tokens": 224,
+          "completion_tokens": 3,
+          "total_tokens": 227
+        },
+        "usage_final": true,
+        "usage_known": true,
+        "usage_matches_response": true,
+        "upstream_attempts": 1,
+        "session_id": "relay-diagnosis-20261029-parallel-json"
+      },
+      {
+        "case": "parallel-sse",
+        "started_at": "2026-10-29T09:49:02.364748+00:00",
+        "request_id": "d9335b73dcc04982b8aa8b1586ac21f7",
+        "connection_id": "relay-personal",
+        "caller_id": "legacy",
+        "model": "claude-sonnet-4-6",
+        "actual_model": "claude-sonnet-4-6",
+        "stream": true,
+        "output_cap": 128,
+        "input_characters": 22,
+        "experimental_wire_override": false,
+        "http_status": 200,
+        "upstream_status": 200,
+        "status": "success",
+        "delivery_status": "sent",
+        "duration_ms": 2737.61,
+        "upstream_headers_ms": 2125.73,
+        "wait_after_body_sent_ms": 1738.32,
+        "first_body_ms": 2126.22,
+        "response_content_type": "text/event-stream",
+        "response_content_encoding": null,
+        "upstream_request_ids": {
+          "x-oneapi-request-id": "202610290949019602767478268d9d65BDP1o0L"
+        },
+        "upstream_path": "/v1/chat/completions",
+        "wire_request": {
+          "keys": [
+            "max_tokens",
+            "messages",
+            "model",
+            "stream",
+            "stream_options"
+          ],
+          "stream": true,
+          "message_roles": [
+            "user"
+          ],
+          "max_tokens": 128,
+          "max_completion_tokens": null,
+          "stream_options": {
+            "include_usage": true
+          },
+          "model": "claude-sonnet-4-6",
+          "input_sha256": "32c0dfb1bd3b9893a2f76075c9740057787fa6301260698338f2407258a34317"
+        },
+        "response_structure": {
+          "event_count": 4,
+          "done": true,
+          "last_event": {
+            "object": "chat.completion.chunk",
+            "type": "None",
+            "id_type": "str",
+            "model": "claude-sonnet-4-6",
+            "usage": {
+              "prompt_tokens": 224,
+              "completion_tokens": 3,
+              "total_tokens": 227
+            },
+            "choices_type": "list",
+            "choices_count": 0,
+            "choices": []
+          },
+          "observed_usage": {
+            "prompt_tokens": 224,
+            "completion_tokens": 3,
+            "total_tokens": 227
+          }
+        },
+        "reported_usage": {
+          "prompt_tokens": 224,
+          "completion_tokens": 3,
+          "total_tokens": 227
+        },
+        "usage_final": true,
+        "usage_known": true,
+        "usage_matches_response": true,
+        "upstream_attempts": 1,
+        "session_id": "relay-diagnosis-20261029-parallel-sse"
+      }
+    ],
+    "summary": {
+      "generation_requests": 8,
+      "read_only_model_queries": 1,
+      "completed": 8,
+      "failed": 0,
+      "automatic_retries": 0,
+      "automatic_fallbacks": 0,
+      "known_prompt_tokens": 1903,
+      "known_completion_tokens": 404,
+      "reported_total_tokens_sum": 2080,
+      "requests_missing_total_tokens": 1,
+      "requests_without_any_usage": 0,
+      "billed_cost": null,
+      "total_tokens_note": "One native Messages request reports input/output only. Its total stays unknown, not zero; no total is invented."
+    },
+    "parallel_health": {
+      "samples": 27,
+      "peak_active": 2,
+      "peak_queued": 0,
+      "max_health_ms": 16.75,
+      "failures": 0
+    },
+    "all_temporary_services_stopped": true,
+    "historical_failures_reproduced": false,
+    "not_proven": [
+      "Historical HTTP 400 internal routing cause",
+      "Exact structure responsible for seven old protocol errors",
+      "Remote network vs relay/provider delay breakdown",
+      "Sustained multi-turn/high-concurrency relay reliability"
+    ],
+    "raw_body_or_headers_committed": false
+  },
+  "preservation": {
+    "baseline_rows": {
+      "requests": 201,
+      "tokens": 7,
+      "allocations": 162
+    },
+    "after_rows": {
+      "requests": 209,
+      "tokens": 7,
+      "allocations": 170
+    },
+    "config_content_unchanged": true,
+    "config_modes": [
+      "0o600"
+    ],
+    "old_tables_unchanged": {
+      "requests": true,
+      "tokens": true,
+      "allocations": true
+    },
+    "new_requests": 8,
+    "pending_receipts": 0,
+    "installed_runtime_matches_source": true,
+    "original_port_8787_stopped": true
+  }
+}
