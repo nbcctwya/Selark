@@ -22,6 +22,7 @@ from selark.connections import legacy_connection, resolve_model
 from selark.errors import GatewayError
 from selark.governance import Policy, ResourcesConfig, enforce_access, input_estimate, permitted
 from selark.persistence import AsyncLedger, Journal
+from selark.plans import PLAN_PRESETS, empty_quota, enforce_quota, query_quota
 from selark.providers.factory import provider_for
 from selark.providers.mimo import reported_usage
 from selark.runtime import Runtime, fingerprint
@@ -210,7 +211,22 @@ class RequestMiddleware:
                         await self.storage.call("policy", state["caller_id"])
                     )
                     selected, model, alias, _ = await self.route(data)
-                    enforce_access(policy, selected.connection_id, model)
+                    state["connection_id"] = selected.connection_id
+                    state["resource_type"] = selected.resource_type
+                    state["plan_id"] = (
+                        selected.connection_id if selected.resource_type == "token_plan" else None
+                    )
+                    enforce_access(policy, selected.connection_id, model, selected.resource_type)
+                    if (
+                        selected.resource_type == "token_plan"
+                        and data.interaction != "personal_coding"
+                    ):
+                        raise GatewayError(
+                            403,
+                            "plan_interaction_required",
+                            "Token Plan 仅用于本人交互式编程；"
+                            "请显式指定 interaction=personal_coding。",
+                        )
                     state["requested_alias"] = alias
                     self.gate.acquire_caller(state["caller_id"], policy.max_concurrent_requests)
                     caller_reserved = True
@@ -328,6 +344,8 @@ class RequestMiddleware:
                     self.gate.release()
                 if caller_reserved:
                     self.gate.release_caller(state["caller_id"])
+                if state.get("plan_slot"):
+                    self.gate.plans.discard(state["plan_slot"])
                 if reserved:
                     self.gate.leave()
                 if metadata:
@@ -342,6 +360,8 @@ class RequestMiddleware:
                         else "unknown",
                         "caller_id": state.get("caller_id"),
                         "connection_id": state["connection_id"],
+                        "resource_type": state.get("resource_type"),
+                        "plan_id": state.get("plan_id"),
                         "requested_alias": state.get("requested_alias"),
                         "session_id": state.get("session_id"),
                         "purpose": state["purpose"],
@@ -515,10 +535,12 @@ def create_app(
                 "connection_id": c.connection_id,
                 "connection_name": c.name,
                 "connection_enabled": c.enabled,
+                "resource_type": c.resource_type,
+                "plan_id": c.connection_id if c.resource_type == "token_plan" else None,
             }
             for c in available
             for m in c.allowed_models
-            if permitted(policy, c.connection_id, m)
+            if permitted(policy, c.connection_id, m, c.resource_type)
         ]
         settings = await resources()
         by_id = {c.connection_id: c for c in available}
@@ -527,7 +549,7 @@ def create_app(
             if (
                 c
                 and target.model in c.allowed_models
-                and permitted(policy, c.connection_id, target.model)
+                and permitted(policy, c.connection_id, target.model, c.resource_type)
             ):
                 entries.append(
                     {
@@ -541,18 +563,26 @@ def create_app(
                         "connection_name": c.name,
                         "connection_enabled": c.enabled,
                         "alias": alias,
+                        "resource_type": c.resource_type,
+                        "plan_id": c.connection_id if c.resource_type == "token_plan" else None,
                     }
                 )
         return {
             "object": "list",
             "data": entries,
             "default_model": current.default_model
-            if permitted(policy, current.connection_id, current.default_model)
+            if permitted(
+                policy, current.connection_id, current.default_model, current.resource_type
+            )
             else None,
             "connection_enabled": current.enabled
-            and permitted(policy, current.connection_id, current.default_model),
+            and permitted(
+                policy, current.connection_id, current.default_model, current.resource_type
+            ),
             "default_connection": current.connection_id
-            if permitted(policy, current.connection_id, current.default_model)
+            if permitted(
+                policy, current.connection_id, current.default_model, current.resource_type
+            )
             else None,
         }
 
@@ -561,9 +591,13 @@ def create_app(
         data = request.state.chat_input
         current, model, alias, settings = await route(data)
         policy = Policy.model_validate(await storage.call("policy", request.state.caller_id))
-        enforce_access(policy, current.connection_id, model)
+        enforce_access(policy, current.connection_id, model, current.resource_type)
         request.state.requested_alias = alias
         request.state.connection_id = current.connection_id
+        request.state.resource_type = current.resource_type
+        request.state.plan_id = (
+            current.connection_id if current.resource_type == "token_plan" else None
+        )
         request.state.session_id = data.session_id
         if not current.enabled:
             raise GatewayError(
@@ -596,6 +630,43 @@ def create_app(
                 update={"max_completion_tokens": min(1024, policy.max_output_tokens)}
             )
         payload = provider.prepare(data, model)
+        if current.resource_type == "token_plan":
+            if data.interaction != "personal_coding":
+                raise GatewayError(
+                    403, "plan_interaction_required", "套餐只接受明确的个人交互式编程请求。"
+                )
+            if PLAN_PRESETS[current.provider]["generation_support"] == "preset_only":
+                raise GatewayError(
+                    501,
+                    "plan_preset_only",
+                    "此套餐只有配置与模拟适配，尚未确认 Selark 的实际接入许可；禁止真实生成。",
+                )
+            request.state.purpose = "interactive_coding"
+            gate.acquire_plan(current.connection_id)
+            request.state.plan_slot = current.connection_id
+            checked_at = utc_now()
+            try:
+                quota = await query_quota(current, client=app.state.http)
+            except GatewayError as exc:
+                await storage.call(
+                    "save_plan_status",
+                    current.connection_id,
+                    fingerprint(current),
+                    checked_at,
+                    empty_quota("failure") | {"error_code": exc.code},
+                )
+                raise
+            await storage.call(
+                "save_plan_status", current.connection_id, fingerprint(current), checked_at, quota
+            )
+            enforce_quota(quota)
+            latest, _ = resolve_model(await connections(), current.connection_id, model)
+            if not latest.enabled or fingerprint(latest) != fingerprint(current):
+                raise GatewayError(
+                    409,
+                    "plan_config_changed",
+                    "套餐配置在额度查询期间发生变化；未生成，请重新确认当前设置。",
+                )
         estimate = input_estimate(payload)
         output = payload.get("max_tokens", payload.get("max_completion_tokens"))
         price = next(
@@ -619,6 +690,11 @@ def create_app(
                 "output": output,
                 "price": price,
                 "alias": alias,
+                "resource_type": current.resource_type,
+                "plan": current.plan.model_dump()
+                | {"effective_reasoning_effort": payload.get("reasoning_effort")}
+                if current.plan
+                else None,
             },
         )
         request.state.upstream_attempts = 1

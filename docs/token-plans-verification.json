@@ -1,0 +1,910 @@
+{
+  "version": "0.6.0",
+  "verified_at": "2026-10-28T15:15:56.524411+00:00",
+  "real_generation_requests": 2,
+  "real_metadata_requests": {
+    "GET /models": 2,
+    "GET /usages": 4
+  },
+  "automatic_generation_retries": 0,
+  "other_provider_generations": 0,
+  "real_requests": [
+    {
+      "request_id": "4ee85312db014de1abfd0e97d2da82d6",
+      "started_at": "2026-10-28T14:58:47.286484+00:00",
+      "connection_id": "kimi-code-personal",
+      "model": "kimi-for-coding",
+      "plan_id": "kimi-code-personal",
+      "resource_type": "token_plan",
+      "session_id": "selark-060-manual",
+      "purpose": "interactive_coding",
+      "status": "success",
+      "upstream_result": "success",
+      "delivery_status": "sent",
+      "duration_ms": 3508.4,
+      "reported_usage": {
+        "prompt_tokens": 108,
+        "completion_tokens": 54,
+        "total_tokens": 162,
+        "completion_tokens_details": {
+          "reasoning_tokens": 24
+        }
+      },
+      "usage_known": true,
+      "usage_final": true,
+      "upstream_attempts": 1,
+      "response_mode": "ordinary"
+    },
+    {
+      "request_id": "774230e8ec544650a3c6b82da8d5f4a0",
+      "started_at": "2026-10-28T14:59:44.825928+00:00",
+      "connection_id": "kimi-code-personal",
+      "model": "kimi-for-coding",
+      "plan_id": "kimi-code-personal",
+      "resource_type": "token_plan",
+      "session_id": "selark-060-manual",
+      "purpose": "interactive_coding",
+      "status": "success",
+      "upstream_result": "success",
+      "delivery_status": "sent",
+      "duration_ms": 3600.9,
+      "reported_usage": {
+        "prompt_tokens": 194,
+        "completion_tokens": 97,
+        "total_tokens": 291,
+        "completion_tokens_details": {
+          "reasoning_tokens": 60
+        }
+      },
+      "usage_known": true,
+      "usage_final": true,
+      "upstream_attempts": 1,
+      "response_mode": "streaming_multiturn"
+    }
+  ],
+  "local_usage": {
+    "timezone": "UTC",
+    "filters": {
+      "plan_id": "kimi-code-personal"
+    },
+    "summary": {
+      "requests": 2,
+      "known_usage_requests": 2,
+      "missing_usage_requests": 0,
+      "reported_usage_requests": 2,
+      "upstream_attempts": 2,
+      "unknown_attempt_count_requests": 0,
+      "unknown_time_requests": 0,
+      "status_counts": {
+        "success": 2
+      },
+      "known_tokens": {
+        "prompt_tokens": 302,
+        "completion_tokens": 151,
+        "total_tokens": 453
+      },
+      "missing_field_requests": {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0
+      },
+      "estimated_cost_by_currency": {},
+      "unknown_cost_requests": 2,
+      "billed_cost": null,
+      "resource_accounting": {
+        "scope": "Selark 0.5+ admissions",
+        "requests": 2,
+        "tokens_by_basis": {
+          "reported_total": 453
+        }
+      }
+    },
+    "group_by": "caller",
+    "groups": [
+      {
+        "caller_id": "caller_cd39ede766dc487e97776011aafafa0b",
+        "requests": 2,
+        "known_usage_requests": 2,
+        "missing_usage_requests": 0,
+        "reported_usage_requests": 2,
+        "upstream_attempts": 2,
+        "unknown_attempt_count_requests": 0,
+        "unknown_time_requests": 0,
+        "status_counts": {
+          "success": 2
+        },
+        "known_tokens": {
+          "prompt_tokens": 302,
+          "completion_tokens": 151,
+          "total_tokens": 453
+        },
+        "missing_field_requests": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        },
+        "estimated_cost_by_currency": {},
+        "unknown_cost_requests": 2,
+        "billed_cost": null,
+        "resource_accounting": {
+          "scope": "Selark 0.5+ admissions",
+          "requests": 2,
+          "tokens_by_basis": {
+            "reported_total": 453
+          }
+        }
+      }
+    ]
+  },
+  "session_summary": {
+    "timezone": "UTC",
+    "filters": {
+      "plan_id": "kimi-code-personal",
+      "sessions_only": true
+    },
+    "summary": {
+      "requests": 2,
+      "known_usage_requests": 2,
+      "missing_usage_requests": 0,
+      "reported_usage_requests": 2,
+      "upstream_attempts": 2,
+      "unknown_attempt_count_requests": 0,
+      "unknown_time_requests": 0,
+      "status_counts": {
+        "success": 2
+      },
+      "known_tokens": {
+        "prompt_tokens": 302,
+        "completion_tokens": 151,
+        "total_tokens": 453
+      },
+      "missing_field_requests": {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0
+      },
+      "estimated_cost_by_currency": {},
+      "unknown_cost_requests": 2,
+      "billed_cost": null,
+      "resource_accounting": {
+        "scope": "Selark 0.5+ admissions",
+        "requests": 2,
+        "tokens_by_basis": {
+          "reported_total": 453
+        }
+      }
+    },
+    "group_by": "session",
+    "groups": [
+      {
+        "caller_id": "caller_cd39ede766dc487e97776011aafafa0b",
+        "session_id": "selark-060-manual",
+        "requests": 2,
+        "known_usage_requests": 2,
+        "missing_usage_requests": 0,
+        "reported_usage_requests": 2,
+        "upstream_attempts": 2,
+        "unknown_attempt_count_requests": 0,
+        "unknown_time_requests": 0,
+        "status_counts": {
+          "success": 2
+        },
+        "known_tokens": {
+          "prompt_tokens": 302,
+          "completion_tokens": 151,
+          "total_tokens": 453
+        },
+        "missing_field_requests": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        },
+        "estimated_cost_by_currency": {},
+        "unknown_cost_requests": 2,
+        "billed_cost": null,
+        "resource_accounting": {
+          "scope": "Selark 0.5+ admissions",
+          "requests": 2,
+          "tokens_by_basis": {
+            "reported_total": 453
+          }
+        }
+      }
+    ]
+  },
+  "last_provider_quota": {
+    "state": "reported",
+    "checked_at": "2026-10-28T14:59:44.830499+00:00",
+    "windows": [
+      {
+        "name": "limit_5h",
+        "used_ratio": 0.2658,
+        "reset_at": "2026-10-28T15:37:21Z"
+      },
+      {
+        "name": "limit_7d",
+        "used_ratio": 0.4236,
+        "reset_at": "2026-10-30T02:37:21Z"
+      }
+    ],
+    "reported_counters": [
+      {
+        "window": "unscoped",
+        "unit": "provider_units",
+        "limit": "100",
+        "used": "42",
+        "remaining": "58",
+        "reset_at": "2026-10-30T02:37:22.249987Z"
+      },
+      {
+        "window": "minutes:300",
+        "unit": "provider_units",
+        "limit": "100",
+        "used": "27",
+        "remaining": "73",
+        "reset_at": "2026-10-28T15:37:22.249987Z"
+      }
+    ],
+    "remaining_tokens": null,
+    "extra_usage": "disabled",
+    "membership_status": "unknown",
+    "source": "https://api.kimi.com/coding/v1/usages",
+    "conflicting_fields": false
+  },
+  "remaining_tokens": null,
+  "billed_cost": null,
+  "migration": {
+    "from": 3,
+    "to": 4,
+    "backup_before_migration": true,
+    "original_private_files_unchanged": 5,
+    "original_additional_connection_fields_unchanged": 2,
+    "original_mimo_config_unchanged": true,
+    "original_requests_preserved": 34,
+    "original_tokens_preserved": 6,
+    "original_revocations_preserved": true,
+    "original_known_tokens": {
+      "prompt_tokens": 626,
+      "completion_tokens": 134,
+      "total_tokens": 760
+    },
+    "repeated_migration_created_backup": false
+  },
+  "tests": {
+    "pytest_passed": 268,
+    "new_plan_cases": 35,
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "remote_ci_060": "not run; workflow updated locally"
+  },
+  "installed_checks": {
+    "version": "Selark 0.6.0",
+    "cwd": "/tmp",
+    "development_environment_active": false,
+    "legacy_models_count": 13,
+    "personal_models_count": 1,
+    "plan_count": 1,
+    "generation_attempts_before": 25,
+    "generation_attempts_after": 25,
+    "doctor": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "server_config",
+          "ok": true,
+          "connection_enabled": true
+        },
+        {
+          "check": "connections_config",
+          "ok": true,
+          "configured_connections": 4
+        },
+        {
+          "check": "resources_config",
+          "ok": true,
+          "aliases": 2,
+          "prices": 0
+        },
+        {
+          "check": "client_config",
+          "ok": true
+        },
+        {
+          "check": "recovery_receipts",
+          "ok": true,
+          "pending": 0,
+          "invalid": 0,
+          "message": "没有待恢复记录"
+        },
+        {
+          "check": "storage",
+          "ok": true,
+          "schema_version": 4,
+          "message": "记录库正常",
+          "integrity": "ok",
+          "records": 36,
+          "running_records": 0,
+          "path": "/home/nbcctwya/.local/share/selark/records.sqlite3"
+        },
+        {
+          "check": "client_token",
+          "ok": true,
+          "caller_id": "legacy",
+          "message": "本地客户端令牌有效"
+        },
+        {
+          "check": "storage_writer",
+          "ok": true
+        },
+        {
+          "check": "service",
+          "ok": true,
+          "version": "0.6.0",
+          "message": "服务正常"
+        }
+      ],
+      "model_generation_requests": 0,
+      "note": "doctor 不执行真实连通性探测；使用 connection probe 显式生成。"
+    },
+    "quota_checked_at": "2026-10-28T14:59:44.830499+00:00"
+  },
+  "stopped_cli": {
+    "exit_code": 1,
+    "connection_failure_clear": true,
+    "upstream_bypass": false
+  },
+  "restart": {
+    "records": 2,
+    "session_groups": 1,
+    "quota_snapshot_retained": true,
+    "known_total_tokens": 453,
+    "additional_generations": 0
+  },
+  "installation": {
+    "version": "0.6.0",
+    "scope": "current WSL user only",
+    "editable": false,
+    "service_final_status": "stopped",
+    "python_source_files_matched": 27,
+    "dependency_check": "No broken requirements found"
+  },
+  "simulated_socket_stability": {
+    "verified_at": "2026-10-28T15:00:24.032011+00:00",
+    "version": "0.6.0",
+    "upstream": "temporary loopback fixture; invented credentials",
+    "real_mimo_requests": 0,
+    "simulated_upstream_requests": 9,
+    "checks": [
+      {
+        "check": "cli_and_passive_checks",
+        "passed": true,
+        "upstream_calls": 0
+      },
+      {
+        "check": "ordinary_and_sse_over_real_local_sockets",
+        "passed": true
+      },
+      {
+        "check": "bounded_queue_overload_and_wait_timeout",
+        "passed": true
+      },
+      {
+        "check": "actual_socket_read_idle_timeout",
+        "passed": true,
+        "elapsed_ms": 1027.41
+      },
+      {
+        "check": "trickling_stream_hits_total_deadline",
+        "passed": true,
+        "elapsed_ms": 1508.42
+      },
+      {
+        "check": "ordinary_client_socket_disconnect",
+        "passed": true
+      },
+      {
+        "check": "sigkill_restart_preserves_unknown_usage_without_retry",
+        "passed": true
+      },
+      {
+        "check": "bounded_sigterm_grace_and_accounting",
+        "passed": true,
+        "elapsed_ms": 421.22
+      },
+      {
+        "check": "post_recovery_call_and_usage_totals",
+        "passed": true,
+        "known_total_tokens": 56
+      }
+    ],
+    "request_records": [
+      {
+        "request_id": "b0f40ff90f264850bdfb84e158ede3cf",
+        "original_request_id": "b0f40ff90f264850bdfb84e158ede3cf",
+        "started_at": "2026-10-28T15:00:19.610862+00:00",
+        "finished_at": "2026-10-28T15:00:19.640601+00:00",
+        "caller_id": "legacy",
+        "connection_id": "mimo-default",
+        "session_id": "ordinary",
+        "model": "mimo-test",
+        "requested_model": "mimo-test",
+        "purpose": "chat",
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "duration_ms": 29.75,
+        "upstream_attempts": 1,
+        "usage_json": "{\"prompt_tokens\": 12, \"completion_tokens\": 2, \"total_tokens\": 14}",
+        "usage_final": 1,
+        "prompt_tokens": 12,
+        "completion_tokens": 2,
+        "total_tokens": 14,
+        "error_code": null,
+        "error_message": null,
+        "origin": "live",
+        "upstream_result": "success",
+        "delivery_status": "sent",
+        "upstream_error_code": null,
+        "delivery_error_code": null,
+        "queue_ms": 0.0,
+        "record_revision": 2,
+        "requested_alias": null,
+        "resource_type": "api",
+        "plan_id": null
+      },
+      {
+        "request_id": "6aeaf7baf7064c709f25aadf18fd5c06",
+        "original_request_id": "6aeaf7baf7064c709f25aadf18fd5c06",
+        "started_at": "2026-10-28T15:00:19.646269+00:00",
+        "finished_at": "2026-10-28T15:00:19.667867+00:00",
+        "caller_id": "legacy",
+        "connection_id": "mimo-default",
+        "session_id": "stream",
+        "model": "mimo-test",
+        "requested_model": "mimo-test",
+        "purpose": "chat",
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "duration_ms": 21.62,
+        "upstream_attempts": 1,
+        "usage_json": "{\"prompt_tokens\": 12, \"completion_tokens\": 2, \"total_tokens\": 14}",
+        "usage_final": 1,
+        "prompt_tokens": 12,
+        "completion_tokens": 2,
+        "total_tokens": 14,
+        "error_code": null,
+        "error_message": null,
+        "origin": "live",
+        "upstream_result": "success",
+        "delivery_status": "sent",
+        "upstream_error_code": null,
+        "delivery_error_code": null,
+        "queue_ms": 1.03,
+        "record_revision": 2,
+        "requested_alias": null,
+        "resource_type": "api",
+        "plan_id": null
+      },
+      {
+        "request_id": "32c228cb4430471caa806c1fc3795bec",
+        "original_request_id": "32c228cb4430471caa806c1fc3795bec",
+        "started_at": "2026-10-28T15:00:19.695597+00:00",
+        "finished_at": "2026-10-28T15:00:20.137309+00:00",
+        "caller_id": "legacy",
+        "connection_id": "mimo-default",
+        "session_id": "active",
+        "model": "mimo-test",
+        "requested_model": "mimo-test",
+        "purpose": "chat",
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "duration_ms": 441.72,
+        "upstream_attempts": 1,
+        "usage_json": "{\"prompt_tokens\": 12, \"completion_tokens\": 2, \"total_tokens\": 14}",
+        "usage_final": 1,
+        "prompt_tokens": 12,
+        "completion_tokens": 2,
+        "total_tokens": 14,
+        "error_code": null,
+        "error_message": null,
+        "origin": "live",
+        "upstream_result": "success",
+        "delivery_status": "sent",
+        "upstream_error_code": null,
+        "delivery_error_code": null,
+        "queue_ms": 0.0,
+        "record_revision": 2,
+        "requested_alias": null,
+        "resource_type": "api",
+        "plan_id": null
+      },
+      {
+        "request_id": "bf1db72f705a4a01a2c3182940246961",
+        "original_request_id": "bf1db72f705a4a01a2c3182940246961",
+        "started_at": "2026-10-28T15:00:19.714150+00:00",
+        "finished_at": "2026-10-28T15:00:20.117203+00:00",
+        "caller_id": "legacy",
+        "connection_id": "mimo-default",
+        "session_id": "queued",
+        "model": null,
+        "requested_model": null,
+        "purpose": "chat",
+        "status": "failed",
+        "http_status": 503,
+        "upstream_status": null,
+        "duration_ms": 403.08,
+        "upstream_attempts": 0,
+        "usage_json": null,
+        "usage_final": 0,
+        "prompt_tokens": null,
+        "completion_tokens": null,
+        "total_tokens": null,
+        "error_code": "queue_timeout",
+        "error_message": "等待 Selark 执行名额超时，未发送上游。",
+        "origin": "live",
+        "upstream_result": "not_started",
+        "delivery_status": "sent",
+        "upstream_error_code": null,
+        "delivery_error_code": null,
+        "queue_ms": 400.8,
+        "record_revision": 2,
+        "requested_alias": null,
+        "resource_type": "api",
+        "plan_id": null
+      },
+      {
+        "request_id": "dd427d7e4e9f490a8a8ff8836b6b9a9d",
+        "original_request_id": "dd427d7e4e9f490a8a8ff8836b6b9a9d",
+        "started_at": "2026-10-28T15:00:20.144646+00:00",
+        "finished_at": "2026-10-28T15:00:21.166144+00:00",
+        "caller_id": "legacy",
+        "connection_id": "mimo-default",
+        "session_id": "idle",
+        "model": "mimo-test",
+        "requested_model": "mimo-test",
+        "purpose": "chat",
+        "status": "failed",
+        "http_status": 200,
+        "upstream_status": 200,
+        "duration_ms": 1021.53,
+        "upstream_attempts": 1,
+        "usage_json": null,
+        "usage_final": 0,
+        "prompt_tokens": null,
+        "completion_tokens": null,
+        "total_tokens": null,
+        "error_code": "upstream_timeout",
+        "error_message": "上游流读取超时；输出可能不完整。",
+        "origin": "live",
+        "upstream_result": "failed",
+        "delivery_status": "sent",
+        "upstream_error_code": "upstream_timeout",
+        "delivery_error_code": null,
+        "queue_ms": 1.11,
+        "record_revision": 2,
+        "requested_alias": null,
+        "resource_type": "api",
+        "plan_id": null
+      },
+      {
+        "request_id": "22f87e3bdc754029b7db8b59c5e03a7f",
+        "original_request_id": "22f87e3bdc754029b7db8b59c5e03a7f",
+        "started_at": "2026-10-28T15:00:21.172018+00:00",
+        "finished_at": "2026-10-28T15:00:22.673620+00:00",
+        "caller_id": "legacy",
+        "connection_id": "mimo-default",
+        "session_id": "trickle",
+        "model": "mimo-test",
+        "requested_model": "mimo-test",
+        "purpose": "chat",
+        "status": "failed",
+        "http_status": 200,
+        "upstream_status": 200,
+        "duration_ms": 1501.61,
+        "upstream_attempts": 1,
+        "usage_json": null,
+        "usage_final": 0,
+        "prompt_tokens": null,
+        "completion_tokens": null,
+        "total_tokens": null,
+        "error_code": "request_deadline_exceeded",
+        "error_message": "Selark 请求总时限已到，生成不会自动重试。",
+        "origin": "live",
+        "upstream_result": "cancelled",
+        "delivery_status": "sent",
+        "upstream_error_code": null,
+        "delivery_error_code": null,
+        "queue_ms": 1.0,
+        "record_revision": 2,
+        "requested_alias": null,
+        "resource_type": "api",
+        "plan_id": null
+      },
+      {
+        "request_id": "81de602334a94d53a3cdb0797cc695a8",
+        "original_request_id": "81de602334a94d53a3cdb0797cc695a8",
+        "started_at": "2026-10-28T15:00:22.675839+00:00",
+        "finished_at": "2026-10-28T15:00:22.689764+00:00",
+        "caller_id": "legacy",
+        "connection_id": "mimo-default",
+        "session_id": "cancel",
+        "model": null,
+        "requested_model": "mimo-test",
+        "purpose": "chat",
+        "status": "cancelled",
+        "http_status": 499,
+        "upstream_status": null,
+        "duration_ms": 13.93,
+        "upstream_attempts": 1,
+        "usage_json": null,
+        "usage_final": 0,
+        "prompt_tokens": null,
+        "completion_tokens": null,
+        "total_tokens": null,
+        "error_code": "client_disconnected",
+        "error_message": "调用方已断开；已取得的真实用量保留。",
+        "origin": "live",
+        "upstream_result": "cancelled",
+        "delivery_status": "disconnected",
+        "upstream_error_code": null,
+        "delivery_error_code": "client_disconnected",
+        "queue_ms": 3.97,
+        "record_revision": 2,
+        "requested_alias": null,
+        "resource_type": "api",
+        "plan_id": null
+      },
+      {
+        "request_id": "83804384f15b4161b1250c69beeb01f9",
+        "original_request_id": "83804384f15b4161b1250c69beeb01f9",
+        "started_at": "2026-10-28T15:00:22.716126+00:00",
+        "finished_at": "2026-10-28T15:00:23.039884+00:00",
+        "caller_id": "legacy",
+        "connection_id": "mimo-default",
+        "session_id": "crash",
+        "model": null,
+        "requested_model": "mimo-test",
+        "purpose": "chat",
+        "status": "interrupted",
+        "http_status": null,
+        "upstream_status": null,
+        "duration_ms": null,
+        "upstream_attempts": 1,
+        "usage_json": null,
+        "usage_final": 0,
+        "prompt_tokens": null,
+        "completion_tokens": null,
+        "total_tokens": null,
+        "error_code": "service_restarted",
+        "error_message": "服务在交付确认前退出；已取得的用量保留，其他用量未知。",
+        "origin": "live",
+        "upstream_result": "unknown",
+        "delivery_status": "unknown",
+        "upstream_error_code": null,
+        "delivery_error_code": null,
+        "queue_ms": null,
+        "record_revision": 0,
+        "requested_alias": null,
+        "resource_type": "api",
+        "plan_id": null
+      },
+      {
+        "request_id": "259a3f68cf544a738bab4b8b53042b7f",
+        "original_request_id": "259a3f68cf544a738bab4b8b53042b7f",
+        "started_at": "2026-10-28T15:00:23.135444+00:00",
+        "finished_at": "2026-10-28T15:00:23.509851+00:00",
+        "caller_id": "legacy",
+        "connection_id": "mimo-default",
+        "session_id": "shutdown",
+        "model": null,
+        "requested_model": "mimo-test",
+        "purpose": "chat",
+        "status": "interrupted",
+        "http_status": 500,
+        "upstream_status": null,
+        "duration_ms": 374.42,
+        "upstream_attempts": 1,
+        "usage_json": null,
+        "usage_final": 0,
+        "prompt_tokens": null,
+        "completion_tokens": null,
+        "total_tokens": null,
+        "error_code": "service_shutdown",
+        "error_message": "服务关闭中断请求；不重试生成。",
+        "origin": "live",
+        "upstream_result": "cancelled",
+        "delivery_status": "unknown",
+        "upstream_error_code": null,
+        "delivery_error_code": null,
+        "queue_ms": 0.0,
+        "record_revision": 2,
+        "requested_alias": null,
+        "resource_type": "api",
+        "plan_id": null
+      },
+      {
+        "request_id": "4dfb43db74c04afd9258f21067423303",
+        "original_request_id": "4dfb43db74c04afd9258f21067423303",
+        "started_at": "2026-10-28T15:00:23.972342+00:00",
+        "finished_at": "2026-10-28T15:00:24.009914+00:00",
+        "caller_id": "legacy",
+        "connection_id": "mimo-default",
+        "session_id": "after-recovery",
+        "model": "mimo-test",
+        "requested_model": "mimo-test",
+        "purpose": "chat",
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "duration_ms": 37.58,
+        "upstream_attempts": 1,
+        "usage_json": "{\"prompt_tokens\": 12, \"completion_tokens\": 2, \"total_tokens\": 14}",
+        "usage_final": 1,
+        "prompt_tokens": 12,
+        "completion_tokens": 2,
+        "total_tokens": 14,
+        "error_code": null,
+        "error_message": null,
+        "origin": "live",
+        "upstream_result": "success",
+        "delivery_status": "sent",
+        "upstream_error_code": null,
+        "delivery_error_code": null,
+        "queue_ms": 0.0,
+        "record_revision": 2,
+        "requested_alias": null,
+        "resource_type": "api",
+        "plan_id": null
+      }
+    ]
+  },
+  "simulated_socket_stress": {
+    "version": "0.6.0",
+    "verified_at": "2026-10-28T15:00:53.461823+00:00",
+    "scope": "temporary loopback upstream only; no real credentials or generations",
+    "real_generation_requests": 0,
+    "client_chat_requests": 275,
+    "simulated_upstream_requests": 50,
+    "peak_upstream_concurrency": 4,
+    "checks": [
+      {
+        "check": "80_simultaneous_clients_cycle_1",
+        "passed": true,
+        "status_counts": {
+          "200": 12,
+          "429": 68
+        },
+        "upstream_calls": 12,
+        "health_latency_ms": 2.17
+      },
+      {
+        "check": "80_simultaneous_clients_cycle_2",
+        "passed": true,
+        "status_counts": {
+          "200": 12,
+          "429": 68
+        },
+        "upstream_calls": 12,
+        "health_latency_ms": 3.55
+      },
+      {
+        "check": "80_simultaneous_clients_cycle_3",
+        "passed": true,
+        "status_counts": {
+          "200": 12,
+          "429": 68
+        },
+        "upstream_calls": 12,
+        "health_latency_ms": 1.99
+      },
+      {
+        "check": "12_simultaneous_disconnects_release_active_and_queued",
+        "passed": true
+      },
+      {
+        "check": "queued_revocation_and_connection_disable_follow_documented_rules",
+        "passed": true
+      },
+      {
+        "check": "10_invalid_or_slow_requests_generate_nothing",
+        "passed": true
+      },
+      {
+        "check": "4_live_streams_with_sqlite_writer_and_consistent_pending_backup",
+        "passed": true,
+        "data_events_per_stream": [
+          42,
+          42,
+          42,
+          42
+        ],
+        "pending_at_backup": 4,
+        "health_latency_ms": 2.52,
+        "recovered_tokens": 56
+      }
+    ],
+    "summary": {
+      "requests": 71,
+      "known_usage_requests": 46,
+      "missing_usage_requests": 25,
+      "reported_usage_requests": 46,
+      "upstream_attempts": 50,
+      "unknown_attempt_count_requests": 0,
+      "unknown_time_requests": 0,
+      "status_counts": {
+        "success": 46,
+        "cancelled": 12,
+        "failed": 13
+      },
+      "known_tokens": {
+        "prompt_tokens": 552,
+        "completion_tokens": 92,
+        "total_tokens": 644
+      },
+      "missing_field_requests": {
+        "prompt_tokens": 25,
+        "completion_tokens": 25,
+        "total_tokens": 25
+      },
+      "estimated_cost_by_currency": {},
+      "unknown_cost_requests": 50,
+      "billed_cost": null,
+      "resource_accounting": {
+        "scope": "Selark 0.5+ admissions",
+        "requests": 50,
+        "tokens_by_basis": {
+          "reported_total": 644,
+          "unknown_hold": 1388
+        }
+      }
+    },
+    "final_health": {
+      "status": "ok",
+      "version": "0.6.0",
+      "capacity": {
+        "active": 0,
+        "queued": 0,
+        "admitted": 0,
+        "max_active": 4,
+        "max_queued": 8,
+        "accepting": true
+      },
+      "storage": {
+        "degraded": false,
+        "pending_records": 0,
+        "invalid_records": 0,
+        "accepting": true
+      }
+    },
+    "recovery_after_stop": {
+      "restored": 0,
+      "invalid": 0,
+      "failed": 0,
+      "pending": 0,
+      "interrupted": 0
+    }
+  },
+  "limitations": [
+    "GLM Coding Plan preset/mock only; live dispatch disabled",
+    "only kimi-for-coding live verified; other model IDs only discovered",
+    "subscription remaining tokens, membership tier and bill unknown",
+    "preflight cannot guarantee provider state does not change before dispatch",
+    "interactive declaration is not proof of human presence",
+    "no tool calls, images, Responses or native Anthropic inbound protocol"
+  ],
+  "security": {
+    "working_tree_files": 87,
+    "index_files": 80,
+    "history_blobs": 127,
+    "history_commits": 4,
+    "actual_credentials_compared": 9,
+    "ignore_cases_passed": 14,
+    "tracked_private_files": 0,
+    "findings": [],
+    "private_config_mode": "0600",
+    "private_directory_mode": "0700",
+    "protected_migration_backup": true
+  }
+}

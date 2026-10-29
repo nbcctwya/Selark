@@ -38,11 +38,14 @@ jobs:
         run: |
           ruff check .
           ruff format --check .
-      - name: Isolated regression tests
+      - name: Isolated regressions including Coding Plan safety (no provider keys)
         run: pytest -q
       - name: Installed CLI outside repository
         working-directory: ${{ runner.temp }}
-        run: selark --help
+        run: |
+          selark --help
+          selark plans --help
+          selark ask --help
       - name: Local TCP and process recovery (fake upstream only)
         if: matrix.python == '3.12'
         run: |

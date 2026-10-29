@@ -1,4 +1,4 @@
-# Selark 0.5.0 · 个人模型接入中间件
+# Selark 0.6.0 · 个人模型接入中间件
 
 独立的文本模型 HTTP 接入服务：`CLI / 外部程序 → Selark → 指定模型连接`。
 Python 3.11+，FastAPI + HTTPX + Uvicorn；默认仅监听 `127.0.0.1:8787`。
@@ -88,7 +88,7 @@ selark serve
 0.5 增加应用级连接/模型权限、滚动请求频率、并发和 UTC 日 Token/估算预算限制，
 显式模型别名、价格快照和按应用/连接/模型的费用估算。升级保留旧令牌权限与历史用量，
 首次打开数据库前备份并迁移 schema 2 → 3。Anthropic 按当前官方版本修复参数兼容。
-命令与统计口径见 [应用资源管理](docs/governance.md)，本轮结果见 [0.5 验收](docs/governance-verification.md)。
+命令与统计口径见 [应用资源管理](docs/governance.md)，该阶段结果见 [0.5 验收](docs/governance-verification.md)。
 
 ```bash
 selark tokens create my-app --policy /absolute/path/application-policy.json
@@ -114,7 +114,7 @@ selark backup --json
 ```
 
 `connection discover ID` 显式读取并保存模型列表，不生成内容；生成验证由实际调用或 `connection probe ID` 完成。
-本轮已真实验证 MiMo、DeepSeek 和指定中转站，其余厂商仅经过模拟验证。
+0.4 阶段已真实验证 MiMo、DeepSeek 和指定中转站，其余按量厂商仅经过模拟验证。
 
 仅首次使用、尚无配置时运行 `selark init`。
 `init` 在终端安全询问 MiMo Key（不回显），自动生成独立的 Selark 令牌。也可从
@@ -133,6 +133,35 @@ selark ask --messages /absolute/path/to/messages.json --max-tokens 32
 回复写 stdout；模型、耗时、结束原因及实际用量写 stderr。`ask --json` 输出完整普通响应。
 `ask` 支持 `--model`、`--system`、`--messages`；省略文本或传 `-` 时读取 stdin。
 `Ctrl+C` 停止服务，再次 `selark serve` 使用原配置启动。服务停机时 CLI 以非零码明确报告连接失败。
+
+## Token Plan：个人交互式编程
+
+0.6 将 `token_plan` 与普通 `api` 连接分开管理，接入 **Kimi Coding Plan** 的官方
+Chat Completions 协议；`kimi-code` 与原有 Kimi 开放平台 `kimi` 是不同连接类型。
+GLM Coding Plan 目前只有配置预设与模拟适配，真实生成被明确阻止。
+
+```bash
+selark plans list --json
+selark plans show kimi-code-personal --json       # 本地快照，不联网
+selark plans refresh kimi-code-personal --json    # 只查询官方额度，不生成
+selark plans usage kimi-code-personal --json
+selark usage --resource-type token_plan --group-by plan --json
+```
+
+本次安装新增了仅供本人编程使用的私有客户端配置。启动 `selark serve` 后，在另一交互终端运行：
+
+```bash
+selark --config-dir "$HOME/.config/selark/clients/personal-coding" models
+selark --config-dir "$HOME/.config/selark/clients/personal-coding" ask \
+  --interactive-coding --max-tokens 512 '为 Python 函数 add(a, b) 写一个简单测试。'
+# 在上一条末尾加 --stream 可使用流式输出；--json 可保留普通响应中的思考历史。
+```
+
+旧调用方默认没有套餐权限；套餐需单独授权连接并明确声明个人编程用途。每个套餐连接
+最多一个在途请求，生成前查询官方额度并确认加油包关闭；不重试生成、不切换付费来源。
+官方剩余额度与本地 Token 统计分开显示，未报告的剩余 Token、套餐档位、账单均为未知。
+详细配置、协议范围和使用限制见 [Token Plan 说明](docs/token-plans.md)，
+验证结果见 [0.6 验收](docs/token-plans-verification.md)。
 
 ## 开发安装
 
@@ -174,7 +203,7 @@ python3 /absolute/path/to/Selark/examples/summarize.py \
 
 该示例仅依赖 Python 标准库，可以复制到其他目录、脱离 Selark 安装运行。
 `examples/` 是单独的小程序示例，不是已安装 `selark` 命令的运行依赖。
-只向外部调用方提供客户端配置；其中的令牌拥有该 Selark 实例的所有模型调用权限。
+只向外部调用方提供客户端配置；模型权限受该令牌策略约束，旧令牌默认无 Token Plan 权限。
 
 初始化时可选择端口、地址和允许模型：
 
@@ -253,7 +282,8 @@ selark sessions list --json
 selark limits show --json
 ```
 
-以上命令不生成模型请求。`selark connection probe` 才会显式进行一次有用量的真实探测。
+以上命令不生成模型请求。普通 API 的 `selark connection probe` 会显式进行一次有用量的真实探测；
+Token Plan 禁用此通用探测，使用本人主动发起的 `ask --interactive-coding` 验证。
 
 运行限制修改后重启生效，例如：
 
@@ -262,7 +292,8 @@ selark limits set --max-concurrent-requests 4 --max-queued-requests 16 \
   --request-timeout-seconds 120 --queue-timeout-seconds 10
 ```
 
-首次升级 0.5 前先停止旧服务。首次 `serve` 或 `migrate` 先备份再升级数据库，保留配置、凭据和旧记录。
+升级前先停止旧服务。首次 `serve` 或 `migrate` 先备份再升级数据库，保留配置、凭据和旧记录；
+0.6 将 schema 3 升为 4，历史资源类型保留未知，不补造套餐计量。
 如需手工恢复待落账文件，先停止服务，再执行 `selark records recover --json`。
 
 ```bash
@@ -288,6 +319,9 @@ ruff format --check .
 
 0.5 的权限、并发额度预留、费用估算、恢复和安装验收见 [资源管理验收](docs/governance-verification.md)。
 GitHub Actions 自动运行模拟测试与代码检查，不使用供应商凭据。
+
+0.6 的 268 项回归、安装与恢复核对，以及 2 次真实 Kimi Code 编程调用（453 Token）
+见 [Token Plan 验收](docs/token-plans-verification.md)。GLM Coding Plan 仅模拟验证。
 
 仅本机单实例，可有多个连接和独立调用方令牌；没有网页、订阅登录、远程管理接口、自动路由或生产托管。
 

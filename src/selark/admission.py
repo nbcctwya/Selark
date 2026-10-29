@@ -15,6 +15,14 @@ class Admission:
         self.tasks = set()
         self.accepting = True
         self.callers = {}
+        self.plans = set()
+
+    def acquire_plan(self, identity):
+        if identity in self.plans:
+            raise GatewayError(
+                429, "plan_concurrency_limit", "个人套餐连接已有在途请求；不批量排队生成。"
+            )
+        self.plans.add(identity)
 
     def acquire_caller(self, caller, maximum):
         active = self.callers.get(caller, 0)

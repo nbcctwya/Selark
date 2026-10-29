@@ -31,6 +31,7 @@ from selark.connections import (
 )
 from selark.governance import Price, ResourcesConfig, Target
 from selark.locking import file_lock
+from selark.plans import PLAN_PRESETS, PlanSettings, empty_quota
 from selark.storage import SCHEMA_VERSION, Store, utc_now
 
 
@@ -39,6 +40,9 @@ def fingerprint(config: ServerConfig) -> str:
         data = connection_document(config)
         for field in ("name", "enabled", "discovery", "limits"):
             data.pop(field, None)
+        if config.resource_type == "api":
+            data.pop("resource_type", None)
+            data.pop("plan", None)
         if config.provider != "anthropic" or config.anthropic_version == "2026-10-21":
             data.pop("anthropic_version", None)  # Existing 0.4 fingerprints remain valid.
         if config.connection_id == "mimo-default":
@@ -161,6 +165,10 @@ class Runtime:
                             document | {"connection_id": connection_id, "model": model}
                         )
                         connection = require_connection(self.connection_settings(), connection_id)
+                        if connection.resource_type == "token_plan":
+                            raise ConfigError(
+                                "Token Plan 不使用按量单价；套餐剩余额度与 Token 用量分别记录。"
+                            )
                         if model not in connection.allowed_models:
                             raise ConfigError("价格目标不在该连接允许模型列表中。")
                         current["prices"].append(price.model_dump())
@@ -182,6 +190,14 @@ class Runtime:
         if provider not in PRESETS:
             raise ConfigError("不支持的供应商类型，请查看 connection providers。")
         name, url = PRESETS[provider]
+        if provider in PLAN_PRESETS:
+            preset = PLAN_PRESETS[provider]
+            options = {
+                "resource_type": "token_plan",
+                "plan": PlanSettings().model_dump(),
+                "allowed_models": [preset["default_model"]],
+                **{k: v for k, v in options.items() if v is not None},
+            }
         if options.get("allowed_models") and options.get("default_model") is None:
             options["default_model"] = options["allowed_models"][0]
         try:
@@ -315,7 +331,26 @@ class Runtime:
         result["protocol"] = (
             "anthropic-messages" if config.provider == "anthropic" else "chat-completions"
         )
+        if config.resource_type == "token_plan":
+            result["plan_status"] = self.plan_status(config.connection_id)
+            result["generation_support"] = PLAN_PRESETS[config.provider]["generation_support"]
         return result
+
+    def plan_status(self, identity):
+        config = require_connection(self.connection_settings(), identity)
+        if config.resource_type != "token_plan":
+            raise ConfigError("此连接不是 Token Plan。")
+        return self.store.plan_status(identity, fingerprint(config))
+
+    def save_plan_status(self, config, result, checked_at):
+        self.store.save_plan_status(config.connection_id, fingerprint(config), checked_at, result)
+
+    def plan_failure(self, config, error, checked_at):
+        result = empty_quota("failure") | {
+            "error_code": error.code,
+            "message": "套餐状态读取失败；不使用旧快照声称当前额度已知。",
+        }
+        self.save_plan_status(config, result, checked_at)
 
     def change_connection(self, changes: dict, identity="mimo-default") -> dict:
         if identity != "mimo-default":
@@ -371,6 +406,7 @@ class Runtime:
             "token_parameter",
             "workspace_id",
             "anthropic_version",
+            "plan",
         }
         if not changes or set(changes) - allowed:
             raise ConfigError("未提供有效的连接修改参数。")

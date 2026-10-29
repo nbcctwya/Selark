@@ -28,6 +28,7 @@ from selark.connections import PRESETS, ConnectionsConfig, require_connection
 from selark.errors import GatewayError
 from selark.governance import ResourcesConfig
 from selark.history import import_history
+from selark.plans import PLAN_PRESETS, query_quota
 from selark.protocol import strict_json
 from selark.runtime import Runtime, fingerprint
 from selark.storage import SCHEMA_VERSION, token_digest
@@ -45,6 +46,7 @@ MANAGEMENT_COMMANDS = {
     "aliases",
     "prices",
     "costs",
+    "plans",
 }
 
 
@@ -65,6 +67,8 @@ def read_key(provider, variable=None):
         "deepseek": "DEEPSEEK_API_KEY",
         "zhipu": "ZHIPU_API_KEY",
         "kimi": "MOONSHOT_API_KEY",
+        "kimi-code": "KIMI_CODE_API_KEY",
+        "glm-coding": "GLM_CODING_API_KEY",
         "openai": "OPENAI_API_KEY",
         "anthropic": "ANTHROPIC_API_KEY",
         "openai-compatible": "SELARK_API_KEY",
@@ -88,15 +92,29 @@ def add_filters(parser):
     parser.add_argument("--tz", default="UTC", help="IANA 时区，默认 UTC，如 Asia/Shanghai")
     parser.add_argument("--model")
     parser.add_argument("--connection", help="按实际连接 ID 筛选")
+    parser.add_argument("--resource-type", choices=["api", "token_plan"])
+    parser.add_argument("--plan", help="按套餐连接的稳定 ID 筛选")
     parser.add_argument("--caller", help="鉴权确定的调用方 ID")
     parser.add_argument("--session", help="仅筛选归组标签；跨调用方仍分别汇总")
-    parser.add_argument("--purpose", choices=["chat", "connection_probe"])
+    parser.add_argument("--purpose", choices=["chat", "connection_probe", "interactive_coding"])
     parser.add_argument(
         "--status", choices=["running", "success", "failed", "cancelled", "interrupted", "unknown"]
     )
 
 
 def add_commands(commands):
+    plans = commands.add_parser("plans", help="Token Plan 独立管理；默认查询不联网、不生成")
+    actions = plans.add_subparsers(dest="action", required=True)
+    actions.add_parser("list").add_argument("--json", action="store_true")
+    for name in ("show", "refresh", "usage"):
+        action = actions.add_parser(name, help="refresh 只查询官方套餐状态；usage 为本地调用统计")
+        action.add_argument("id")
+        action.add_argument("--json", action="store_true")
+    update = actions.add_parser("set", help="修改套餐标签或默认思考强度，不能伪造额度")
+    update.add_argument("id")
+    update.add_argument("--tier", help="用户自填套餐名称；不表示官方会员认证")
+    update.add_argument("--reasoning-effort", choices=["low", "high", "max"])
+    update.add_argument("--json", action="store_true")
     aliases = commands.add_parser("aliases", help="本机管理显式模型别名；不会自动切换供应商")
     actions = aliases.add_subparsers(dest="action", required=True)
     actions.add_parser("list").add_argument("--json", action="store_true")
@@ -166,6 +184,7 @@ def add_commands(commands):
     add.add_argument("--api-key-env", help="读取指定环境变量中的 Key，不接受命令行明文 Key")
     add.add_argument("--workspace-id", help="Anthropic 非工作区专属 Key 所需的 workspace ID")
     add.add_argument("--anthropic-version", choices=["2023-06-01", "2026-10-21"])
+    add.add_argument("--plan-tier", help="套餐档位标签；真实权益以官方返回为准")
     add.add_argument("--json", action="store_true")
     change = actions.add_parser("set", help="修改连接并热生效；关键修改使旧验证失效")
     change.add_argument("id", nargs="?", default="mimo-default")
@@ -226,13 +245,19 @@ def add_commands(commands):
 
     usage = commands.add_parser("usage", help="汇总已知用量及未知请求数；默认所有时间、UTC")
     add_filters(usage)
-    usage.add_argument("--group-by", choices=["model", "caller", "session", "day", "connection"])
+    usage.add_argument(
+        "--group-by",
+        choices=["model", "caller", "session", "day", "connection", "resource_type", "plan"],
+    )
     usage.add_argument("--json", action="store_true")
     costs = commands.add_parser(
         "costs", help="按调用时价格快照汇总估算费用；缺价/未知用量不会当作零"
     )
     add_filters(costs)
-    costs.add_argument("--group-by", choices=["model", "caller", "session", "day", "connection"])
+    costs.add_argument(
+        "--group-by",
+        choices=["model", "caller", "session", "day", "connection", "resource_type", "plan"],
+    )
     costs.add_argument("--json", action="store_true")
     sessions = commands.add_parser("sessions", help="按调用方和 session_id 归组，不保存或拼接历史")
     actions = sessions.add_subparsers(dest="action", required=True)
@@ -283,6 +308,8 @@ def query_filters(args) -> dict:
         "session_id": args.session,
         "model": args.model,
         "connection_id": getattr(args, "connection", None),
+        "resource_type": getattr(args, "resource_type", None),
+        "plan_id": getattr(args, "plan", None),
         "purpose": args.purpose,
         "status": args.status,
         "since": since.astimezone(UTC).isoformat(timespec="microseconds") if since else None,
@@ -310,6 +337,11 @@ def server_url(config: ServerConfig) -> str:
 
 def probe(runtime: Runtime, identity="mimo-default") -> dict:
     config = require_connection(runtime.connection_settings(), identity)
+    if config.resource_type == "token_plan":
+        raise ConfigError(
+            "套餐不执行通用生成探测。额度用 plans refresh；"
+            "编程调用用受限令牌与 ask --interactive-coding。"
+        )
     if not config.enabled:
         raise ConfigError("连接已停用；请先启用，再显式探测。")
     if not config.default_model:
@@ -549,6 +581,53 @@ def run(args, directory: Path) -> int:
                     "backup": str(runtime.backup("explicit-backup")),
                     "recovery_consistent": True,
                 }
+        elif args.command == "plans":
+            if args.action == "list":
+                result = {
+                    "plans": [
+                        runtime.connection(c.connection_id)
+                        for c in runtime.connection_settings()
+                        if c.resource_type == "token_plan"
+                    ]
+                }
+            else:
+                current = require_connection(runtime.connection_settings(), args.id)
+                if current.resource_type != "token_plan":
+                    raise ConfigError("此连接是普通 API，不是 Token Plan。")
+                if args.action == "refresh":
+                    from selark.storage import utc_now
+
+                    checked_at = utc_now()
+                    try:
+                        status = asyncio.run(query_quota(current))
+                        runtime.save_plan_status(current, status, checked_at)
+                    except GatewayError as error:
+                        runtime.plan_failure(current, error, checked_at)
+                        emit(runtime.connection(args.id), args.json)
+                        return 1
+                    result = runtime.connection(args.id)
+                elif args.action == "set":
+                    patch = {
+                        key: value
+                        for key, value in (
+                            ("tier", args.tier),
+                            ("reasoning_effort", args.reasoning_effort),
+                        )
+                        if value is not None
+                    }
+                    if not patch:
+                        raise ConfigError("请指定 --tier 或 --reasoning-effort。")
+                    result = runtime.change_connection(
+                        {"plan": current.plan.model_dump() | patch}, args.id
+                    )
+                elif args.action == "usage":
+                    result = {
+                        "plan_id": args.id,
+                        "provider_quota": runtime.plan_status(args.id),
+                        "local_usage": store.summary({"plan_id": args.id}, group_by="caller"),
+                    }
+                else:
+                    result = runtime.connection(args.id)
         elif args.command == "limits":
             result = (
                 {"limits": runtime.settings().limits.model_dump(), "applied_on": "service_start"}
@@ -624,6 +703,10 @@ def run(args, directory: Path) -> int:
                         if key == "anthropic"
                         else "chat-completions",
                         "scope": "text subset; model availability requires account verification",
+                        "resource_type": "token_plan" if key in PLAN_PRESETS else "api",
+                        "generation_support": PLAN_PRESETS[key]["generation_support"]
+                        if key in PLAN_PRESETS
+                        else "text",
                     }
                     for key, (name, url) in PRESETS.items()
                 ]
@@ -639,6 +722,7 @@ def run(args, directory: Path) -> int:
                     default_model=args.default_model,
                     workspace_id=args.workspace_id,
                     anthropic_version=args.anthropic_version,
+                    plan={"tier": args.plan_tier} if args.plan_tier is not None else None,
                 )
             elif args.action == "discover":
                 from selark.providers.discovery import discover

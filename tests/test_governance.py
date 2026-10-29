@@ -730,6 +730,10 @@ def test_schema_two_migration_is_atomic_backed_up_and_repeatable(tmp_path, monke
         path = old.store.path
         with old.store.transaction() as db:
             # Reconstruct precisely the existing schema 2 shape.
+            db.execute("DROP TABLE plan_status")
+            db.execute("DROP INDEX requests_resource")
+            db.execute("ALTER TABLE requests DROP COLUMN resource_type")
+            db.execute("ALTER TABLE requests DROP COLUMN plan_id")
             db.execute("DROP TABLE allocations")
             db.execute("ALTER TABLE tokens DROP COLUMN policy_json")
             db.execute("ALTER TABLE requests DROP COLUMN requested_alias")
@@ -770,7 +774,7 @@ def test_schema_two_migration_is_atomic_backed_up_and_repeatable(tmp_path, monke
         ] == tokens
         assert upgraded.store.authenticate(auth(token)["Authorization"].encode(), chat=True) is None
         assert upgraded.store.policy("legacy")["daily_token_limit"] is None
-        assert upgraded.store.db.execute("PRAGMA user_version").fetchone()[0] == 3
+        assert upgraded.store.db.execute("PRAGMA user_version").fetchone()[0] == 4
     with Runtime(directory) as repeated:
         assert repeated.migration_backup is None
     assert (directory / "client.json").read_bytes() == client_bytes

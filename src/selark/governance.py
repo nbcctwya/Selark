@@ -41,6 +41,7 @@ def money(value):
 
 
 class Policy(StrictConfig):
+    allow_token_plans: bool = False
     allowed_connections: list[str] | None = Field(default=None, max_length=32)
     allowed_models: list[str] | None = Field(default=None, max_length=1000)
     requests_per_minute: int | None = Field(default=None, ge=1, le=100000)
@@ -118,14 +119,21 @@ class ResourcesConfig(StrictConfig):
         return self
 
 
-def permitted(policy, connection, model):
-    return (policy.allowed_connections is None or connection in policy.allowed_connections) and (
-        policy.allowed_models is None or f"{connection}::{model}" in policy.allowed_models
+def permitted(policy, connection, model, resource_type="api"):
+    plan_allowed = resource_type != "token_plan" or (
+        policy.allow_token_plans
+        and policy.allowed_connections is not None
+        and connection in policy.allowed_connections
+    )
+    return (
+        plan_allowed
+        and (policy.allowed_connections is None or connection in policy.allowed_connections)
+        and (policy.allowed_models is None or f"{connection}::{model}" in policy.allowed_models)
     )
 
 
-def enforce_access(policy, connection, model):
-    if not permitted(policy, connection, model):
+def enforce_access(policy, connection, model, resource_type="api"):
+    if not permitted(policy, connection, model, resource_type):
         raise GatewayError(403, "model_access_denied", "此调用方没有使用该连接或模型的权限。")
 
 
@@ -225,10 +233,30 @@ def allocations(db, caller, day):
 
 
 def reserve(
-    db, request_id, caller, connection, model, provider, estimate, output, price, now, alias
+    db,
+    request_id,
+    caller,
+    connection,
+    model,
+    provider,
+    estimate,
+    output,
+    price,
+    now,
+    alias,
+    resource_type="api",
+    plan=None,
 ):
     policy = policy_for(db, caller)
-    enforce_access(policy, connection, model)
+    enforce_access(policy, connection, model, resource_type)
+    if resource_type == "token_plan":
+        if policy.daily_budget is not None:
+            raise GatewayError(
+                403,
+                "plan_budget_unsupported",
+                "订阅消耗不能折算为按量费用预算；请使用 Token、并发和频率限制。",
+            )
+        price = None
     if policy.max_output_tokens is not None and output > policy.max_output_tokens:
         raise GatewayError(403, "output_limit_exceeded", "请求输出上限超过此调用方允许值。")
     if (
@@ -303,6 +331,9 @@ def reserve(
                 429, "caller_budget_quota", "此调用方今日估算预算不足，包含在途预留。"
             )
     document = {
+        "resource_type": resource_type,
+        "plan_id": connection if resource_type == "token_plan" else None,
+        "plan_snapshot": plan,
         "provider": provider,
         "requested_model": model,
         "requested_alias": alias,

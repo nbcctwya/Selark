@@ -24,6 +24,8 @@ FIELDS = frozenset(
         "finished_at",
         "caller_id",
         "connection_id",
+        "resource_type",
+        "plan_id",
         "purpose",
         "model",
         "actual_model",

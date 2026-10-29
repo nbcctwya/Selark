@@ -46,6 +46,8 @@ class AnthropicProvider(MiMoProvider):
         return headers
 
     def prepare(self, request, model):
+        if request.reasoning_effort is not None:
+            unsupported("当前 Anthropic 文本子集不支持 reasoning_effort。")
         if any(m.reasoning_content is not None for m in request.messages):
             unsupported("Anthropic 思考块需要原生结构；当前文本接口不接收 reasoning_content。")
         data = request.upstream_payload(model)

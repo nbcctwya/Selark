@@ -6,11 +6,13 @@ Additional connections live in connections.json, without duplicating the legacy 
 
 import re
 from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 
 from selark.config import ConfigError, ServiceLimits, StrictConfig, validate_url
 from selark.errors import GatewayError
+from selark.plans import PLAN_PRESETS, PlanSettings
 
 PRESETS = {
     "mimo": ("MiMo", "https://api.xiaomimimo.com/v1"),
@@ -21,8 +23,17 @@ PRESETS = {
     "anthropic": ("Anthropic", "https://api.anthropic.com/v1"),
     "openai-compatible": ("OpenAI 兼容中转", None),
 }
+PRESETS.update({key: (value["name"], value["base_urls"][0]) for key, value in PLAN_PRESETS.items()})
 ProviderName = Literal[
-    "mimo", "deepseek", "zhipu", "kimi", "openai", "anthropic", "openai-compatible"
+    "mimo",
+    "deepseek",
+    "zhipu",
+    "kimi",
+    "openai",
+    "anthropic",
+    "openai-compatible",
+    "kimi-code",
+    "glm-coding",
 ]
 
 
@@ -58,6 +69,8 @@ class ConnectionConfig(StrictConfig):
     token_parameter: Literal["max_tokens", "max_completion_tokens"] = "max_tokens"
     workspace_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{1,128}$")
     anthropic_version: Literal["2023-06-01", "2026-10-21"] = "2026-10-21"
+    resource_type: Literal["api", "token_plan"] = "api"
+    plan: PlanSettings | None = None
     discovery: Discovery = Field(default_factory=Discovery)
     limits: ServiceLimits = Field(default_factory=ServiceLimits, exclude=True)
 
@@ -65,6 +78,25 @@ class ConnectionConfig(StrictConfig):
 
     @model_validator(mode="after")
     def check_connection(self):
+        if self.provider in PLAN_PRESETS:
+            preset = PLAN_PRESETS[self.provider]
+            if self.resource_type != "token_plan" or self.plan is None:
+                raise ValueError("Coding Plan 必须使用 token_plan 资源与独立套餐配置")
+            if self.base_url not in preset["base_urls"]:
+                raise ValueError("套餐连接只允许官方专用地址，不可指向按量 API 或中转")
+            if any(model not in preset["models"] for model in self.allowed_models):
+                raise ValueError("套餐模型 ID 不在已支持的官方标识中")
+        elif self.resource_type != "api" or self.plan is not None:
+            raise ValueError("普通 API 连接不能冒充订阅资源")
+        else:
+            address = urlsplit(self.base_url)
+            if any(
+                address.hostname == urlsplit(url).hostname
+                and address.path.startswith(urlsplit(url).path)
+                for preset in PLAN_PRESETS.values()
+                for url in preset["base_urls"]
+            ):
+                raise ValueError("官方套餐地址必须使用对应的 Token Plan 类型，不能作为普通 API")
         if not self.name.strip() or any(ord(c) < 32 for c in self.name):
             raise ValueError("连接名称无效")
         if any(not valid_model(m) for m in self.allowed_models):

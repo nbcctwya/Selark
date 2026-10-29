@@ -17,7 +17,7 @@ from selark.config import ConfigError, private_directory
 from selark.governance import Policy, allocations, policy_for, public_allocation, reserve, settle
 
 USAGE_FIELDS = ("prompt_tokens", "completion_tokens", "total_tokens")
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 ALLOCATION_FIELDS = (
     "state",
     "quota_tokens",
@@ -115,7 +115,7 @@ class Store:
 
     def _initialize_schema(self, path):
         version = self.db.execute("PRAGMA user_version").fetchone()[0]
-        if version not in {0, 1, 2, 3}:
+        if version not in {0, 1, 2, 3, 4}:
             raise ConfigError("数据库版本高于当前程序支持范围，请使用匹配的 Selark 版本。")
         if path:
             self.db.execute("PRAGMA journal_mode=WAL")
@@ -165,6 +165,20 @@ class Store:
                     "CREATE INDEX allocations_rate ON allocations(caller_id,created_at)"
                 )
                 self.db.execute("PRAGMA user_version=3")
+        if version < 4:
+            with self.db:
+                self.db.execute("BEGIN IMMEDIATE")
+                self.db.execute("ALTER TABLE requests ADD COLUMN resource_type TEXT")
+                self.db.execute("ALTER TABLE requests ADD COLUMN plan_id TEXT")
+                self.db.execute(
+                    "CREATE INDEX requests_resource ON requests(resource_type,plan_id,started_at)"
+                )
+                self.db.execute(
+                    "CREATE TABLE plan_status (connection_id TEXT, fingerprint TEXT, "
+                    "checked_at TEXT NOT NULL, document TEXT NOT NULL, "
+                    "PRIMARY KEY(connection_id,fingerprint))"
+                )
+                self.db.execute("PRAGMA user_version=4")
 
     @contextmanager
     def transaction(self):
@@ -174,6 +188,34 @@ class Store:
     def close(self):
         with self.lock:
             self.db.close()
+
+    def save_plan_status(self, connection, fingerprint, checked_at, document):
+        with self.transaction() as db:
+            db.execute(
+                "INSERT INTO plan_status VALUES(?,?,?,?) ON CONFLICT(connection_id,fingerprint) "
+                "DO UPDATE SET checked_at=excluded.checked_at,document=excluded.document "
+                "WHERE excluded.checked_at>=plan_status.checked_at",
+                (connection, fingerprint, checked_at, json.dumps(document)),
+            )
+
+    def plan_status(self, connection, fingerprint):
+        from selark.plans import empty_quota
+
+        with self.lock:
+            row = self.db.execute(
+                "SELECT * FROM plan_status WHERE connection_id=? "
+                "ORDER BY (fingerprint=?) DESC,checked_at DESC LIMIT 1",
+                (connection, fingerprint),
+            ).fetchone()
+        if row is None:
+            return empty_quota()
+        result = json.loads(row["document"]) | {"checked_at": row["checked_at"]}
+        if row["fingerprint"] != fingerprint:
+            return empty_quota("stale") | {
+                "checked_at": row["checked_at"],
+                "previous_state": result["state"],
+            }
+        return result
 
     def set_busy_timeout(self, seconds):
         with self.lock:
@@ -384,9 +426,21 @@ class Store:
                 )
             db.execute(
                 "UPDATE requests SET upstream_attempts=1,requested_model=?,session_id=?,"
-                "connection_id=COALESCE(?,connection_id) "
+                "connection_id=COALESCE(?,connection_id),resource_type=COALESCE(?,resource_type),"
+                "plan_id=?,purpose=CASE WHEN ?='token_plan' THEN 'interactive_coding' "
+                "ELSE purpose END "
                 "WHERE request_id=?",
-                (requested_model, session_id, connection_id, request_id),
+                (
+                    requested_model,
+                    session_id,
+                    connection_id,
+                    (resource or {}).get("resource_type", "api") if resource else None,
+                    connection_id
+                    if (resource or {}).get("resource_type") == "token_plan"
+                    else None,
+                    (resource or {}).get("resource_type"),
+                    request_id,
+                ),
             )
 
     def finish(self, request_id: str, *, state: dict, http_status: int, duration_ms: float):
@@ -417,7 +471,8 @@ class Store:
                 "completion_tokens=?,total_tokens=?,error_code=?,error_message=?,"
                 "upstream_result=?,delivery_status=?,upstream_error_code=?,delivery_error_code=?,"
                 "queue_ms=?,upstream_attempts=COALESCE(?,upstream_attempts),"
-                "connection_id=?,record_revision=?,requested_alias=? "
+                "connection_id=?,record_revision=?,requested_alias=?,resource_type=?,plan_id=?,"
+                "purpose=COALESCE(?,purpose) "
                 "WHERE request_id=? AND record_revision<=?",
                 (
                     None if status == "running" else state.get("finished_at", utc_now()),
@@ -442,6 +497,9 @@ class Store:
                     state.get("connection_id"),
                     state.get("record_revision", 2),
                     state.get("requested_alias"),
+                    state.get("resource_type"),
+                    state.get("plan_id"),
+                    state.get("purpose"),
                     request_id,
                     state.get("record_revision", 2),
                 ),
@@ -514,7 +572,16 @@ class Store:
         clauses, params = [], []
         if filters.get("sessions_only"):
             clauses.append("requests.session_id IS NOT NULL")
-        for field in ("caller_id", "session_id", "model", "purpose", "status", "connection_id"):
+        for field in (
+            "caller_id",
+            "session_id",
+            "model",
+            "purpose",
+            "status",
+            "connection_id",
+            "resource_type",
+            "plan_id",
+        ):
             if filters.get(field) is not None:
                 clauses.append("requests." + field + " = ?")
                 params.append(filters[field])
@@ -635,7 +702,12 @@ class Store:
                         )
                         dimensions = {"day": key}
                     else:
-                        field = {"caller": "caller_id", "connection": "connection_id"}[group_by]
+                        field = {
+                            "caller": "caller_id",
+                            "connection": "connection_id",
+                            "resource_type": "resource_type",
+                            "plan": "plan_id",
+                        }[group_by]
                         key, dimensions = row[field], {field: row[field]}
                     aggregate = groups.setdefault(key, dimensions | empty())
                     add(aggregate, row)

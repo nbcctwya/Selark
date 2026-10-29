@@ -30,6 +30,8 @@ class ChatRequest(StrictModel):
     model: str | None = None
     messages: list[Message] = Field(min_length=1, max_length=256)
     stream: bool = False
+    interaction: Literal["personal_coding"] | None = None
+    reasoning_effort: Literal["low", "high", "max"] | None = None
     max_tokens: int | None = Field(default=None, ge=1, le=131072)
     max_completion_tokens: int | None = Field(default=None, ge=1, le=131072)
     temperature: float | None = Field(default=None, ge=0, le=1.5)
@@ -56,7 +58,9 @@ class ChatRequest(StrictModel):
         return self
 
     def upstream_payload(self, model: str) -> dict:
-        data = self.model_dump(exclude_none=True, exclude={"session_id", "connection_id"})
+        data = self.model_dump(
+            exclude_none=True, exclude={"session_id", "connection_id", "interaction"}
+        )
         data["model"] = model
         data["max_completion_tokens"] = data.pop("max_tokens", None) or data.get(
             "max_completion_tokens", 1024

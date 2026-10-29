@@ -50,6 +50,16 @@ def parser() -> argparse.ArgumentParser:
     ask.add_argument("--connection", help="明确选择连接 ID；不指定模型时使用该连接默认模型")
     ask.add_argument("--session", help="可选会话归组标识；不保存或拼接 messages")
     ask.add_argument("--stream", action="store_true")
+    ask.add_argument(
+        "--interactive-coding",
+        action="store_true",
+        help="本人在交互终端发起单次编程请求；套餐需要单独授权，不用于批量脚本",
+    )
+    ask.add_argument(
+        "--reasoning-effort",
+        choices=["low", "high", "max"],
+        help="Kimi Code 思考强度；默认使用套餐设置",
+    )
     ask.add_argument("--max-tokens", type=int, default=1024)
     ask.add_argument("--json", action="store_true", help="普通响应输出完整 JSON")
     from selark.management import add_commands
@@ -139,6 +149,8 @@ def main(argv: list[str] | None = None) -> int:
                 return 0
             if args.json and args.stream:
                 raise ClientError("--json 仅用于普通响应，不能与 --stream 同时使用。")
+            if args.interactive_coding and not sys.stdin.isatty():
+                raise ClientError("套餐编程请求需从交互终端主动发起，不支持管道或批量脚本。")
             if args.messages:
                 if args.prompt is not None or args.system is not None:
                     raise ClientError("--messages 不能与 prompt 或 --system 同时使用。")
@@ -173,6 +185,8 @@ def main(argv: list[str] | None = None) -> int:
                     "stream": args.stream,
                     "max_completion_tokens": args.max_tokens,
                     "session_id": args.session,
+                    "interaction": "personal_coding" if args.interactive_coding else None,
+                    "reasoning_effort": args.reasoning_effort,
                 },
                 raw_json=args.json,
             )

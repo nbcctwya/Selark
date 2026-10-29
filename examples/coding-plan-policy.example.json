@@ -1,0 +1,12 @@
+{
+  "allow_token_plans": true,
+  "allowed_connections": ["kimi-code-personal"],
+  "allowed_models": ["kimi-code-personal::kimi-for-coding"],
+  "requests_per_minute": 4,
+  "max_concurrent_requests": 1,
+  "max_output_tokens": 512,
+  "max_estimated_input_tokens": 4000,
+  "daily_token_limit": 10000,
+  "daily_budget": null,
+  "budget_currency": "USD"
+}

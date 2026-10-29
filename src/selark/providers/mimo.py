@@ -73,6 +73,10 @@ class MiMoProvider:
         return {"api-key": self.config.api_key.get_secret_value()}
 
     def prepare(self, request, model):
+        if request.reasoning_effort is not None:
+            raise GatewayError(
+                400, "unsupported_provider_option", "当前连接不支持 reasoning_effort。"
+            )
         if any(m.reasoning_content is not None for m in request.messages):
             raise GatewayError(400, "unsupported_provider_option", "MiMo 文本模式不接收思考历史。")
         return request.upstream_payload(model)

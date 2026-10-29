@@ -15,6 +15,8 @@ class CompatibleProvider(MiMoProvider):
         return {"Authorization": "Bearer " + self.config.api_key.get_secret_value()}
 
     def prepare(self, request, model):
+        if request.reasoning_effort is not None:
+            unsupported("reasoning_effort 当前只由 Kimi Code 套餐适配器接收。")
         data = request.upstream_payload(model)
         data.pop("thinking")
         provider = self.config.provider
