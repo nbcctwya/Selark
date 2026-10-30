@@ -32,8 +32,22 @@ def fail(message):
 
 
 try:
-    assert len(blocks) == 1, "Expected one Python fence"
-    tree = ast.parse(blocks[0])
+    function_name = "paginate" if variant == "a" else "dedupe_events"
+    implementations = []
+    for block in blocks:
+        try:
+            parsed = ast.parse(block)
+        except SyntaxError:
+            continue
+        if any(
+            isinstance(node, ast.FunctionDef) and node.name == function_name for node in parsed.body
+        ):
+            implementations.append(parsed)
+    # Explanatory examples may have separate fences; never execute those examples.
+    assert len(implementations) == 1, (
+        "Expected exactly one implementation of the requested function"
+    )
+    tree = implementations[0]
     allowed_attrs = {
         "get",
         "items",
@@ -41,6 +55,7 @@ try:
         "keys",
         "copy",
         "append",
+        "add",
         "extend",
         "strip",
         "index",
@@ -122,7 +137,7 @@ try:
     }
     space = {"__builtins__": builtins}
     exec(compile(tree, "generated-function", "exec"), space)
-    fn = space["paginate" if variant == "a" else "dedupe_events"]
+    fn = space[function_name]
 
     def test(args, kwargs, expected=None, invalid=False):
         result["tests"] += 1

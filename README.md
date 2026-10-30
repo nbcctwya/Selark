@@ -10,6 +10,9 @@ Token 计数、旧账本核算、默认目录恢复和状态退出码等问题�
 修复细节、兼容边界与复核方法见 [0.7.2 修复说明](docs/stability-072.md)，
 测试与安装结果见 [0.7.2 验收](docs/stability-072-verification.md)。
 
+后续经本人授权的 MiMo 赠送额度实测见 [持续调用与边界验收](docs/mimo-credit-live-verification.md)。
+该报告分别记录传输、Token、费用未知和答案正确性，保留中途停止及显式补测的证据。
+
 ```bash
 selark status                       # 所有资源、模型、历史验证、授权、用量及本地配额
 selark status --offline --json       # 完全离线只读，不迁移、不刷新 OAuth
@@ -337,6 +340,8 @@ selark --config-dir /private/new-selark init \
 - `stream` 默认为 false。流式 `data: <JSON>` 逐事件转发，以 `data: [DONE]` 结束；保持上游分片和实际 usage。
 - 普通 API 支持 `max_completion_tokens`，以及映射到它的别名 `max_tokens`（两者不可同时给出，范围 1–131072，省略默认 1024）；ChatGPT 订阅拒绝这些参数。
 - 支持 `temperature`（0–1.5）、`top_p`（0.01–1）、`stop`（字符串或最多四个字符串）、`presence_penalty/frequency_penalty`（-2–2）。
+- 这些参数由上游执行；MiMo 实测中存在已传入 `stop` 但仍输出停止序列的情况，见上述实测报告。
+  Selark 保留原始回答和用量；需要严格格式的调用方应检查结果，输出预算仍须设置 Token 上限。
 - MiMo/DeepSeek 及可关闭思考的 GLM/Kimi 模式关闭 thinking；Kimi K3 等保留调用方显式提供的 assistant reasoning_content，不自动管理历史。原生 Anthropic 转换为统一文本响应。
 - 普通响应保留上游 `id/model/choices/usage` 等字段。不会生成、估算或补零 usage；上游缺失时日志标记 null。
 - 上游回复只接受一条 `index=0` 的 assistant 文本 choice；结束原因必须是非空字符串。SSE 允许空 choices 的用量帧、重复累计用量和无新增文本的相同结束标记；结束后继续输出或改写结束原因视为协议错误。已经收到的有效部分用量保留，未完成的用量仍不作为最终消耗汇总。
