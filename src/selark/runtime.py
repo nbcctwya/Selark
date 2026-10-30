@@ -147,20 +147,24 @@ class Runtime:
         from selark.chatgpt_auth import ChatGPTAuth
 
         auth = ChatGPTAuth(self.directory)
-        return [
-            legacy_connection(server, registry),
-            *[
-                c.model_copy(
+        connections = [legacy_connection(server, registry)]
+        for config in registry.connections:
+            generation, unreadable = 0, False
+            if config.provider == "chatgpt":
+                try:
+                    generation = auth.read(config.connection_id).generation
+                except (ConfigError, OSError):
+                    unreadable = True
+            connections.append(
+                config.model_copy(
                     update={
                         "limits": server.limits,
-                        "oauth_generation": auth.read(c.connection_id).generation
-                        if c.provider == "chatgpt"
-                        else 0,
+                        "oauth_generation": generation,
+                        "authorization_unreadable": unreadable,
                     }
                 )
-                for c in registry.connections
-            ],
-        ]
+            )
+        return connections
 
     def resources(self):
         path = self.directory / "resources.json"
@@ -270,7 +274,13 @@ class Runtime:
         private_directory(root)
         target = root / (utc_now().replace(":", "-") + "-" + uuid4().hex[:8])
         private_directory(target)
-        for name in ("server.json", "client.json", "connections.json", "resources.json"):
+        for name in (
+            "server.json",
+            "client.json",
+            "connections.json",
+            "resources.json",
+            "storage.json",
+        ):
             source = self.directory / name
             if source.is_symlink():
                 raise ConfigError("待备份的配置不能是符号链接。")
@@ -376,8 +386,16 @@ class Runtime:
 
             result.pop("api_key")
             result["authentication"] = "oauth"
-            result["authorization"] = ChatGPTAuth(self.directory).status(identity)
-        result["verification"] = self.store.verification(config.connection_id, fingerprint(config))
+            result["authorization"] = (
+                {"state": "unreadable", "ready": False}
+                if config.authorization_unreadable
+                else ChatGPTAuth(self.directory).status(identity)
+            )
+        result["verification"] = (
+            {"state": "unknown", "verified_at": None}
+            if config.authorization_unreadable
+            else self.store.verification(config.connection_id, fingerprint(config))
+        )
         discovery = result["discovery"]
         old = discovery.pop("source_fingerprint", None)
         if old and old != discovery_fingerprint(config):

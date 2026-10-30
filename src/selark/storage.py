@@ -14,7 +14,16 @@ from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 
 from selark.config import ConfigError, private_directory
-from selark.governance import Policy, allocations, policy_for, public_allocation, reserve, settle
+from selark.governance import (
+    Policy,
+    allocations,
+    checked_allocation,
+    policy_for,
+    public_allocation,
+    reserve,
+    settle,
+)
+from selark.storage_schema import validate_schema
 from selark.usage import inconsistent_usage
 
 USAGE_FIELDS = ("prompt_tokens", "completion_tokens", "total_tokens")
@@ -54,6 +63,24 @@ def usage_values(usage: dict | None, final: bool) -> dict:
         else None
         for field in USAGE_FIELDS
     }
+
+
+def checked_record(row):
+    result = dict(row)
+    raw = result.get("usage_json")
+    usage = json.loads(raw) if raw else None
+    consistency = "inconsistent" if inconsistent_usage(usage) else "uncontradicted"
+    document = result.get("allocation_json")
+    if document:
+        allocation = {field: result["allocation_" + field] for field in ALLOCATION_FIELDS}
+        checked = checked_allocation(allocation | {"document": document}, usage)
+        result["allocation_json"] = checked["document"]
+        result.update({"allocation_" + field: checked[field] for field in ALLOCATION_FIELDS})
+        consistency = json.loads(checked["document"]).get("usage_consistency", consistency)
+    if consistency in {"inconsistent", "regressed"}:
+        result.update(dict.fromkeys(USAGE_FIELDS))
+    result.update(reported_usage=usage, usage_consistency=consistency)
+    return result
 
 
 SCHEMA = """
@@ -114,12 +141,14 @@ class Store:
         )
         self.db.row_factory = sqlite3.Row
         try:
+            validate_schema(self.db)
             if readonly:
                 if self.db.execute("PRAGMA user_version").fetchone()[0] != SCHEMA_VERSION:
                     raise ConfigError("记录库需要迁移；停服后运行 selark migrate。")
                 self.db.execute("PRAGMA query_only=ON")
             else:
                 self._initialize_schema(path)
+            validate_schema(self.db)
         except Exception:
             self.db.close()
             raise
@@ -623,13 +652,9 @@ class Store:
 
     @staticmethod
     def public_record(row) -> dict:
-        result = dict(row)
+        result = checked_record(row)
         result.pop("record_revision", None)
-        raw = result.pop("usage_json")
-        result["reported_usage"] = json.loads(raw) if raw else None
-        result["usage_consistency"] = (
-            "inconsistent" if inconsistent_usage(result["reported_usage"]) else "uncontradicted"
-        )
+        result.pop("usage_json")
         result["usage_final"] = bool(result["usage_final"])
         result["usage_known"] = all(result[f] is not None for f in USAGE_FIELDS)
         result["usage_received"] = result["reported_usage"] is not None
@@ -733,7 +758,8 @@ class Store:
 
         total = empty()
         with self.lock:
-            for row in self.db.execute(SELECT_RECORDS + where, params):
+            for stored in self.db.execute(SELECT_RECORDS + where, params):
+                row = checked_record(stored)
                 add(total, row)
                 if group_by:
                     if group_by == "session":

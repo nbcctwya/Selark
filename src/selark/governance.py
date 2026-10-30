@@ -241,9 +241,46 @@ def policy_for(db, caller):
 
 
 def allocations(db, caller, day):
-    return db.execute(
-        "SELECT * FROM allocations WHERE caller_id=? AND day=?", (caller, day)
+    rows = db.execute(
+        "SELECT a.*,r.usage_json AS request_usage_json FROM allocations a "
+        "LEFT JOIN requests r ON r.request_id=a.request_id WHERE a.caller_id=? AND a.day=?",
+        (caller, day),
     ).fetchall()
+    return [
+        checked_allocation(
+            row, json.loads(row["request_usage_json"]) if row["request_usage_json"] else None
+        )
+        for row in rows
+    ]
+
+
+def checked_allocation(row, usage):
+    """Revalidate old derived accounting without overwriting the historical ledger."""
+    value = dict(row)
+    document = json.loads(value["document"])
+    consistency = document.get("usage_consistency", "uncontradicted")
+    if consistency != "regressed" and inconsistent_usage(usage):
+        consistency = "inconsistent"
+    if consistency not in {"inconsistent", "regressed"}:
+        return value
+    adjusted = {
+        "token_basis": "unknown_hold",
+        "quota_tokens": max(
+            value["quota_tokens"],
+            document.get("reserved_tokens", 0),
+            observed_token_floor(usage, document["provider"]),
+            observed_token_floor(document.get("observed_usage_peak"), document["provider"]),
+        ),
+        "cost_status": "unknown" if document.get("price_snapshot") else "not_priced",
+        "estimated_cost": None,
+        "quota_cost": document.get("reserved_cost"),
+    }
+    if any(value[key] != item for key, item in adjusted.items()):
+        document["stored_accounting"] = {key: value[key] for key in adjusted}
+        document["accounting_revalidated"] = True
+    document.update(estimated_cost=None, usage_consistency=consistency)
+    value.update(adjusted, document=json.dumps(document))
+    return value
 
 
 def reserve(

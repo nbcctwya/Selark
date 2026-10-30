@@ -608,6 +608,12 @@ def create_app(
             raise GatewayError(
                 503, "connection_disabled", "所选连接已停用，请由本机管理员启用连接。"
             )
+        if current.authorization_unreadable:
+            raise GatewayError(
+                503,
+                "connection_authorization_unreadable",
+                "所选订阅的本地凭据不可读，请运行 selark status / doctor 检查；其他连接不受影响。",
+            )
         if model is None:
             raise GatewayError(
                 400,

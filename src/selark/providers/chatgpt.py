@@ -64,18 +64,16 @@ def response_usage(response):
         ("output_tokens", "completion_tokens"),
         ("total_tokens", "total_tokens"),
     ):
-        if type(raw.get(source)) is int and raw[source] >= 0:
+        if source in raw:
             normalized[target] = raw[source]
     for source, target, fields in (
         ("input_tokens_details", "prompt_tokens_details", ("cached_tokens",)),
         ("output_tokens_details", "completion_tokens_details", ("reasoning_tokens",)),
     ):
         if isinstance(raw.get(source), dict):
-            normalized[target] = {
-                k: raw[source][k]
-                for k in fields
-                if type(raw[source].get(k)) is int and raw[source][k] >= 0
-            }
+            normalized[target] = {k: raw[source][k] for k in fields if k in raw[source]}
+        elif source in raw:
+            normalized[target] = raw[source]
     return reported_usage({"usage": normalized})
 
 

@@ -15,6 +15,7 @@ from selark.config import (
     ClientConfig,
     ConfigError,
     ServerConfig,
+    StorageLayout,
     _write_private,
     load_config,
     private_directory,
@@ -23,12 +24,14 @@ from selark.connections import ConnectionsConfig
 from selark.governance import ResourcesConfig
 from selark.locking import file_lock
 from selark.persistence import Journal, sync_directory
+from selark.storage_schema import validate_schema
 
 CONFIGS = {
     "server.json": ServerConfig,
     "client.json": ClientConfig,
     "connections.json": ConnectionsConfig,
     "resources.json": ResourcesConfig,
+    "storage.json": StorageLayout,
 }
 
 
@@ -110,6 +113,12 @@ def verify_backup(root, *, allow_legacy=False):
                 schema = db.execute("PRAGMA user_version").fetchone()[0]
                 if schema not in {0, 1, 2, 3, 4}:
                     raise ConfigError("备份数据库版本不受支持。")
+                initialized = validate_schema(db)
+                if (
+                    not initialized
+                    and load_config(root / "server.json", ServerConfig).access_token is None
+                ):
+                    raise ConfigError("已迁移配置不能使用空记录库恢复。")
         elif load_config(root / "server.json", ServerConfig).access_token is None:
             raise ConfigError("已迁移配置缺少匹配数据库，拒绝恢复。")
         for name in files:
@@ -171,6 +180,9 @@ def restore_backup(root, target, *, allow_legacy=False):
                 (instance / "data" / name).chmod(0o600)
         if (archive / "chatgpt-registration").exists():
             shutil.copytree(archive / "chatgpt-registration", instance / "chatgpt-auth")
+        # Retain the isolated layout even at the default XDG configuration path.
+        # Never silently reopen an unrelated XDG ledger after a successful restore.
+        _write_private(instance / "storage.json", StorageLayout().model_dump())
         # Recover in isolation, overriding ambient SELARK_DATA_DIR without changing it.
         from selark.runtime import Runtime
 
@@ -181,6 +193,7 @@ def restore_backup(root, target, *, allow_legacy=False):
             integrity = runtime.store.db.execute("PRAGMA integrity_check").fetchone()[0]
             if integrity != "ok":
                 raise ConfigError("恢复后的 SQLite 完整性检查失败。")
+            validate_schema(runtime.store.db)
             usage = runtime.store.summary({})["summary"]
             callers = len(runtime.store.tokens())
         # fsync restored bytes before publishing the complete directory.

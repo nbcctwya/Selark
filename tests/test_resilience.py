@@ -1037,7 +1037,10 @@ def test_distinct_connection_pool_and_write_timeouts(runtime, exception, code):
             assert response.status_code == 504 and response.json()["error"]["code"] == code
             assert UPSTREAM_KEY not in response.text
         row = runtime.store.records({})[0]
-        assert row["upstream_error_code"] == code and row["upstream_result"] == "failed"
+        assert row["upstream_error_code"] == code
+        assert row["upstream_result"] == (
+            "failed" if exception is httpx.WriteTimeout else "not_started"
+        )
         assert row["total_tokens"] is None and len(calls) == 1
 
     asyncio.run(scenario())

@@ -14,6 +14,7 @@ from selark.config import ServerConfig
 from selark.errors import GatewayError
 from selark.protocol import strict_json
 from selark.sse import SSEDecoder, async_sse_lines
+from selark.usage import sanitize_usage
 
 
 def retry_after_seconds(value):
@@ -69,42 +70,8 @@ async def close_response(response):
 
 
 def reported_usage(data: dict) -> dict | None:
-    """Keep only actual numeric usage fields; never estimate or invent missing counts."""
-    usage = data.get("usage")
-    if not isinstance(usage, dict):
-        return None
-    result = {}
-    for key in (
-        "prompt_tokens",
-        "completion_tokens",
-        "total_tokens",
-        "prompt_cache_hit_tokens",
-        "prompt_cache_miss_tokens",
-        "input_tokens",
-        "output_tokens",
-        "cache_creation_input_tokens",
-        "cache_read_input_tokens",
-    ):
-        if type(usage.get(key)) is int and usage[key] >= 0:
-            result[key] = usage[key]
-    for key, fields in (
-        (
-            "prompt_tokens_details",
-            ("cached_tokens", "cache_write_tokens", "audio_tokens", "image_tokens", "video_tokens"),
-        ),
-        ("completion_tokens_details", ("reasoning_tokens", "audio_tokens")),
-        ("cache_creation", ("ephemeral_5m_input_tokens", "ephemeral_1h_input_tokens")),
-        ("output_tokens_details", ("thinking_tokens",)),
-    ):
-        if key in usage and usage[key] is None:
-            result[key] = None
-        elif isinstance(usage.get(key), dict):
-            result[key] = {
-                k: usage[key][k]
-                for k in fields
-                if type(usage[key].get(k)) is int and usage[key][k] >= 0
-            }
-    return result or None
+    """Preserve numeric evidence, including invalid counts, without storing arbitrary text."""
+    return sanitize_usage(data.get("usage"))
 
 
 class MiMoProvider:
@@ -113,6 +80,7 @@ class MiMoProvider:
     def __init__(self, config: ServerConfig, client: httpx.AsyncClient):
         self.config = config
         self.client = client
+        self.outcome = {}
 
     def headers(self):
         return {"api-key": self.config.api_key.get_secret_value()}
@@ -145,12 +113,25 @@ class MiMoProvider:
         try:
             response = await self.client.send(request, stream=True, follow_redirects=False)
         except (httpx.ConnectTimeout, httpx.PoolTimeout, httpx.WriteTimeout) as exc:
+            if isinstance(exc, (httpx.ConnectTimeout, httpx.PoolTimeout)):
+                self.outcome = {"upstream_attempts": 0, "upstream_result": "not_started"}
             code = {
                 httpx.ConnectTimeout: "upstream_connect_timeout",
                 httpx.PoolTimeout: "upstream_pool_timeout",
                 httpx.WriteTimeout: "upstream_write_timeout",
             }[type(exc)]
+            if self.outcome.get("upstream_result") == "not_started":
+                self.outcome["upstream_error_code"] = code
             raise GatewayError(504, code, "建立连接、等待连接池或发送 上游请求超时。") from None
+        except httpx.ConnectError:
+            self.outcome = {
+                "upstream_attempts": 0,
+                "upstream_result": "not_started",
+                "upstream_error_code": "upstream_unavailable",
+            }
+            raise GatewayError(
+                502, "upstream_unavailable", "无法建立上游连接；未发送生成请求，请检查服务端网络。"
+            ) from None
         except httpx.TimeoutException:
             raise GatewayError(504, "upstream_timeout", "等待 上游响应超时，请稍后重试。") from None
         except httpx.RequestError:

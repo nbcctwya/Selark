@@ -144,6 +144,11 @@ class ClientConfig(StrictConfig):
     _url = field_validator("url")(validate_url)
 
 
+class StorageLayout(StrictConfig):
+    schema_version: Literal[1] = 1
+    layout: Literal["colocated"] = "colocated"
+
+
 def data_directory(directory: Path) -> Path:
     override = os.environ.get("SELARK_DATA_DIR")
     if override:
@@ -151,6 +156,10 @@ def data_directory(directory: Path) -> Path:
         if not result.is_absolute():
             raise ConfigError("SELARK_DATA_DIR 必须是绝对路径。")
         return result
+    layout = directory / "storage.json"
+    if layout.exists() or layout.is_symlink():
+        load_config(layout, StorageLayout)
+        return directory / "data"
     config_root = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config").expanduser()
     if not config_root.is_absolute():
         config_root = Path.home() / ".config"

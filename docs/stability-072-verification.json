@@ -1,0 +1,680 @@
+{
+  "version": "0.7.2",
+  "date_local": "2026-10-30",
+  "timezone": "Asia/Shanghai",
+  "baseline_commit": "770d2361d5422d3c625ffd67d437b0c4a55c6f11",
+  "baseline_tests": 514,
+  "regression_tests": 541,
+  "regression_result": "passed",
+  "regression_seconds": 63.04,
+  "ruff_check": "passed",
+  "ruff_format": "passed",
+  "git_diff_check": "passed",
+  "real_provider_requests": 0,
+  "real_oauth_operations": 0,
+  "oauth_mechanisms_changed": false,
+  "subscription_adapter_change": "pure usage normalization preserves invalid count evidence",
+  "pipx": {
+    "version": "0.7.2",
+    "python": "3.12.2",
+    "source": "persistent repository directory",
+    "editable": false,
+    "pip_check": "passed",
+    "outside_repository_shells": [
+      "login bash",
+      "interactive bash"
+    ],
+    "default_offline_status": "passed",
+    "default_connections": 5,
+    "original_private_files_content_ownership_modes_unchanged": 12
+  },
+  "limitations": [
+    "real provider availability and invoices not tested",
+    "systemd boot lifecycle simulated only",
+    "backups remain private plaintext with integrity manifests",
+    "explicit SELARK_DATA_DIR overrides restored local layout",
+    "already running services need restart to load the new version"
+  ],
+  "reports": {
+    "stability": {
+      "verified_at": "2026-10-30T03:40:10.144001+00:00",
+      "version": "0.7.2",
+      "upstream": "temporary loopback fixture; invented credentials",
+      "real_mimo_requests": 0,
+      "simulated_upstream_requests": 9,
+      "checks": [
+        {
+          "check": "cli_and_passive_checks",
+          "passed": true,
+          "upstream_calls": 0
+        },
+        {
+          "check": "ordinary_and_sse_over_real_local_sockets",
+          "passed": true
+        },
+        {
+          "check": "bounded_queue_overload_and_wait_timeout",
+          "passed": true
+        },
+        {
+          "check": "actual_socket_read_idle_timeout",
+          "passed": true,
+          "elapsed_ms": 1043.36
+        },
+        {
+          "check": "trickling_stream_hits_total_deadline",
+          "passed": true,
+          "elapsed_ms": 1507.49
+        },
+        {
+          "check": "ordinary_client_socket_disconnect",
+          "passed": true
+        },
+        {
+          "check": "sigkill_restart_preserves_unknown_usage_without_retry",
+          "passed": true
+        },
+        {
+          "check": "bounded_sigterm_grace_and_accounting",
+          "passed": true,
+          "elapsed_ms": 420.49
+        },
+        {
+          "check": "post_recovery_call_and_usage_totals",
+          "passed": true,
+          "known_total_tokens": 56
+        }
+      ]
+    },
+    "api": {
+      "version": "0.7.2",
+      "verified_at": "2026-10-30T03:40:13.763181+00:00",
+      "scope": "temporary loopback upstream only; no real credentials or generations",
+      "real_generation_requests": 0,
+      "client_chat_requests": 275,
+      "simulated_upstream_requests": 50,
+      "peak_upstream_concurrency": 4,
+      "checks": [
+        {
+          "check": "80_simultaneous_clients_cycle_1",
+          "passed": true,
+          "status_counts": {
+            "200": 12,
+            "429": 68
+          },
+          "upstream_calls": 12,
+          "health_latency_ms": 3.48
+        },
+        {
+          "check": "80_simultaneous_clients_cycle_2",
+          "passed": true,
+          "status_counts": {
+            "200": 12,
+            "429": 68
+          },
+          "upstream_calls": 12,
+          "health_latency_ms": 2.48
+        },
+        {
+          "check": "80_simultaneous_clients_cycle_3",
+          "passed": true,
+          "status_counts": {
+            "200": 12,
+            "429": 68
+          },
+          "upstream_calls": 12,
+          "health_latency_ms": 2.58
+        },
+        {
+          "check": "12_simultaneous_disconnects_release_active_and_queued",
+          "passed": true
+        },
+        {
+          "check": "queued_revocation_and_connection_disable_follow_documented_rules",
+          "passed": true
+        },
+        {
+          "check": "10_invalid_or_slow_requests_generate_nothing",
+          "passed": true
+        },
+        {
+          "check": "4_live_streams_with_sqlite_writer_and_consistent_pending_backup",
+          "passed": true,
+          "data_events_per_stream": [
+            42,
+            42,
+            42,
+            42
+          ],
+          "pending_at_backup": 4,
+          "health_latency_ms": 4.99,
+          "recovered_tokens": 56
+        }
+      ],
+      "summary": {
+        "requests": 71,
+        "known_usage_requests": 46,
+        "missing_usage_requests": 25,
+        "local_rejected_requests": 21,
+        "unknown_consumption_requests": 4,
+        "in_flight_requests": 0,
+        "reported_usage_requests": 46,
+        "upstream_attempts": 50,
+        "unknown_attempt_count_requests": 0,
+        "unknown_time_requests": 0,
+        "status_counts": {
+          "success": 46,
+          "cancelled": 12,
+          "failed": 13
+        },
+        "known_tokens": {
+          "prompt_tokens": 552,
+          "completion_tokens": 92,
+          "total_tokens": 644
+        },
+        "missing_field_requests": {
+          "prompt_tokens": 25,
+          "completion_tokens": 25,
+          "total_tokens": 25
+        },
+        "estimated_cost_by_currency": {},
+        "unknown_cost_requests": 50,
+        "billed_cost": null,
+        "resource_accounting": {
+          "scope": "Selark 0.5+ admissions",
+          "requests": 50,
+          "tokens_by_basis": {
+            "reported_total": 644,
+            "unknown_hold": 1388
+          }
+        }
+      },
+      "final_health": {
+        "status": "ok",
+        "version": "0.7.2",
+        "pid": 3819884,
+        "capacity": {
+          "active": 0,
+          "queued": 0,
+          "admitted": 0,
+          "max_active": 4,
+          "max_queued": 8,
+          "accepting": true
+        },
+        "storage": {
+          "degraded": false,
+          "pending_records": 0,
+          "invalid_records": 0,
+          "accepting": true
+        }
+      },
+      "recovery_after_stop": {
+        "restored": 0,
+        "invalid": 0,
+        "failed": 0,
+        "pending": 0,
+        "interrupted": 0
+      }
+    },
+    "matrix": {
+      "version": "0.7.2",
+      "verified_at": "2026-10-30T03:40:24.877526+00:00",
+      "scope": "temporary profiles; real loopback downstream; MockTransport upstream",
+      "real_generation_requests": 0,
+      "real_provider_metadata_requests": 0,
+      "http_chat_requests": 668,
+      "cli_and_example_generations": 14,
+      "simulated_upstream_generations": 142,
+      "simulated_quota_reads": 19,
+      "per_connection_generations": {
+        "mimo-default": 48,
+        "deepseek-test": 38,
+        "relay-test": 38,
+        "coding-test": 18
+      },
+      "peak_upstream_concurrency": 4,
+      "peak_per_connection": {
+        "mimo-default": 1,
+        "deepseek-test": 2,
+        "relay-test": 1,
+        "coding-test": 1
+      },
+      "checks": [
+        {
+          "check": "four_resources_http_multiturn_text_blocks_routes_sessions",
+          "passed": true,
+          "requests": 8
+        },
+        {
+          "check": "cli_inputs_routes_json_stream_and_external_program",
+          "passed": true,
+          "successful_generations": 14,
+          "noninteractive_plan_cli_rejected": true
+        },
+        {
+          "check": "64_mixed_clients_cycle_1",
+          "passed": true,
+          "status_counts": {
+            "200": 10,
+            "429": 54
+          },
+          "upstream_calls": 10,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 59.51,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_2",
+          "passed": true,
+          "status_counts": {
+            "200": 10,
+            "429": 54
+          },
+          "upstream_calls": 10,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 50.01,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_3",
+          "passed": true,
+          "status_counts": {
+            "200": 11,
+            "429": 53
+          },
+          "upstream_calls": 11,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 58.11,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_4",
+          "passed": true,
+          "status_counts": {
+            "200": 10,
+            "429": 54
+          },
+          "upstream_calls": 10,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 59.7,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_5",
+          "passed": true,
+          "status_counts": {
+            "200": 10,
+            "429": 54
+          },
+          "upstream_calls": 10,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 50.1,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_6",
+          "passed": true,
+          "status_counts": {
+            "200": 10,
+            "429": 54
+          },
+          "upstream_calls": 10,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 60.08,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_7",
+          "passed": true,
+          "status_counts": {
+            "200": 11,
+            "429": 53
+          },
+          "upstream_calls": 11,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 49.97,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_8",
+          "passed": true,
+          "status_counts": {
+            "200": 10,
+            "429": 54
+          },
+          "upstream_calls": 10,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 50.04,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_9",
+          "passed": true,
+          "status_counts": {
+            "200": 10,
+            "429": 54
+          },
+          "upstream_calls": 10,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 59.84,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "64_mixed_clients_cycle_10",
+          "passed": true,
+          "status_counts": {
+            "200": 11,
+            "429": 53
+          },
+          "upstream_calls": 11,
+          "peak_active": 4,
+          "peak_plan_active": 1,
+          "health_latency_ms": 60.06,
+          "client_transport_errors": 0,
+          "generation_retries": 0
+        },
+        {
+          "check": "shared_caller_token_reservation_across_four_resources",
+          "passed": true,
+          "successful_generations": 1,
+          "quota_rejections": 3,
+          "settled_tokens": 14
+        },
+        {
+          "check": "four_resources_socket_disconnect_release",
+          "passed": true,
+          "unknown_usage_requests": 4
+        },
+        {
+          "check": "four_resource_streams_database_lock_backup_recovery",
+          "passed": true,
+          "restored_receipts": 4,
+          "known_total_tokens": 56,
+          "second_replay": 0
+        },
+        {
+          "check": "four_resources_zero_vs_missing_usage",
+          "passed": true
+        }
+      ],
+      "summary": {
+        "timezone": "UTC",
+        "filters": {},
+        "summary": {
+          "requests": 162,
+          "known_usage_requests": 134,
+          "missing_usage_requests": 28,
+          "local_rejected_requests": 20,
+          "unknown_consumption_requests": 8,
+          "in_flight_requests": 0,
+          "reported_usage_requests": 134,
+          "upstream_attempts": 142,
+          "unknown_attempt_count_requests": 0,
+          "unknown_time_requests": 0,
+          "status_counts": {
+            "success": 138,
+            "failed": 20,
+            "cancelled": 4
+          },
+          "known_tokens": {
+            "prompt_tokens": 1300,
+            "completion_tokens": 520,
+            "total_tokens": 1820
+          },
+          "missing_field_requests": {
+            "prompt_tokens": 28,
+            "completion_tokens": 28,
+            "total_tokens": 28
+          },
+          "estimated_cost_by_currency": {},
+          "unknown_cost_requests": 142,
+          "billed_cost": null,
+          "resource_accounting": {
+            "scope": "Selark 0.5+ admissions",
+            "requests": 142,
+            "tokens_by_basis": {
+              "reported_total": 1820,
+              "unknown_hold": 3668
+            }
+          }
+        },
+        "group_by": "connection",
+        "groups": [
+          {
+            "connection_id": "mimo-default",
+            "requests": 48,
+            "known_usage_requests": 46,
+            "missing_usage_requests": 2,
+            "local_rejected_requests": 0,
+            "unknown_consumption_requests": 2,
+            "in_flight_requests": 0,
+            "reported_usage_requests": 46,
+            "upstream_attempts": 48,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 47,
+              "cancelled": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 450,
+              "completion_tokens": 180,
+              "total_tokens": 630
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 2,
+              "completion_tokens": 2,
+              "total_tokens": 2
+            },
+            "estimated_cost_by_currency": {},
+            "unknown_cost_requests": 48,
+            "billed_cost": null,
+            "resource_accounting": {
+              "scope": "Selark 0.5+ admissions",
+              "requests": 48,
+              "tokens_by_basis": {
+                "reported_total": 630,
+                "unknown_hold": 917
+              }
+            }
+          },
+          {
+            "connection_id": "deepseek-test",
+            "requests": 39,
+            "known_usage_requests": 36,
+            "missing_usage_requests": 3,
+            "local_rejected_requests": 1,
+            "unknown_consumption_requests": 2,
+            "in_flight_requests": 0,
+            "reported_usage_requests": 36,
+            "upstream_attempts": 38,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 37,
+              "failed": 1,
+              "cancelled": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 350,
+              "completion_tokens": 140,
+              "total_tokens": 490
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 3,
+              "completion_tokens": 3,
+              "total_tokens": 3
+            },
+            "estimated_cost_by_currency": {},
+            "unknown_cost_requests": 38,
+            "billed_cost": null,
+            "resource_accounting": {
+              "scope": "Selark 0.5+ admissions",
+              "requests": 38,
+              "tokens_by_basis": {
+                "reported_total": 490,
+                "unknown_hold": 917
+              }
+            }
+          },
+          {
+            "connection_id": "relay-test",
+            "requests": 39,
+            "known_usage_requests": 36,
+            "missing_usage_requests": 3,
+            "local_rejected_requests": 1,
+            "unknown_consumption_requests": 2,
+            "in_flight_requests": 0,
+            "reported_usage_requests": 36,
+            "upstream_attempts": 38,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 37,
+              "failed": 1,
+              "cancelled": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 350,
+              "completion_tokens": 140,
+              "total_tokens": 490
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 3,
+              "completion_tokens": 3,
+              "total_tokens": 3
+            },
+            "estimated_cost_by_currency": {},
+            "unknown_cost_requests": 38,
+            "billed_cost": null,
+            "resource_accounting": {
+              "scope": "Selark 0.5+ admissions",
+              "requests": 38,
+              "tokens_by_basis": {
+                "reported_total": 490,
+                "unknown_hold": 917
+              }
+            }
+          },
+          {
+            "connection_id": "coding-test",
+            "requests": 36,
+            "known_usage_requests": 16,
+            "missing_usage_requests": 20,
+            "local_rejected_requests": 18,
+            "unknown_consumption_requests": 2,
+            "in_flight_requests": 0,
+            "reported_usage_requests": 16,
+            "upstream_attempts": 18,
+            "unknown_attempt_count_requests": 0,
+            "unknown_time_requests": 0,
+            "status_counts": {
+              "success": 17,
+              "failed": 18,
+              "cancelled": 1
+            },
+            "known_tokens": {
+              "prompt_tokens": 150,
+              "completion_tokens": 60,
+              "total_tokens": 210
+            },
+            "missing_field_requests": {
+              "prompt_tokens": 20,
+              "completion_tokens": 20,
+              "total_tokens": 20
+            },
+            "estimated_cost_by_currency": {},
+            "unknown_cost_requests": 18,
+            "billed_cost": null,
+            "resource_accounting": {
+              "scope": "Selark 0.5+ admissions",
+              "requests": 18,
+              "tokens_by_basis": {
+                "reported_total": 210,
+                "unknown_hold": 917
+              }
+            }
+          }
+        ]
+      },
+      "final_health": {
+        "status": "ok",
+        "version": "0.7.2",
+        "pid": 3819882,
+        "capacity": {
+          "active": 0,
+          "queued": 0,
+          "admitted": 0,
+          "max_active": 4,
+          "max_queued": 8,
+          "accepting": true
+        },
+        "storage": {
+          "degraded": false,
+          "pending_records": 0,
+          "invalid_records": 0,
+          "accepting": true
+        }
+      },
+      "restart_preserved_summary": true,
+      "temporary_service_stopped": true
+    },
+    "operations": {
+      "version": "0.7.2",
+      "passed": true,
+      "checks": [
+        "background start confirms own health and repeated start is idempotent",
+        "two explicit fake generations recorded once with 28 tokens",
+        "online backup hash verification and isolated recovery preserve live ledger",
+        "persistent logs contain request metadata and no fake credentials",
+        "graceful restart preserves history without regenerating",
+        "crash restart and repeated stop are safe without extra generation",
+        "offline history overview is consistent on every repeated read"
+      ],
+      "real_provider_requests": 0,
+      "oauth_operations": 0,
+      "fake_generations": 2,
+      "known_tokens": 28,
+      "history_rows": 20000,
+      "overview_seconds": [
+        0.4078,
+        0.3926,
+        0.3717
+      ],
+      "service_backend": "process",
+      "systemd": "covered by unit simulation"
+    },
+    "legacy": {
+      "generated_by_version": "0.7.0",
+      "reported_usage": {
+        "prompt_tokens": 1000,
+        "completion_tokens": 2,
+        "total_tokens": 1
+      },
+      "usage_consistency": "inconsistent",
+      "usage_known": false,
+      "known_usage_requests": 0,
+      "unknown_consumption_requests": 1,
+      "quota_tokens": 1002,
+      "unknown_token_requests": 1
+    }
+  }
+}

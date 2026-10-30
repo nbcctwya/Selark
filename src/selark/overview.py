@@ -82,6 +82,7 @@ def overview(directory, *, offline=False):
             "caller_id": None,
         }
     except ConfigError as error:
+        result["ok"] = False
         result["client"] = {"configured": False}
         result["issues"].append(str(error))
     if not (directory / "server.json").exists():

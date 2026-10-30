@@ -6,6 +6,7 @@ import time
 
 import pytest
 
+from selark.backups import drill_backup, verify_backup
 from selark.config import initialize
 from selark.persistence import Journal, snapshot
 from selark.runtime import Runtime
@@ -91,6 +92,8 @@ def test_schema_one_database_with_legacy_secret_recovers_interrupted_migration(t
         assert len(list((data / "backups").iterdir())) == 1
         with contextlib.closing(sqlite3.connect(backup / "records.sqlite3")) as old:
             assert old.execute("PRAGMA user_version").fetchone()[0] == 1
+        assert verify_backup(backup)["database_schema"] == 1
+        assert drill_backup(backup)["usage"]["known_tokens"]["total_tokens"] == 14
         assert migrated.store.records({})[0]["total_tokens"] == 14
         assert bool(migrated.store.authenticate(f"Bearer {token}".encode(), chat=True)) != revoked
     with Runtime(tmp_path) as again:

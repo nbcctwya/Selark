@@ -8,6 +8,7 @@ from pathlib import Path
 from selark.config import ConfigError
 from selark.runtime import Runtime, file_lock
 from selark.storage import usage_values, utc_now
+from selark.usage import sanitize_usage
 
 
 def import_history(runtime: Runtime, path: Path) -> dict:
@@ -86,9 +87,7 @@ def import_history(runtime: Runtime, path: Path) -> dict:
                 status_code,
                 entry.get("upstream_status"),
                 entry.get("duration_ms", entry.get("elapsed_ms")),
-                json.dumps({k: v for k, v in usage_values(usage, True).items() if v is not None})
-                if isinstance(usage, dict)
-                else None,
+                json.dumps(sanitize_usage(usage)) if isinstance(usage, dict) else None,
                 int(final),
                 *values.values(),
                 entry.get("error_code"),

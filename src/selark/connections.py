@@ -76,6 +76,7 @@ class ConnectionConfig(StrictConfig):
     discovery: Discovery = Field(default_factory=Discovery)
     limits: ServiceLimits = Field(default_factory=ServiceLimits, exclude=True)
     oauth_generation: int = Field(default=0, ge=0, exclude=True)
+    authorization_unreadable: bool = Field(default=False, exclude=True)
 
     _url = field_validator("base_url")(validate_url)
 

@@ -1,9 +1,14 @@
-# Selark 0.7.1 · 个人 AI 资源管理工具
+# Selark 0.7.2 · 个人 AI 资源管理工具
 
 独立的文本模型 HTTP 接入服务：`CLI / 外部程序 → Selark → 指定模型连接`。
 Python 3.11+，FastAPI + HTTPX + Uvicorn；默认仅监听 `127.0.0.1:8787`。
 
-## 0.7.1：稳定性与日常管理
+## 0.7.2：审查修复与稳定性加固
+
+修复备份业务结构漏检、损坏订阅影响其他连接、未发送请求错误占用配额、非法及缓存
+Token 计数、旧账本核算、默认目录恢复和状态退出码等问题。
+修复细节、兼容边界与复核方法见 [0.7.2 修复说明](docs/stability-072.md)，
+测试与安装结果见 [0.7.2 验收](docs/stability-072-verification.md)。
 
 ```bash
 selark status                       # 所有资源、模型、历史验证、授权、用量及本地配额
@@ -30,8 +35,8 @@ Token 矛盾、流式累计计数回退和不完整用量保留追溯信息与�
 新增 `connection add ID --interactive` 配置向导；日志默认按 5 MiB 轮转并保留 3 个历史文件。
 0.7.0 配置、数据库 schema 4、令牌、API、Token Plan 和 ChatGPT 连接继续兼容，
 OAuth 登录、授权、刷新和退出代码保持原样。
-操作说明及边界见 [0.7.1 使用说明](docs/stability-071.md)，
-测试、性能与 pipx 结果见 [0.7.1 验收](docs/stability-071-verification.md)。
+日常操作仍适用 [0.7.1 使用说明](docs/stability-071.md)，
+上一版测试证据保留在 [0.7.1 验收](docs/stability-071-verification.md)。
 
 ## 日常安装：pipx（当前用户）
 
