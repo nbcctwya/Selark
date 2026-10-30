@@ -70,6 +70,11 @@ jobs:
         shell: bash
         run: |
           python scripts/verify_resource_matrix.py --selark "$(command -v selark)" --cycles 10 --output "$RUNNER_TEMP/selark-resource-matrix.json" | tee "$RUNNER_TEMP/selark-resource-matrix.log"
+      - name: Six independent applications, quotas and shared ingress (fake upstream only)
+        if: matrix.python == '3.12'
+        shell: bash
+        run: |
+          python scripts/verify_multi_app.py --requests-per-app 100 --output "$RUNNER_TEMP/selark-multi-app.json" | tee "$RUNNER_TEMP/selark-multi-app.log"
       - name: Background service, backup drill and 20k-row overview (fake upstream only)
         if: matrix.python == '3.12'
         shell: bash
