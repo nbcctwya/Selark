@@ -9,19 +9,63 @@ dist/
 .env
 .env.*
 !.env.example
+.envrc
+.envrc.*
+!.envrc.example
+# Local credential stores and private keys; examples stay in config/*.example.json.
+.secrets/
+secrets/
+credentials/
+.aws/
+.ssh/
+.gnupg/
+.codex/auth.json
+.git-credentials
+.netrc
+.npmrc
+.pypirc
+credentials.json
+credentials.*.json
+auth.json
+token.json
+tokens.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_ecdsa
+id_ed25519
+# Shell history and local copies of operational data.
+.bash_history
+.zsh_history
+.python_history
+.private/
 .selark/
 server.json
+server.json.*
 client.json
+client.json.*
 connections.json
+connections.json.*
 resources.json
+resources.json.*
 # OAuth registrations and rotating credentials belong only in user configuration.
 chatgpt-auth/
 # Local recovery receipts and protected configuration/database backups.
 pending/
 backups/
 *.log
+*.log.*
 *.jsonl
+*.sqlite
+*.sqlite-*
 *.sqlite3
 *.sqlite3-*
 *.db
 *.db-*
+# Raw OpenAI acceptance reports retain machine paths and upstream request IDs.
+# Publish only the reviewed, anonymized docs/openai-verification.md summary.
+/docs/openai*-live-verification.json

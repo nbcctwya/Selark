@@ -125,9 +125,23 @@ API 模型与账户权限会变化，示例模型名和发现结果不能代替�
 | deepseek | `https://api.deepseek.com/v1` | Bearer、`max_tokens`、关闭 thinking、请求流式用量；保留缓存命中/未命中计数。真实验证 `deepseek-flash`。 |
 | zhipu / glm | `https://open.bigmodel.cn/api/paas/v4` | Bearer、`max_tokens`；GLM 4.5+ 非思考；适配可缺少 object 的普通/SSE 响应。仅模拟验证。 |
 | kimi | `https://api.moonshot.ai/v1` | Bearer、Chat Completions；K2.5/K2.6 非思考；K3 保留显式思考历史。仅模拟验证，可覆盖为账户对应官方区域地址。 |
-| openai | `https://api.openai.com/v1` | Bearer、文本 Chat Completions、`max_completion_tokens`、流式 include_usage。仅模拟验证，未实现 Responses-only 模型接口。 |
+| openai | `https://api.openai.com/v1` | Bearer、文本 Chat Completions、`max_completion_tokens`、流式 include_usage。2026-10-30 真实验证 `gpt-4o-mini` 及 GPT-6 Astra、6.1 Sol、6 Luna、6.1 Terra 普通/SSE；见[脱敏测试摘要](openai-verification.md)。未实现 Responses-only 模型接口。 |
 | anthropic | `https://api.anthropic.com/v1` | 原生 Messages、`x-api-key`、版本 `2026-10-21`，原生 SSE 转统一文本流。仅模拟验证。 |
 | openai-compatible | 必须指定 | Bearer 与常见 Chat Completions；真实验证用户指定中转站的 `claude-sonnet-4-6`。不能据此声称已实测 Anthropic 官方原生接口。 |
+
+2026-10-30 的 OpenAI 实测使用当前 0.7.2 源码、临时本地 HTTP 服务和内存中的连接密钥。
+官方模型列表返回 130 个模型；`gpt-4o-mini` 两次生成均为 HTTP 200，普通回复、SSE
+`[DONE]`、最终用量及调用记录全部通过。输入 31、输出 9，合计 40 tokens；按
+[官方单价](https://developers.openai.com/api/docs/models/gpt-4o-mini)估算 $0.00001005，
+不是账户账单或余额查询。每次输出上限为 32 tokens，没有重试；未保存持久连接或更改原有配置。
+
+同日继续测试 `gpt-6-astra`、`gpt-6.1-sol`、`gpt-6-luna`、`gpt-6.1-terra`。
+四款模型均在账户模型列表中，各一次普通回复和一次流式回复，共 8 次真实生成全部通过。
+每次最多 512 输出 tokens（含思考），沿用上游默认思考设置，无重试；最终输入 136、
+输出 69，合计 205 tokens，其中思考 13 tokens 已包含在输出内。按各模型官方标准单价
+估算共 $0.0011784；8 条 Selark 记录均为成功、最终用量已知、单次上游尝试、交付完成。
+本次范围是基础文本接入；用量和价格来源见[脱敏测试摘要](openai-verification.md)。
+含本机路径及上游请求 ID 的原始报告仅保留在本地，并由 `.gitignore` 排除。
 
 MiMo 沿用 [原官方协议地址](https://mimo.mi.com/docs/api/text-generation/openai-api) 及已有实现，本轮两次真实请求再次验证。
 DeepSeek 的 [Chat API](https://api-docs.deepseek.com/api/create-chat-completion/)、
