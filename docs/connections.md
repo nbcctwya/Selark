@@ -1,4 +1,4 @@
-# Selark 0.4：多平台、多连接
+# 多平台、多连接与模型目录
 
 仍是 WSL/Linux 本机单实例、API Key、HTTP API + CLI 和文本调用。
 原 MiMo 配置、客户端令牌、撤销状态和记录库继续使用；原 `selark ask`、`models`、`connection show` 均可用。
@@ -20,9 +20,10 @@ selark connection show deepseek-personal
 
 # 首次新增时从交互终端隐藏输入 Key；不在命令行传明文 Key
 selark connection add deepseek-work --provider deepseek --name 'DeepSeek Work'
-# 0.8.1 起，省略 --models 会自动查询并保存上游模型列表
+# 0.9.0 起，省略 --models 自动发现目录，但不启用模型
 selark connection discover deepseek-work  # 之后可显式刷新列表；不生成内容
-selark connection set deepseek-work --default-model deepseek-flash
+selark model enable deepseek-work deepseek-flash
+selark model default deepseek-work deepseek-flash
 
 selark connection add relay-work --provider openai-compatible \
   --base-url https://relay.example/v1 --name 'Relay Work'
@@ -35,13 +36,14 @@ selark connection probe deepseek-work     # 显式生成一次短请求，有实
 
 新增也可用 `--models MODEL ... --default-model MODEL` 手动配置，适用于没有模型列表接口的厂商。
 从 0.8.1 起，`connection add` 新增普通 API 时，省略 `--models` 或在向导里留空，
-会使用已输入的 Key 查询当前 API 地址的 `/models`，加入上游返回的全部合法模型标识。
-显式填写模型会跳过发现；`--no-discover` 可保留只写本地配置的流程。Token Plan 使用原预设，
+会使用已输入的 Key 查询当前 API 地址的 `/models`，保存上游返回的全部合法模型标识。
+**0.9.0 起这些标识只进入发现目录，不加入 `allowed_models`。** 新建所有类型连接默认不启用模型。
+显式填写模型会跳过发现并启用手动列表；`--no-discover` 可保留只写本地配置的流程。Token Plan 使用原协议预设，
 ChatGPT 继续通过专用 OAuth 命令管理，已有连接的 `set --api-key` 不会替换模型列表。
 发现失败时连接和 Key 已保存，命令返回 1，输出 `discovery.state=failure`，
 无需重新输入 Key；使用 `connection discover ID` 重试，或 `connection set ID --models ...` 手动配置。
-自动发现时可同时给出 `--default-model`；它必须在返回的列表中，否则保留发现结果、报告错误并留空默认模型。
-显式手动提供模型而省略默认模型时，选择手动列表中的第一个；自动发现不会替你挑选一个新默认模型。
+新增时使用 `--default-model` 必须同时给出 `--models`，否则在保存和发现前拒绝。
+显式手动提供模型而省略默认模型时，兼容旧行为选择手动列表中的第一个；自动发现和 `model enable` 均不自动选择默认模型。
 各连接的 ID 创建后不变；`set ID --name ...`、`--base-url ...`、`--api-key`、`--models ...`、
 `--default-model ...`、`--timeout ...` 可修改其设置。新增/修改/启停热生效；已经分发的请求继续使用原连接快照。
 
@@ -56,7 +58,7 @@ Key 可来自厂商环境变量：`MIMO_API_KEY`、`DEEPSEEK_API_KEY`、`ZHIPU_A
 
 ## 路由与模型来源
 
-`GET /v1/models` 返回各连接已保存的模型，不访问上游。
+`GET /v1/models` 返回各连接已启用且当前应用获权的模型，不访问上游，也不返回仅发现的模型。
 每项包含 `connection_id`、`connection_name`、`upstream_model`、`qualified_id` 和启停状态。
 原 MiMo 项目的 `id` 保留原模型名；其他连接使用 `连接ID::模型ID`，同名模型可共存。
 原 MiMo 也有对应的 `mimo-default::模型ID` 标识。
@@ -99,12 +101,12 @@ selark usage --connection relay-personal --today --tz Asia/Shanghai --json
 会话依然按 `(caller_id, session_id)` 归组，可以跨连接；按连接筛选可查看其中一个来源。
 不会自动保存或拼接对话历史。所有连接共享原有单机并发/队列/超时/取消/访问令牌/落账机制。
 
-## 已配置、已发现与已验证
+## 发现、启用、应用授权与历史能力
 
 `connection show/list` 分别展示：
 
 - `configured`：本地设置和 Key 格式有效，不代表账户有额度或模型可调用。
-- `models_configured`：有本地允许列表，可能来自手动输入或发现。
+- `models_configured`：本地启用列表非空；升级保留旧版本曾自动加入的全部模型。
 - `discovery`：最近模型列表查询的状态、时间、模型和错误（含新增 API 时的自动发现）。地址、Key 或工作区变化后显示 stale。
 - `verification`：当前配置最近已取得成功/失败上游结果的真实调用，包含时间与请求 ID；普通生成和显式 probe 都可更新。
 
@@ -114,12 +116,20 @@ selark usage --connection relay-personal --today --tz Asia/Shanghai --json
 
 发现过程只 GET 当前连接的 `/models`，不跟随重定向，不向返回的其他地址发送 Key。
 最多保存 1000 个受支持格式的 ID，每页最多读取 1 MiB，最多 10 页、总时限最多 30 秒；
-Anthropic 使用受限游标分页。其他未支持的分页、空列表、非 JSON、认证或网络错误会明确失败，保留原允许列表，支持手动配置。
+Anthropic 使用受限游标分页。其他未支持的分页、非 JSON、认证或网络错误会明确失败，保留上次目录及其时间。
+合法空列表作为成功空目录保存；所有情况均保留原启用列表。
 模型元数据不足以证明模型支持文本、流式、工具或其他功能；发现结果不是能力认证，也不包含价格承诺。
 
-成功刷新会替换该连接允许列表。原默认模型仍存在时保留；新增连接没有默认模型、或原默认消失时，要求显式选择。
-旧 MiMo 配置要求保留一个有效默认模型；若发现结果不能满足此要求，拒绝改写并提示手动配置。
-发现过程中连接设置发生变化，旧结果不会应用。失败发现仍保留上次列表，不会把失败误报成生成验证成功。
+成功刷新只替换发现目录，原启用与默认模型保持不变。目录未再列出已启用模型时标记“目录未列出”，
+不推断已永久不可用，也不撤销本地许可。`model disable` 移除默认模型时仅清除默认值，不选替代。
+旧 MiMo 同样可以显式禁用全部模型。发现期间来源/凭据变化或另一查询先保存时，拒绝迟到结果；
+仅启用列表变化时保留当前审批再保存目录。
+
+`selark model list ID [--caller APP]` 查看四层数量；`model show ID MODEL` 查看模型级历史证据。
+`model enable ID MODEL...` / `--all-discovered` 明确启用，`model disable ID MODEL...` / `--all` 禁用，
+`model default ID MODEL` / `--clear` 管理默认。应用授权继续由独立 `tokens policy` 控制。
+普通 API 可显式 `model verify ID MODEL [--stream]` 生成一次短验证请求；订阅沿用专用调用路径。
+完整的状态、并发与升级语义见 [模型治理说明](model-governance.md)。
 
 ## 厂商适配与官方依据
 

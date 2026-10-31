@@ -1,23 +1,31 @@
-# Selark 0.8.1 · 个人 AI 资源管理工具
+# Selark 0.9.0 · 个人 AI 资源管理工具
 
 独立的文本模型 HTTP 接入服务：`CLI / 外部程序 → Selark → 指定模型连接`。
 Python 3.11+，FastAPI + HTTPX + Uvicorn；默认仅监听 `127.0.0.1:8787`。
 
-## 0.8.1：新增 API 自动发现模型
+## 0.9.0：模型发现、启用、应用授权与能力验证分离
 
 ```bash
 selark connection add openai-personal --provider openai --interactive
-# 隐藏输入 Key；模型留空会查询并加入上游模型列表
+# 隐藏输入 Key；模型留空只保存发现目录，不启用任何模型
+selark model list openai-personal
+selark model enable openai-personal YOUR_TEXT_MODEL
+selark model default openai-personal YOUR_TEXT_MODEL
+selark model list openai-personal --caller CALLER_ID --json
+selark dashboard
 ```
 
-新增普通 API 连接时，省略 `--models` 或在向导中留空，现在默认执行模型发现。
-显式填写模型则只使用手动列表；需要完全离线创建时加 `--no-discover`。
-失败会保留已保存的连接与 Key、返回非零退出码，并提示使用 `connection discover ID` 重试。
-此步骤只查询模型列表，不发起生成；上游列出的模型不等于已验证可调用或均支持文本协议。
-自动发现不任意选择默认调用模型，可另用 `--default-model` 指定。
-Token Plan 的预设模型和 ChatGPT 的 OAuth 流程沿用原有行为。
-Dashboard 首页资源池也支持滚动查看全部连接，不再只显示前 5 项。
-详见 [连接配置](docs/connections.md) 与 [0.8.1 验收](docs/model-discovery-verification.md)。
+**发现不等于启用，启用不等于应用获权，获权不等于供应商实际可用。**
+新增连接（包括 Token Plan 和 ChatGPT）默认不启用模型；普通 API 省略 `--models` 时自动发现目录。
+`model enable/disable/default` 支持明确选择、批量操作和清除默认模型；原 `connection set --models` 仍表示明确启用。
+发现失败、空目录或模型下架均不更改已有启用列表。应用令牌、连接、模型、并发及配额在派发前再次检查。
+CLI 与只读 Dashboard 展示四层状态，历史能力证据区分普通文本和 SSE、配置范围及时间。
+不会因为发现、登录或历史成功就显示实时可用，不自动验证全部模型或切换收费来源。
+
+升级保留全部已有启用项（包括 0.8.1 曾自动加入的模型）、默认模型、应用策略、记录及 OAuth 配置。
+停止旧网关后运行 `selark migrate`，自动备份并将账本 schema 4 升为 5；Dashboard 不执行迁移。
+详细操作、订阅边界及兼容性见 [模型治理说明](docs/model-governance.md)，
+测试与安装结果见 [0.9.0 验收](docs/model-governance-verification.md)。
 仓库的敏感信息检查、忽略规则与历史范围见 [发布安全检查](docs/repository-security.md)。
 
 ## 0.8.0：本地 Web Dashboard V0.1
@@ -38,7 +46,7 @@ Dashboard 独立于模型网关运行：只监听 `127.0.0.1`，不自动启动�
 终端中的一次性管理链接有效期 5 分钟，登录后通过独立 HttpOnly 会话访问，最长 8 小时。
 保持终端运行，`Ctrl+C` 关闭 Dashboard。API Key、OAuth 凭据、调用方令牌不发送到浏览器。
 本阶段没有连接修改、令牌创建、模型调用、服务控制或其他资源写入接口。
-旧 CLI、schema 4、配置与 OAuth 机制保持兼容。
+旧 CLI、配置与 OAuth 机制保持兼容；0.9.0 首次使用需完成上述账本迁移。
 
 完整使用、统计口径与安全边界见 [Dashboard 说明](docs/dashboard.md)，
 测试、浏览器与安装验收见 [Dashboard 验收](docs/dashboard-verification.md)。
@@ -208,6 +216,8 @@ selark backup --json
 `init` 在终端安全询问 MiMo Key（不回显），自动生成独立的 Selark 令牌。也可从
 `MIMO_API_KEY` 环境变量读入；不要把真实密钥直接写入 shell 命令历史。
 重复 `init` 会保留原配置并报错，不会旋转令牌或覆盖密钥。
+0.9.0 起省略 `--models` 不启用模型；先 `connection discover mimo-default` 查看目录，
+再 `model enable mimo-default MODEL` 和 `model default mimo-default MODEL`，或在初始化时明确提供 `--models MODEL`。
 
 另开一个新终端，在任意目录运行客户端：
 
@@ -452,7 +462,7 @@ selark limits set --max-concurrent-requests 4 --max-queued-requests 16 \
 ```
 
 升级前先停止旧服务。首次 `serve` 或 `migrate` 先备份再升级数据库，保留配置、凭据和旧记录；
-0.6 将 schema 3 升为 4，历史资源类型保留未知，不补造套餐计量。
+0.6 将 schema 3 升为 4；0.9.0 将 schema 4 升为 5。历史资源类型与能力范围保留未知，不补造验证或套餐计量。
 如需手工恢复待落账文件，先停止服务，再执行 `selark records recover --json`。
 
 ```bash
@@ -486,9 +496,9 @@ GitHub Actions 自动运行模拟测试与代码检查，不使用供应商凭�
 0.6 的 268 项回归、安装与恢复核对，以及 2 次真实 Kimi Code 编程调用（453 Token）
 见 [Token Plan 验收](docs/token-plans-verification.md)。GLM Coding Plan 仅模拟验证。
 
-仅本机单实例，可有多个连接和独立调用方令牌；没有网页、订阅登录、远程管理接口、自动路由或生产托管。
+仅本机单实例，可有多个连接、独立调用方令牌、只读 Dashboard 和官方订阅登录；不提供远程管理、自动路由或生产托管。
 
 2026-10-27 核对的官方来源：[首次调用](https://mimo.mi.com/docs/en-US/quick-start/summary/first-api-call)、
 [Chat Completions 协议](https://mimo.mi.com/docs/api/text-generation/openai-api)、
 [模型更新](https://mimo.mi.com/docs/en-US/updates/model)。官方按量接口为
-`https://api.xiaomimimo.com/v1`，服务端使用 `api-key` 请求头；默认模型 `mimo-v2.6-flash`。
+`https://api.xiaomimimo.com/v1`，服务端使用 `api-key` 请求头；历史默认模型为 `mimo-v2.6-flash`，新建配置需明确选择。

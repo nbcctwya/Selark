@@ -274,10 +274,11 @@ async def exercise(client, runtime, upstream, callers):
     upstream.release.set()
     assert all(r.status_code == 200 for r in await asyncio.gather(*active))
     old, disabled = await asyncio.gather(*queued)
-    assert old.status_code == 200
+    assert old.status_code == 401 and old.json()["error"]["code"] == "invalid_token"
     assert disabled.status_code == 503 and disabled.json()["error"]["code"] == "connection_disabled"
     await until(idle)
     assert runtime.store.records({"session_id": "disabled-inflight"})[0]["upstream_attempts"] == 0
+    assert runtime.store.records({"session_id": "revoked-inflight"})[0]["upstream_attempts"] == 0
     checks.append(
         {
             "check": "queued_revocation_and_connection_disable_follow_documented_rules",

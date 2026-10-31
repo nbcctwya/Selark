@@ -286,7 +286,9 @@ def test_explicit_discovery_saves_refreshes_and_rejects_stale_results(multi):
 
     models = asyncio.run(discover(config, transport=httpx.MockTransport(upstream)))
     result = multi.save_discovery(config, models)
-    assert result["allowed_models"] == ["vendor/shared", "other"]
+    assert result["allowed_models"] == []
+    assert result["discovery"]["models"] == ["vendor/shared", "other"]
+    multi.change_models("relay", "enable", models)
     assert result["discovery"]["state"] == "success"
     assert result["verification"]["state"] == "never" and multi.store.records({}) == []
     multi.change_connection({"default_model": "other"}, "relay")
@@ -300,14 +302,14 @@ def test_explicit_discovery_saves_refreshes_and_rejects_stale_results(multi):
     assert failed["allowed_models"] == models and failed["discovery"]["state"] == "failure"
     multi.change_connection({"api_key": "fake-replacement"}, "relay")
     assert multi.connection("relay")["discovery"]["state"] == "stale"
-    with pytest.raises(ConfigError, match="期间连接配置已改变"):
+    with pytest.raises(ConfigError, match="期间连接来源或授权已改变"):
         multi.save_discovery(config, ["late-result"])
     current = require_connection(multi.connection_settings(), "relay")
-    assert multi.save_discovery(current, ["new-model"])["default_model"] is None
+    assert multi.save_discovery(current, ["new-model"])["default_model"] == "other"
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("bad", ["html", "empty", "redirect", "auth", "pagination"])
+@pytest.mark.parametrize("bad", ["html", "redirect", "auth", "pagination"])
 def test_discovery_failure_is_bounded_and_never_generates(multi, bad):
     multi.add_connection(
         "relay", "openai-compatible", "fake-relay", base_url="https://relay.test/v1"

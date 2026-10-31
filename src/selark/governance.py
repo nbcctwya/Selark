@@ -297,9 +297,24 @@ def reserve(
     alias,
     resource_type="api",
     plan=None,
+    concurrent_requests=None,
 ):
+    if caller != "local-probe":
+        identity = db.execute(
+            "SELECT revoked_at,expires_at FROM tokens WHERE id=?", (caller,)
+        ).fetchone()
+        if identity is None or identity[0] or (identity[1] and identity[1] <= now):
+            raise GatewayError(401, "invalid_token", "发送前调用方令牌已撤销、过期或不存在。")
     policy = policy_for(db, caller)
     enforce_access(policy, connection, model, resource_type)
+    if (
+        concurrent_requests is not None
+        and policy.max_concurrent_requests is not None
+        and concurrent_requests > policy.max_concurrent_requests
+    ):
+        raise GatewayError(
+            429, "caller_concurrency_limit", "当前在途数量超过更新后的应用并发上限。"
+        )
     if resource_type in {"token_plan", "chatgpt_subscription"}:
         if policy.daily_budget is not None:
             raise GatewayError(

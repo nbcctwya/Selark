@@ -13,7 +13,8 @@ selark chatgpt login                         # 默认连接 chatgpt-personal
 selark chatgpt status --json                 # 只读本地状态，不联网
 selark connection discover chatgpt-personal  # 官方 GET /v1/models；不生成
 selark connection show chatgpt-personal --json
-selark connection set chatgpt-personal --default-model MODEL_FROM_DISCOVERY
+selark model enable chatgpt-personal MODEL_FROM_DISCOVERY
+selark model default chatgpt-personal MODEL_FROM_DISCOVERY
 ```
 
 在浏览器选择本人的 ChatGPT 账户，同意 Selark 使用套餐。
@@ -33,6 +34,8 @@ ID Token 验证官方 JWKS 的 RS256 签名、issuer、audience、期限和 nonc
 `selark chatgpt login --consent` 重新授权。`ready` 表示本地授权可用于尝试，不保证模型调用
 成功。官方发现成功也不等于真实推理验证；查看 connection 的独立 discovery/verification。
 修改配置、退出或重新登录会使旧验证过期；正常同账户刷新不改变身份版本。
+0.9.0 起发现目录不再自动启用模型。登录、启用、应用授权和模型级能力证据分别保存，
+已有启用项与 OAuth 机制保持原样；完整规则见 [模型治理](model-governance.md)。
 
 ## 允许特定应用使用订阅
 
@@ -136,7 +139,8 @@ access/refresh/ID token；不能确认远程撤销时显示 `remote_revocation_c
 可在官方 Usage 页面确认。已经通过最后一次授权检查并发送的在途请求允许完成，也可能被
 官方撤销中断；无论哪种结果都不自动重放，已知用量保留。原调用记录与注册身份保留。
 
-旧配置与数据库 schema 4 无需重写迁移；已有 API Key、调用方令牌、撤销状态及历史用量保留。
+0.7 引入订阅时未更改 schema 4；0.9.0 为模型级证据追加迁移到 schema 5，见[模型治理](model-governance.md)。
+已有 API Key、调用方令牌、撤销状态及历史用量保留，OAuth 文件不改写。
 添加／修改连接前继续创建受保护备份。**备份只保存 ChatGPT 注册身份，不保存可轮换的 OAuth 令牌**，
 避免恢复过期 refresh token 造成重放。恢复时将 `chatgpt-registration/` 作为 `chatgpt-auth/`
 恢复注册绑定，然后本人重新 `chatgpt login`；不要覆盖仍在使用的另一套有效授权。

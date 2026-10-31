@@ -54,6 +54,15 @@ class Discovery(StrictConfig):
     models: list[str] = Field(default_factory=list, max_length=1000)
     error_code: str | None = None
     error_message: str | None = None
+    discovered_at: str | None = None
+    catalog_fingerprint: str | None = None
+
+    @field_validator("models")
+    @classmethod
+    def model_ids(cls, values):
+        if any(not valid_model(value) for value in values) or len(set(values)) != len(values):
+            raise ValueError("发现目录包含无效或重复模型标识")
+        return values
 
 
 class ConnectionConfig(StrictConfig):
@@ -193,3 +202,12 @@ def require_connection(connections, identity):
         if config.connection_id == identity:
             return config
     raise ConfigError("未找到连接 ID，请运行 selark connection list。")
+
+
+def enforce_approval(config, model):
+    if not config.enabled:
+        raise GatewayError(503, "connection_disabled", "所选连接已停用。")
+    if model is None:
+        raise GatewayError(400, "no_default_model", "尚未选择默认模型；请指定已启用的模型。")
+    if model not in config.allowed_models:
+        raise GatewayError(400, "model_not_allowed", "该模型未启用；发现目录不授予调用权限。")

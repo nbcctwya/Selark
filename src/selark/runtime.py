@@ -25,9 +25,11 @@ from selark.connections import (
     ConnectionConfig,
     ConnectionsConfig,
     connection_document,
+    enforce_approval,
     legacy_connection,
     registry_document,
     require_connection,
+    valid_model,
 )
 from selark.governance import Price, ResourcesConfig, Target
 from selark.locking import file_lock
@@ -78,6 +80,23 @@ def discovery_fingerprint(config):
         key: document[key]
         for key in ("connection_id", "provider", "base_url", "api_key", "workspace_id")
     }
+    if config.provider == "chatgpt":
+        data["oauth_generation"] = config.oauth_generation
+    return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
+
+
+def capability_fingerprint(config):
+    """Protocol evidence is independent of local approval and application policies."""
+    data = connection_document(config)
+    for key in (
+        "name",
+        "enabled",
+        "discovery",
+        "allowed_models",
+        "default_model",
+        "config_revision",
+    ):
+        data.pop(key, None)
     if config.provider == "chatgpt":
         data["oauth_generation"] = config.oauth_generation
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
@@ -229,11 +248,10 @@ class Runtime:
         if provider == "chatgpt":
             options = {"resource_type": "chatgpt_subscription", **options}
         if provider in PLAN_PRESETS:
-            preset = PLAN_PRESETS[provider]
             options = {
                 "resource_type": "token_plan",
                 "plan": PlanSettings().model_dump(),
-                "allowed_models": [preset["default_model"]],
+                "allowed_models": [],
                 **{k: v for k, v in options.items() if v is not None},
             }
         if options.get("allowed_models") and options.get("default_model") is None:
@@ -396,10 +414,9 @@ class Runtime:
             if config.authorization_unreadable
             else self.store.verification(config.connection_id, fingerprint(config))
         )
-        discovery = result["discovery"]
-        old = discovery.pop("source_fingerprint", None)
-        if old and old != discovery_fingerprint(config):
-            discovery["previous_state"], discovery["state"] = discovery["state"], "stale"
+        from selark.model_state import catalog
+
+        result["discovery"] = catalog(config)
         result["models_configured"] = bool(config.allowed_models)
         result["protocol"] = (
             "responses"
@@ -516,58 +533,118 @@ class Runtime:
 
         with file_lock(self.data_dir / "management.lock"):
             current = require_connection(self.connection_settings(), original.connection_id)
-            if fingerprint(current) != fingerprint(original):
-                raise ConfigError("发现期间连接配置已改变；结果未应用，请重新发现。")
-            registry = self.registry()
-            if error is None:
-                if not models:
-                    raise ConfigError("发现结果为空，原模型列表保留。")
-                current.allowed_models = models
-                current.default_model = (
-                    current.default_model if current.default_model in models else None
-                )
-                if (current.allowed_models, current.default_model) != (
-                    original.allowed_models,
-                    original.default_model,
-                ):
-                    current.config_revision += 1
-                try:
-                    ConnectionConfig.model_validate(connection_document(current))
-                    if current.connection_id == "mimo-default":
-                        ServerConfig.model_validate(
-                            server_document(self.settings())
-                            | {
-                                "allowed_models": current.allowed_models,
-                                "default_model": current.default_model,
-                            }
-                        )
-                except ValidationError:
-                    raise ConfigError(
-                        "发现的模型不符合本地配置格式；原列表保留，请手动配置。"
-                    ) from None
-            current.discovery = Discovery(
-                state="failure" if error else "success",
-                checked_at=utc_now(),
-                source_fingerprint=discovery_fingerprint(current),
-                models=models or original.discovery.models,
-                error_code=error.code if error else None,
-                error_message=error.message if error else None,
+            if discovery_fingerprint(current) != discovery_fingerprint(original):
+                raise ConfigError("发现期间连接来源或授权已改变；结果未应用，请重新发现。")
+            if current.discovery != original.discovery:
+                raise ConfigError("发现目录已被另一查询更新；迟到结果未应用。")
+            # Approval may change during a network query. Keep the current approval,
+            # not the pre-query copy. A failed refresh retains the last catalog.
+            previous = current.discovery
+            catalog_at = previous.discovered_at or (
+                previous.checked_at if previous.state == "success" else None
             )
-            self.backup("before-model-discovery")
+            catalog_source = previous.catalog_fingerprint or (
+                previous.source_fingerprint if previous.state == "success" else None
+            )
+            checked_at = utc_now()
+            try:
+                current.discovery = Discovery(
+                    state="failure" if error else "success",
+                    checked_at=checked_at,
+                    source_fingerprint=discovery_fingerprint(current),
+                    models=previous.models if error else models,
+                    discovered_at=catalog_at if error else checked_at,
+                    catalog_fingerprint=catalog_source if error else discovery_fingerprint(current),
+                    error_code=error.code if error else None,
+                    error_message=error.message if error else None,
+                )
+            except ValidationError:
+                raise ConfigError("发现目录无效；原目录与启用列表均保留。") from None
+            registry = self.registry()
             if current.connection_id == "mimo-default":
                 registry.legacy_discovery = current.discovery
-                if error is None:
-                    server = self.settings()
-                    server.allowed_models, server.default_model = (
-                        current.allowed_models,
-                        current.default_model,
-                    )
-                    server.config_revision = current.config_revision
-                    _write_private(self.config_path, server_document(server))
             else:
                 registry.connections = [
                     current if c.connection_id == current.connection_id else c
                     for c in registry.connections
                 ]
+            self.backup("before-model-discovery")
             _write_private(self.directory / "connections.json", registry_document(registry))
         return self.connection(original.connection_id)
+
+    def change_models(self, identity, action, models=(), *, all_models=False, default=None):
+        """One atomic approval change, independent of catalog refresh and caller policies."""
+        with file_lock(self.data_dir / "management.lock"):
+            config = require_connection(self.connection_settings(), identity)
+            selected = list(dict.fromkeys(models))
+            if any(not valid_model(model) for model in selected):
+                raise ConfigError("模型标识无效。")
+            if action == "enable" and all_models:
+                from selark.model_state import catalog
+
+                state = catalog(config)
+                if state["state"] != "success" or not state["current"]:
+                    raise ConfigError(
+                        "批量启用需要当前来源的成功发现目录，请先 connection discover。"
+                    )
+                selected = list(config.discovery.models)
+            if action in {"enable", "disable"} and not selected and not all_models:
+                raise ConfigError("请指定模型，或明确使用批量选项。")
+            approved = list(config.allowed_models)
+            chosen = config.default_model
+            if action == "enable":
+                approved = list(dict.fromkeys([*approved, *selected]))
+            elif action == "disable":
+                approved = [] if all_models else [m for m in approved if m not in selected]
+                if chosen not in approved:
+                    chosen = None
+            elif action == "default":
+                if default is not None and default not in approved:
+                    raise ConfigError("默认模型必须已经启用；设置默认不会隐式启用模型。")
+                chosen = default
+            else:
+                raise ConfigError("未知模型管理操作。")
+            if approved == config.allowed_models and chosen == config.default_model:
+                return self.connection(identity, config=config)
+            changes = {"allowed_models": approved, "default_model": chosen}
+            try:
+                if identity == "mimo-default":
+                    server = self.settings()
+                    updated = ServerConfig.model_validate(server_document(server) | changes)
+                    updated.config_revision += 1
+                    path, document = self.config_path, server_document(updated)
+                else:
+                    updated = ConnectionConfig.model_validate(connection_document(config) | changes)
+                    updated.config_revision += 1
+                    registry = self.registry()
+                    registry.connections = [
+                        updated if c.connection_id == identity else c for c in registry.connections
+                    ]
+                    path = self.directory / "connections.json"
+                    document = registry_document(registry)
+            except ValidationError:
+                raise ConfigError("启用列表无效或超出该连接支持范围；所有选择均未应用。") from None
+            self.backup("before-model-approval")
+            _write_private(path, document)
+        return self.connection(identity)
+
+    @contextmanager
+    def model_admission(self, original, model):
+        # This lock linearizes dispatch admission with administrative approval changes.
+        # Requests already admitted retain their original provider snapshot.
+        with file_lock(self.data_dir / "management.lock"):
+            current = require_connection(self.connection_settings(), original.connection_id)
+            enforce_approval(current, model)
+            if capability_fingerprint(current) != capability_fingerprint(original):
+                from selark.errors import GatewayError
+
+                raise GatewayError(
+                    409, "model_config_changed", "发送前连接配置或授权发生变化，未生成。"
+                )
+            yield
+
+    def models(self, identity, *, caller=None):
+        from selark.model_state import inventory
+
+        config = require_connection(self.connection_settings(), identity)
+        return inventory(self.store, config, caller=caller)

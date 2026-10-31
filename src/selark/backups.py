@@ -111,7 +111,7 @@ def verify_backup(root, *, allow_legacy=False):
                 if db.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                     raise ConfigError("备份 SQLite 完整性检查失败。")
                 schema = db.execute("PRAGMA user_version").fetchone()[0]
-                if schema not in {0, 1, 2, 3, 4}:
+                if schema not in {0, 1, 2, 3, 4, 5}:
                     raise ConfigError("备份数据库版本不受支持。")
                 initialized = validate_schema(db)
                 if (

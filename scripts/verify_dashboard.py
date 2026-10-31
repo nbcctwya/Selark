@@ -19,7 +19,8 @@ import httpx
 
 from selark.config import initialize
 from selark.governance import Price
-from selark.runtime import Runtime, fingerprint
+from selark.model_state import protocol
+from selark.runtime import Runtime, capability_fingerprint, fingerprint
 
 
 def files(root):
@@ -41,7 +42,13 @@ def seed(profile, count=140):
             name="DeepSeek",
             allowed_models=["deepseek-fixture"],
         )
-        runtime.add_connection("coding", "kimi-code", "fixture-only-key", name="Kimi Coding Plan")
+        runtime.add_connection(
+            "coding",
+            "kimi-code",
+            "fixture-only-key",
+            name="Kimi Coding Plan",
+            allowed_models=["kimi-for-coding"],
+        )
         runtime.add_connection("subscription", "chatgpt", None, name="ChatGPT Personal")
         runtime.add_connection(
             "anthropic",
@@ -127,6 +134,10 @@ def seed(profile, count=140):
                 "error_code": "fixture_timeout" if unknown else None,
                 "error_message": "fixture-private-error-never-expose",
                 "fingerprint": fingerprint(config),
+                "model_fingerprint": capability_fingerprint(config),
+                "protocol": protocol(config),
+                "capability": "text_nonstream",
+                "upstream_completed_at": started,
                 "queue_ms": index % 9 * 15,
             }
             runtime.store.finish(
@@ -231,15 +242,46 @@ def add_api_with_discovery(command, profile, env):
             )
             assert response.returncode == 0
             result = json.loads(response.stdout)
-            assert result["allowed_models"] == ["openai-fixture", "openai-fixture-small"]
+            assert result["allowed_models"] == []
+            assert result["discovery"]["models"] == ["openai-fixture", "openai-fixture-small"]
             assert result["discovery"]["state"] == "success"
             assert result["verification"]["state"] == "never"
             assert "fixture-only-key" not in response.stdout + response.stderr
+            approved = subprocess.run(
+                [
+                    command,
+                    "--config-dir",
+                    str(profile),
+                    "model",
+                    "enable",
+                    "openai",
+                    "openai-fixture",
+                    "--json",
+                ],
+                env=env,
+                cwd=profile.parent,
+                capture_output=True,
+                text=True,
+                timeout=20,
+            )
+            assert approved.returncode == 0
+            inventory = json.loads(approved.stdout)
+            assert inventory["counts"]["discovered"] == 2
+            assert inventory["counts"]["approved"] == 1
+            assert inventory["default_model"] is None
+            assert not next(m for m in inventory["models"] if m["id"] == "openai-fixture-small")[
+                "approved"
+            ]
             assert calls == [("GET", "/v1/models", "Bearer fixture-only-key")]
         finally:
             server.shutdown()
             thread.join(timeout=5)
-    return {"model_list_get_requests": 1, "models_added": 2, "generation_requests": 0}
+    return {
+        "model_list_get_requests": 1,
+        "models_discovered": 2,
+        "models_explicitly_enabled": 1,
+        "generation_requests": 0,
+    }
 
 
 def browser_checks(url, output, first_caller):
@@ -270,10 +312,19 @@ def browser_checks(url, output, first_caller):
         expect(page.locator(".resource-row")).to_have_count(6)
         page.locator('.resource-list [data-connection="openai"]').click()
         expect(page.locator("#detail-content")).to_contain_text("openai-fixture-small")
+        for label in ("01 发现目录", "02 明确启用", "03 应用获权", "04 历史能力"):
+            expect(page.locator("#detail-content")).to_contain_text(label)
+        disabled = page.locator(".model-table tbody tr").filter(has_text="openai-fixture-small")
+        expect(disabled).to_contain_text("未启用")
+        expect(disabled).to_contain_text("无有效授权")
+        expect(disabled).to_contain_text("尚无模型级证据")
+        page.screenshot(path=str(output / "model-layers-light.png"), full_page=True)
         page.keyboard.press("Escape")
         page.screenshot(path=str(output / "overview-light.png"), full_page=True)
         page.locator('[data-view="resources"]').click()
         expect(page.locator(".connection-card")).to_have_count(6)
+        expect(page.locator(".connection-card .model-layers")).to_have_count(6)
+        page.screenshot(path=str(output / "resources-light.png"), full_page=True)
         page.locator('[data-connection="coding"]').click()
         expect(page.locator("#details")).to_be_visible()
         expect(page.locator("#detail-content")).to_contain_text("当前剩余 Token")
@@ -340,6 +391,8 @@ def browser_checks(url, output, first_caller):
         "external_requests": 0,
         "responsive_widths": [1440, 390],
         "views_checked": 5,
+        "model_layers": 4,
+        "unapproved_catalog_model_denied": True,
     }
 
 
@@ -416,6 +469,17 @@ def run(command, *, browser_output=None, rows=140):
                     report["snapshot_seconds"] = round(time.perf_counter() - started, 3)
                     assert result.status_code == 200
                     assert result.json()["usage"]["summary"]["requests"] == rows
+                    connection = next(
+                        c for c in result.json()["connections"] if c["id"] == "openai"
+                    )
+                    assert connection["model_catalog"]["counts"]["discovered"] == 2
+                    assert connection["model_catalog"]["counts"]["approved"] == 1
+                    unapproved = next(
+                        m
+                        for m in connection["model_catalog"]["models"]
+                        if m["id"] == "openai-fixture-small"
+                    )
+                    assert not unapproved["approved"] and not unapproved["effective_applications"]
                     for endpoint in ("records", "logs", "backups"):
                         response = client.get("/api/" + endpoint, headers=headers)
                         assert response.status_code == 200

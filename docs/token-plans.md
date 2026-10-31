@@ -16,7 +16,7 @@ Selark 面向本人使用的单机模型中间件。`resource_type=api` 表示�
 
 Kimi Code 官方模型 ID：`kimi-for-coding`（默认）、`kimi-for-coding-highspeed`、`k3`、
 `k3-256k`、`k3.1-pro`、`k3.1-pro-highspeed`。发现列表仅说明服务列出了模型，不证明每个模型
-都属于当前套餐。新建连接默认只允许 `kimi-for-coding`；可显式发现或修改允许列表。
+都属于当前套餐。0.9.0 起新建连接默认不启用模型；目录发现后须明确启用，升级保留原允许列表。
 未知 ID、本地拼写错误与非官方套餐地址会被拒绝，不借用开放平台来源。
 官方套餐地址也不能误配成普通 API 类型，避免绕过套餐授权与使用限制。
 
@@ -47,6 +47,8 @@ GLM 预设依据[专用端点说明](https://docs.bigmodel.cn/cn/coding-plan/qui
 ```bash
 selark connection add kimi-code-personal --provider kimi-code --name '个人编程套餐'
 selark connection discover kimi-code-personal --json
+selark model enable kimi-code-personal kimi-for-coding
+selark model default kimi-code-personal kimi-for-coding
 selark plans set kimi-code-personal --tier '本人套餐标签' --reasoning-effort low
 selark plans refresh kimi-code-personal --json
 selark connection disable kimi-code-personal
@@ -153,7 +155,8 @@ selark costs --resource-type token_plan --json
 
 ## 迁移与恢复
 
-首次打开 schema 3 数据库时，先受保护地备份完整配置、SQLite 与 pending，再迁移为 schema 4。
+0.6 首次打开 schema 3 数据库时，先受保护地备份完整配置、SQLite 与 pending，再迁移为 schema 4。
+0.9.0 继续追加迁移到 schema 5，保留所有既有启用项及授权，见[模型治理](model-governance.md)。
 新字段为 `resource_type/plan_id`，新增按连接/配置指纹隔离的官方额度快照。旧记录不猜测资源
 类型，保留 null；已有调用方、撤销状态、用量与价格快照不改变。迁移失败回滚本段 DDL，重复
 运行不会重复导入。恢复仍先重放收据再标记中断，不重发模型请求。

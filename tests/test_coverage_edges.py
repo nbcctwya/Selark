@@ -541,8 +541,8 @@ def test_interleaved_stateful_conversations_are_isolated_and_restartable(resourc
     assert resources.store.summary({}, group_by="session") == before
 
 
-def test_revocation_preserves_admitted_queue_but_denies_new_requests(resources):
-    """Revocation is checked at admission; accepted work is not retroactively cancelled."""
+def test_revocation_denies_queued_requests_but_preserves_dispatched_work(resources):
+    """Recheck revocation at dispatch, without cancelling an upstream request in flight."""
 
     async def scenario():
         upstream, token = FourUpstreams(), caller(resources)
@@ -580,9 +580,9 @@ def test_revocation_preserves_admitted_queue_but_denies_new_requests(resources):
             finally:
                 upstream.hold.set()
                 responses = await asyncio.gather(*jobs)
-            assert all(r.status_code == 200 for r in responses)
-            assert "[DONE]" in responses[1].text
-            assert len(upstream.calls) == 2
+            assert responses[0].status_code == 200
+            assert responses[1].status_code == 401
+            assert len(upstream.calls) == 1
             assert not app.state.admission.callers
         # The revoked identity stays revoked after restarting the service.
         next_app = app_for(resources, upstream)
@@ -593,7 +593,7 @@ def test_revocation_preserves_admitted_queue_but_denies_new_requests(resources):
             ) as c,
         ):
             response = await c.get("/v1/models", headers=auth(token))
-            assert response.status_code == 401 and len(upstream.calls) == 2
+            assert response.status_code == 401 and len(upstream.calls) == 1
 
     asyncio.run(scenario())
 

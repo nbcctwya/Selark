@@ -107,8 +107,8 @@ class ServerConfig(StrictConfig):
     config_revision: int = Field(default=1, ge=1)
     base_url: str = DEFAULT_BASE_URL
     api_key: SecretStr
-    allowed_models: list[str] = Field(min_length=1)
-    default_model: str
+    allowed_models: list[str] = Field(default_factory=list, max_length=1000)
+    default_model: str | None = None
     access_token: SecretStr | None = None  # Read-only compatibility input, removed on migration.
     host: str = "127.0.0.1"
     port: int = Field(default=8787, ge=1, le=65535)
@@ -120,11 +120,14 @@ class ServerConfig(StrictConfig):
 
     @model_validator(mode="after")
     def check_models(self):
-        if any(not re.fullmatch(r"[A-Za-z0-9_.-]{1,100}", m) for m in self.allowed_models):
+        if any(
+            not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:/@+-]{0,199}", m) or "::" in m
+            for m in self.allowed_models
+        ):
             raise ValueError("模型标识无效")
         if len(set(self.allowed_models)) != len(self.allowed_models):
             raise ValueError("允许模型不能重复")
-        if self.default_model not in self.allowed_models:
+        if self.default_model is not None and self.default_model not in self.allowed_models:
             raise ValueError("默认模型必须在允许模型列表内")
         if self.access_token is not None and len(self.access_token.get_secret_value()) < 32:
             raise ValueError("Selark 访问令牌至少需要 32 个字符")
@@ -138,7 +141,7 @@ class ServerConfig(StrictConfig):
 class ClientConfig(StrictConfig):
     url: str = "http://127.0.0.1:8787"
     access_token: SecretStr
-    model: str = DEFAULT_MODEL
+    model: str | None = DEFAULT_MODEL
     connection_id: str | None = Field(default=None, pattern=r"^[a-z][a-z0-9_-]{0,63}$")
 
     _url = field_validator("url")(validate_url)
@@ -222,16 +225,18 @@ def initialize(
     api_key: str,
     base_url: str = DEFAULT_BASE_URL,
     models: list[str] | None = None,
-    default_model: str = DEFAULT_MODEL,
+    default_model: str | None = None,
     port: int = 8787,
 ) -> None:
     token = secrets.token_urlsafe(32)
+    if default_model is None and models:
+        default_model = models[0]
     try:
         server = ServerConfig(
             api_key=api_key,
             access_token=token,
             base_url=base_url,
-            allowed_models=models or [default_model],
+            allowed_models=models or [],
             default_model=default_model,
             port=port,
         )

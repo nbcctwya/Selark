@@ -12,7 +12,7 @@ from selark.providers.mimo import close_response
 
 
 async def discover(config, *, transport=None, auth=None):
-    models, after = [], None
+    models, after, seen_items = [], None, 0
     try:
         async with (
             asyncio.timeout(min(config.limits.request_timeout_seconds, 30)),
@@ -40,6 +40,7 @@ async def discover(config, *, transport=None, auth=None):
                 key = "models" if config.provider == "chatgpt" else "data"
                 if not isinstance(data, dict) or not isinstance(data.get(key), list):
                     raise ValueError
+                seen_items += len(data[key])
                 for item in data[key]:
                     if config.provider == "chatgpt" and (
                         not isinstance(item, dict) or item.get("visibility") != "list"
@@ -62,7 +63,7 @@ async def discover(config, *, transport=None, auth=None):
                     if len(models) > 1000:
                         raise ValueError
                 if not data.get("has_more"):
-                    if not models:
+                    if not models and seen_items:
                         raise GatewayError(
                             502,
                             "discovery_empty",

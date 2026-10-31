@@ -58,7 +58,7 @@ def reply(usage=True):
 
 @pytest.fixture
 def plan(runtime):
-    runtime.add_connection(PLAN, "kimi-code", "fake-plan-key")
+    runtime.add_connection(PLAN, "kimi-code", "fake-plan-key", allowed_models=[MODEL])
     return runtime.connection_settings()[-1]
 
 
@@ -409,7 +409,7 @@ def test_plan_concurrency_shared_between_callers_and_cancellation_releases(runti
 
 
 def test_glm_is_preset_only_but_adapter_has_mock_protocol_coverage(runtime):
-    runtime.add_connection("glm-sub", "glm-coding", "fake-glm")
+    runtime.add_connection("glm-sub", "glm-coding", "fake-glm", allowed_models=["glm-5.3-flash"])
     config = runtime.connection_settings()[-1]
     token = caller(runtime, allowed_connections=["glm-sub"])
     with TestClient(
@@ -498,6 +498,9 @@ def test_recovery_retains_plan_identity_and_known_tokens_once(runtime, plan):
 def test_schema_three_migration_rollback_backup_and_repeat(runtime, monkeypatch):
     runtime.store.begin_request("old", utc_now(), "legacy", "mimo-default", "chat")
     with runtime.store.transaction() as db:
+        db.execute("DROP INDEX requests_evidence")
+        for column in ("model_fingerprint", "protocol", "capability", "verified_at"):
+            db.execute(f"ALTER TABLE requests DROP COLUMN {column}")
         db.execute("DROP TABLE plan_status")
         db.execute("DROP INDEX requests_resource")
         db.execute("ALTER TABLE requests DROP COLUMN resource_type")

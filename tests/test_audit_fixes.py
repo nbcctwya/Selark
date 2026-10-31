@@ -33,6 +33,8 @@ from .test_service import sse
 def test_incomplete_schema_cannot_pass_backup_checks_or_replace_healthy_copy(runtime, damage):
     healthy = runtime.backup("healthy")
     with runtime.store.transaction() as db:
+        if damage == "ALTER TABLE requests DROP COLUMN requested_model":
+            db.execute("DROP INDEX requests_evidence")
         db.execute(damage)
     damaged = runtime.backup("damaged-schema")
     for verify in (verify_backup, drill_backup):

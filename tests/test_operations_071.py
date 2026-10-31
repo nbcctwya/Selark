@@ -139,8 +139,8 @@ def test_restore_and_drill_replay_pending_once_and_preserve_revocation(
     runtime, tmp_path, monkeypatch
 ):
     caller = runtime.store.create_token("revoked")
-    runtime.store.revoke(caller["id"])
     allocation(runtime, caller, "pending")
+    runtime.store.revoke(caller["id"])
     journal = Journal(runtime.data_dir / "pending")
     journal.save(snapshot(finished(caller, "pending"), 200, 1, settled=True))
     backup = runtime.backup("pending-test")

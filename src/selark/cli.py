@@ -12,7 +12,6 @@ import httpx
 from selark.client import ClientError, SelarkClient
 from selark.config import (
     DEFAULT_BASE_URL,
-    DEFAULT_MODEL,
     ClientConfig,
     ConfigError,
     config_directory,
@@ -34,7 +33,7 @@ def parser() -> argparse.ArgumentParser:
     commands = result.add_subparsers(dest="command", required=True)
     init = commands.add_parser("init", help="创建私有配置，自动生成独立访问令牌")
     init.add_argument("--base-url", default=DEFAULT_BASE_URL)
-    init.add_argument("--models", nargs="+", help="允许模型列表")
+    init.add_argument("--models", nargs="+", help="明确启用的模型；省略时不启用模型")
     init.add_argument("--default-model", help="默认使用 --models 中第一个模型")
     init.add_argument("--port", type=int, default=8787)
     commands.add_parser("serve", help="按持久配置启动 HTTP 服务")
@@ -97,6 +96,8 @@ def main(argv: list[str] | None = None) -> int:
         if args.command in MANAGEMENT_COMMANDS:
             return run(args, directory)
         if args.command == "init":
+            if args.default_model and not args.models:
+                raise ConfigError("请用 --models 明确启用模型后再指定默认模型。")
             if any((directory / name).exists() for name in ("server.json", "client.json")):
                 raise ConfigError("配置已存在，已保留原配置；修改配置文件后重启服务即可。")
             key = os.environ.get("MIMO_API_KEY")
@@ -106,7 +107,7 @@ def main(argv: list[str] | None = None) -> int:
                         "请在交互终端运行 selark init，或通过 MIMO_API_KEY 环境变量传入密钥。"
                     )
                 key = getpass.getpass("MiMo API Key（输入不回显）: ").strip()
-            default_model = args.default_model or (args.models[0] if args.models else DEFAULT_MODEL)
+            default_model = args.default_model or (args.models[0] if args.models else None)
             initialize(directory, key, args.base_url, args.models, default_model, args.port)
             from selark.runtime import Runtime
 

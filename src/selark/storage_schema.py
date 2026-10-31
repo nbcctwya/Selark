@@ -5,7 +5,7 @@ from selark.config import ConfigError
 
 def validate_schema(db):
     version = db.execute("PRAGMA user_version").fetchone()[0]
-    if version not in {0, 1, 2, 3, 4}:
+    if version not in {0, 1, 2, 3, 4, 5}:
         raise ConfigError("记录库版本不受支持。")
     tables = dict(db.execute("SELECT name,type FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'"))
     # An empty version-zero database is the only legitimate pre-initialization shape.
@@ -47,6 +47,8 @@ def validate_schema(db):
         columns["requests"] += " resource_type plan_id"
         columns["plan_status"] = "connection_id fingerprint checked_at document"
         keys["plan_status"] = ["connection_id", "fingerprint"]
+    if version >= 5:
+        columns["requests"] += " model_fingerprint protocol capability verified_at"
     for name, required in columns.items():
         fields = db.execute(f"PRAGMA table_info({name})").fetchall()
         primary = [row[1] for row in sorted(fields, key=lambda row: row[5]) if row[5]]

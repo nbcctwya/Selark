@@ -51,6 +51,11 @@ jobs:
           selark dashboard --help
           selark connection add --help
           selark connection add --help | grep -- '--no-discover'
+          selark model list --help
+          selark model enable --help | grep -- '--all-discovered'
+          selark model disable --help | grep -- '--all'
+          selark model default --help | grep -- '--clear'
+          selark model verify --help | grep -- '--stream'
           selark service --help
           selark logs --help
           selark backup drill --help
@@ -61,7 +66,7 @@ jobs:
           selark ask --help
           selark ask --help | grep -- '--interactive'
           selark plans set --help | grep -- 'personal_interactive'
-      - name: Installed API model discovery and read-only Dashboard (fake upstream only)
+      - name: Installed model discovery, explicit approval and read-only Dashboard (fake upstream only)
         run: |
           python scripts/verify_dashboard.py --selark "$(command -v selark)" --output "$RUNNER_TEMP/selark-dashboard.json"
       - name: Dashboard Chromium acceptance (temporary synthetic ledger only)

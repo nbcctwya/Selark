@@ -19,14 +19,14 @@ from starlette.requests import ClientDisconnect
 from selark import __version__
 from selark.admission import Admission
 from selark.config import ConfigError, ServerConfig
-from selark.connections import legacy_connection, resolve_model
+from selark.connections import enforce_approval, legacy_connection, resolve_model
 from selark.errors import GatewayError
 from selark.governance import Policy, ResourcesConfig, enforce_access, input_estimate, permitted
 from selark.persistence import AsyncLedger, Journal
 from selark.plans import PLAN_PRESETS, empty_quota, enforce_quota, interaction_purpose, query_quota
 from selark.providers.factory import provider_for
 from selark.providers.mimo import reported_usage
-from selark.runtime import Runtime, fingerprint
+from selark.runtime import Runtime, capability_fingerprint, fingerprint
 from selark.schemas import ChatRequest
 from selark.storage import Store, request_status, utc_now
 from selark.usage import observe_usage
@@ -219,6 +219,7 @@ class RequestMiddleware:
                         else None
                     )
                     enforce_access(policy, selected.connection_id, model, selected.resource_type)
+                    enforce_approval(selected, model)
                     if selected.resource_type == "token_plan":
                         state["purpose"] = interaction_purpose(selected, data.interaction)
                     state["requested_alias"] = alias
@@ -626,6 +627,11 @@ def create_app(
             )
         request.state.model = model
         request.state.fingerprint = fingerprint(current)
+        from selark.model_state import protocol
+
+        request.state.model_fingerprint = capability_fingerprint(current)
+        request.state.protocol = protocol(current)
+        request.state.capability = "text_stream" if data.stream else "text_nonstream"
         if (
             request.state.purpose == "connection_probe"
             and request.state.probe_fingerprint != request.state.fingerprint
@@ -719,6 +725,7 @@ def create_app(
             data.session_id,
             current.connection_id,
             purpose=request.state.purpose,
+            admission_guard=runtime.model_admission(current, model) if runtime else None,
             resource={
                 "caller": request.state.caller_id,
                 "provider": current.provider,
@@ -727,6 +734,7 @@ def create_app(
                 "price": price,
                 "alias": alias,
                 "resource_type": current.resource_type,
+                "concurrent_requests": gate.callers.get(request.state.caller_id, 0),
                 "plan": current.plan.model_dump()
                 | {"effective_reasoning_effort": payload.get("reasoning_effort")}
                 if current.plan

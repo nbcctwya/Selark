@@ -400,7 +400,7 @@ def test_health_probe_only_targets_loopback_and_projects_response(runtime, monke
 
 
 def test_effective_permissions_respect_resource_opt_in_and_revocation(runtime):
-    runtime.add_connection("plan", "kimi-code", "fixture-key")
+    runtime.add_connection("plan", "kimi-code", "fixture-key", allowed_models=["kimi-for-coding"])
     caller = runtime.store.create_token("flag-is-not-a-grant", policy={"allow_token_plans": True})
     result = data.snapshot(runtime.directory, data.query_filters({}), offline=True)
     app = next(a for a in result["applications"] if a["id"] == caller["id"])

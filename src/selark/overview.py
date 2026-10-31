@@ -237,6 +237,9 @@ def overview(directory, *, offline=False):
                         "usage": by_connection.get(config.connection_id),
                         "provider_quota": {"state": "unknown", "remaining_tokens": None},
                     }
+                    from selark.model_state import inventory
+
+                    resource["model_catalog"] = inventory(store, config, callers=result["callers"])
                     if config.resource_type == "token_plan":
                         quota = entry["plan_status"]
                         resource["provider_quota"] = {
@@ -259,7 +262,7 @@ def render_overview(result):
     print(
         f"服务：{result.get('service', {}).get('state', 'unknown')}  配置：{result['config_dir']}"
     )
-    print("资源 / 类型 / 启用 / 模型 / 历史验证 / 当前可用性")
+    print("资源 / 类型 / 连接启用 / 模型启用 / 历史验证 / 当前可用性")
     for entry in result["connections"]:
         print(
             f"{entry['id']} / {entry['resource_type']} / {'是' if entry['enabled'] else '否'} / "
@@ -267,6 +270,21 @@ def render_overview(result):
             f"{entry['availability']['state']}"
         )
         print("  模型：" + (", ".join(entry["models"]) or "未配置"))
+        counts = entry.get("model_catalog", {}).get("counts", {})
+        print(
+            "  发现 / 启用 / 应用获权 / 历史能力验证："
+            + " / ".join(
+                str(counts.get(k, "未知"))
+                if k != "discovered" or entry.get("discovery", {}).get("discovered_at")
+                else "未知"
+                for k in (
+                    "discovered",
+                    "approved",
+                    "application_authorized",
+                    "historically_verified",
+                )
+            )
+        )
         print("  当前客户端获准模型：" + (", ".join(entry["client_allowed_models"]) or "无"))
         print("  授权：" + json.dumps(entry["authorization"], ensure_ascii=False))
         if entry["verification"].get("verified_at"):

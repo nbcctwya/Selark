@@ -82,7 +82,8 @@ def test_new_api_without_models_discovers_all_without_generating(
     assert main(args) == 0
     output = capsys.readouterr()
     result = json.loads(output.out)
-    assert result["allowed_models"] == ["model-b", "model-a", "embedding-fixture"]
+    assert result["allowed_models"] == []
+    assert result["discovery"]["models"] == ["model-b", "model-a", "embedding-fixture"]
     assert result["default_model"] is None  # Never pick a costly/unsupported model by list order.
     assert result["discovery"]["state"] == "success"
     assert result["verification"]["state"] == "never"
@@ -91,7 +92,7 @@ def test_new_api_without_models_discovers_all_without_generating(
     assert originals == {name: (runtime.directory / name).read_bytes() for name in originals}
     assert stat.S_IMODE((runtime.directory / "connections.json").stat().st_mode) == 0o600
     assert KEY not in output.out + output.err
-    assert "3 个上游返回的模型" in output.err
+    assert "已发现 3 个模型，尚未启用" in output.err
 
 
 def test_interactive_blank_model_input_discovers_after_hidden_key(runtime, monkeypatch, capsys):
@@ -120,8 +121,9 @@ def test_interactive_blank_model_input_discovers_after_hidden_key(runtime, monke
         == 0
     )
     output = capsys.readouterr()
-    assert len(json.loads(output.out)["allowed_models"]) == 3
-    assert any("留空自动查询" in prompt for prompt in prompts)
+    assert json.loads(output.out)["allowed_models"] == []
+    assert len(json.loads(output.out)["discovery"]["models"]) == 3
+    assert any("留空仅发现目录" in prompt for prompt in prompts)
     assert len(calls) == 1
     assert KEY not in output.out + output.err
 
@@ -131,8 +133,8 @@ def test_interactive_blank_model_input_discovers_after_hidden_key(runtime, monke
     [
         ("openai", ["--models", "manual-b", "manual-a"], ["manual-b", "manual-a"]),
         ("openai", ["--no-discover"], []),
-        ("kimi-code", [], ["kimi-for-coding"]),
-        ("glm-coding", [], ["glm-5.3-flash"]),
+        ("kimi-code", [], []),
+        ("glm-coding", [], []),
     ],
 )
 def test_manual_models_offline_opt_out_and_token_plans_keep_existing_behavior(
@@ -146,9 +148,7 @@ def test_manual_models_offline_opt_out_and_token_plans_keep_existing_behavior(
     assert not calls
 
 
-@pytest.mark.parametrize(
-    "failure", ["auth", "missing_endpoint", "timeout", "empty", "redirect", "invalid"]
-)
+@pytest.mark.parametrize("failure", ["auth", "missing_endpoint", "timeout", "redirect", "invalid"])
 def test_failed_discovery_retains_key_returns_failure_and_supports_explicit_retry(
     runtime, monkeypatch, capsys, failure
 ):
@@ -187,19 +187,18 @@ def test_failed_discovery_retains_key_returns_failure_and_supports_explicit_retr
         == 0
     )
     result = json.loads(capsys.readouterr().out)
-    assert result["allowed_models"] == ["recovered-model"]
+    assert result["allowed_models"] == []
+    assert result["discovery"]["models"] == ["recovered-model"]
     assert result["discovery"]["state"] == "success"
     assert not runtime.store.records({})
 
 
-@pytest.mark.parametrize("model,status", [("model-a", 0), ("not-returned", 1)])
-def test_explicit_default_is_checked_after_discovery(runtime, monkeypatch, capsys, model, status):
+@pytest.mark.parametrize("model", ["model-a", "not-returned"])
+def test_default_cannot_implicitly_enable_discovered_models(runtime, monkeypatch, capsys, model):
     calls = upstream(monkeypatch)
-    assert main(add_args(runtime, "openai", "--default-model", model)) == status
-    result = json.loads(capsys.readouterr().out)
-    assert result["allowed_models"] == ["model-b", "model-a", "embedding-fixture"]
-    assert result["default_model"] == (model if status == 0 else None)
-    assert len(calls) == 1
+    assert main(add_args(runtime, "openai", "--default-model", model)) == 1
+    assert not calls
+    assert runtime.registry().connections == []
 
 
 def test_concurrent_manual_configuration_is_not_overwritten(runtime, monkeypatch, capsys):
@@ -208,8 +207,8 @@ def test_concurrent_manual_configuration_is_not_overwritten(runtime, monkeypatch
         return httpx.Response(200, json={"data": [{"id": "discovered-model"}]})
 
     calls = upstream(monkeypatch, changed)
-    assert main(add_args(runtime)) == 1
-    assert "连接配置已改变" in capsys.readouterr().err
+    assert main(add_args(runtime)) == 0
+    assert json.loads(capsys.readouterr().out)["discovery"]["models"] == ["discovered-model"]
     assert runtime.connection("new-api")["allowed_models"] == ["concurrent-choice"]
     assert len(calls) == 1
 

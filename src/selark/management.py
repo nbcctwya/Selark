@@ -15,7 +15,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import httpx
 
 from selark import __version__
-from selark.client import SelarkClient
+from selark.client import ClientError, SelarkClient
 from selark.config import (
     ClientConfig,
     ConfigError,
@@ -24,7 +24,7 @@ from selark.config import (
     data_directory,
     load_config,
 )
-from selark.connections import PRESETS, ConnectionsConfig, require_connection, valid_model
+from selark.connections import PRESETS, ConnectionsConfig, require_connection
 from selark.errors import GatewayError
 from selark.governance import ResourcesConfig
 from selark.history import import_history
@@ -51,6 +51,7 @@ MANAGEMENT_COMMANDS = {
     "status",
     "service",
     "logs",
+    "model",
 }
 
 
@@ -109,9 +110,9 @@ def configure_connection_interactively(args):
         hint = (
             "留空后可手动执行 connection discover"
             if args.no_discover
-            else "留空自动查询并加入上游返回的全部模型"
+            else "留空仅发现目录，不启用模型"
         )
-        args.models = input(f"允许模型 ID（空格分隔；{hint}）: ").split() or None
+        args.models = input(f"明确启用模型 ID（空格分隔；{hint}）: ").split() or None
     if args.models and not args.default_model:
         args.default_model = input(f"默认模型 [{args.models[0]}]: ").strip() or args.models[0]
 
@@ -139,6 +140,31 @@ def add_commands(commands):
     from selark.chatgpt_cli import add_commands as chatgpt_commands
 
     chatgpt_commands(commands)
+    model = commands.add_parser("model", help="分开管理模型目录、启用、应用授权与历史能力证据")
+    actions = model.add_subparsers(dest="action", required=True)
+    for name in ("list", "show", "enable", "disable", "default", "verify"):
+        action = actions.add_parser(name)
+        action.add_argument("id", help="连接 ID")
+        action.add_argument("--json", action="store_true")
+        if name in {"list", "show"}:
+            action.add_argument("--caller", help="仅显示指定应用的授权交集；不生成")
+        if name in {"show", "verify"}:
+            action.add_argument("model")
+        if name in {"enable", "disable"}:
+            action.add_argument("models", nargs="*")
+            action.add_argument(
+                "--all-discovered" if name == "enable" else "--all",
+                dest="all_models",
+                action="store_true",
+                help="明确批量操作；不会改变应用策略",
+            )
+        if name == "default":
+            action.add_argument("model", nargs="?")
+            action.add_argument("--clear", action="store_true")
+        if name == "verify":
+            action.add_argument(
+                "--stream", action="store_true", help="显式生成一次短 SSE 请求；API 专用"
+            )
     status = commands.add_parser("status", help="只读统一资源总览；不登录、刷新或调用供应商")
     status.add_argument("--offline", action="store_true", help="也不请求本地 /health")
     status.add_argument("--json", action="store_true")
@@ -221,10 +247,12 @@ def add_commands(commands):
     actions.add_parser("providers", help="查看厂商预设与协议范围").add_argument(
         "--json", action="store_true"
     )
-    discover = actions.add_parser("discover", help="读取并保存上游模型列表；不生成，失败保留旧列表")
+    discover = actions.add_parser(
+        "discover", help="只更新发现目录，不启用/禁用模型；失败保留旧目录"
+    )
     discover.add_argument("id", nargs="?", default="mimo-default")
     discover.add_argument("--json", action="store_true")
-    add = actions.add_parser("add", help="新增独立连接；API 未填写模型时自动查询并加入上游模型列表")
+    add = actions.add_parser("add", help="新增独立连接；API 未填写模型时仅自动发现，默认不启用")
     add.add_argument("id", help="稳定连接 ID，如 deepseek-personal")
     add.add_argument("--provider", choices=[*PRESETS, "glm"])
     add.add_argument(
@@ -232,7 +260,7 @@ def add_commands(commands):
     )
     add.add_argument("--name")
     add.add_argument("--base-url")
-    add.add_argument("--models", nargs="+", help="手动允许列表；普通 API 省略时自动发现全部模型")
+    add.add_argument("--models", nargs="+", help="明确启用这些模型；省略时不启用任何模型")
     add.add_argument(
         "--no-discover", action="store_true", help="跳过新增 API 的自动模型发现，仅保存本地配置"
     )
@@ -412,7 +440,7 @@ def server_url(config: ServerConfig) -> str:
     return f"http://{host}:{config.port}"
 
 
-def probe(runtime: Runtime, identity="mimo-default") -> dict:
+def probe(runtime: Runtime, identity="mimo-default", *, model=None, stream=False) -> dict:
     config = require_connection(runtime.connection_settings(), identity)
     if config.resource_type in {"token_plan", "chatgpt_subscription"}:
         raise ConfigError(
@@ -421,8 +449,9 @@ def probe(runtime: Runtime, identity="mimo-default") -> dict:
         )
     if not config.enabled:
         raise ConfigError("连接已停用；请先启用，再显式探测。")
-    if not config.default_model:
-        raise ConfigError("连接尚无默认模型，请先 discover 或手动配置模型。")
+    model = model or config.default_model
+    if not model or model not in config.allowed_models:
+        raise ConfigError("请先明确启用该模型；发现目录不会授予探测权限。")
     ticket = runtime.store.create_token(
         "Local explicit connection probe", probe_fingerprint=fingerprint(config)
     )
@@ -430,29 +459,68 @@ def probe(runtime: Runtime, identity="mimo-default") -> dict:
         profile = ClientConfig(
             url=server_url(runtime.settings()),
             access_token=ticket["token"],
-            model=config.default_model,
+            model=model,
         )
-        with SelarkClient(profile) as client:
-            response = client.http.post(
+        with (
+            SelarkClient(profile) as client,
+            client.http.stream(
+                "POST",
                 "/v1/chat/completions",
                 json={
                     "connection_id": config.connection_id,
+                    "model": model,
                     "messages": [
                         {"role": "user", "content": "Reply with exactly: Selark probe OK"}
                     ],
                     "max_completion_tokens": 32,
-                    "stream": False,
+                    "stream": stream,
                 },
-            )
-            client.check(response)
-            data = response.json()
+            ) as response,
+        ):
+            if response.status_code != 200:
+                response.read()
+                client.check(response)
+            if stream:
+                from selark.sse import SSEDecoder, sse_lines
+
+                if not response.headers.get("content-type", "").startswith("text/event-stream"):
+                    raise ClientError("流式能力验证未返回 SSE。")
+                decoder, done, data = SSEDecoder(), False, {}
+                try:
+                    for line in sse_lines(response):
+                        event = decoder.feed(line)
+                        if event == "[DONE]":
+                            done = True
+                            break
+                        if event:
+                            item = json.loads(event)
+                            if not isinstance(item, dict) or "error" in item:
+                                raise ClientError("流式能力验证失败；请查看该模型的历史证据。")
+                            data.update({k: v for k, v in item.items() if k in {"model", "usage"}})
+                except (ValueError, TypeError):
+                    raise ClientError("流式能力验证响应无效；请查看该模型的历史证据。") from None
+                if not done:
+                    raise ClientError("流式能力验证未收到结束事件。")
+            else:
+                response.read()
+                data = response.json()
         return {
+            "capability": "text_stream" if stream else "text_nonstream",
             "request_id": response.headers.get("x-request-id"),
             "purpose": "connection_probe",
             "model": data.get("model"),
             "usage": data.get("usage"),
             "connection_id": config.connection_id,
             "verification": runtime.connection(config.connection_id)["verification"],
+            "model_verification": next(
+                (
+                    m["verification"]
+                    for m in runtime.models(config.connection_id)["models"]
+                    if m["id"] == model
+                ),
+                [],
+            ),
+            "live_availability": "unknown",
         }
     finally:
         runtime.store.revoke(ticket["id"])
@@ -721,7 +789,28 @@ def run(args, directory: Path) -> int:
         return 0 if result["ok"] else 1
     with Runtime(directory) as runtime:
         store = runtime.store
-        if args.command == "backup":
+        if args.command == "model":
+            if args.action in {"list", "show"}:
+                result = runtime.models(args.id, caller=args.caller)
+                if args.action == "show":
+                    result = next((m for m in result["models"] if m["id"] == args.model), None)
+                    if result is None:
+                        raise ConfigError("该模型既未发现也未启用。")
+            elif args.action == "verify":
+                result = probe(runtime, args.id, model=args.model, stream=args.stream)
+            else:
+                if args.action == "default":
+                    if bool(args.model) == args.clear:
+                        raise ConfigError("请指定已启用的默认模型，或使用 --clear。")
+                    runtime.change_models(args.id, "default", default=args.model)
+                else:
+                    if bool(args.models) == args.all_models:
+                        raise ConfigError("请指定模型列表，或单独使用批量选项。")
+                    runtime.change_models(
+                        args.id, args.action, args.models, all_models=args.all_models
+                    )
+                result = runtime.models(args.id)
+        elif args.command == "backup":
             from selark.locking import file_lock
 
             with file_lock(runtime.data_dir / "management.lock"):
@@ -878,8 +967,8 @@ def run(args, directory: Path) -> int:
                 auto_discover = (
                     not args.models and not args.no_discover and provider not in PLAN_PRESETS
                 )
-                if auto_discover and args.default_model and not valid_model(args.default_model):
-                    raise ConfigError("默认模型标识格式无效。")
+                if args.default_model and not args.models:
+                    raise ConfigError("请用 --models 明确启用默认模型；默认模型设置不会隐式启用。")
                 result = runtime.add_connection(
                     identity,
                     provider,
@@ -904,21 +993,9 @@ def run(args, directory: Path) -> int:
                         )
                         emit(result, args.json)
                         return 1
-                    if args.default_model:
-                        if args.default_model not in result["allowed_models"]:
-                            print(
-                                "模型列表已保存，但指定的默认模型不在发现结果中；"
-                                "请从已发现列表选择默认模型。",
-                                file=sys.stderr,
-                            )
-                            emit(result, args.json)
-                            return 1
-                        result = runtime.change_connection(
-                            {"default_model": args.default_model}, identity
-                        )
                     print(
-                        f"已登记 {len(result['allowed_models'])} 个上游返回的模型。"
-                        "模型发现不代表已完成生成验证。",
+                        f"已发现 {len(result['discovery']['models'])} 个模型，尚未启用。"
+                        f"请使用 selark model enable {identity} MODEL ... 明确选择。",
                         file=sys.stderr,
                     )
             elif args.action == "discover":

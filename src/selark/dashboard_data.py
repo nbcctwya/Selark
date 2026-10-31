@@ -67,7 +67,33 @@ def projected_connection(entry):
         entry["verification"], "state previous_state verified_at age_seconds model scope"
     )
     result["availability"] = pick(entry["availability"], "state checked_live blockers")
-    result["discovery"] = pick(entry.get("discovery", {}), "state checked_at discovered_at")
+    result["discovery"] = pick(
+        entry.get("discovery", {}), "state checked_at discovered_at current count"
+    )
+    catalog = entry.get("model_catalog", {})
+    result["model_catalog"] = {
+        "counts": pick(
+            catalog.get("counts", {}),
+            "discovered approved application_authorized historically_verified",
+        ),
+        "protocol": catalog.get("protocol"),
+        "models": [],
+    }
+    for model in catalog.get("models", []):
+        item = pick(
+            model,
+            "id discovery approved default authorized_applications effective_applications "
+            "verified_capabilities live_availability",
+        )
+        item["verification"] = [
+            pick(
+                v,
+                "state outcome verified_at request_id actual_model protocol capability scope "
+                "current_configuration account_access_observed live_availability",
+            )
+            for v in model["verification"]
+        ]
+        result["model_catalog"]["models"].append(item)
     quota = entry["provider_quota"]
     result["provider_quota"] = pick(
         quota,
@@ -287,6 +313,7 @@ def snapshot(directory: Path, filters, *, offline=False):
                 model
                 for model in connection["models"]
                 if application["active"]
+                and connection["enabled"]
                 and permitted(policy, connection["id"], model, connection["resource_type"])
             ]
             if allowed:

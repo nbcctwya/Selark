@@ -5,7 +5,7 @@ import json
 import secrets
 import sqlite3
 import threading
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
@@ -27,7 +27,7 @@ from selark.storage_schema import validate_schema
 from selark.usage import inconsistent_usage
 
 USAGE_FIELDS = ("prompt_tokens", "completion_tokens", "total_tokens")
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 ALLOCATION_FIELDS = (
     "state",
     "quota_tokens",
@@ -67,6 +67,7 @@ def usage_values(usage: dict | None, final: bool) -> dict:
 
 def checked_record(row):
     result = dict(row)
+    result.pop("model_fingerprint", None)
     raw = result.get("usage_json")
     usage = json.loads(raw) if raw else None
     consistency = "inconsistent" if inconsistent_usage(usage) else "uncontradicted"
@@ -155,7 +156,7 @@ class Store:
 
     def _initialize_schema(self, path):
         version = self.db.execute("PRAGMA user_version").fetchone()[0]
-        if version not in {0, 1, 2, 3, 4}:
+        if version not in {0, 1, 2, 3, 4, 5}:
             raise ConfigError("数据库版本高于当前程序支持范围，请使用匹配的 Selark 版本。")
         if path:
             self.db.execute("PRAGMA journal_mode=WAL")
@@ -219,6 +220,16 @@ class Store:
                     "PRIMARY KEY(connection_id,fingerprint))"
                 )
                 self.db.execute("PRAGMA user_version=4")
+        if version < 5:
+            with self.db:
+                self.db.execute("BEGIN IMMEDIATE")
+                for name in ("model_fingerprint", "protocol", "capability", "verified_at"):
+                    self.db.execute(f"ALTER TABLE requests ADD COLUMN {name} TEXT")
+                self.db.execute(
+                    "CREATE INDEX IF NOT EXISTS requests_evidence "
+                    "ON requests(connection_id,requested_model,started_at)"
+                )
+                self.db.execute("PRAGMA user_version=5")
 
     @contextmanager
     def transaction(self):
@@ -468,8 +479,9 @@ class Store:
         connection_id=None,
         resource=None,
         purpose=None,
+        admission_guard=None,
     ):
-        with self.transaction() as db:
+        with admission_guard or nullcontext(), self.transaction() as db:
             if resource is not None:
                 db.execute("BEGIN IMMEDIATE")
                 reserve(
@@ -530,7 +542,8 @@ class Store:
                 "upstream_result=?,delivery_status=?,upstream_error_code=?,delivery_error_code=?,"
                 "queue_ms=?,upstream_attempts=COALESCE(?,upstream_attempts),"
                 "connection_id=?,record_revision=?,requested_alias=?,resource_type=?,plan_id=?,"
-                "purpose=COALESCE(?,purpose) "
+                "purpose=COALESCE(?,purpose),model_fingerprint=?,"
+                "protocol=?,capability=?,verified_at=? "
                 "WHERE request_id=? AND record_revision<=?",
                 (
                     None if status == "running" else state.get("finished_at", utc_now()),
@@ -558,6 +571,10 @@ class Store:
                     state.get("resource_type"),
                     state.get("plan_id"),
                     state.get("purpose"),
+                    state.get("model_fingerprint"),
+                    state.get("protocol"),
+                    state.get("capability"),
+                    state.get("upstream_completed_at"),
                     request_id,
                     state.get("record_revision", 2),
                 ),
