@@ -104,6 +104,47 @@ def test_static_matrix_and_inline_media_fit_total_budget(tmp_path):
     assert len({c["name"] for c in cases}) == len(cases)
 
 
+@pytest.mark.parametrize("value", [0, -1, "NaN", "Infinity", "20.000001", "0.0000001"])
+def test_custom_budget_rejects_unbounded_or_imprecise_values(value):
+    with pytest.raises(ValueError):
+        harness.budget_micros(value)
+
+
+def test_finite_text_stress_fits_eight_yuan_and_existing_model_permissions():
+    assert harness.budget_micros("8") == 8_000_000
+    phases = harness.stress_phases()
+    cases = [c for _, _, cs in phases for c in cs]
+    assert len(cases) == 270
+    assert len({c["name"] for c in cases}) == len(cases)
+    assert sum(harness.reservation(c["payload"]) for c in cases) < 7_600_000
+    assert {c["model"] for c in cases} == set(harness.MODELS)
+    soak = next(cs for name, _, cs in phases if name == "sustained-gateway-output")
+    assert len(soak) == 96 and all(c["route"] == "gateway" for c in soak)
+    assert {c["stream"] for c in soak} == {True, False}
+    assert all(c["cap"] == 8192 for c in soak)
+
+
+def test_repeated_upstream_server_failure_stops_new_generation(tmp_path):
+    guard = harness.MiMoGuard(tmp_path, "fake-mimo-key")
+
+    async def exercise():
+        for _ in range(3):
+            request = httpx.Request(
+                "POST",
+                harness.ENDPOINTS["chat"],
+                headers={"api-key": "fake-mimo-key"},
+                json=harness.case("test")["payload"],
+            )
+            guard.pause_until = 0
+            await guard.before(request)
+            await guard.after(httpx.Response(503, request=request))
+        with pytest.raises(httpx.ConnectError):
+            await guard.before(request)
+
+    asyncio.run(exercise())
+    assert len(guard.events) == 3 and guard.stop_reason == "repeated_server_failure"
+
+
 def test_targeted_controls_and_fixed_calculations(tmp_path):
     cases = harness.focused_cases(tmp_path)
     assert len(cases) == 22
@@ -336,12 +377,12 @@ def test_strict_answer_checks_do_not_confuse_http_success_with_correctness():
     assert not r["passed"]
 
 
-@pytest.mark.parametrize("reason", ["cost-chain", "attempt-chain", "quota"])
+@pytest.mark.parametrize("reason", ["cost-chain", "attempt-chain", "quota", "increase"])
 def test_continuation_cannot_reset_cumulative_spending_or_quota_stop(tmp_path, monkeypatch, reason):
     from selark.config import initialize
 
     original = tmp_path / "original"
-    initialize(original, "fake-mimo-key")
+    initialize(original, "fake-mimo-key", models=[*harness.MODELS, harness.TTS, harness.ASR])
     monkeypatch.setattr(harness, "config_directory", lambda: original)
     prior = tmp_path / "prior"
     prior.mkdir()
@@ -353,8 +394,10 @@ def test_continuation_cannot_reset_cumulative_spending_or_quota_stop(tmp_path, m
     elif reason == "attempt-chain":
         report["prior_attempts"] = harness.MAX_ATTEMPTS - 1
         budget["attempts"] = 1
-    else:
+    elif reason == "quota":
         budget["stop_reason"] = "insufficient_balance"
+    else:
+        report["total_budget_micros"] = 8_000_000
     (prior / "report.json").write_text(json.dumps(report))
     (prior / "budget.json").write_text(json.dumps(budget))
     work = tmp_path / "new"
@@ -363,11 +406,33 @@ def test_continuation_cannot_reset_cumulative_spending_or_quota_stop(tmp_path, m
     assert not work.exists()
 
 
+@pytest.mark.parametrize("disabled", [False, True])
+def test_live_acceptance_cannot_approve_source_models_or_enable_connections(
+    tmp_path, monkeypatch, disabled
+):
+    from selark.config import _write_private, initialize
+
+    original = tmp_path / "original"
+    initialize(original, "fake-mimo-key", models=list(harness.MODELS) if disabled else [])
+    if disabled:
+        path = original / "server.json"
+        config = json.loads(path.read_text())
+        config["enabled"] = False
+        _write_private(path, config)
+    before = {p.name: p.read_bytes() for p in original.iterdir() if p.is_file()}
+    monkeypatch.setattr(harness, "config_directory", lambda: original)
+    work = tmp_path / "run"
+    with pytest.raises(ValueError, match="already be explicitly enabled"):
+        asyncio.run(harness.run(argparse.Namespace(work_dir=work, suite="stress", budget_cny=8)))
+    assert not work.exists()
+    assert {p.name: p.read_bytes() for p in original.iterdir() if p.is_file()} == before
+
+
 def test_isolated_runtime_makes_only_mock_upstream_calls(tmp_path, monkeypatch):
     from selark.config import initialize
 
     original = tmp_path / "original"
-    initialize(original, "fake-mimo-key")
+    initialize(original, "fake-mimo-key", models=[*harness.MODELS, harness.TTS, harness.ASR])
     monkeypatch.setattr(harness, "config_directory", lambda: original)
     monkeypatch.setattr(
         harness,

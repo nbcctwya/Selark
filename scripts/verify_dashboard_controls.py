@@ -117,6 +117,9 @@ def browser_controls(url, directory, output):
         page.screenshot(path=str(output / "model-controls-dark.png"), full_page=True)
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        button = page.get_by_role("button", name="禁用 gpt-6.1-sol", exact=True)
+        box = button.bounding_box()
+        assert box["x"] >= 0 and box["x"] + box["width"] <= 390 and box["height"] >= 44
         page.get_by_role("button", name="禁用 gpt-6.1-sol", exact=True).click()
         expect(page.locator("#model-action-status")).to_contain_text("已禁用")
         page.screenshot(path=str(output / "model-controls-mobile.png"), full_page=True)

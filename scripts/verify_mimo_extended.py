@@ -19,6 +19,7 @@ import time
 import wave
 from collections import Counter
 from contextlib import AsyncExitStack
+from decimal import Decimal
 from pathlib import Path
 from unittest.mock import patch
 
@@ -41,7 +42,7 @@ from verify_resource_matrix import serve, wait_for
 
 from selark.app import create_app
 from selark.config import ServerConfig, _write_private, config_directory, initialize, load_config
-from selark.connections import ConnectionConfig
+from selark.connections import ConnectionConfig, ConnectionsConfig, legacy_connection
 from selark.providers.mimo import retry_after_seconds
 from selark.runtime import Runtime
 from selark.storage import utc_now
@@ -56,6 +57,58 @@ ENDPOINTS = {
     "responses": ORIGIN + "/v1/responses",
     "anthropic": ORIGIN + "/anthropic/v1/messages",
 }
+
+
+def budget_micros(value):
+    amount = Decimal(str(value)) * 1_000_000
+    if not amount.is_finite() or not 0 < amount <= MAX_MICROS or amount != int(amount):
+        raise ValueError("Budget must be positive, at most CNY 20, with at most six decimals")
+    return int(amount)
+
+
+def stress_phases():
+    """Finite text-only regression and sustained output load, within CNY 8 reservation."""
+    phases = static_phases()
+    for index, (name, concurrency, cases) in enumerate(phases):
+        if name == "long-reference":
+            # Keep 16/64/128 KiB; reserve budget for sustained delivery as well.
+            phases[index] = (
+                name,
+                concurrency,
+                [c for c in cases if len(json.dumps(c["payload"]).encode()) < 150_000],
+            )
+    templates = next(cases for name, _, cases in phases if name == "substantive-long-output")
+    contexts = (
+        "低内存笔记本，特别说明资源限制",
+        "离线桌面应用，特别说明断电恢复",
+        "多人共享电脑，特别说明应用权限隔离",
+        "十万条记录，特别说明分页与检索边界",
+        "磁盘空间不足，特别说明写入失败处理",
+        "低速网络，特别说明流式取消与重连",
+        "首次使用的新用户，特别说明错误提示与操作步骤",
+        "升级迁移，特别说明兼容检查和回滚",
+    )
+    soak = []
+    for i in range(96):
+        source = templates[i % len(templates)]
+        prompt = (
+            f"虚构验收案例 {i + 1}：{contexts[(i // len(templates)) % len(contexts)]}。\n"
+            + source["payload"]["messages"][0]["content"]
+        )
+        soak.append(
+            case(
+                f"sustained-output-{i}",
+                prompt,
+                model=source["model"],
+                route="gateway",
+                stream=i % 3 != 0,
+                cap=8192,
+                check="substantive",
+                expected=source["expected"],
+            )
+        )
+    phases.insert(-2, ("sustained-gateway-output", 8, soak))
+    return phases
 
 
 def reservation(body):
@@ -150,7 +203,7 @@ class MiMoGuard:
         self.reserved, self.metadata_reads = 0, 0
         self.stop_reason, self.phase = None, "initialization"
         self.started = time.monotonic()
-        self.pause_until, self.rate_failures = 0, 0
+        self.pause_until, self.rate_failures, self.server_failures = 0, 0, 0
         self.lock = asyncio.Lock()
         self.path = directory / "budget.json"
         with self.path.open("x"):
@@ -252,6 +305,13 @@ class MiMoGuard:
             if self.rate_failures >= 3 or wait > 120:
                 self.stop_reason = "repeated_rate_limit"
             self.pause_until = time.monotonic() + wait
+        if response.status_code >= 500:
+            self.server_failures += 1
+            self.pause_until = max(self.pause_until, time.monotonic() + 5)
+            if self.server_failures >= 3:
+                self.stop_reason = "repeated_server_failure"
+        else:
+            self.server_failures = 0
         self.save()
 
 
@@ -372,7 +432,7 @@ class Runner:
             "calls": [],
             "phases": [],
             "generation_retries": 0,
-            "reported_balance_cny": 20,
+            "reservation_budget_cny": guard.maximum / 1_000_000,
             "balance_verified": False,
         }
         self.gateway_clients, self.direct = [], None
@@ -795,12 +855,23 @@ class Runner:
 
 
 async def run(args):
+    maximum_micros = budget_micros(getattr(args, "budget_cny", 20))
     source = config_directory()
     paths = [source / n for n in ("server.json", "connections.json", "client.json")]
     fingerprints = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.exists()}
     server = load_config(source / "server.json", ServerConfig)
     if server.base_url != ORIGIN + "/v1":
         raise ValueError("Configured official MiMo connection required")
+    registry_path = source / "connections.json"
+    registry = (
+        load_config(registry_path, ConnectionsConfig)
+        if registry_path.exists()
+        else ConnectionsConfig()
+    )
+    configured = legacy_connection(server, registry)
+    needed = {*MODELS, TTS, ASR} if getattr(args, "suite", "full") == "full" else set(MODELS)
+    if not configured.enabled or not needed <= set(configured.allowed_models):
+        raise ValueError("Requested test models must already be explicitly enabled")
     key = server.api_key.get_secret_value()
     prior_attempts = prior_reserved = 0
     if getattr(args, "prior_run", None):
@@ -812,17 +883,25 @@ async def run(args):
             raise ValueError("Cannot continue an authentication, quota or spending stop")
         prior_attempts = old_report.get("prior_attempts", 0) + old_budget["attempts"]
         prior_reserved = old_report.get("prior_reserved_micros", 0) + old_budget["reserved_micros"]
-        if prior_attempts >= MAX_ATTEMPTS or prior_reserved >= MAX_MICROS:
+        old_maximum = old_report.get("total_budget_micros", MAX_MICROS)
+        if maximum_micros > old_maximum:
+            raise ValueError("A continuation cannot increase its original budget")
+        if prior_attempts >= MAX_ATTEMPTS or prior_reserved >= maximum_micros:
             raise ValueError("Cumulative budget exhausted")
     args.work_dir.mkdir(mode=0o700, parents=True, exist_ok=False)
     guard = MiMoGuard(
         args.work_dir,
         key,
-        maximum=MAX_MICROS - prior_reserved,
+        maximum=maximum_micros - prior_reserved,
         attempts=MAX_ATTEMPTS - prior_attempts,
     )
     runner = Runner(args.work_dir, guard)
-    runner.report.update(prior_attempts=prior_attempts, prior_reserved_micros=prior_reserved)
+    runner.report.update(
+        prior_attempts=prior_attempts,
+        prior_reserved_micros=prior_reserved,
+        total_budget_micros=maximum_micros,
+        suite=getattr(args, "suite", "full"),
+    )
     environment = {
         k: v
         for k, v in os.environ.items()
@@ -916,7 +995,9 @@ async def run(args):
                         await runner.phase_cases(*plan[0])
                         await runner.phase_cases("vision", 3, vision_cases(args.work_dir))
                         await runner.audio_workflows()
-                    if suite == "focus":
+                    if suite == "stress":
+                        plan = stress_phases()
+                    elif suite == "focus":
                         await runner.focused_workflows()
                         plan = [("focused-controls", 4, focused_cases(args.work_dir))]
                     else:
@@ -1029,7 +1110,8 @@ if __name__ == "__main__":
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--work-dir", type=Path, required=True)
     parser.add_argument("--prior-run", type=Path)
-    parser.add_argument("--suite", choices=("full", "remaining", "focus"), default="full")
+    parser.add_argument("--suite", choices=("full", "remaining", "focus", "stress"), default="full")
+    parser.add_argument("--budget-cny", type=Decimal, default=Decimal("20"))
     args = parser.parse_args()
     if not args.execute:
         parser.error("Real API calls require --execute")
