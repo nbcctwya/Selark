@@ -1,0 +1,638 @@
+{
+  "version": "0.10.0",
+  "date": "2026-10-31",
+  "scope": "synthetic inputs, isolated local profiles; real APIs explicitly authorized",
+  "unit_tests_passed": 749,
+  "mock_http_requests": 3503,
+  "mock_cli_and_example_generations": 14,
+  "mock_upstream_generations": 604,
+  "real_outgoing_attempts": 518,
+  "providers": {
+    "mimo": {
+      "client_cases": 276,
+      "outgoing_generation_attempts": 256,
+      "metadata_queries": 1,
+      "upstream_http_statuses": {
+        "200": 255,
+        "None": 1
+      },
+      "client_http_statuses": {
+        "200": 255,
+        "429": 16,
+        "None": 1,
+        "400": 4
+      },
+      "complete_deliveries": 252,
+      "case_checks_passed": 222,
+      "local_overload_rejections": 16,
+      "output_cap_violations": 0,
+      "intentional_cancellations": 4,
+      "calls_with_final_usage": 252,
+      "outgoing_attempts_without_usage": 4,
+      "input_tokens": 358806,
+      "output_tokens": 690343,
+      "total_reported_tokens": 1049149,
+      "estimated_known_usage_cost": {
+        "currency": "CNY",
+        "lower": "2.74078090",
+        "upper": "2.86452256"
+      },
+      "provider_bill_and_balance_verified": false,
+      "reserved_cost": {
+        "currency": "CNY",
+        "value": 7.391778,
+        "limit": 8
+      },
+      "peak_simultaneously_waiting_for_headers": 8,
+      "ledger_checks": [
+        {
+          "missing_records": 0,
+          "unique_records": true,
+          "gateway_attempts": 160,
+          "direct_attempts": 96,
+          "all_attempts_accounted": true,
+          "gateway_usage_checked": 156,
+          "gateway_usage_matches": true,
+          "no_retries": true
+        }
+      ],
+      "final_idle": true,
+      "source_configuration_unchanged": true,
+      "temporary_profiles_removed": true,
+      "temporary_files_contain_provider_key": false,
+      "automatic_generation_retries": 0,
+      "stop_reasons": [
+        null
+      ],
+      "phases": [
+        {
+          "name": "smoke",
+          "clients": 4,
+          "delivered": 4,
+          "passed": 4,
+          "peak_active": 0,
+          "peak_queued": 0,
+          "p50_ms": 877.58,
+          "p95_ms": 1146.69
+        },
+        {
+          "name": "business-json",
+          "clients": 24,
+          "delivered": 24,
+          "passed": 13,
+          "peak_active": 0,
+          "peak_queued": 0,
+          "p50_ms": 1409.81,
+          "p95_ms": 5600.06
+        },
+        {
+          "name": "reasoning-and-data",
+          "clients": 8,
+          "delivered": 8,
+          "passed": 0,
+          "peak_active": 0,
+          "peak_queued": 0,
+          "p50_ms": 2087.63,
+          "p95_ms": 213838.33
+        },
+        {
+          "name": "structured-output",
+          "clients": 8,
+          "delivered": 8,
+          "passed": 8,
+          "peak_active": 0,
+          "peak_queued": 0,
+          "p50_ms": 1966.47,
+          "p95_ms": 6942.3
+        },
+        {
+          "name": "parameter-boundaries",
+          "clients": 22,
+          "delivered": 22,
+          "passed": 11,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 2170.17,
+          "p95_ms": 135359.32
+        },
+        {
+          "name": "long-reference",
+          "clients": 5,
+          "delivered": 5,
+          "passed": 2,
+          "peak_active": 0,
+          "peak_queued": 0,
+          "p50_ms": 1880.8,
+          "p95_ms": 4184.79
+        },
+        {
+          "name": "protocols-and-reasoning-controls",
+          "clients": 20,
+          "delivered": 20,
+          "passed": 20,
+          "peak_active": 0,
+          "peak_queued": 0,
+          "p50_ms": 1728.45,
+          "p95_ms": 8478.83
+        },
+        {
+          "name": "substantive-long-output",
+          "clients": 6,
+          "delivered": 6,
+          "passed": 6,
+          "peak_active": 0,
+          "peak_queued": 0,
+          "p50_ms": 123993.9,
+          "p95_ms": 200101.41
+        },
+        {
+          "name": "prefix-cache",
+          "clients": 3,
+          "delivered": 3,
+          "passed": 1,
+          "peak_active": 0,
+          "peak_queued": 0,
+          "p50_ms": 1352.88,
+          "p95_ms": 1403.73
+        },
+        {
+          "name": "gateway-concurrency-1",
+          "clients": 2,
+          "delivered": 2,
+          "passed": 2,
+          "peak_active": 1,
+          "peak_queued": 0,
+          "p50_ms": 849.95,
+          "p95_ms": 3534.72
+        },
+        {
+          "name": "gateway-concurrency-4",
+          "clients": 8,
+          "delivered": 8,
+          "passed": 8,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 1214.5,
+          "p95_ms": 2602.49
+        },
+        {
+          "name": "gateway-concurrency-8",
+          "clients": 16,
+          "delivered": 16,
+          "passed": 16,
+          "peak_active": 8,
+          "peak_queued": 4,
+          "p50_ms": 1116.45,
+          "p95_ms": 2439.6
+        },
+        {
+          "name": "gateway-burst-32",
+          "clients": 32,
+          "delivered": 16,
+          "passed": 14,
+          "peak_active": 8,
+          "peak_queued": 8,
+          "p50_ms": 2189.47,
+          "p95_ms": 6143.91
+        },
+        {
+          "name": "mixed-interfaces",
+          "clients": 8,
+          "delivered": 8,
+          "passed": 8,
+          "peak_active": 2,
+          "peak_queued": 0,
+          "p50_ms": 1260.79,
+          "p95_ms": 12108.04
+        },
+        {
+          "name": "sustained-gateway-output",
+          "clients": 96,
+          "delivered": 96,
+          "passed": 95,
+          "peak_active": 8,
+          "peak_queued": 1,
+          "p50_ms": 160374.25,
+          "p95_ms": 250462.35
+        },
+        {
+          "name": "cancellations",
+          "clients": 4,
+          "delivered": 0,
+          "passed": 4,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": null,
+          "p95_ms": null
+        },
+        {
+          "name": "recovery",
+          "clients": 4,
+          "delivered": 4,
+          "passed": 4,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 1027.9,
+          "p95_ms": 1454.29
+        },
+        {
+          "name": "slow-readers",
+          "clients": 2,
+          "delivered": 2,
+          "passed": 2,
+          "peak_active": 2,
+          "peak_queued": 0,
+          "p50_ms": 8231.57,
+          "p95_ms": 11381.51
+        },
+        {
+          "name": "gateway-unsupported",
+          "clients": 4,
+          "delivered": 0,
+          "passed": 4,
+          "peak_active": 0,
+          "peak_queued": 0,
+          "p50_ms": null,
+          "p95_ms": null
+        }
+      ]
+    },
+    "relay": {
+      "client_cases": 286,
+      "outgoing_generation_attempts": 254,
+      "metadata_queries": 0,
+      "upstream_http_statuses": {
+        "200": 246,
+        "None": 8
+      },
+      "client_http_statuses": {
+        "200": 242,
+        "502": 4,
+        "429": 32,
+        "None": 4,
+        "504": 4
+      },
+      "complete_deliveries": 241,
+      "case_checks_passed": 187,
+      "local_overload_rejections": 32,
+      "output_cap_violations": 41,
+      "intentional_cancellations": 5,
+      "calls_with_final_usage": 241,
+      "outgoing_attempts_without_usage": 13,
+      "input_tokens": 428220,
+      "output_tokens": 16635,
+      "total_reported_tokens": 444855,
+      "estimated_known_usage_cost": null,
+      "provider_bill_and_balance_verified": false,
+      "reserved_cost": null,
+      "peak_simultaneously_waiting_for_headers": 16,
+      "ledger_checks": [
+        {
+          "checked": 194,
+          "ingress_overloads": 32,
+          "missing": [],
+          "gateway_attempts": 198,
+          "direct_responses": 16,
+          "all_attempts_accounted": true,
+          "unique_records": true,
+          "no_retries": true,
+          "passed": true,
+          "caller_bindings_checked": 194
+        },
+        {
+          "checked": 36,
+          "ingress_overloads": 0,
+          "missing": [],
+          "gateway_attempts": 36,
+          "direct_responses": 4,
+          "all_attempts_accounted": true,
+          "unique_records": true,
+          "no_retries": true,
+          "passed": true,
+          "caller_bindings_checked": 36
+        }
+      ],
+      "final_idle": true,
+      "source_configuration_unchanged": true,
+      "temporary_profiles_removed": true,
+      "temporary_files_contain_provider_key": false,
+      "automatic_generation_retries": 0,
+      "stop_reasons": [
+        null,
+        null
+      ],
+      "phases": [
+        {
+          "name": "baseline",
+          "clients": 4,
+          "delivered": 4,
+          "passed": 4,
+          "peak_active": 1,
+          "peak_queued": 0,
+          "p50_ms": 2336.32,
+          "p95_ms": 8205.07
+        },
+        {
+          "name": "gateway-caps",
+          "clients": 16,
+          "delivered": 16,
+          "passed": 3,
+          "peak_active": 5,
+          "peak_queued": 0,
+          "p50_ms": 3189.22,
+          "p95_ms": 13738.15
+        },
+        {
+          "name": "direct-identical-caps",
+          "clients": 16,
+          "delivered": 16,
+          "passed": 4,
+          "peak_active": 0,
+          "peak_queued": 0,
+          "p50_ms": 3706.29,
+          "p95_ms": 9415.8
+        },
+        {
+          "name": "native-messages-caps",
+          "clients": 16,
+          "delivered": 16,
+          "passed": 4,
+          "peak_active": 5,
+          "peak_queued": 0,
+          "p50_ms": 3507.34,
+          "p95_ms": 4292.62
+        },
+        {
+          "name": "content-and-options",
+          "clients": 16,
+          "delivered": 15,
+          "passed": 11,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 7029.29,
+          "p95_ms": 7425.41
+        },
+        {
+          "name": "long-context",
+          "clients": 4,
+          "delivered": 4,
+          "passed": 4,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 7394.47,
+          "p95_ms": 8125.24
+        },
+        {
+          "name": "long-output",
+          "clients": 4,
+          "delivered": 2,
+          "passed": 2,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 13552.69,
+          "p95_ms": 14218.88
+        },
+        {
+          "name": "slow-consumers",
+          "clients": 4,
+          "delivered": 4,
+          "passed": 4,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 7478.35,
+          "p95_ms": 7783.92
+        },
+        {
+          "name": "all-configured-models",
+          "clients": 16,
+          "delivered": 16,
+          "passed": 14,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 22657.43,
+          "p95_ms": 27070.71
+        },
+        {
+          "name": "ramp-1",
+          "clients": 2,
+          "delivered": 2,
+          "passed": 2,
+          "peak_active": 1,
+          "peak_queued": 0,
+          "p50_ms": 5700.72,
+          "p95_ms": 6822.04
+        },
+        {
+          "name": "ramp-2",
+          "clients": 4,
+          "delivered": 4,
+          "passed": 4,
+          "peak_active": 2,
+          "peak_queued": 0,
+          "p50_ms": 5917.73,
+          "p95_ms": 7051.13
+        },
+        {
+          "name": "ramp-4",
+          "clients": 8,
+          "delivered": 8,
+          "passed": 7,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 7817.44,
+          "p95_ms": 9034.9
+        },
+        {
+          "name": "ramp-8",
+          "clients": 16,
+          "delivered": 16,
+          "passed": 16,
+          "peak_active": 8,
+          "peak_queued": 0,
+          "p50_ms": 7088.89,
+          "p95_ms": 8564.96
+        },
+        {
+          "name": "ramp-16",
+          "clients": 32,
+          "delivered": 31,
+          "passed": 31,
+          "peak_active": 16,
+          "peak_queued": 2,
+          "p50_ms": 6667.33,
+          "p95_ms": 7849.76
+        },
+        {
+          "name": "burst-64",
+          "clients": 64,
+          "delivered": 32,
+          "passed": 32,
+          "peak_active": 16,
+          "peak_queued": 16,
+          "p50_ms": 8074.06,
+          "p95_ms": 14028.87
+        },
+        {
+          "name": "cancel",
+          "clients": 8,
+          "delivered": 3,
+          "passed": 5,
+          "peak_active": 8,
+          "peak_queued": 0,
+          "p50_ms": 7889.56,
+          "p95_ms": 7918.74
+        },
+        {
+          "name": "recovery",
+          "clients": 8,
+          "delivered": 8,
+          "passed": 8,
+          "peak_active": 8,
+          "peak_queued": 0,
+          "p50_ms": 6191.3,
+          "p95_ms": 8700.81
+        },
+        {
+          "name": "repeated-prompt",
+          "clients": 8,
+          "delivered": 8,
+          "passed": 8,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 2333.12,
+          "p95_ms": 2578.32
+        },
+        {
+          "name": "control-system",
+          "clients": 8,
+          "delivered": 8,
+          "passed": 8,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 2718.72,
+          "p95_ms": 3626.93
+        },
+        {
+          "name": "control-stop",
+          "clients": 8,
+          "delivered": 8,
+          "passed": 0,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 3004.42,
+          "p95_ms": 7573.58
+        },
+        {
+          "name": "control-arithmetic-models",
+          "clients": 16,
+          "delivered": 16,
+          "passed": 16,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 1941.29,
+          "p95_ms": 26579.76
+        },
+        {
+          "name": "control-fresh-caps",
+          "clients": 8,
+          "delivered": 4,
+          "passed": 0,
+          "peak_active": 4,
+          "peak_queued": 0,
+          "p50_ms": 7947.13,
+          "p95_ms": 8602.67
+        }
+      ]
+    },
+    "luna": {
+      "client_cases": 8,
+      "outgoing_generation_attempts": 8,
+      "metadata_queries": 1,
+      "upstream_http_statuses": {
+        "200": 6,
+        "400": 2
+      },
+      "client_http_statuses": {
+        "200": 6,
+        "400": 2
+      },
+      "complete_deliveries": 6,
+      "case_checks_passed": 6,
+      "local_overload_rejections": 0,
+      "output_cap_violations": 0,
+      "intentional_cancellations": 0,
+      "calls_with_final_usage": 6,
+      "outgoing_attempts_without_usage": 2,
+      "input_tokens": 330,
+      "output_tokens": 86,
+      "total_reported_tokens": 416,
+      "estimated_known_usage_cost": {
+        "currency": "USD",
+        "lower": "0.0000760",
+        "upper": "0.0000760"
+      },
+      "provider_bill_and_balance_verified": false,
+      "reserved_cost": {
+        "currency": "USD",
+        "value": 0.006509,
+        "limit": 0.25
+      },
+      "peak_simultaneously_waiting_for_headers": 4,
+      "ledger_checks": [
+        {
+          "checked": 0,
+          "ingress_overloads": 0,
+          "missing": [],
+          "gateway_attempts": 0,
+          "direct_responses": 8,
+          "all_attempts_accounted": true,
+          "unique_records": true,
+          "no_retries": true,
+          "passed": true
+        }
+      ],
+      "final_idle": true,
+      "source_configuration_unchanged": true,
+      "temporary_profiles_removed": true,
+      "temporary_files_contain_provider_key": false,
+      "automatic_generation_retries": 0,
+      "stop_reasons": [
+        null
+      ],
+      "phases": [
+        {
+          "name": "stream-usage-followup",
+          "clients": 4,
+          "delivered": 4,
+          "passed": 4,
+          "peak_active": 0,
+          "peak_queued": 0,
+          "p50_ms": 2181.04,
+          "p95_ms": 2723.17
+        },
+        {
+          "name": "chat-tool-roundtrip-followup",
+          "clients": 2,
+          "delivered": 2,
+          "passed": 2,
+          "peak_active": 0,
+          "peak_queued": 0,
+          "p50_ms": 2075.56,
+          "p95_ms": 2336.0
+        },
+        {
+          "name": "tiny-output-direct-controls",
+          "clients": 2,
+          "delivered": 0,
+          "passed": 0,
+          "peak_active": 0,
+          "peak_queued": 0,
+          "p50_ms": null,
+          "p95_ms": null
+        }
+      ]
+    }
+  },
+  "real_gateway_attempts": 394,
+  "real_direct_attempts": 124
+}

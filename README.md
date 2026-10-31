@@ -19,6 +19,11 @@ selark dashboard --read-only        # 严格只读，服务端关闭模型写入
 本版本沿用 schema 5，无额外迁移或全局默认授权更改。详见 [Dashboard 说明](docs/dashboard.md)
 和 [0.10.0 安装与浏览器验收](docs/dashboard-controls-verification.md)。
 
+本轮 [高强度验收](docs/core-010-stress-verification.md) 完成 749 项回归、3,503 次模拟 HTTP
+请求及 518 次真实 API 发送尝试（MiMo 256、中转站 254、Luna 8），已报告约 149 万 tokens。
+Core 权限、队列和账本核对通过；中转站输出上限、停止词及 MiMo 内容格式等上游限制单独记录，
+费用估算与未知用量保持区分，真实测试不进入 CI。
+
 ## 0.9.0：模型发现、启用、应用授权与能力验证分离
 
 ```bash
