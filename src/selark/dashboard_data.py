@@ -77,6 +77,7 @@ def projected_connection(entry):
             "discovered approved application_authorized historically_verified",
         ),
         "protocol": catalog.get("protocol"),
+        "approval_revision": catalog.get("approval_revision"),
         "models": [],
     }
     for model in catalog.get("models", []):

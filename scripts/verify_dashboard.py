@@ -425,6 +425,7 @@ def run(command, *, browser_output=None, rows=140):
                 "0",
                 "--no-open",
                 "--offline",
+                "--read-only",
             ],
             cwd=root,
             env=env,

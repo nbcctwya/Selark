@@ -111,6 +111,7 @@ def inventory(store, config, *, caller=None, callers=None):
     return {
         "connection_id": config.connection_id,
         "connection_enabled": config.enabled,
+        "approval_revision": config.config_revision,
         "default_model": config.default_model,
         "protocol": protocol(config),
         "discovery": directory,

@@ -1,4 +1,4 @@
-/* Selark Dashboard: no external assets, credentials in storage, or resource mutations. */
+/* Selark Dashboard: local sessions, explicit model approvals, no provider calls. */
 "use strict";
 let bootstrap = new URLSearchParams(location.hash.slice(1)).get("login");
 if (location.hash || location.search) history.replaceState(null, "", location.pathname);
@@ -63,6 +63,8 @@ const badge = (text, color="") => `<span class="badge ${color}">${h(text)}</span
 const empty = (title, description, name="chart") => `<div class="empty"><span class="empty-icon">${icon(name,22)}</span><h3>${h(title)}</h3><p>${h(description)}</p></div>`;
 let view="overview", metric="tokens", currency="", snapshot=null, requestRows=null, logs=null, backups=null;
 let offset=0, errorsOnly=false, authorized=false, controller=null, requestVersion=0;
+let detailConnection=null, modelBusy=false, modelSearch="", modelScope="all";
+const canManageModels=()=>Boolean(snapshot?.capabilities?.model_approval);
 let activeQuery = new URLSearchParams({period:"7d"});
 const appName = (id) => snapshot?.applications.find(a => a.id === id)?.name || id || "未知应用";
 
@@ -109,6 +111,8 @@ async function refresh() {
     const next = await api(`snapshot?${query}`,signal);
     if (version !== requestVersion) return;
     snapshot=next;
+    $("#dashboard-mode").textContent=canManageModels()?"模型管理":"只读模式";
+    $("#access-mode").textContent=canManageModels()?"独立管理会话 · 模型启用管理":"独立管理会话 · 只读访问";
     populateFilters();
     $("#version").textContent=`v${snapshot.version}`;
     notice(snapshot.issues.join(" "));
@@ -133,6 +137,7 @@ async function refresh() {
     }
     render();
     $("#freshness").textContent=`快照 ${time(snapshot.checked_at)}`;
+    return true;
   } catch (error) {
     if (error.name === "AbortError" || version !== requestVersion) return;
     if (error.status===401) loginRequired(error.message);
@@ -145,6 +150,7 @@ async function refresh() {
     clearTimeout(deadline);
     if (version === requestVersion) $("#refresh").disabled=false;
   }
+  return false;
 }
 function metrics() {
   const s=snapshot.usage?.summary;
@@ -222,11 +228,56 @@ function modelLayers(c) {
   return `<div class="model-layers" aria-label="模型四层状态"><div><span>01 发现目录</span><strong>${c.discovery?.discovered_at ? number(n.discovered) : "—"}</strong><small>${h(({never:"尚未查询",success:"目录已获取",failure:"最近发现失败",stale:"来源已变更"})[c.discovery?.state] || "未知")}</small></div><div><span>02 明确启用</span><strong>${number(n.approved ?? c.models.length)}</strong><small>本机允许列表</small></div><div><span>03 应用获权</span><strong>${number(n.application_authorized)}</strong><small>至少一个有效应用</small></div><div><span>04 历史能力</span><strong>${number(n.historically_verified)}</strong><small>当前配置 · 历史</small></div></div>`;
 }
 function modelTable(c) {
-  const models=c.model_catalog?.models || [];
-  return `<div class="detail-section"><h3>模型目录与权限</h3>${modelLayers(c)}<p class="detail-note">目录与启用分别保存。应用策略匹配仍需模型启用、连接开启及额度允许。历史能力不代表实时可用。</p><div class="table-wrap model-table"><table><thead><tr><th>模型</th><th>发现</th><th>启用</th><th>应用授权</th><th>历史协议能力</th></tr></thead><tbody>${models.map(m=>`<tr><td class="mono">${h(m.id)}${m.default?'<span class="secondary">默认模型</span>':""}</td><td>${h(m.discovery==="listed" ? c.discovery.current ? "目录中" : "旧目录" : m.discovery==="not_in_catalog" ? "目录未列出" : "未知")}</td><td>${badge(m.approved?"已启用":"未启用",m.approved?"green":"")}</td><td>${m.effective_applications.map(appName).map(h).join("、") || "无有效授权"}<span class="secondary">策略匹配 ${m.authorized_applications.length} 个应用</span></td><td>${m.verification.length ? m.verification.map(v=>`<p>${h(v.capability==="text_stream"?"文本 SSE":v.capability==="text_nonstream"?"文本普通":"旧记录 · 能力范围未知")} · ${h(v.state==="unscoped"?"范围未知":label(v.state))}<span class="secondary">${h(v.protocol || "协议未知")} · ${h(time(v.verified_at))}</span><span class="secondary">账户权限历史：${h(v.account_access_observed==="allowed"?"该次调用获准":v.account_access_observed==="rejected"?"该次被拒绝":"未知")} · 当前可用性未知</span></p>`).join("") : "尚无模型级证据"}</td></tr>`).join("")}</tbody></table></div>${models.length ? "" : '<p class="muted">尚无发现或启用的模型。</p>'}</div>`;
+  const models=c.model_catalog?.models || [], editable=canManageModels();
+  return `<div class="detail-section"><div class="model-heading"><h3>模型目录与权限</h3>${badge(editable?"可管理启用状态":"只读模式")}</div>${modelLayers(c)}<p class="detail-note">启用只改变本地资源池，应用策略继续独立生效。禁用后不再接收该模型的新调用；已派发请求继续结算。</p><div class="model-toolbar"><label>查找模型<input id="model-search" type="search" placeholder="搜索模型名称" value="${h(modelSearch)}" autocomplete="off"></label><label>启用状态<select id="model-scope"><option value="all" ${modelScope==="all"?"selected":""}>全部模型</option><option value="approved" ${modelScope==="approved"?"selected":""}>已启用</option><option value="disabled" ${modelScope==="disabled"?"selected":""}>未启用</option></select></label><span id="model-match-count" class="muted"></span></div><div id="model-action-status" class="model-action-status" role="status" aria-live="polite" hidden></div><div id="model-confirmation" class="model-confirmation" hidden></div><div class="table-wrap model-table"><table><thead><tr><th>模型</th><th>发现</th><th>启用</th><th>应用授权</th><th>历史协议能力</th>${editable?"<th>操作</th>":""}</tr></thead><tbody>${models.map(m=>`<tr data-model-row="${h(m.id)}" data-approved="${m.approved}"><td class="mono">${h(m.id)}${m.default?'<span class="secondary">默认模型</span>':""}</td><td>${h(m.discovery==="listed" ? c.discovery.current ? "目录中" : "旧目录" : m.discovery==="not_in_catalog" ? "目录未列出" : "未知")}</td><td>${badge(m.approved?"已启用":"未启用",m.approved?"green":"")}</td><td>${m.effective_applications.map(appName).map(h).join("、") || "无有效授权"}<span class="secondary">策略匹配 ${m.authorized_applications.length} 个应用</span></td><td>${m.verification.length ? m.verification.map(v=>`<p>${h(v.capability==="text_stream"?"文本 SSE":v.capability==="text_nonstream"?"文本普通":"旧记录 · 能力范围未知")} · ${h(v.state==="unscoped"?"范围未知":label(v.state))}<span class="secondary">${h(v.protocol || "协议未知")} · ${h(time(v.verified_at))}</span><span class="secondary">账户权限历史：${h(v.account_access_observed==="allowed"?"该次调用获准":v.account_access_observed==="rejected"?"该次被拒绝":"未知")} · 当前可用性未知</span></p>`).join("") : "尚无模型级证据"}</td>${editable?`<td><button class="model-action ${m.approved?"":"enable"}" data-model-action="${h(m.id)}" aria-label="${m.approved?"禁用":"启用"} ${h(m.id)}" ${modelBusy?"disabled":""}>${m.approved?"禁用":"启用"}</button></td>`:""}</tr>`).join("")}</tbody></table></div><p id="model-no-match" class="muted" hidden>没有匹配的模型。</p>${models.length ? "" : '<p class="muted">尚无发现或启用的模型；可先在终端执行 connection discover。</p>'}</div>`;
+}
+function filterModels() {
+  let visible=0;
+  document.querySelectorAll("[data-model-row]").forEach(row=>{
+    row.hidden=!row.dataset.modelRow.toLowerCase().includes(modelSearch.toLowerCase()) || (modelScope!=="all" && (row.dataset.approved==="true")!==(modelScope==="approved"));
+    if(!row.hidden)visible++;
+  });
+  if($("#model-match-count"))$("#model-match-count").textContent=`${visible} 个模型`;
+  if($("#model-no-match"))$("#model-no-match").hidden=visible!==0;
+}
+function modelMessage(message, failed=false) {
+  const element=$("#model-action-status");if(!element)return;
+  element.textContent=message;element.hidden=!message;element.classList.toggle("error",failed);
+}
+async function changeModel(modelId, clearDefault=false) {
+  if(modelBusy || !canManageModels())return;
+  const id=detailConnection,c=snapshot.connections.find(c=>c.id===id),m=c?.model_catalog.models.find(m=>m.id===modelId);
+  if(!m)return;
+  if(m.approved && m.default && !clearDefault){
+    $("#model-confirmation").innerHTML=`<p><strong>${h(modelId)}</strong> 是当前默认模型。禁用会清除默认值，之后需显式指定模型或在 CLI 选择新默认。</p><div><button class="model-action" data-model-confirm="${h(modelId)}">禁用并清除默认</button><button class="text-button" id="cancel-model-change">取消</button></div>`;
+    $("#model-confirmation").hidden=false;$("[data-model-confirm]").focus();return;
+  }
+  modelBusy=true;$("#model-confirmation").hidden=true;
+  document.querySelectorAll("[data-model-action],[data-model-confirm]").forEach(b=>b.disabled=true);
+  modelMessage("正在保存模型启用设置…");
+  const requestController=new AbortController(),deadline=setTimeout(()=>requestController.abort(),20000);
+  let saved=false;
+  try {
+    const response=await fetch("/api/model-approval",{method:"POST",headers:{"Content-Type":"application/json","X-Selark-Dashboard":"1"},credentials:"same-origin",cache:"no-store",signal:requestController.signal,body:JSON.stringify({connection_id:id,model:modelId,enabled:!m.approved,revision:c.model_catalog.approval_revision,clear_default:clearDefault})});
+    const result=await response.json();
+    if(!response.ok){const error=new Error(result.error || "模型设置保存失败。");error.status=response.status;throw error;}
+    saved=true;
+    const fresh=await refresh();
+    if(!fresh)throw new Error("设置已保存，快照暂时未刷新；请刷新确认后再操作。");
+    if($("#details").open && detailConnection===id){connectionDetails(id);modelMessage(`${modelId} 已${result.enabled?"启用":"禁用"}。应用权限保持不变。`);}
+  }catch(error){
+    if(error.status===401)loginRequired(error.message);
+    else if($("#details").open && detailConnection===id){
+      if(error.status===409 && await refresh())connectionDetails(id);
+      modelMessage(error.name==="AbortError"?"请求超时，结果尚未确认。请刷新查看，操作不会自动重试。":error.message || "连接中断，请刷新确认操作结果。",true);
+    }else notice(saved?"模型设置已保存，请刷新查看。":"模型操作结果未确认，请刷新查看。");
+  }finally{
+    clearTimeout(deadline);modelBusy=false;
+    document.querySelectorAll("[data-model-action],[data-model-confirm]").forEach(b=>b.disabled=false);
+  }
 }
 function resourcesPage() {
-  return `<div class="section-intro"><p>共 ${snapshot.connections.length} 个连接 · ${snapshot.connections.reduce((n,c)=>n+c.models.length,0)} 个已启用的连接内模型</p>${badge("全部资源 · 只读")}</div><div class="connection-cards">${snapshot.connections.map(c=>`<article class="connection-card"><div class="card-title"><div class="provider-icon">${h(c.provider.slice(0,2).toUpperCase())}</div><div><h3>${h(c.name)}</h3><div class="card-type">${h(label(c.resource_type))} / ${h(c.id)}</div></div>${badge(c.enabled?"已启用":"已停用",c.enabled?"green":"")}</div><div class="card-facts"><div><span class="fact-label">供应商凭据 · 本地</span><span class="fact-value">${h(authorization(c))}</span></div><div><span class="fact-label">连接历史调用</span>${badge(label(c.verification.state),stateColor(c.verification.state))}</div><div><span class="fact-label">当前可用性</span><span class="fact-value">${h(availability(c))}</span></div><div><span class="fact-label">供应商当前剩余额度</span><span class="fact-value">未知</span></div></div>${modelLayers(c)}<div class="model-chips">${c.models.slice(0,4).map(m=>`<span class="chip">${h(m)}</span>`).join("")}${c.models.length>4?`<span class="chip">+${c.models.length-4}</span>`:""}${!c.models.length?`<span class="muted">尚未启用模型</span>`:""}</div><div class="card-footer"><span>最近历史验证：${h(time(c.verification.verified_at))}</span><button class="text-button" data-connection="${h(c.id)}">查看详情 ${icon("arrow",14)}</button></div></article>`).join("")}</div>${snapshot.connections.length?"":`<section class="panel">${empty("还没有可显示的连接","请检查本机 Selark 配置。Dashboard 会保持只读，不创建或更改连接。","resources")}</section>`}`;
+  return `<div class="section-intro"><p>共 ${snapshot.connections.length} 个连接 · ${snapshot.connections.reduce((n,c)=>n+c.models.length,0)} 个已启用的连接内模型</p>${badge(canManageModels()?"模型启用管理":"全部资源 · 只读")}</div><div class="connection-cards">${snapshot.connections.map(c=>`<article class="connection-card"><div class="card-title"><div class="provider-icon">${h(c.provider.slice(0,2).toUpperCase())}</div><div><h3>${h(c.name)}</h3><div class="card-type">${h(label(c.resource_type))} / ${h(c.id)}</div></div>${badge(c.enabled?"已启用":"已停用",c.enabled?"green":"")}</div><div class="card-facts"><div><span class="fact-label">供应商凭据 · 本地</span><span class="fact-value">${h(authorization(c))}</span></div><div><span class="fact-label">连接历史调用</span>${badge(label(c.verification.state),stateColor(c.verification.state))}</div><div><span class="fact-label">当前可用性</span><span class="fact-value">${h(availability(c))}</span></div><div><span class="fact-label">供应商当前剩余额度</span><span class="fact-value">未知</span></div></div>${modelLayers(c)}<div class="model-chips">${c.models.slice(0,4).map(m=>`<span class="chip">${h(m)}</span>`).join("")}${c.models.length>4?`<span class="chip">+${c.models.length-4}</span>`:""}${!c.models.length?`<span class="muted">尚未启用模型</span>`:""}</div><div class="card-footer"><span>最近历史验证：${h(time(c.verification.verified_at))}</span><button class="text-button" data-connection="${h(c.id)}">${canManageModels()?"管理模型":"查看详情"} ${icon("arrow",14)}</button></div></article>`).join("")}</div>${snapshot.connections.length?"":`<section class="panel">${empty("还没有可显示的连接","请先在本机 CLI 配置连接，再在这里管理模型启用状态。","resources")}</section>`}`;
 }
 function applicationsPage() {
   return `<div class="section-intro"><p>本地应用配额按 UTC 今日计算，不受用量筛选影响。</p>${badge(`${snapshot.applications.length} 个应用`)}</div><div class="application-cards">${snapshot.applications.map(a=>{
@@ -259,14 +310,17 @@ function navigate(next) {
 }
 function pairs(items) { return `<dl class="detail-list">${items.map(([key,value])=>`<dt>${h(key)}</dt><dd>${h(value ?? "未知")}</dd>`).join("")}</dl>`; }
 function detail(title,description,body) {
+  detailConnection=null;
   $("#detail-content").innerHTML=`<h2 class="detail-title" id="detail-title">${h(title)}</h2><p class="detail-description">${h(description)}</p>${body}`;
   $("#details").showModal();
 }
 function connectionDetails(id) {
   const c=snapshot.connections.find(c=>c.id===id); if(!c)return;
+  if(detailConnection!==id){modelSearch="";modelScope="all";}
   const a=c.authorization,v=c.verification,q=c.provider_quota;
   const blockers={connection_disabled:"连接已停用",models_not_configured:"未启用模型",authorization_not_ready:"授权尚未就绪",access_expired_refresh_required:"访问凭据已过期，需要刷新",plan_preset_only:"仅预设，不支持生成",local_state_unavailable:"本地状态不可读"};
-  detail(c.name,`${label(c.resource_type)} · ${c.id}`,pairs([["本地授权",authorization(c)],["远端凭据有效性","未知；未向供应商验证"],["当前可用性",availability(c)],["本地阻碍",c.availability.blockers?.map(b=>blockers[b]||b).join("；") || "未发现已知本地阻碍"],["历史验证",label(v.state)],["验证时间",v.verified_at || "尚无记录"],["历史验证模型",v.model || "未知"],["默认模型",c.default_model],["OAuth 访问到期",a.expires_at==null?"不适用 / 未知":new Date(a.expires_at).toLocaleString("zh-CN")],["可用刷新凭据",a.refresh_available==null?"不适用 / 未知":a.refresh_available?"本地存在":"未提供"]])+modelTable(c)+`<div class="detail-section"><h3>已启用模型 · ${c.models.length}</h3><div class="model-chips">${c.models.map(m=>`<span class="chip">${h(m)}</span>`).join("") || "无"}</div><p class="policy-list">当前 CLI 调用方获准模型：${h(c.client_allowed_models.join("、")||"无")}</p></div><div class="detail-section"><h3>供应商额度</h3>${pairs([["当前剩余 Token","未知"],["历史快照",q.historical_snapshot?label(q.state):"未提供"],["快照时间",q.checked_at || "尚无记录"]])}${q.windows?.length?`<div class="table-wrap"><table><thead><tr><th>历史窗口</th><th>已使用比例</th><th>重置时间</th></tr></thead><tbody>${q.windows.map(w=>`<tr><td>${h(w.name)}</td><td>${h(percent(w.used_ratio))}</td><td>${h(w.reset_at || "未知")}</td></tr>`).join("")}</tbody></table></div>`:""}${q.reported_counters?.length?`<div class="table-wrap"><table><thead><tr><th>历史窗口</th><th>单位</th><th>上限 / 已用 / 剩余</th></tr></thead><tbody>${q.reported_counters.map(w=>`<tr><td>${h(w.window)}</td><td>${h(w.unit)}</td><td>${h(w.limit??"未知")} / ${h(w.used??"未知")} / ${h(w.remaining??"未知")}</td></tr>`).join("")}</tbody></table></div>`:""}</div><p class="detail-note">历史成功仅对应当时的配置与模型。套餐快照是历史证据，供应商单位不换算为 Token；Dashboard 不刷新 OAuth、不发现模型、不查询套餐或发起模型调用。</p>`);
+  detail(c.name,`${label(c.resource_type)} · ${c.id}`,modelTable(c)+`<div class="detail-section"><h3>连接与授权</h3></div>`+pairs([["本地授权",authorization(c)],["远端凭据有效性","未知；未向供应商验证"],["当前可用性",availability(c)],["本地阻碍",c.availability.blockers?.map(b=>blockers[b]||b).join("；") || "未发现已知本地阻碍"],["历史验证",label(v.state)],["验证时间",v.verified_at || "尚无记录"],["历史验证模型",v.model || "未知"],["默认模型",c.default_model],["OAuth 访问到期",a.expires_at==null?"不适用 / 未知":new Date(a.expires_at).toLocaleString("zh-CN")],["可用刷新凭据",a.refresh_available==null?"不适用 / 未知":a.refresh_available?"本地存在":"未提供"]])+`<div class="detail-section"><h3>已启用模型 · ${c.models.length}</h3><div class="model-chips">${c.models.map(m=>`<span class="chip">${h(m)}</span>`).join("") || "无"}</div><p class="policy-list">当前 CLI 调用方获准模型：${h(c.client_allowed_models.join("、")||"无")}</p></div><div class="detail-section"><h3>供应商额度</h3>${pairs([["当前剩余 Token","未知"],["历史快照",q.historical_snapshot?label(q.state):"未提供"],["快照时间",q.checked_at || "尚无记录"]])}${q.windows?.length?`<div class="table-wrap"><table><thead><tr><th>历史窗口</th><th>已使用比例</th><th>重置时间</th></tr></thead><tbody>${q.windows.map(w=>`<tr><td>${h(w.name)}</td><td>${h(percent(w.used_ratio))}</td><td>${h(w.reset_at || "未知")}</td></tr>`).join("")}</tbody></table></div>`:""}${q.reported_counters?.length?`<div class="table-wrap"><table><thead><tr><th>历史窗口</th><th>单位</th><th>上限 / 已用 / 剩余</th></tr></thead><tbody>${q.reported_counters.map(w=>`<tr><td>${h(w.window)}</td><td>${h(w.unit)}</td><td>${h(w.limit??"未知")} / ${h(w.used??"未知")} / ${h(w.remaining??"未知")}</td></tr>`).join("")}</tbody></table></div>`:""}</div><p class="detail-note">历史成功仅对应当时的配置与模型。套餐快照是历史证据，供应商单位不换算为 Token；Dashboard 不刷新 OAuth、不发现模型、不查询套餐或发起模型调用。</p>`);
+  detailConnection=id;filterModels();
 }
 function applicationDetails(id) {
   const a=snapshot.applications.find(a=>a.id===id); if(!a)return;
@@ -280,6 +334,9 @@ function recordDetails(index) {
 }
 document.addEventListener("click", (event)=>{
   const b=event.target.closest("button"); if(!b)return;
+  if(b.dataset.modelAction)changeModel(b.dataset.modelAction);
+  if(b.dataset.modelConfirm)changeModel(b.dataset.modelConfirm,true);
+  if(b.id==="cancel-model-change")$("#model-confirmation").hidden=true;
   if(b.dataset.view) navigate(b.dataset.view);
   if(b.dataset.navigate) navigate(b.dataset.navigate);
   if(b.dataset.metric){metric=b.dataset.metric;render();$(`[data-metric="${metric}"]`).focus();}
@@ -291,6 +348,9 @@ document.addEventListener("click", (event)=>{
   if(b.id==="next"){offset+=25;refresh();}
 });
 $("#content").addEventListener("change",(event)=>{if(event.target.id==="currency"){currency=event.target.value;render();}});
+$("#detail-content").addEventListener("input",event=>{if(event.target.id==="model-search"){modelSearch=event.target.value;filterModels();}});
+$("#detail-content").addEventListener("change",event=>{if(event.target.id==="model-scope"){modelScope=event.target.value;filterModels();}});
+$("#details").addEventListener("close",()=>{detailConnection=null;});
 $("#close-details").addEventListener("click",()=>$("#details").close());
 $("#details").addEventListener("click",(event)=>{if(event.target===$("#details")){const r=event.target.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)event.target.close();}});
 $("#refresh").addEventListener("click",refresh);

@@ -13,9 +13,13 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
+from pydantic import Field, ValidationError, field_validator
 
 from selark import dashboard_data as data
-from selark.config import ConfigError
+from selark.config import ConfigError, StrictConfig
+from selark.connections import valid_model
+from selark.errors import GatewayError
+from selark.runtime import Runtime
 
 ASSETS = Path(__file__).with_name("dashboard_assets")
 SESSION_SECONDS = 8 * 60 * 60
@@ -71,7 +75,22 @@ class Session:
         )
 
 
-def create_dashboard(directory, *, port, bootstrap, offline=False):
+class ModelApproval(StrictConfig):
+    connection_id: str = Field(pattern=r"^[a-z][a-z0-9_-]{0,63}$")
+    model: str = Field(min_length=1, max_length=200)
+    enabled: bool
+    revision: int = Field(ge=1)
+    clear_default: bool = False
+
+    @field_validator("model")
+    @classmethod
+    def valid_id(cls, value):
+        if not valid_model(value):
+            raise ValueError("模型标识无效")
+        return value
+
+
+def create_dashboard(directory, *, port, bootstrap, offline=False, read_only=False):
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     authority = "127.0.0.1" if port == 80 else f"127.0.0.1:{port}"
     origin = f"http://{authority}"
@@ -93,9 +112,13 @@ def create_dashboard(directory, *, port, bootstrap, offline=False):
         ) not in (None, "same-origin", "none"):
             response = error(403, "拒绝跨源请求。")
         elif request.method not in {"GET", "HEAD"} and not (
-            request.method == "POST" and request.url.path == "/api/session"
+            request.method == "POST"
+            and (
+                request.url.path == "/api/session"
+                or (not read_only and request.url.path == "/api/model-approval")
+            )
         ):
-            response = error(405, "Dashboard 仅提供只读查询。")
+            response = error(405, "此 Dashboard 接口不允许该操作。")
         elif (
             request.url.path.startswith("/api/")
             and request.url.path != "/api/session"
@@ -180,6 +203,7 @@ def create_dashboard(directory, *, port, bootstrap, offline=False):
                     result = await asyncio.to_thread(
                         data.snapshot, directory, filters, offline=offline
                     )
+                    result["capabilities"] = {"model_approval": not read_only}
                 elif kind == "records":
                     result = await asyncio.to_thread(
                         data.records,
@@ -198,6 +222,66 @@ def create_dashboard(directory, *, port, bootstrap, offline=False):
                 cache.pop(next(iter(cache)))
             cache[key] = (time.monotonic(), result)
             return JSONResponse(result)
+
+    @app.post("/api/model-approval")
+    async def approve_model(request: Request):
+        if request.headers.getlist("origin") != [origin] or request.headers.getlist(
+            "content-type"
+        ) != ["application/json"]:
+            return error(403, "模型管理需要同源 JSON 请求。")
+        if request.query_params:
+            return error(400, "模型管理不接受查询参数。")
+        body = bytearray()
+        try:
+            async with asyncio.timeout(5):
+                async for part in request.stream():
+                    body.extend(part)
+                    if len(body) > 4096:
+                        return error(413, "模型管理请求过大。")
+        except TimeoutError:
+            return error(408, "模型管理请求超时。")
+        try:
+            selection = ModelApproval.model_validate_json(body)
+        except ValidationError:
+            return error(400, "请提供有效的连接、模型、启用状态和当前版本。")
+
+        def change():
+            # Only configuration approval is writable. Never initialize/migrate or
+            # mutate the ledger, refresh OAuth, discover models or call a provider.
+            with Runtime(directory, readonly=True) as runtime:
+                result = runtime.change_models(
+                    selection.connection_id,
+                    "enable" if selection.enabled else "disable",
+                    [selection.model],
+                    expected_revision=selection.revision,
+                    allow_default_clear=selection.clear_default,
+                )
+                return {
+                    "connection_id": selection.connection_id,
+                    "model": selection.model,
+                    "enabled": selection.model in result["allowed_models"],
+                    "default_model": result["default_model"],
+                }
+
+        async with query_lock:
+            if not session.valid(request.cookies.get(cookie)):
+                return error(401, "管理会话已失效，请重新运行 selark dashboard。")
+            operation = asyncio.create_task(asyncio.to_thread(change))
+            try:
+                try:
+                    result = await asyncio.shield(operation)
+                except asyncio.CancelledError:
+                    await operation
+                    raise
+                return JSONResponse(result)
+            except GatewayError as exc:
+                return error(exc.status, exc.message)
+            except ConfigError as exc:
+                return error(400, str(exc))
+            except (OSError, ValueError, sqlite3.Error):
+                return error(503, "本地模型设置暂时不可写，请刷新确认状态或使用 CLI 检查。")
+            finally:
+                cache.clear()
 
     @app.get("/api/{kind}")
     async def api(kind: str, request: Request):
@@ -218,12 +302,13 @@ def create_dashboard(directory, *, port, bootstrap, offline=False):
     return app
 
 
-def run_dashboard(directory, *, port=8790, open_browser=True, offline=False):
+def run_dashboard(directory, *, port=8790, open_browser=True, offline=False, read_only=False):
     import uvicorn
 
     if not 0 <= port <= 65535:
         raise ConfigError("Dashboard 端口须在 0–65535 之间（0 自动分配）。")
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             sock.bind(("127.0.0.1", port))
         except OSError:
@@ -231,13 +316,19 @@ def run_dashboard(directory, *, port=8790, open_browser=True, offline=False):
         port = sock.getsockname()[1]
         bootstrap = secrets.token_urlsafe(32)
         url = f"http://127.0.0.1:{port}/#login={bootstrap}"
-        app = create_dashboard(directory, port=port, bootstrap=bootstrap, offline=offline)
+        app = create_dashboard(
+            directory, port=port, bootstrap=bootstrap, offline=offline, read_only=read_only
+        )
 
         class Server(uvicorn.Server):
             async def startup(self, sockets=None):
                 await super().startup(sockets=sockets)
                 if self.started:
-                    print("Selark Dashboard V0.1 · 本地只读 · Ctrl+C 关闭", flush=True)
+                    mode = "只读模式" if read_only else "模型启用管理"
+                    print(
+                        f"Selark Dashboard V0.2 · {mode} · Ctrl+C 关闭服务（关闭浏览器不会停服）",
+                        flush=True,
+                    )
                     print("一次性管理链接（5 分钟内有效，请勿分享）：", flush=True)
                     print(url, flush=True)
                     if open_browser:

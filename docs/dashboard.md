@@ -1,7 +1,7 @@
-# 本地 Web Dashboard V0.1
+# 本地 Web Dashboard V0.2
 
-Selark 的本地个人 AI 资源控制台。只读浏览已配置的 API、Token Plan 和 ChatGPT 订阅；
-不调用模型、不修改连接、权限、额度或 OAuth，也不启动、停止、重启网关。
+Selark 的本地个人 AI 资源控制台。浏览 API、Token Plan 和 ChatGPT 订阅，并明确启用/禁用连接中的模型。
+其余功能只读；不调用模型、不修改连接密钥、应用策略、额度或 OAuth，也不启动、停止、重启网关。
 
 ## 启动与安装
 
@@ -14,6 +14,8 @@ selark dashboard
 默认监听 `http://127.0.0.1:8790`，自动打开带一次性管理凭证的浏览器链接。链接仅在终端显示，
 有效期 5 分钟，使用一次即失效。浏览器收到链接后立即清除 URL 片段，以独立管理会话读取数据。
 请保持启动终端运行；`Ctrl+C` 关闭 Dashboard，浏览器会在下一次刷新提示无法读取。
+仅关闭浏览器标签页不会结束 Dashboard 进程。0.10 修复关闭服务后 TCP 连接残留导致端口暂时无法重用；
+若仍提示端口不可用，用 `ss -ltnp 'sport = :8790'` 检查实际监听，或显式选择其他端口。
 会话最长 8 小时，过期后关闭原 Dashboard 并重新运行命令。重新启动后旧会话全部失效。
 同一浏览器的其他标签页可直接打开根地址，未登录的其他浏览器需重新启动取得新链接。
 
@@ -21,6 +23,7 @@ selark dashboard
 selark dashboard --no-open           # 不自动打开浏览器
 selark dashboard --port 8795          # 改用其他本机端口；0 自动分配
 selark dashboard --offline            # 不请求本机网关 /health
+selark dashboard --read-only          # 严格只读，服务端关闭模型启用/禁用接口
 selark --config-dir /absolute/profile dashboard
 ```
 
@@ -43,7 +46,7 @@ selark --config-dir /absolute/profile dashboard
 | 运行监控 | 本机 `/health` 报告的全局并发、队列与落账状态；分页异常记录、结构化日志、备份清单 |
 
 0.8.1 起首页资源池显示全部连接，超过卡片高度时可滚动查看。
-在终端新增普通 API 连接时，模型留空默认自动发现；这是 CLI 配置行为，Dashboard 仍然严格只读。
+在终端新增普通 API 连接时，模型留空默认自动发现；发现仍只由 CLI 执行，Dashboard 不查询供应商。
 0.9.0 起自动发现只保存目录，未启用模型不会进入可调用资源池。连接详情同时展示目录与启用列表，
 包括已下架但仍启用的模型；应用策略匹配数与有效授权分别展示。历史能力按当前连接配置和文本普通/SSE
 证据计数，不将旧版本范围未知的记录补标为通过。旧账本需先停服并执行 `selark migrate`；Dashboard 自身不迁移。
@@ -77,8 +80,9 @@ selark --config-dir /absolute/profile dashboard
 
 ## 安全与实现
 
-`dashboard.py` 提供独立 FastAPI / Uvicorn 服务；没有挂载现有网关 API，也没有管理写入路由。
-唯一 POST `/api/session` 仅兑换内存中的管理会话，不改写 Selark 资源。数据端点为：
+`dashboard.py` 提供独立 FastAPI / Uvicorn 服务，没有挂载现有网关 API。
+POST `/api/session` 仅兑换内存中的管理会话。默认模式另开放 POST `/api/model-approval`，
+只改变单个模型启用状态；`--read-only` 下服务端返回 405，前端也不显示操作按钮。查询端点为：
 
 ```text
 GET /api/snapshot
@@ -86,6 +90,15 @@ GET /api/records
 GET /api/logs
 GET /api/backups
 ```
+
+在“连接与模型 → 查看详情”搜索模型，按启用状态筛选，点击启用/禁用。
+启用不会设置默认模型、调用上游或改写应用白名单；既有通配应用策略继续适用。
+禁用当前默认模型需确认同时清除默认值，不自动选替代。已派发请求仍按原快照完成，排队请求重新检查权限。
+如果其他标签页或 CLI 已修改相关连接，旧版本操作返回 409；刷新后由用户重新明确操作，不自动重试。
+
+模型写入须同时具备有效管理 cookie、专用请求头、精确 Origin 和 JSON 类型；请求体最多 4 KiB，读取最多 5 秒。
+严格校验字段、模型 ID、布尔状态与配置版本，在核心管理锁下完成检查、备份和原子配置替换。
+不初始化或迁移数据库，账本以只读连接打开；写入后清除快照缓存。没有其他管理写入接口。
 
 管理凭证由安全随机数生成，与调用方令牌完全独立，不持久化，服务内仅保存摘要。会话 cookie 使用
 HttpOnly、SameSite=Strict、host-only，HTTP 回环连接不设置 Secure。任何可读取本机进程、终端、

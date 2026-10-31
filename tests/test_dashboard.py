@@ -460,7 +460,7 @@ def test_unpriced_partial_inconsistent_and_multiple_currencies(runtime):
     }
 
 
-def test_cli_dispatch_is_readonly_and_assets_are_packaged(runtime, monkeypatch):
+def test_cli_dispatch_readonly_option_and_assets_are_packaged(runtime, monkeypatch):
     calls = []
     monkeypatch.setattr(
         "selark.dashboard.run_dashboard", lambda *a, **kw: calls.append((a, kw)) or 0
@@ -475,11 +475,12 @@ def test_cli_dispatch_is_readonly_and_assets_are_packaged(runtime, monkeypatch):
                 "8795",
                 "--no-open",
                 "--offline",
+                "--read-only",
             ]
         )
         == 0
     )
-    assert calls[0][1] == {"port": 8795, "open_browser": False, "offline": True}
+    assert calls[0][1] == {"port": 8795, "open_browser": False, "offline": True, "read_only": True}
     with dashboard(runtime.directory, offline=True) as client:
         for path in ("/", "/assets/style.css", "/assets/app.js", "/assets/mark.svg"):
             result = client.get(path)

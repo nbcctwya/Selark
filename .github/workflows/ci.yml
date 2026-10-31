@@ -49,6 +49,7 @@ jobs:
           selark --version
           selark status --help
           selark dashboard --help
+          selark dashboard --help | grep -- '--read-only'
           selark connection add --help
           selark connection add --help | grep -- '--no-discover'
           selark model list --help
@@ -69,6 +70,7 @@ jobs:
       - name: Installed model discovery, explicit approval and read-only Dashboard (fake upstream only)
         run: |
           python scripts/verify_dashboard.py --selark "$(command -v selark)" --output "$RUNNER_TEMP/selark-dashboard.json"
+          python scripts/verify_dashboard_controls.py --selark "$(command -v selark)" --output "$RUNNER_TEMP/selark-dashboard-controls.json"
       - name: Dashboard Chromium acceptance (temporary synthetic ledger only)
         if: matrix.python == '3.12'
         run: |
@@ -76,6 +78,7 @@ jobs:
           python -m playwright install --with-deps chromium
           node --check src/selark/dashboard_assets/app.js
           python scripts/verify_dashboard.py --selark "$(command -v selark)" --browser-output "$RUNNER_TEMP/selark-dashboard-screenshots" --output "$RUNNER_TEMP/selark-dashboard-browser.json"
+          python scripts/verify_dashboard_controls.py --selark "$(command -v selark)" --browser-output "$RUNNER_TEMP/selark-dashboard-screenshots" --output "$RUNNER_TEMP/selark-dashboard-controls-browser.json"
       - name: Local TCP and process recovery (fake upstream only)
         if: matrix.python == '3.12'
         shell: bash

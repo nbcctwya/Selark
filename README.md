@@ -1,7 +1,23 @@
-# Selark 0.9.0 · 个人 AI 资源管理工具
+# Selark 0.10.0 · 个人 AI 资源管理工具
 
 独立的文本模型 HTTP 接入服务：`CLI / 外部程序 → Selark → 指定模型连接`。
 Python 3.11+，FastAPI + HTTPX + Uvicorn；默认仅监听 `127.0.0.1:8787`。
+
+## 0.10.0：在 Dashboard 中启用与禁用模型
+
+`selark dashboard` → **连接与模型 → 管理模型**：搜索模型、筛选已启用/未启用，点击启用或禁用。
+禁用默认模型需要确认清除默认值，不会自动换模型；跨标签页或 CLI 的旧版本操作会被拒绝并提示刷新。
+操作前自动备份，应用策略保持独立；没有供应商调用、OAuth 刷新、额度调整或服务控制操作。
+
+```bash
+selark dashboard                    # 本机模型启用管理，其余状态只读
+selark dashboard --read-only        # 严格只读，服务端关闭模型写入接口
+```
+
+关闭浏览器不会停止服务；在启动终端按 `Ctrl+C` 关闭。修复旧版本退出后 TCP 连接残留导致
+短时间无法重用同一端口的问题，同时保留对实际监听进程的冲突检查，不抢占其他服务。
+本版本沿用 schema 5，无额外迁移或全局默认授权更改。详见 [Dashboard 说明](docs/dashboard.md)
+和 [0.10.0 安装与浏览器验收](docs/dashboard-controls-verification.md)。
 
 ## 0.9.0：模型发现、启用、应用授权与能力验证分离
 
@@ -31,10 +47,10 @@ CLI 与只读 Dashboard 展示四层状态，历史能力证据区分普通文�
 ## 0.8.0：本地 Web Dashboard V0.1
 
 ```bash
-selark dashboard                    # 在本机浏览器打开只读仪表盘
+selark dashboard --read-only        # 在本机浏览器打开只读仪表盘
 selark dashboard --no-open          # 仅打印一次性管理链接
 selark dashboard --port 8795         # 默认 127.0.0.1:8790，可选本机端口
-selark dashboard --offline          # 完全离线，只读本地文件与账本
+selark dashboard --offline --read-only # 完全离线，只读本地文件与账本
 ```
 
 五个页面：资源概览、连接与模型、用量分析、应用管理、运行监控。
@@ -45,7 +61,7 @@ selark dashboard --offline          # 完全离线，只读本地文件与账本
 Dashboard 独立于模型网关运行：只监听 `127.0.0.1`，不自动启动网关；网关停止时仍可查看历史。
 终端中的一次性管理链接有效期 5 分钟，登录后通过独立 HttpOnly 会话访问，最长 8 小时。
 保持终端运行，`Ctrl+C` 关闭 Dashboard。API Key、OAuth 凭据、调用方令牌不发送到浏览器。
-本阶段没有连接修改、令牌创建、模型调用、服务控制或其他资源写入接口。
+0.8/0.9 阶段没有资源写入接口；0.10 仅增加明确的模型启用/禁用，其他管理操作仍在 CLI。
 旧 CLI、配置与 OAuth 机制保持兼容；0.9.0 首次使用需完成上述账本迁移。
 
 完整使用、统计口径与安全边界见 [Dashboard 说明](docs/dashboard.md)，
@@ -496,7 +512,7 @@ GitHub Actions 自动运行模拟测试与代码检查，不使用供应商凭�
 0.6 的 268 项回归、安装与恢复核对，以及 2 次真实 Kimi Code 编程调用（453 Token）
 见 [Token Plan 验收](docs/token-plans-verification.md)。GLM Coding Plan 仅模拟验证。
 
-仅本机单实例，可有多个连接、独立调用方令牌、只读 Dashboard 和官方订阅登录；不提供远程管理、自动路由或生产托管。
+仅本机单实例，可有多个连接、独立调用方令牌、本地 Dashboard 和官方订阅登录；不提供远程管理、自动路由或生产托管。
 
 2026-10-27 核对的官方来源：[首次调用](https://mimo.mi.com/docs/en-US/quick-start/summary/first-api-call)、
 [Chat Completions 协议](https://mimo.mi.com/docs/api/text-generation/openai-api)、

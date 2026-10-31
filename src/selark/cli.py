@@ -37,7 +37,7 @@ def parser() -> argparse.ArgumentParser:
     init.add_argument("--default-model", help="默认使用 --models 中第一个模型")
     init.add_argument("--port", type=int, default=8787)
     commands.add_parser("serve", help="按持久配置启动 HTTP 服务")
-    dashboard = commands.add_parser("dashboard", help="打开本地只读 Web Dashboard")
+    dashboard = commands.add_parser("dashboard", help="打开本地资源仪表盘与模型启用管理")
     dashboard.add_argument(
         "--port", type=int, default=8790, help="本机端口（默认 8790；0 自动分配）"
     )
@@ -45,6 +45,9 @@ def parser() -> argparse.ArgumentParser:
         "--no-open", action="store_true", help="仅打印管理链接，不自动打开浏览器"
     )
     dashboard.add_argument("--offline", action="store_true", help="也不查询本机网关健康状态")
+    dashboard.add_argument(
+        "--read-only", action="store_true", help="仅查看状态，关闭模型启用/禁用操作"
+    )
     models = commands.add_parser("models", help="通过 Selark HTTP 获取允许模型")
     models.add_argument("--json", action="store_true")
     models.add_argument("--connection", help="仅查看指定连接的本地模型列表")
@@ -89,7 +92,11 @@ def main(argv: list[str] | None = None) -> int:
             from selark.dashboard import run_dashboard
 
             return run_dashboard(
-                directory, port=args.port, open_browser=not args.no_open, offline=args.offline
+                directory,
+                port=args.port,
+                open_browser=not args.no_open,
+                offline=args.offline,
+                read_only=args.read_only,
             )
         from selark.management import MANAGEMENT_COMMANDS, run
 

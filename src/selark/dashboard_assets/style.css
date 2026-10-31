@@ -16,4 +16,9 @@ dialog:has(.model-table){width:min(960px,calc(100% - 32px))}
 .model-layers strong{display:block;font-size:24px;line-height:1.8;font-variant-numeric:tabular-nums}
 .model-table{max-height:480px;overflow:auto}.model-table td{vertical-align:top;max-width:300px;overflow-wrap:anywhere}
 .model-table td p{margin:0 0 10px}.model-table th{position:sticky;top:0;background:var(--surface);z-index:1}
+.model-heading,.model-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.model-toolbar{margin:20px 0;align-items:end;flex-wrap:wrap}.model-toolbar label{font-size:11px;color:var(--muted);display:grid;gap:5px}.model-toolbar label:first-child{flex:1;min-width:160px}.model-toolbar input{width:100%}.model-toolbar select{padding:8px 10px}.model-toolbar>span{font-size:11px;padding-bottom:9px}
+.model-action{padding:6px 12px;font-size:12px;white-space:nowrap;background:var(--surface);border:1px solid var(--line)}.model-action.enable{color:var(--accent-ink);background:var(--tint);border-color:var(--tint)}.model-action:hover:not(:disabled){border-color:var(--accent);color:var(--accent-ink)}
+.model-action-status{padding:11px 13px;margin:12px 0;border-radius:8px;background:var(--tint);color:var(--accent-ink);font-size:12px;overflow-wrap:anywhere}.model-action-status.error{background:var(--surface-alt);color:var(--ink);border:1px solid var(--line)}
+.model-confirmation{padding:14px;margin:12px 0;background:var(--surface-alt);border:1px solid var(--line);border-radius:10px;font-size:12px}.model-confirmation>div{display:flex;gap:14px;margin-top:12px}
 @media(max-width:600px){.model-layers{grid-template-columns:repeat(2,minmax(0,1fr))}}

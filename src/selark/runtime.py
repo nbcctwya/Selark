@@ -572,10 +572,26 @@ class Runtime:
             _write_private(self.directory / "connections.json", registry_document(registry))
         return self.connection(original.connection_id)
 
-    def change_models(self, identity, action, models=(), *, all_models=False, default=None):
+    def change_models(
+        self,
+        identity,
+        action,
+        models=(),
+        *,
+        all_models=False,
+        default=None,
+        expected_revision=None,
+        allow_default_clear=True,
+    ):
         """One atomic approval change, independent of catalog refresh and caller policies."""
         with file_lock(self.data_dir / "management.lock"):
             config = require_connection(self.connection_settings(), identity)
+            from selark.errors import GatewayError
+
+            if expected_revision is not None and expected_revision != config.config_revision:
+                raise GatewayError(
+                    409, "model_approval_changed", "模型设置已被其他操作更新，请刷新后重试。"
+                )
             selected = list(dict.fromkeys(models))
             if any(not valid_model(model) for model in selected):
                 raise ConfigError("模型标识无效。")
@@ -596,6 +612,12 @@ class Runtime:
                 approved = list(dict.fromkeys([*approved, *selected]))
             elif action == "disable":
                 approved = [] if all_models else [m for m in approved if m not in selected]
+                if chosen is not None and chosen not in approved and not allow_default_clear:
+                    raise GatewayError(
+                        409,
+                        "default_model_confirmation",
+                        "该模型是默认模型；禁用前请确认同时清除默认值。",
+                    )
                 if chosen not in approved:
                     chosen = None
             elif action == "default":
