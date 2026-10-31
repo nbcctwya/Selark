@@ -5,7 +5,7 @@
 ## 安装与配置
 
 - Selark 版本 `0.1.1`，pipx `1.18.4`，Python `3.12.2`，WSL2。
-- 当前用户 `nbcctwya` 的命令：`/home/nbcctwya/.local/bin/selark`。
+- 当前用户的命令：`~/.local/bin/selark`。
 - 独立应用环境：`~/.local/share/pipx/venvs/selark`。
 - pipx 自身位于 `~/.local/share/pipx-venv`，未改写系统 Python。
 - 当前 WSL 的 `/usr/bin/python3` 为 3.8.10，因此安装时明确选择已有的 3.12.2 解释器。
@@ -15,8 +15,8 @@
 
 ```bash
 pipx install \
-  --python /home/nbcctwya/anaconda3/bin/python3 \
-  /home/nbcctwya/Alark/Selark
+  --python ~/anaconda3/bin/python3 \
+  /path/to/Selark
 pipx ensurepath
 ```
 

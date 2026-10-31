@@ -75,6 +75,7 @@ selark connection add relay-personal --provider openai-compatible --interactive
 向导选择已有平台、名称、API 地址、模型及默认模型；Key 继续从环境变量或隐藏输入读取，
 从不要求在命令行放入明文 Key。非终端脚本使用显式参数。向导只写本地配置，不发现模型、
 不生成、不发起 OAuth。ChatGPT 继续使用原有命令。
+以上是 0.7.1 行为；0.8.1 起普通 API 的模型留空会自动发现，可用 `--no-discover` 保留离线配置流程。
 `init --models first second` 未指定默认模型时选第一个，避免常见的默认模型不匹配错误。
 交互 `ask` 从标准输入读取时会提示 Ctrl+D 发送、Ctrl+C 取消。
 

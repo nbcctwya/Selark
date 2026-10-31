@@ -15,7 +15,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -38,6 +38,8 @@ jobs:
         run: |
           ruff check .
           ruff format --check .
+      - name: Reject credential literals and tracked private files
+        run: python scripts/check_repository_security.py
       - name: Isolated regressions including OAuth and subscription safety (no real credentials)
         run: pytest -q
       - name: Installed CLI outside repository
@@ -46,6 +48,9 @@ jobs:
           selark --help
           selark --version
           selark status --help
+          selark dashboard --help
+          selark connection add --help
+          selark connection add --help | grep -- '--no-discover'
           selark service --help
           selark logs --help
           selark backup drill --help
@@ -56,6 +61,16 @@ jobs:
           selark ask --help
           selark ask --help | grep -- '--interactive'
           selark plans set --help | grep -- 'personal_interactive'
+      - name: Installed API model discovery and read-only Dashboard (fake upstream only)
+        run: |
+          python scripts/verify_dashboard.py --selark "$(command -v selark)" --output "$RUNNER_TEMP/selark-dashboard.json"
+      - name: Dashboard Chromium acceptance (temporary synthetic ledger only)
+        if: matrix.python == '3.12'
+        run: |
+          python -m pip install -r requirements-dashboard.lock
+          python -m playwright install --with-deps chromium
+          node --check src/selark/dashboard_assets/app.js
+          python scripts/verify_dashboard.py --selark "$(command -v selark)" --browser-output "$RUNNER_TEMP/selark-dashboard-screenshots" --output "$RUNNER_TEMP/selark-dashboard-browser.json"
       - name: Local TCP and process recovery (fake upstream only)
         if: matrix.python == '3.12'
         shell: bash
@@ -75,6 +90,11 @@ jobs:
         shell: bash
         run: |
           python scripts/verify_multi_app.py --requests-per-app 100 --output "$RUNNER_TEMP/selark-multi-app.json" | tee "$RUNNER_TEMP/selark-multi-app.log"
+      - name: Four APIs, eight applications and 128-client bursts (fake upstream only)
+        if: matrix.python == '3.12'
+        shell: bash
+        run: |
+          python scripts/verify_multi_app.py --four-api --requests-per-app 100 --burst-clients 128 --burst-cycles 3 --output "$RUNNER_TEMP/selark-four-api.json" | tee "$RUNNER_TEMP/selark-four-api.log"
       - name: Background service, backup drill and 20k-row overview (fake upstream only)
         if: matrix.python == '3.12'
         shell: bash
@@ -86,5 +106,13 @@ jobs:
         with:
           name: selark-socket-diagnostics
           path: ${{ runner.temp }}/selark-*.json
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Preserve Dashboard browser screenshots (synthetic fixtures)
+        if: always() && matrix.python == '3.12'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: selark-dashboard-screenshots
+          path: ${{ runner.temp }}/selark-dashboard-screenshots
           if-no-files-found: ignore
           retention-days: 7

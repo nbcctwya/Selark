@@ -1,0 +1,77 @@
+{
+  "version": "0.8.0",
+  "dashboard_version": "0.1",
+  "date": "2026-10-31",
+  "regression_tests": {
+    "passed": 656,
+    "dashboard_tests": 39,
+    "warnings": 1,
+    "seconds": 54.53
+  },
+  "checks": {
+    "ruff_check": true,
+    "ruff_format": true,
+    "javascript_syntax": true,
+    "git_diff_check": true
+  },
+  "browser": {
+    "fixture_only": true,
+    "real_provider_requests": 0,
+    "synthetic_ledger_rows": 140,
+    "host": "127.0.0.1",
+    "browser": {
+      "browser": "Chromium",
+      "console_errors": 0,
+      "external_requests": 0,
+      "responsive_widths": [
+        1440,
+        390
+      ],
+      "views_checked": 5
+    },
+    "shutdown_exit_code": 130,
+    "passed": true,
+    "checks": [
+      "installed_assets_outside_repository",
+      "unauthenticated_rebinding_and_mutation_rejected",
+      "browser_desktop_mobile_theme_filters_details_and_session",
+      "configuration_ledger_oauth_and_backup_content_unchanged",
+      "clean_shutdown"
+    ]
+  },
+  "installed_tcp": {
+    "fixture_only": true,
+    "real_provider_requests": 0,
+    "synthetic_ledger_rows": 20000,
+    "host": "127.0.0.1",
+    "snapshot_seconds": 2.996,
+    "shutdown_exit_code": 130,
+    "passed": true,
+    "checks": [
+      "installed_assets_outside_repository",
+      "unauthenticated_rebinding_and_mutation_rejected",
+      "authenticated_queries_and_redaction",
+      "configuration_ledger_oauth_and_backup_content_unchanged",
+      "clean_shutdown"
+    ]
+  },
+  "personal_profile": {
+    "installed_version": "0.8.0",
+    "real_profile_snapshot_readable": true,
+    "overview_ok": true,
+    "provider_requests": 0,
+    "config_initialized": false,
+    "protected_files_unchanged": 163,
+    "passed": true
+  },
+  "ci": {
+    "configured_python": [
+      "3.11",
+      "3.12",
+      "3.13"
+    ],
+    "browser_python": "3.12",
+    "remote_run_performed": false
+  },
+  "runtime_dependencies_added": 0
+}

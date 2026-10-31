@@ -1,4 +1,4 @@
-"""Six independent applications over real loopback HTTP, using invented upstreams only.
+"""Independent applications over real loopback HTTP, using invented upstreams only.
 
 No real profiles, provider sockets, API keys, subscriptions or OAuth are used.
 Run with the installed Selark Python to exercise that installation.
@@ -48,8 +48,9 @@ def percentiles(values):
 
 
 class Stream(httpx.AsyncByteStream):
-    def __init__(self, owner, model, tag, mode):
+    def __init__(self, owner, identity, model, tag, mode):
         self.owner, self.model, self.tag, self.mode = owner, model, tag, mode
+        self.identity = identity
         self.closed = False
 
     async def __aiter__(self):
@@ -91,42 +92,69 @@ class Stream(httpx.AsyncByteStream):
     async def aclose(self):
         if not self.closed:
             self.closed = True
-            self.owner.active -= 1
+            self.owner.release(self.identity)
 
 
 class Upstreams:
-    def __init__(self, resources):
+    def __init__(self, resources, apps):
         self.resources = resources
+        self.apps = apps
         self.calls = []
         self.active = self.peak = 0
+        self.active_by_connection = Counter()
+        self.peak_by_connection = Counter()
+        self.peak_distinct_connections = 0
         self.hold = asyncio.Event()
+
+    def release(self, identity):
+        self.active -= 1
+        self.active_by_connection[identity] -= 1
 
     async def __call__(self, request):
         identity = next(
             (k for k, (_, _, host) in self.resources.items() if host == request.url.host), None
         )
-        assert identity in {"mimo-default", "deepseek-test", "relay-test"}
+        assert identity in {connection for connection, _ in self.apps.values()}
         assert request.method == "POST" and request.url.path.endswith("/chat/completions")
         data = json.loads(request.content)
         assert not {"session_id", "caller_id", "connection_id"} & data.keys()
         task = json.loads(data["messages"][-1]["content"])
-        assert APPS[task["application"]][0] == identity
+        assert self.apps[task["application"]][0] == identity
         provider = self.resources[identity][0]
         if identity == "mimo-default":
             assert request.headers["api-key"] == "fake-matrix-mimo"
         else:
             assert request.headers["authorization"] == "Bearer fake-matrix-" + provider
+        parameter = "max_completion_tokens" if provider in {"mimo", "openai"} else "max_tokens"
+        assert data[parameter] == 16
+        assert ("thinking" in data) == (provider in {"mimo", "deepseek"})
+        if data["stream"] and provider != "mimo":
+            assert data["stream_options"]["include_usage"] is True
         tag = task["application"] + ":" + task["case"]
         mode = task["mode"]
-        self.calls.append({"application": task["application"], "case": task["case"]})
+        self.calls.append(
+            {"application": task["application"], "case": task["case"], "connection": identity}
+        )
         self.active += 1
         self.peak = max(self.peak, self.active)
+        self.active_by_connection[identity] += 1
+        self.peak_by_connection[identity] = max(
+            self.peak_by_connection[identity], self.active_by_connection[identity]
+        )
+        self.peak_distinct_connections = max(
+            self.peak_distinct_connections,
+            sum(value > 0 for value in self.active_by_connection.values()),
+        )
         handed_off = False
         try:
             if mode == "hold":
                 await self.hold.wait()
             if mode == "rate":
                 return httpx.Response(429, headers={"Retry-After": "2"}, text="fake limit")
+            if mode == "auth":
+                return httpx.Response(401, text="fake authorization failure")
+            if mode == "server-error":
+                return httpx.Response(503, text="fake provider failure")
             if mode == "timeout":
                 raise httpx.ReadTimeout("invented timeout; no provider socket")
             if mode == "malformed":
@@ -135,7 +163,7 @@ class Upstreams:
                 handed_off = True
                 return httpx.Response(
                     200,
-                    stream=Stream(self, data["model"], tag, mode),
+                    stream=Stream(self, identity, data["model"], tag, mode),
                     headers={"Content-Type": "text/event-stream"},
                 )
             await asyncio.sleep(0.025)
@@ -157,18 +185,27 @@ class Upstreams:
             )
         finally:
             if not handed_off:
-                self.active -= 1
+                self.release(identity)
 
 
 async def run(args):
     sys.path.insert(0, str(ROOT))
     from tests.four_resources import RESOURCES, app_for, configure
 
-    environment = {k: v for k, v in os.environ.items() if not k.startswith("SELARK_")}
+    apps, resources = dict(APPS), dict(RESOURCES)
+    if args.four_api:
+        resources["openai-test"] = ("openai", "gpt-6-luna", "api.openai.com")
+        apps.update({"openai-chat": ("openai-test", 2), "openai-review": ("openai-test", 2)})
+    environment = {
+        k: v
+        for k, v in os.environ.items()
+        if not k.startswith("SELARK_") and not k.endswith(("_API_KEY", "_TOKEN"))
+    }
     report = {
         "version": __version__,
         "verified_at": utc_now(),
-        "scope": "six independent tokens and HTTP pools; loopback TCP; fake upstream only",
+        "scope": "independent tokens and HTTP pools; loopback TCP; fake upstream only",
+        "four_api": args.four_api,
         "real_generation_requests": 0,
         "real_provider_metadata_requests": 0,
         "oauth_operations": 0,
@@ -189,21 +226,28 @@ async def run(args):
         sock.listen(128)
         url = f"http://127.0.0.1:{sock.getsockname()[1]}"
         with configure(Path(tmp) / "profile", port=sock.getsockname()[1]) as runtime:
-            upstream = Upstreams(RESOURCES)
+            if args.four_api:
+                runtime.add_connection(
+                    "openai-test",
+                    "openai",
+                    "fake-matrix-openai",
+                    allowed_models=[resources["openai-test"][1]],
+                )
+            upstream = Upstreams(resources, apps)
             tokens = {
                 name: runtime.store.create_token(
                     name,
                     policy={
                         "allowed_connections": [connection],
-                        "allowed_models": [connection + "::" + RESOURCES[connection][1]],
+                        "allowed_models": [connection + "::" + resources[connection][1]],
                         "max_concurrent_requests": None,
                     },
                 )
-                for name, (connection, limit) in APPS.items()
+                for name, (connection, limit) in apps.items()
             }
             prices = {}
-            for connection in {value[0] for value in APPS.values()}:
-                model = RESOURCES[connection][1]
+            for connection in {value[0] for value in apps.values()}:
+                model = resources[connection][1]
                 prices[connection] = {
                     "connection_id": connection,
                     "model": model,
@@ -230,7 +274,10 @@ async def run(args):
                                 headers={"Authorization": "Bearer " + token["token"]},
                                 trust_env=False,
                                 timeout=10,
-                                limits=httpx.Limits(max_connections=20, keepalive_expiry=0.5),
+                                limits=httpx.Limits(
+                                    max_connections=max(20, args.burst_clients),
+                                    keepalive_expiry=0.5,
+                                ),
                             )
                         )
                         for name, token in tokens.items()
@@ -250,8 +297,8 @@ async def run(args):
 
                     def payload(name, case, mode="fast", stream=False):
                         return {
-                            "connection_id": APPS[name][0],
-                            "model": RESOURCES[APPS[name][0]][1],
+                            "connection_id": apps[name][0],
+                            "model": resources[apps[name][0]][1],
                             "messages": [
                                 {
                                     "role": "user",
@@ -338,11 +385,11 @@ async def run(args):
                     watcher = asyncio.create_task(watch())
                     try:
                         workers = await asyncio.gather(
-                            *(worker(name) for name in APPS), return_exceptions=True
+                            *(worker(name) for name in apps), return_exceptions=True
                         )
                         failures = [
                             {"application": name, "exception": type(result).__name__}
-                            for name, result in zip(APPS, workers, strict=True)
+                            for name, result in zip(apps, workers, strict=True)
                             if isinstance(result, BaseException)
                         ]
                         if failures:
@@ -354,13 +401,13 @@ async def run(args):
                         await watcher
                     groups = runtime.store.sessions({"session_id": "shared-project"})["groups"]
                     check(
-                        "six_apps_same_session_isolated",
-                        len(groups) == 6
+                        "applications_same_session_isolated",
+                        len(groups) == len(apps)
                         and all(
                             g["known_tokens"]["total_tokens"] == 14 * args.requests_per_app
                             for g in groups
                         ),
-                        requests=len(APPS) * args.requests_per_app,
+                        requests=len(apps) * args.requests_per_app,
                         health_samples=len(samples),
                         health_latency_ms=percentiles(samples),
                     )
@@ -368,49 +415,152 @@ async def run(args):
                     # First isolate global queue behavior from per-application policies.
                     for token in tokens.values():
                         runtime.store.set_policy(token["id"], {"max_concurrent_requests": None})
-                    upstream.hold.clear()
-                    names = list(APPS)
-                    jobs = [
-                        asyncio.create_task(call(names[i % 6], f"burst-{i:02}", mode="hold"))
-                        for i in range(4)
-                    ]
+                    names = list(apps)
 
                     async def four_active():
                         return upstream.active == 4
 
-                    try:
-                        await wait_for(four_active)
-                        jobs += [
-                            asyncio.create_task(
-                                call(names[i % 6], f"burst-{i:02}", mode="hold", stream=bool(i % 2))
-                            )
-                            for i in range(4, 48)
+                    async def burst(label, selected):
+                        upstream.hold.clear()
+                        distinct = {}
+                        for name in selected:
+                            distinct.setdefault(apps[name][0], name)
+                        starters = list(distinct.values())
+                        starters += [selected[i % len(selected)] for i in range(4)]
+                        before = len(upstream.calls)
+                        jobs = [
+                            asyncio.create_task(call(starters[i], f"{label}-{i:03}", mode="hold"))
+                            for i in range(4)
                         ]
 
-                        async def saturated():
-                            h = await health()
-                            return (
-                                h["capacity"]["active"] == 4
-                                and h["capacity"]["queued"] == 8
-                                and sum(task.done() for task in jobs) == 36
+                        try:
+                            await wait_for(four_active)
+                            jobs += [
+                                asyncio.create_task(
+                                    call(
+                                        selected[i % len(selected)],
+                                        f"{label}-{i:03}",
+                                        mode="hold",
+                                        stream=bool(i % 2),
+                                    )
+                                )
+                                for i in range(4, args.burst_clients)
+                            ]
+
+                            async def saturated():
+                                h = await health()
+                                return (
+                                    h["capacity"]["active"] == 4
+                                    and h["capacity"]["queued"] == 8
+                                    and sum(task.done() for task in jobs) == args.burst_clients - 12
+                                )
+
+                            await wait_for(saturated)
+                        finally:
+                            upstream.hold.set()
+                            results = await asyncio.gather(*jobs)
+                        await wait_for(idle)
+                        check(
+                            label + "_bounded_execution_and_queue",
+                            Counter(x["status"] for x in results)
+                            == {200: 12, 429: args.burst_clients - 12}
+                            and len(upstream.calls) - before == 12
+                            and all(
+                                x["error"] == "server_overloaded"
+                                for x in results
+                                if x["status"] == 429
+                            ),
+                            status_counts=dict(Counter(x["status"] for x in results)),
+                            upstream_calls=12,
+                        )
+
+                    for cycle in range(args.burst_cycles):
+                        await burst(f"mixed_burst_{cycle + 1}", names)
+                    if args.four_api:
+                        representatives = {}
+                        for name, (connection, _) in apps.items():
+                            representatives.setdefault(connection, name)
+                        for connection in representatives:
+                            await burst(
+                                "single_" + connection,
+                                [name for name in names if apps[name][0] == connection],
                             )
 
-                        await wait_for(saturated)
-                    finally:
-                        upstream.hold.set()
-                        burst = await asyncio.gather(*jobs)
-                    await wait_for(idle)
-                    check(
-                        "48_requests_four_active_eight_queued_rest_rejected",
-                        Counter(x["status"] for x in burst) == {200: 12, 429: 36}
-                        and all(
-                            x["error"] == "server_overloaded" for x in burst if x["status"] == 429
-                        ),
-                        status_counts=dict(Counter(x["status"] for x in burst)),
-                    )
+                        check(
+                            "all_four_apis_overlap_and_each_reaches_four_execution_slots",
+                            upstream.peak_distinct_connections == 4
+                            and all(upstream.peak_by_connection[c] == 4 for c in representatives),
+                            peak_distinct_connections=upstream.peak_distinct_connections,
+                            peak_by_connection=dict(upstream.peak_by_connection),
+                        )
+                        upstream.hold.clear()
+                        before = len(upstream.calls)
+                        held = [
+                            asyncio.create_task(call(name, "queue-holder", mode="hold"))
+                            for name in representatives.values()
+                        ]
+                        limits = app.state.admission.limits
+                        original_timeout = limits.queue_timeout_seconds
+                        try:
+                            await wait_for(four_active)
+                            queued = asyncio.create_task(call("openai-chat", "cancel-queued"))
+
+                            async def one_queued():
+                                return (await health())["capacity"]["queued"] == 1
+
+                            await wait_for(one_queued)
+                            queued.cancel()
+                            await asyncio.gather(queued, return_exceptions=True)
+
+                            async def queue_empty():
+                                return (await health())["capacity"]["queued"] == 0
+
+                            await wait_for(queue_empty)
+                            report["cancelled_client_requests"] = 1
+                            limits.queue_timeout_seconds = 0.05
+                            timed_out = await call("openai-chat", "queue-timeout")
+                            check(
+                                "queued_cancel_and_timeout_never_reach_upstream",
+                                timed_out["error"] == "queue_timeout"
+                                and len(upstream.calls) - before == 4,
+                            )
+                        finally:
+                            limits.queue_timeout_seconds = original_timeout
+                            upstream.hold.set()
+                            await asyncio.gather(*held)
+                        await wait_for(idle)
+
+                        fault_matrix = (
+                            ("rate", False, "upstream_rate_limit"),
+                            ("auth", False, "upstream_auth_error"),
+                            ("server-error", False, "upstream_error"),
+                            ("timeout", False, "upstream_timeout"),
+                            ("malformed", False, "upstream_protocol_error"),
+                            ("truncated", True, "upstream_protocol_error"),
+                            ("disconnect", True, None),
+                            ("unknown", False, None),
+                        )
+                        peers = list(representatives.values())
+                        for index, name in enumerate(peers):
+                            for mode, streaming, expected in fault_matrix:
+                                before = len(upstream.calls)
+                                failed, healthy = await asyncio.gather(
+                                    call(name, "matrix-" + mode, mode=mode, stream=streaming),
+                                    call(peers[(index + 1) % len(peers)], "neighbor-" + mode),
+                                )
+                                await wait_for(idle)
+                                check(
+                                    apps[name][0] + "_" + mode + "_isolated",
+                                    failed["error"] == expected
+                                    and healthy["correct_response"]
+                                    and healthy["done"]
+                                    and len(upstream.calls) - before == 2
+                                    and (mode != "unknown" or failed["usage"] is None)
+                                    and (mode != "disconnect" or not failed["done"]),
+                                )
                     for name, token in tokens.items():
                         runtime.store.set_policy(
-                            token["id"], {"max_concurrent_requests": APPS[name][1]}
+                            token["id"], {"max_concurrent_requests": apps[name][1]}
                         )
 
                     # Responses can precede final settlement; measure this boundary honestly.
@@ -444,7 +594,7 @@ async def run(args):
                         neighbors = await asyncio.gather(
                             *(
                                 call(name, "beside-noisy")
-                                for name in APPS
+                                for name in apps
                                 if name != "batch-indexer"
                             )
                         )
@@ -456,7 +606,7 @@ async def run(args):
                         after_cleanup = await asyncio.gather(
                             *(
                                 call(name, "after-noisy-rejections")
-                                for name in APPS
+                                for name in apps
                                 if name != "batch-indexer"
                             )
                         )
@@ -475,7 +625,7 @@ async def run(args):
                         immediate_neighbor_status_counts=dict(
                             Counter(x["status"] for x in neighbors)
                         ),
-                        other_apps_succeeded_after_cleanup=5,
+                        other_apps_succeeded_after_cleanup=len(apps) - 1,
                     )
                     await wait_for(idle)
 
@@ -494,7 +644,7 @@ async def run(args):
                                 before["charged_or_reserved_tokens"] + reserve + 16
                             )
                         else:
-                            price = prices[APPS[name][0]]
+                            price = prices[apps[name][0]]
                             policy.update(
                                 daily_budget=str(
                                     Decimal(before["estimated_cost_or_reservation"]["CNY"])
@@ -540,7 +690,7 @@ async def run(args):
                         "forbidden-route",
                         overrides={
                             "connection_id": "relay-test",
-                            "model": RESOURCES["relay-test"][1],
+                            "model": resources["relay-test"][1],
                         },
                     )
                     spoof = await call(
@@ -633,7 +783,7 @@ async def run(args):
                                 "summary"
                             ],
                         }
-                        for name, (connection, limit) in APPS.items()
+                        for name, (connection, limit) in apps.items()
                     }
                     before_restart = runtime.store.summary({}, group_by="caller")
                     report["final_health"] = await health()
@@ -651,10 +801,12 @@ async def run(args):
                     )
                 report.update(
                     passed=True,
-                    application_count=6,
-                    client_requests=len(outcomes),
+                    application_count=len(apps),
+                    client_requests=len(outcomes) + report.get("cancelled_client_requests", 0),
                     simulated_upstream_requests=len(upstream.calls),
                     peak_upstream_concurrency=upstream.peak,
+                    peak_distinct_connections=upstream.peak_distinct_connections,
+                    peak_by_connection=dict(upstream.peak_by_connection),
                     latency_ms=percentiles(
                         [x["duration_ms"] for x in outcomes if x["correct_response"] and x["done"]]
                     ),
@@ -683,4 +835,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--requests-per-app", type=int, default=100, choices=range(2, 501))
+    parser.add_argument("--four-api", action="store_true", help="Add two OpenAI applications")
+    parser.add_argument("--burst-clients", type=int, default=48, choices=range(16, 257))
+    parser.add_argument("--burst-cycles", type=int, default=1, choices=range(1, 11))
     asyncio.run(run(parser.parse_args()))

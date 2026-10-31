@@ -372,8 +372,8 @@
     "fresh_shells": [
       {
         "version": "0.6.3",
-        "package": "/home/nbcctwya/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark/__init__.py",
-        "executable": "/home/nbcctwya/.local/bin/selark",
+        "package": "~/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark/__init__.py",
+        "executable": "~/.local/bin/selark",
         "cwd": "/tmp/selark-installed-check-aeo_aicc",
         "development_environment": false,
         "pythonpath_set": false,
@@ -403,8 +403,8 @@
       },
       {
         "version": "0.6.3",
-        "package": "/home/nbcctwya/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark/__init__.py",
-        "executable": "/home/nbcctwya/.local/bin/selark",
+        "package": "~/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark/__init__.py",
+        "executable": "~/.local/bin/selark",
         "cwd": "/tmp/selark-installed-check-aeo_aicc",
         "development_environment": false,
         "pythonpath_set": false,

@@ -324,7 +324,7 @@
           "integrity": "ok",
           "records": 36,
           "running_records": 0,
-          "path": "/home/nbcctwya/.local/share/selark/records.sqlite3"
+          "path": "~/.local/share/selark/records.sqlite3"
         },
         {
           "check": "client_token",

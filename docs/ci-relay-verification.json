@@ -35,7 +35,7 @@
   ],
   "relay": {
     "scope": "Eight explicit, bounded requests through Selark HTTP and its persistent ledger; no automatic retries/fallbacks.",
-    "base_url": "https://newapi.zahml.top/v1",
+    "base_url": "https://relay.example/v1",
     "discovery": {
       "status": 200,
       "models": [
@@ -750,7 +750,8 @@
       "Remote network vs relay/provider delay breakdown",
       "Sustained multi-turn/high-concurrency relay reliability"
     ],
-    "raw_body_or_headers_committed": false
+    "raw_body_or_headers_committed": false,
+    "base_url_redacted": true
   },
   "preservation": {
     "baseline_rows": {

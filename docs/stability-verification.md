@@ -70,7 +70,7 @@ cd /tmp
 
 ## 现有用户配置与安装迁移
 
-执行 `pipx install --force --python /home/nbcctwya/anaconda3/bin/python3 /home/nbcctwya/Alark/Selark`，
+执行 `pipx install --force --python ~/anaconda3/bin/python3 /path/to/Selark`，
 现有 pipx 环境升级到 **0.3.0**，沿用 Python 3.12.2。pipx 提示 `--force` 时沿用原解释器，因此 README 的再次安装命令省略了无效的 `--python`。
 安装为普通 wheel 安装，非 editable；安装目录中的 17 个 Python 文件逐字节匹配已测试源码，`pip check` 通过。
 

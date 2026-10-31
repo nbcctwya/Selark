@@ -38,6 +38,14 @@ def parser() -> argparse.ArgumentParser:
     init.add_argument("--default-model", help="默认使用 --models 中第一个模型")
     init.add_argument("--port", type=int, default=8787)
     commands.add_parser("serve", help="按持久配置启动 HTTP 服务")
+    dashboard = commands.add_parser("dashboard", help="打开本地只读 Web Dashboard")
+    dashboard.add_argument(
+        "--port", type=int, default=8790, help="本机端口（默认 8790；0 自动分配）"
+    )
+    dashboard.add_argument(
+        "--no-open", action="store_true", help="仅打印管理链接，不自动打开浏览器"
+    )
+    dashboard.add_argument("--offline", action="store_true", help="也不查询本机网关健康状态")
     models = commands.add_parser("models", help="通过 Selark HTTP 获取允许模型")
     models.add_argument("--json", action="store_true")
     models.add_argument("--connection", help="仅查看指定连接的本地模型列表")
@@ -78,6 +86,12 @@ def main(argv: list[str] | None = None) -> int:
     try:
         args = parser().parse_args(argv)
         directory = config_directory(args.config_dir)
+        if args.command == "dashboard":
+            from selark.dashboard import run_dashboard
+
+            return run_dashboard(
+                directory, port=args.port, open_browser=not args.no_open, offline=args.offline
+            )
         from selark.management import MANAGEMENT_COMMANDS, run
 
         if args.command in MANAGEMENT_COMMANDS:

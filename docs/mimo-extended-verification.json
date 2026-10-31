@@ -1,0 +1,898 @@
+{
+  "verified_on": "2026-10-30",
+  "generation_attempts": 296,
+  "metadata_reads": 4,
+  "reserved_cny": "19.108006",
+  "maximum_reservation_cny": "20",
+  "generation_retries": 0,
+  "reported_account_balance_cny": "20",
+  "account_balance_verified": false,
+  "api_statuses": {
+    "200": 292,
+    "no_headers": 2,
+    "400": 2
+  },
+  "requests_by_model": {
+    "mimo-v2.6-flash": 187,
+    "mimo-v2.6-pro": 103,
+    "mimo-v2.5-tts": 4,
+    "mimo-v2.5-asr": 2
+  },
+  "completed_responses": 267,
+  "intentional_cancellations": 4,
+  "parser_interrupted_responses": 22,
+  "api_output_cap_violations": 0,
+  "known_usage": {
+    "requests": 279,
+    "input_tokens": 1867456,
+    "output_tokens": 129967,
+    "total_tokens": 1997423,
+    "reported_cached_tokens": 242156
+  },
+  "reasoning_detail_anomalies": [
+    {
+      "name": "knapsack-mimo-v2.6-pro-True",
+      "output_tokens": 8192,
+      "reasoning_tokens": 8198
+    },
+    {
+      "name": "table-aggregation-mimo-v2.6-pro-True",
+      "output_tokens": 8192,
+      "reasoning_tokens": 8195
+    }
+  ],
+  "run_cleanup": [
+    {
+      "run": "mimo-extended-20261030",
+      "completed": true,
+      "source_configuration_unchanged": true,
+      "temporary_files_contain_provider_key": false,
+      "temporary_profiles_removed": true,
+      "outgoing_attempts": 29,
+      "reserved_micros": 1255700,
+      "stop_reason": null
+    },
+    {
+      "run": "mimo-extended-fixed-20261030",
+      "completed": true,
+      "source_configuration_unchanged": true,
+      "temporary_files_contain_provider_key": false,
+      "temporary_profiles_removed": true,
+      "outgoing_attempts": 17,
+      "reserved_micros": 915188,
+      "stop_reason": "harness_parser_error"
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "completed": true,
+      "source_configuration_unchanged": true,
+      "temporary_files_contain_provider_key": false,
+      "temporary_profiles_removed": true,
+      "outgoing_attempts": 214,
+      "reserved_micros": 12670308,
+      "stop_reason": null
+    },
+    {
+      "run": "mimo-extended-focus-20261030",
+      "completed": true,
+      "source_configuration_unchanged": true,
+      "temporary_files_contain_provider_key": false,
+      "temporary_profiles_removed": true,
+      "outgoing_attempts": 35,
+      "reserved_micros": 3259852,
+      "stop_reason": null
+    },
+    {
+      "run": "mimo-extended-web-20261030",
+      "completed": true,
+      "source_configuration_unchanged": true,
+      "temporary_files_contain_provider_key": false,
+      "temporary_profiles_removed": true,
+      "outgoing_attempts": 1,
+      "reserved_micros": 1006958,
+      "stop_reason": null
+    }
+  ],
+  "ledger_audits": [
+    {
+      "checked": 66,
+      "ingress_overloads": 16,
+      "missing": [],
+      "gateway_attempts": 0,
+      "direct_responses": 29,
+      "all_attempts_accounted": true,
+      "unique_records": true,
+      "no_retries": true,
+      "passed": true,
+      "successful_usage_rows_matched": 0,
+      "record_statuses": {
+        "failed": 68
+      },
+      "run": "mimo-extended-20261030"
+    },
+    {
+      "checked": 0,
+      "ingress_overloads": 0,
+      "missing": [],
+      "gateway_attempts": 0,
+      "direct_responses": 17,
+      "all_attempts_accounted": true,
+      "unique_records": true,
+      "no_retries": true,
+      "passed": true,
+      "successful_usage_rows_matched": 0,
+      "record_statuses": {},
+      "run": "mimo-extended-fixed-20261030"
+    },
+    {
+      "checked": 63,
+      "ingress_overloads": 16,
+      "missing": [
+        "gateway-reject-1",
+        "gateway-reject-2",
+        "gateway-reject-3"
+      ],
+      "gateway_attempts": 64,
+      "direct_responses": 150,
+      "all_attempts_accounted": true,
+      "unique_records": true,
+      "no_retries": true,
+      "passed": false,
+      "successful_usage_rows_matched": 60,
+      "record_statuses": {
+        "failed": 1,
+        "success": 60,
+        "cancelled": 4
+      },
+      "run": "mimo-extended-main-20261030"
+    },
+    {
+      "checked": 6,
+      "ingress_overloads": 0,
+      "missing": [],
+      "gateway_attempts": 2,
+      "direct_responses": 33,
+      "all_attempts_accounted": true,
+      "unique_records": true,
+      "no_retries": true,
+      "passed": true,
+      "successful_usage_rows_matched": 2,
+      "record_statuses": {
+        "failed": 4,
+        "success": 2
+      },
+      "run": "mimo-extended-focus-20261030"
+    },
+    {
+      "checked": 0,
+      "ingress_overloads": 0,
+      "missing": [],
+      "gateway_attempts": 0,
+      "direct_responses": 1,
+      "all_attempts_accounted": true,
+      "unique_records": true,
+      "no_retries": true,
+      "passed": true,
+      "successful_usage_rows_matched": 0,
+      "record_statuses": {},
+      "run": "mimo-extended-web-20261030"
+    }
+  ],
+  "phases": [
+    {
+      "run": "mimo-extended-fixed-20261030",
+      "phase": "smoke",
+      "clients": 4,
+      "complete": 4,
+      "strict_pass": 2,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 1125.665589934215,
+        "p95": 1605.2338290028274
+      },
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-fixed-20261030",
+      "phase": "vision",
+      "clients": 6,
+      "complete": 6,
+      "strict_pass": 1,
+      "errors": {},
+      "json_fence_only_failures": 5,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 1546.8320208601654,
+        "p95": 2022.5575608201325
+      },
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-fixed-20261030",
+      "phase": "speech-roundtrips",
+      "clients": 6,
+      "complete": 6,
+      "strict_pass": 5,
+      "errors": {},
+      "json_fence_only_failures": 1,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 1501.8772408366203,
+        "p95": 1878.444026922807
+      }
+    },
+    {
+      "run": "mimo-extended-fixed-20261030",
+      "phase": "function-roundtrips",
+      "clients": 1,
+      "complete": 0,
+      "strict_pass": 0,
+      "errors": {
+        "TypeError": 1
+      },
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": []
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "function-roundtrips",
+      "clients": 17,
+      "complete": 17,
+      "strict_pass": 16,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 1245.6011350732297,
+        "p95": 3401.7382741440088
+      }
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "application-conversations",
+      "clients": 36,
+      "complete": 36,
+      "strict_pass": 22,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 13411.821258021519,
+        "p95": 62366.68587406166
+      }
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "business-json",
+      "clients": 24,
+      "complete": 24,
+      "strict_pass": 12,
+      "errors": {},
+      "json_fence_only_failures": 10,
+      "incorrect_json_values": [
+        {
+          "name": "deduplicate-mimo-v2.6-flash",
+          "actual": [
+            "A",
+            "B",
+            "C"
+          ],
+          "expected": [
+            "A",
+            "B",
+            "b",
+            "C"
+          ]
+        },
+        {
+          "name": "unicode-mimo-v2.6-flash",
+          "actual": [
+            -20,
+            -2,
+            -2,
+            0,
+            2,
+            3,
+            11,
+            11,
+            100
+          ],
+          "expected": [
+            -20,
+            -2,
+            0,
+            2,
+            3,
+            11,
+            11,
+            100
+          ]
+        }
+      ],
+      "latency_ms": {
+        "p50": 1878.5989650059491,
+        "p95": 4228.526800870895
+      },
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "reasoning-and-data",
+      "clients": 8,
+      "complete": 8,
+      "strict_pass": 0,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [
+        {
+          "name": "knapsack-mimo-v2.6-flash-False",
+          "actual": {
+            "maximum_value": 133
+          },
+          "expected": {
+            "maximum_value": 130
+          }
+        },
+        {
+          "name": "table-aggregation-mimo-v2.6-flash-False",
+          "actual": {
+            "A": 5116,
+            "B": 6088,
+            "C": 7101
+          },
+          "expected": {
+            "A": 3215,
+            "B": 3936,
+            "C": 4647
+          }
+        },
+        {
+          "name": "knapsack-mimo-v2.6-pro-False",
+          "actual": {
+            "maximum_value": 143
+          },
+          "expected": {
+            "maximum_value": 130
+          }
+        },
+        {
+          "name": "table-aggregation-mimo-v2.6-pro-False",
+          "actual": {
+            "A": 3786,
+            "B": 5412,
+            "C": 7110
+          },
+          "expected": {
+            "A": 3215,
+            "B": 3936,
+            "C": 4647
+          }
+        }
+      ],
+      "latency_ms": {
+        "p50": 3048.6976359970868,
+        "p95": 210626.87131389976
+      },
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "structured-output",
+      "clients": 8,
+      "complete": 8,
+      "strict_pass": 8,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 1927.0332669839263,
+        "p95": 4301.25871906057
+      },
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "parameter-boundaries",
+      "clients": 22,
+      "complete": 22,
+      "strict_pass": 11,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 2706.5791240893304,
+        "p95": 82002.26569990627
+      },
+      "peak_local_active": 4,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "long-reference",
+      "clients": 10,
+      "complete": 10,
+      "strict_pass": 4,
+      "errors": {},
+      "json_fence_only_failures": 6,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 5225.3093149047345,
+        "p95": 38281.39590611681
+      },
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "protocols-and-reasoning-controls",
+      "clients": 20,
+      "complete": 20,
+      "strict_pass": 20,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 1419.106898829341,
+        "p95": 20430.19869318232
+      },
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "substantive-long-output",
+      "clients": 6,
+      "complete": 6,
+      "strict_pass": 6,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 125371.60900398158,
+        "p95": 208656.86408197507
+      },
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "prefix-cache",
+      "clients": 3,
+      "complete": 3,
+      "strict_pass": 0,
+      "errors": {},
+      "json_fence_only_failures": 3,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 1984.3616751022637,
+        "p95": 2069.974653888494
+      },
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "gateway-concurrency-1",
+      "clients": 2,
+      "complete": 2,
+      "strict_pass": 2,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 842.4511980265379,
+        "p95": 2450.8633471559733
+      },
+      "peak_local_active": 1,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "gateway-concurrency-4",
+      "clients": 8,
+      "complete": 8,
+      "strict_pass": 8,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 834.9409629590809,
+        "p95": 1010.8954419847578
+      },
+      "peak_local_active": 4,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "gateway-concurrency-8",
+      "clients": 16,
+      "complete": 16,
+      "strict_pass": 16,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 938.3316931780428,
+        "p95": 2186.2861937843263
+      },
+      "peak_local_active": 8,
+      "peak_local_queued": 1
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "gateway-burst-32",
+      "clients": 32,
+      "complete": 16,
+      "strict_pass": 11,
+      "errors": {
+        "server_overloaded": 16
+      },
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 3679.427039111033,
+        "p95": 8755.858313990757
+      },
+      "peak_local_active": 8,
+      "peak_local_queued": 8
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "mixed-interfaces",
+      "clients": 8,
+      "complete": 8,
+      "strict_pass": 8,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 1684.5328989438713,
+        "p95": 2056.9844429846853
+      },
+      "peak_local_active": 2,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "cancellations",
+      "clients": 4,
+      "complete": 0,
+      "strict_pass": 4,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "peak_local_active": 4,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "recovery",
+      "clients": 4,
+      "complete": 4,
+      "strict_pass": 4,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 4992.904440034181,
+        "p95": 5071.007482940331
+      },
+      "peak_local_active": 4,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "slow-readers",
+      "clients": 2,
+      "complete": 2,
+      "strict_pass": 2,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 8693.799091037363,
+        "p95": 9796.27908184193
+      },
+      "peak_local_active": 3,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-main-20261030",
+      "phase": "gateway-unsupported",
+      "clients": 4,
+      "complete": 0,
+      "strict_pass": 4,
+      "errors": {
+        "invalid_request": 4
+      },
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-focus-20261030",
+      "phase": "calculator-workflows",
+      "clients": 8,
+      "complete": 8,
+      "strict_pass": 6,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 2005.9564020484686,
+        "p95": 13402.79853506945
+      }
+    },
+    {
+      "run": "mimo-extended-focus-20261030",
+      "phase": "deduplication-code",
+      "clients": 2,
+      "complete": 2,
+      "strict_pass": 2,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 48010.096721118316,
+        "p95": 53143.037440022454
+      }
+    },
+    {
+      "run": "mimo-extended-focus-20261030",
+      "phase": "focused-controls",
+      "clients": 22,
+      "complete": 21,
+      "strict_pass": 19,
+      "errors": {
+        "TotalTimeout": 1
+      },
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [
+        {
+          "name": "chinese-policy-mimo-v2.6-flash",
+          "actual": {
+            "版本": "v3.2",
+            "保留天数": "7",
+            "导出上限": "2"
+          },
+          "expected": {
+            "版本": "v3.2",
+            "保留天数": 7,
+            "导出上限": 2
+          }
+        }
+      ],
+      "latency_ms": {
+        "p50": 2225.284249987453,
+        "p95": 55939.13474306464
+      },
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-focus-20261030",
+      "phase": "slow-readers",
+      "clients": 2,
+      "complete": 2,
+      "strict_pass": 2,
+      "errors": {},
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "latency_ms": {
+        "p50": 9730.025969911367,
+        "p95": 11380.309578962624
+      },
+      "peak_local_active": 2,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-focus-20261030",
+      "phase": "gateway-unsupported",
+      "clients": 4,
+      "complete": 0,
+      "strict_pass": 4,
+      "errors": {
+        "invalid_request": 4
+      },
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-focus-20261030",
+      "phase": "web-search-capability",
+      "clients": 1,
+      "complete": 0,
+      "strict_pass": 0,
+      "errors": {
+        "400": 1
+      },
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    },
+    {
+      "run": "mimo-extended-web-20261030",
+      "phase": "web-search-documented-control",
+      "clients": 1,
+      "complete": 0,
+      "strict_pass": 0,
+      "errors": {
+        "400": 1
+      },
+      "json_fence_only_failures": 0,
+      "incorrect_json_values": [],
+      "peak_local_active": 0,
+      "peak_local_queued": 0
+    }
+  ],
+  "known_usage_cost_range_cny": [
+    "3.004270308888888888888888889",
+    "3.134866088888888888888888889"
+  ],
+  "cache_breakdown_missing_requests": 138,
+  "attempts_without_token_usage": 17,
+  "sample_lengths": [
+    {
+      "name": "longform-offline-design-mimo-v2.6-flash",
+      "characters": 8711,
+      "hanzi": 2638,
+      "finish_reason": "stop",
+      "output_tokens": 4321
+    },
+    {
+      "name": "longform-incident-playbook-mimo-v2.6-flash",
+      "characters": 10709,
+      "hanzi": 2530,
+      "finish_reason": "stop",
+      "output_tokens": 5102
+    },
+    {
+      "name": "longform-evaluation-design-mimo-v2.6-flash",
+      "characters": 13832,
+      "hanzi": 5650,
+      "finish_reason": "stop",
+      "output_tokens": 8279
+    },
+    {
+      "name": "longform-offline-design-mimo-v2.6-pro",
+      "characters": 7785,
+      "hanzi": 2084,
+      "finish_reason": "stop",
+      "output_tokens": 3679
+    },
+    {
+      "name": "longform-incident-playbook-mimo-v2.6-pro",
+      "characters": 15733,
+      "hanzi": 3599,
+      "finish_reason": "stop",
+      "output_tokens": 7680
+    },
+    {
+      "name": "longform-evaluation-design-mimo-v2.6-pro",
+      "characters": 9260,
+      "hanzi": 4356,
+      "finish_reason": "stop",
+      "output_tokens": 5817
+    }
+  ],
+  "code_verification": {
+    "implementations": 8,
+    "checks": 1744,
+    "failures": 0,
+    "results": [
+      {
+        "name": "application-mimo-v2.6-flash-coding-1",
+        "tests": 154,
+        "failures": 0,
+        "examples": [],
+        "status": "pass"
+      },
+      {
+        "name": "application-mimo-v2.6-flash-coding-2",
+        "tests": 279,
+        "failures": 0,
+        "examples": [],
+        "status": "pass"
+      },
+      {
+        "name": "application-mimo-v2.6-pro-coding-1",
+        "tests": 154,
+        "failures": 0,
+        "examples": [],
+        "status": "pass"
+      },
+      {
+        "name": "application-mimo-v2.6-flash-coding-3",
+        "tests": 279,
+        "failures": 0,
+        "examples": [],
+        "status": "pass"
+      },
+      {
+        "name": "application-mimo-v2.6-pro-coding-2",
+        "tests": 279,
+        "failures": 0,
+        "examples": [],
+        "status": "pass"
+      },
+      {
+        "name": "application-mimo-v2.6-pro-coding-3",
+        "tests": 279,
+        "failures": 0,
+        "examples": [],
+        "status": "pass"
+      },
+      {
+        "name": "dedupe-code-mimo-v2.6-flash",
+        "tests": 160,
+        "failures": 0,
+        "examples": [],
+        "status": "pass"
+      },
+      {
+        "name": "dedupe-code-mimo-v2.6-pro",
+        "tests": 160,
+        "failures": 0,
+        "examples": [],
+        "status": "pass"
+      }
+    ]
+  },
+  "unknown_usage_breakdown": {
+    "early_parser_interrupted_streams": 10,
+    "intentional_cancellations": 4,
+    "total_timeout": 1,
+    "web_search_rejections": 2
+  },
+  "maximum_single_input_tokens": 345801,
+  "peak_upstream_requests_before_headers": 8,
+  "runtime_implementation_changed": false,
+  "final_gateway_health": {
+    "active": 0,
+    "queued": 0,
+    "admitted": 0,
+    "max_active": 8,
+    "max_queued": 8,
+    "accepting": true,
+    "pending_records": 0
+  },
+  "final_recovery": {
+    "restored": 0,
+    "invalid": 0,
+    "failed": 0,
+    "pending": 0,
+    "interrupted": 0
+  },
+  "validation": {
+    "full_pytest_passed": 617,
+    "duration_seconds": 62.68,
+    "warnings": 1,
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "diff_check": "passed",
+    "credential_scan": {
+      "public_files_scanned": 165,
+      "public_findings": [],
+      "raw_files_scanned": 609,
+      "raw_credential_findings": [],
+      "raw_files_gitignored": true
+    }
+  },
+  "sources": [
+    "https://mimo.mi.com/docs/zh-CN/price/pay-as-you-go",
+    "https://mimo.mi.com/docs/zh-CN/api/chat/openai-api",
+    "https://mimo.mi.com/docs/zh-CN/api/chat/responses",
+    "https://mimo.mi.com/docs/zh-CN/quick-start/usage-guide/text-generation/tool-calling/web-search"
+  ]
+}

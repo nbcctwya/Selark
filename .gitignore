@@ -66,6 +66,23 @@ backups/
 *.sqlite3-*
 *.db
 *.db-*
-# Raw OpenAI acceptance reports retain machine paths and upstream request IDs.
-# Publish only the reviewed, anonymized docs/openai-verification.md summary.
+# Raw acceptance reports can retain machine paths and upstream request IDs.
+# Publish only reviewed, anonymized summaries under docs/.
 /docs/openai*-live-verification.json
+/artifacts/
+/reports/
+/test-results/
+/playwright-report/
+/blob-report/
+.playwright/
+playwright/.auth/
+*.raw.json
+*.private.json
+/docs/*-raw*.json
+# Browser sessions, traces and network captures can contain management cookies.
+*storage-state*.json
+*storage_state*.json
+cookies.json
+cookies.txt
+*.har
+*.trace.zip

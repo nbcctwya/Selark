@@ -86,7 +86,7 @@ GitHub Actions 已纳入新增测试，维持 Python 3.11/3.12/3.13 矩阵，并
 - 新 Key 写入 `~/.config/selark/connections.json`；新客户端只含 Selark 令牌，保存于
   `~/.config/selark/clients/personal-coding/client.json`，0600。旧 legacy 不会自动获得套餐权限。
 
-通过 README 标准命令 `pipx install --force /home/nbcctwya/Alark/Selark` 完成安装。
+通过 README 标准命令 `pipx install --force /path/to/Selark` 完成安装。
 曾尝试跳过构建隔离，但 pipx 运行环境未安装 setuptools，改用标准隔离构建后成功；无需改系统 Python。
 最终安装源码与本轮实现一致，`pip check` 通过。
 

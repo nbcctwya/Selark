@@ -320,7 +320,7 @@ def test_quota_invalid_auth_redirect_and_response_bounds(plan, response):
 
 def test_stale_snapshot_and_late_old_refresh_cannot_replace_current(runtime, plan):
     runtime.save_plan_status(plan, parse_quota(quota()), "2026-10-28T01:00:00+00:00")
-    runtime.change_connection({"api_key": "changed-fake-key"}, PLAN)
+    runtime.change_connection({"api_key": "fake-changed-key"}, PLAN)
     assert runtime.plan_status(PLAN)["state"] == "stale"
     current = runtime.connection_settings()[-1]
     latest = parse_quota(quota()) | {"extra_usage": "enabled"}

@@ -1,7 +1,47 @@
-# Selark 0.7.2 · 个人 AI 资源管理工具
+# Selark 0.8.1 · 个人 AI 资源管理工具
 
 独立的文本模型 HTTP 接入服务：`CLI / 外部程序 → Selark → 指定模型连接`。
 Python 3.11+，FastAPI + HTTPX + Uvicorn；默认仅监听 `127.0.0.1:8787`。
+
+## 0.8.1：新增 API 自动发现模型
+
+```bash
+selark connection add openai-personal --provider openai --interactive
+# 隐藏输入 Key；模型留空会查询并加入上游模型列表
+```
+
+新增普通 API 连接时，省略 `--models` 或在向导中留空，现在默认执行模型发现。
+显式填写模型则只使用手动列表；需要完全离线创建时加 `--no-discover`。
+失败会保留已保存的连接与 Key、返回非零退出码，并提示使用 `connection discover ID` 重试。
+此步骤只查询模型列表，不发起生成；上游列出的模型不等于已验证可调用或均支持文本协议。
+自动发现不任意选择默认调用模型，可另用 `--default-model` 指定。
+Token Plan 的预设模型和 ChatGPT 的 OAuth 流程沿用原有行为。
+Dashboard 首页资源池也支持滚动查看全部连接，不再只显示前 5 项。
+详见 [连接配置](docs/connections.md) 与 [0.8.1 验收](docs/model-discovery-verification.md)。
+仓库的敏感信息检查、忽略规则与历史范围见 [发布安全检查](docs/repository-security.md)。
+
+## 0.8.0：本地 Web Dashboard V0.1
+
+```bash
+selark dashboard                    # 在本机浏览器打开只读仪表盘
+selark dashboard --no-open          # 仅打印一次性管理链接
+selark dashboard --port 8795         # 默认 127.0.0.1:8790，可选本机端口
+selark dashboard --offline          # 完全离线，只读本地文件与账本
+```
+
+五个页面：资源概览、连接与模型、用量分析、应用管理、运行监控。
+支持深浅色主题、手机布局、时间 / 应用 / 模型 / 连接筛选、历史趋势与调用详情。
+所有数据来自现有本地记录；历史验证不代表实时可用性，费用估算不是账单，未知额度不计为零。
+前端随 Python 包安装，无需 Node、CDN、外部字体或单独构建。
+
+Dashboard 独立于模型网关运行：只监听 `127.0.0.1`，不自动启动网关；网关停止时仍可查看历史。
+终端中的一次性管理链接有效期 5 分钟，登录后通过独立 HttpOnly 会话访问，最长 8 小时。
+保持终端运行，`Ctrl+C` 关闭 Dashboard。API Key、OAuth 凭据、调用方令牌不发送到浏览器。
+本阶段没有连接修改、令牌创建、模型调用、服务控制或其他资源写入接口。
+旧 CLI、schema 4、配置与 OAuth 机制保持兼容。
+
+完整使用、统计口径与安全边界见 [Dashboard 说明](docs/dashboard.md)，
+测试、浏览器与安装验收见 [Dashboard 验收](docs/dashboard-verification.md)。
 
 ## 0.7.2：审查修复与稳定性加固
 
@@ -14,6 +54,14 @@ Token 计数、旧账本核算、默认目录恢复和状态退出码等问题�
 该报告分别记录传输、Token、费用未知和答案正确性，保留中途停止及显式补测的证据。
 多应用同时接入的行为与边界见 [六应用并发模拟](docs/multi-app-simulation.md)：独立令牌、
 同名会话隔离、共享队列、应用限额、未知预留及重启恢复，全部使用模拟上游。
+OpenAI、DeepSeek、MiMo 与中转站的 [四 API 并发与极端场景验收](docs/four-api-concurrency-verification.md)
+包含 1,824 次模拟请求和 28 次真实调用；中转站的内容偏差与输出上限异常单独记录。
+后续 [中转站深入压力与协议对照](docs/relay-stress-verification.md) 完成 256 次真实生成，
+覆盖 16 路并发与 64 客户端突发，并复现输出上限、系统消息和停止词问题。
+官方 [GPT-6 Luna 扩展验收](docs/openai-luna-verification.md) 完成 141 次真实上游请求，
+覆盖长输入、严格 JSON、函数往返、六档推理、8 路并发和参数拒绝边界。
+后续 [MiMo 扩展场景实测](docs/mimo-extended-verification.md) 完成 296 次真实调用、约 200 万
+已报告 tokens，覆盖 Flash / Pro、代码执行检查、长文、图像、语音、工具、并发及参数边界。
 
 ```bash
 selark status                       # 所有资源、模型、历史验证、授权、用量及本地配额
@@ -55,7 +103,7 @@ SELARK_PYTHON="$(command -v python3)"
 
 若 `python3` 低于 3.11，将 `SELARK_PYTHON` 设置为已安装的较新 Python 的绝对路径。
 本次验收的 WSL 系统 Python 是 3.8，实际使用
-`/home/nbcctwya/anaconda3/bin/python3`（3.12.2）；启动 Selark 时不需要激活 Conda。
+`~/anaconda3/bin/python3`（3.12.2）；启动 Selark 时不需要激活 Conda。
 
 若尚未安装 pipx，可按 [pipx 官方说明](https://pipx.pypa.io/latest/how-to/install-pipx.html)
 安装在当前用户的独立工具环境中，无需 sudo，也不修改系统 Python：

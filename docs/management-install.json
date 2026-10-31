@@ -2,8 +2,8 @@
   "version": "0.2.0",
   "cwd": "/tmp/selark-management-client",
   "shell": "fresh interactive non-login bash",
-  "command_path": "/home/nbcctwya/.local/bin/selark",
-  "module_file": "/home/nbcctwya/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark/__init__.py",
+  "command_path": "~/.local/bin/selark",
+  "module_file": "~/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark/__init__.py",
   "virtual_env_active": false,
   "conda_environment_active": false,
   "installed_python_files_match_source": 15,
@@ -163,7 +163,7 @@
             "integrity": "ok",
             "records": 17,
             "running_records": 0,
-            "path": "/home/nbcctwya/.local/share/selark/records.sqlite3"
+            "path": "~/.local/share/selark/records.sqlite3"
           },
           {
             "check": "client_token",
@@ -600,7 +600,7 @@
       "exit_code": 0,
       "result": {
         "schema_version": 2,
-        "database": "/home/nbcctwya/.local/share/selark/records.sqlite3",
+        "database": "~/.local/share/selark/records.sqlite3",
         "backup": null,
         "migrated": false
       }
@@ -723,7 +723,7 @@
         "--json"
       ],
       "exit_code": 1,
-      "stdout": "{\"ok\": false, \"checks\": [{\"check\": \"server_config\", \"ok\": true, \"connection_enabled\": true}, {\"check\": \"client_config\", \"ok\": true}, {\"check\": \"storage\", \"ok\": true, \"integrity\": \"ok\", \"records\": 17, \"running_records\": 0, \"path\": \"/home/nbcctwya/.local/share/selark/records.sqlite3\"}, {\"check\": \"client_token\", \"ok\": true, \"caller_id\": \"legacy\", \"message\": \"本地客户端令牌有效\"}, {\"check\": \"service\", \"ok\": false, \"message\": \"无法连接本机服务，请运行 selark serve。\"}], \"model_generation_requests\": 0, \"note\": \"doctor 不执行真实连通性探测；使用 connection probe 显式生成。\"}",
+      "stdout": "{\"ok\": false, \"checks\": [{\"check\": \"server_config\", \"ok\": true, \"connection_enabled\": true}, {\"check\": \"client_config\", \"ok\": true}, {\"check\": \"storage\", \"ok\": true, \"integrity\": \"ok\", \"records\": 17, \"running_records\": 0, \"path\": \"~/.local/share/selark/records.sqlite3\"}, {\"check\": \"client_token\", \"ok\": true, \"caller_id\": \"legacy\", \"message\": \"本地客户端令牌有效\"}, {\"check\": \"service\", \"ok\": false, \"message\": \"无法连接本机服务，请运行 selark serve。\"}], \"model_generation_requests\": 0, \"note\": \"doctor 不执行真实连通性探测；使用 connection probe 显式生成。\"}",
       "stderr": ""
     }
   ],

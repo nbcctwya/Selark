@@ -2,8 +2,8 @@
   "verified_at": "2026-10-28T08:06:45.721454+00:00",
   "version": "0.4.0",
   "installation_scope": "current WSL user nbcctwya; not system-wide",
-  "entrypoint": "/home/nbcctwya/.local/bin/selark",
-  "installed_module": "/home/nbcctwya/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark",
+  "entrypoint": "~/.local/bin/selark",
+  "installed_module": "~/.local/share/pipx/venvs/selark/lib/python3.12/site-packages/selark",
   "installed_source_files_match": 23,
   "editable_install": false,
   "activated_environment": false,
@@ -53,7 +53,7 @@
       "verification": "success"
     }
   ],
-  "protected_backup": "/home/nbcctwya/.local/share/selark/backups/2026-10-28T08-06-44.317323+00-00-60a60be0",
+  "protected_backup": "~/.local/share/selark/backups/2026-10-28T08-06-44.317323+00-00-60a60be0",
   "backup_recovery_consistent": true,
   "protected_permissions": true,
   "service_before": "stopped",
@@ -127,12 +127,12 @@
       "passed": true
     },
     {
-      "command": "selark --config-dir /home/nbcctwya/.config/selark/clients/management-verification-a models",
+      "command": "selark --config-dir ~/.config/selark/clients/management-verification-a models",
       "exit_code": 1,
       "passed": true
     },
     {
-      "command": "selark --config-dir /home/nbcctwya/.config/selark/clients/management-verification-b models",
+      "command": "selark --config-dir ~/.config/selark/clients/management-verification-b models",
       "exit_code": 0,
       "passed": true
     },

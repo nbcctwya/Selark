@@ -215,7 +215,7 @@ def test_connection_changes_hot_reload_and_probe_validation(runtime):
             "probe", probe_fingerprint=fingerprint(runtime.settings())
         )
         runtime.change_connection(
-            {"api_key": "another-fake-key", "base_url": "https://another.test/v1"}
+            {"api_key": "fake-another-key", "base_url": "https://another.test/v1"}
         )
         assert runtime.connection()["verification"]["state"] == "stale"
         assert runtime.connection()["verification"]["verified_at"] == verified["verified_at"]
@@ -237,7 +237,7 @@ def test_connection_changes_hot_reload_and_probe_validation(runtime):
             == 502
         )
         assert runtime.connection()["verification"]["state"] == "failure"
-        assert calls[-1].headers["api-key"] == "another-fake-key"
+        assert calls[-1].headers["api-key"] == "fake-another-key"
         assert calls[-1].url.host == "another.test"
         before = len(calls)
         for _ in range(2):

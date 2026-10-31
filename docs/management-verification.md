@@ -101,8 +101,8 @@ A 已撤销，B 和 legacy 仍有效。验收生成的 A/B 客户端配置保留
 已实际执行普通安装更新：
 
 ```bash
-~/.local/bin/pipx install --force --python /home/nbcctwya/anaconda3/bin/python3 \
-  /home/nbcctwya/Alark/Selark
+~/.local/bin/pipx install --force --python ~/anaconda3/bin/python3 \
+  /path/to/Selark
 ```
 
 pipx 保留现有解释器（Python 3.12.2），安装版本 **0.2.0**。命令位于

@@ -20,12 +20,12 @@ selark connection show deepseek-personal
 
 # 首次新增时从交互终端隐藏输入 Key；不在命令行传明文 Key
 selark connection add deepseek-work --provider deepseek --name 'DeepSeek Work'
-selark connection discover deepseek-work  # 只读取模型列表
+# 0.8.1 起，省略 --models 会自动查询并保存上游模型列表
+selark connection discover deepseek-work  # 之后可显式刷新列表；不生成内容
 selark connection set deepseek-work --default-model deepseek-flash
 
 selark connection add relay-work --provider openai-compatible \
   --base-url https://relay.example/v1 --name 'Relay Work'
-selark connection discover relay-work
 selark connection set relay-work --models YOUR_TEXT_MODEL --default-model YOUR_TEXT_MODEL
 
 selark connection disable deepseek-work
@@ -34,6 +34,13 @@ selark connection probe deepseek-work     # 显式生成一次短请求，有实
 ```
 
 新增也可用 `--models MODEL ... --default-model MODEL` 手动配置，适用于没有模型列表接口的厂商。
+从 0.8.1 起，`connection add` 新增普通 API 时，省略 `--models` 或在向导里留空，
+会使用已输入的 Key 查询当前 API 地址的 `/models`，加入上游返回的全部合法模型标识。
+显式填写模型会跳过发现；`--no-discover` 可保留只写本地配置的流程。Token Plan 使用原预设，
+ChatGPT 继续通过专用 OAuth 命令管理，已有连接的 `set --api-key` 不会替换模型列表。
+发现失败时连接和 Key 已保存，命令返回 1，输出 `discovery.state=failure`，
+无需重新输入 Key；使用 `connection discover ID` 重试，或 `connection set ID --models ...` 手动配置。
+自动发现时可同时给出 `--default-model`；它必须在返回的列表中，否则保留发现结果、报告错误并留空默认模型。
 显式手动提供模型而省略默认模型时，选择手动列表中的第一个；自动发现不会替你挑选一个新默认模型。
 各连接的 ID 创建后不变；`set ID --name ...`、`--base-url ...`、`--api-key`、`--models ...`、
 `--default-model ...`、`--timeout ...` 可修改其设置。新增/修改/启停热生效；已经分发的请求继续使用原连接快照。
@@ -98,7 +105,7 @@ selark usage --connection relay-personal --today --tz Asia/Shanghai --json
 
 - `configured`：本地设置和 Key 格式有效，不代表账户有额度或模型可调用。
 - `models_configured`：有本地允许列表，可能来自手动输入或发现。
-- `discovery`：最近显式模型列表查询的状态、时间、模型和错误。地址、Key 或工作区变化后显示 stale。
+- `discovery`：最近模型列表查询的状态、时间、模型和错误（含新增 API 时的自动发现）。地址、Key 或工作区变化后显示 stale。
 - `verification`：当前配置最近已取得成功/失败上游结果的真实调用，包含时间与请求 ID；普通生成和显式 probe 都可更新。
 
 修改关键调用配置会使旧生成验证过期；旧配置的迟到请求不会覆盖当前配置的验证。

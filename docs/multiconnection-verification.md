@@ -116,7 +116,7 @@ MiMo 保留原手动列表及默认模型。三个连接当前均显示真实调
 已执行：
 
 ```bash
-/home/nbcctwya/.local/bin/pipx install --force /home/nbcctwya/Alark/Selark
+~/.local/bin/pipx install --force /path/to/Selark
 ```
 
 当前命令为 `~/.local/bin/selark`，版本 **0.4.0**，Python 3.12.2。

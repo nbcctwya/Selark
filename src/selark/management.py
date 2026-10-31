@@ -24,7 +24,7 @@ from selark.config import (
     data_directory,
     load_config,
 )
-from selark.connections import PRESETS, ConnectionsConfig, require_connection
+from selark.connections import PRESETS, ConnectionsConfig, require_connection, valid_model
 from selark.errors import GatewayError
 from selark.governance import ResourcesConfig
 from selark.history import import_history
@@ -91,7 +91,7 @@ def read_key(provider, variable=None):
 
 def configure_connection_interactively(args):
     if not sys.stdin.isatty():
-        raise ConfigError("--interactive 需要交互终端；脚本请显式提供 --provider 和 --models。")
+        raise ConfigError("--interactive 需要交互终端；脚本请用 --provider，模型可自动发现。")
     if not args.provider:
         providers = [key for key in PRESETS if key != "chatgpt"]
         print("可选平台：" + ", ".join(providers), file=sys.stderr)
@@ -106,7 +106,12 @@ def configure_connection_interactively(args):
     if not args.base_url:
         args.base_url = input(f"API 地址 [{PRESETS[provider][1]}]: ").strip() or None
     if not args.models and provider not in PLAN_PRESETS:
-        args.models = input("允许模型 ID（空格分隔，可留空后显式 discover）: ").split() or None
+        hint = (
+            "留空后可手动执行 connection discover"
+            if args.no_discover
+            else "留空自动查询并加入上游返回的全部模型"
+        )
+        args.models = input(f"允许模型 ID（空格分隔；{hint}）: ").split() or None
     if args.models and not args.default_model:
         args.default_model = input(f"默认模型 [{args.models[0]}]: ").strip() or args.models[0]
 
@@ -219,15 +224,18 @@ def add_commands(commands):
     discover = actions.add_parser("discover", help="读取并保存上游模型列表；不生成，失败保留旧列表")
     discover.add_argument("id", nargs="?", default="mimo-default")
     discover.add_argument("--json", action="store_true")
-    add = actions.add_parser("add", help="新增独立连接；Key 从环境变量或隐藏输入读取")
+    add = actions.add_parser("add", help="新增独立连接；API 未填写模型时自动查询并加入上游模型列表")
     add.add_argument("id", help="稳定连接 ID，如 deepseek-personal")
     add.add_argument("--provider", choices=[*PRESETS, "glm"])
     add.add_argument(
-        "--interactive", action="store_true", help="交互选择已有平台并配置模型；不发起网络请求"
+        "--interactive", action="store_true", help="交互配置；API 模型留空时自动发现，不生成内容"
     )
     add.add_argument("--name")
     add.add_argument("--base-url")
-    add.add_argument("--models", nargs="+")
+    add.add_argument("--models", nargs="+", help="手动允许列表；普通 API 省略时自动发现全部模型")
+    add.add_argument(
+        "--no-discover", action="store_true", help="跳过新增 API 的自动模型发现，仅保存本地配置"
+    )
     add.add_argument("--default-model")
     add.add_argument("--api-key-env", help="读取指定环境变量中的 Key，不接受命令行明文 Key")
     add.add_argument("--workspace-id", help="Anthropic 非工作区专属 Key 所需的 workspace ID")
@@ -641,6 +649,26 @@ def doctor(directory: Path) -> dict:
     }
 
 
+def discover_connection(runtime, identity):
+    """One bounded model-list request flow, shared by explicit discovery and CLI onboarding."""
+    from selark.chatgpt_auth import ChatGPTAuth
+    from selark.providers.discovery import discover
+
+    original = require_connection(runtime.connection_settings(), identity)
+    try:
+        models = asyncio.run(discover(original, auth=ChatGPTAuth(runtime.directory)))
+        return runtime.save_discovery(original, models)
+    except GatewayError as error:
+        if error.upstream_status and original.provider != "chatgpt":
+            error = GatewayError(
+                error.status,
+                "discovery_http_error",
+                f"模型列表接口返回 HTTP {error.upstream_status}；"
+                "请检查地址/权限或使用 connection set --models 手动配置。",
+            )
+        return runtime.save_discovery(original, [], error)
+
+
 def run(args, directory: Path) -> int:
     if args.command == "status":
         from selark.overview import overview, render_overview
@@ -847,6 +875,11 @@ def run(args, directory: Path) -> int:
                 provider = "zhipu" if args.provider == "glm" else args.provider
                 if provider == "chatgpt":
                     raise ConfigError("ChatGPT 订阅请用 selark chatgpt login [连接 ID]。")
+                auto_discover = (
+                    not args.models and not args.no_discover and provider not in PLAN_PRESETS
+                )
+                if auto_discover and args.default_model and not valid_model(args.default_model):
+                    raise ConfigError("默认模型标识格式无效。")
                 result = runtime.add_connection(
                     identity,
                     provider,
@@ -854,28 +887,43 @@ def run(args, directory: Path) -> int:
                     name=args.name,
                     base_url=args.base_url,
                     allowed_models=args.models,
-                    default_model=args.default_model,
+                    default_model=None if auto_discover else args.default_model,
                     workspace_id=args.workspace_id,
                     anthropic_version=args.anthropic_version,
                     plan={"tier": args.plan_tier} if args.plan_tier is not None else None,
                 )
-            elif args.action == "discover":
-                from selark.chatgpt_auth import ChatGPTAuth
-                from selark.providers.discovery import discover
-
-                original = require_connection(runtime.connection_settings(), identity)
-                try:
-                    models = asyncio.run(discover(original, auth=ChatGPTAuth(directory)))
-                    result = runtime.save_discovery(original, models)
-                except GatewayError as error:
-                    if error.upstream_status and original.provider != "chatgpt":
-                        error = GatewayError(
-                            error.status,
-                            "discovery_http_error",
-                            f"模型列表接口返回 HTTP {error.upstream_status}；"
-                            "请检查地址/权限或使用 connection set --models 手动配置。",
+                if auto_discover:
+                    print("连接已保存，正在查询上游模型列表（不生成内容）…", file=sys.stderr)
+                    result = discover_connection(runtime, identity)
+                    if result["discovery"]["state"] != "success":
+                        print(
+                            "自动模型发现失败；连接与 Key 已保存，无需重新添加。\n"
+                            f"重试：selark connection discover {identity}\n"
+                            f"或手动配置：selark connection set {identity} --models MODEL ...",
+                            file=sys.stderr,
                         )
-                    result = runtime.save_discovery(original, [], error)
+                        emit(result, args.json)
+                        return 1
+                    if args.default_model:
+                        if args.default_model not in result["allowed_models"]:
+                            print(
+                                "模型列表已保存，但指定的默认模型不在发现结果中；"
+                                "请从已发现列表选择默认模型。",
+                                file=sys.stderr,
+                            )
+                            emit(result, args.json)
+                            return 1
+                        result = runtime.change_connection(
+                            {"default_model": args.default_model}, identity
+                        )
+                    print(
+                        f"已登记 {len(result['allowed_models'])} 个上游返回的模型。"
+                        "模型发现不代表已完成生成验证。",
+                        file=sys.stderr,
+                    )
+            elif args.action == "discover":
+                result = discover_connection(runtime, identity)
+                if result["discovery"]["state"] != "success":
                     emit(result, args.json)
                     return 1
             elif args.action == "show":
