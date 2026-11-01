@@ -1,0 +1,4413 @@
+{
+  "version": "0.10.0",
+  "started_at": "2026-10-31T14:34:02.413346+00:00",
+  "finished_at": "2026-10-31T14:36:48.791903+00:00",
+  "scope": "enabled models; live temporary localhost gateway; native MiMo audio supplement",
+  "generation_retries": 0,
+  "ledger": "isolated; original dashboard/history not updated",
+  "inventory": [
+    {
+      "connection_id": "mimo-default",
+      "provider": "mimo",
+      "resource_type": "api",
+      "models": [
+        "mimo-v2.5-asr",
+        "mimo-v2.5-tts",
+        "mimo-v2.5-tts-voiceclone",
+        "mimo-v2.5-tts-voicedesign",
+        "mimo-v2.6-flash",
+        "mimo-v2.6-pro",
+        "mimo-v2.6-pro-ultraspeed"
+      ],
+      "default_model": "mimo-v2.6-flash"
+    },
+    {
+      "connection_id": "deepseek-personal",
+      "provider": "deepseek",
+      "resource_type": "api",
+      "models": [
+        "deepseek-flash",
+        "deepseek-v4-pro"
+      ],
+      "default_model": "deepseek-flash"
+    },
+    {
+      "connection_id": "relay-personal",
+      "provider": "openai-compatible",
+      "resource_type": "api",
+      "models": [
+        "claude-opus-4-6",
+        "claude-opus-4-7",
+        "claude-opus-4-8",
+        "claude-opus-5",
+        "claude-opus-5-5",
+        "claude-sonnet-4-6",
+        "claude-sonnet-5",
+        "claude-sonnet-5-5"
+      ],
+      "default_model": "claude-sonnet-4-6"
+    },
+    {
+      "connection_id": "kimi-code-personal",
+      "provider": "kimi-code",
+      "resource_type": "token_plan",
+      "models": [
+        "kimi-for-coding",
+        "kimi-for-coding-highspeed",
+        "k3",
+        "k3-256k",
+        "k3.1-pro",
+        "k3.1-pro-highspeed"
+      ],
+      "default_model": "kimi-for-coding"
+    },
+    {
+      "connection_id": "chatgpt-personal",
+      "provider": "chatgpt",
+      "resource_type": "chatgpt_subscription",
+      "models": [
+        "gpt-6.1-sol",
+        "gpt-6-astra",
+        "gpt-6.1-terra",
+        "gpt-6-sol",
+        "gpt-6-luna",
+        "gpt-5.6-sol",
+        "gpt-5.6-terra",
+        "gpt-5.6-luna"
+      ],
+      "default_model": "gpt-6-luna"
+    },
+    {
+      "connection_id": "openai-personal",
+      "provider": "openai",
+      "resource_type": "api",
+      "models": [
+        "gpt-6-sol",
+        "gpt-6.1-sol",
+        "gpt-6.1-terra",
+        "gpt-6-luna",
+        "gpt-6-astra"
+      ],
+      "default_model": null
+    }
+  ],
+  "configuration_unchanged": true,
+  "generation_sends": 81,
+  "call_count": 81,
+  "passed_calls": 80,
+  "calls": [
+    {
+      "case": "arithmetic",
+      "connection_id": "deepseek-personal",
+      "model": "deepseek-flash",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:02.552305+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 24,
+        "completion_tokens": 1,
+        "total_tokens": 25,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 24
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "deepseek-flash",
+      "finish_reason": "stop",
+      "elapsed_ms": 777.0,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 24,
+          "completion_tokens": 1,
+          "total_tokens": 25,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 24,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.6-flash",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:02.530753+00:00",
+      "done": true,
+      "usage": {
+        "completion_tokens": 3,
+        "prompt_tokens": 29,
+        "total_tokens": 32,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": null
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "mimo-v2.6-flash",
+      "finish_reason": "stop",
+      "elapsed_ms": 1520.61,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 29,
+          "completion_tokens": 3,
+          "total_tokens": 32,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-6.1-sol",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:34:04.074705+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-6.1-sol",
+      "finish_reason": "stop",
+      "elapsed_ms": 8660.64,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "openai-personal",
+      "model": "gpt-6-sol",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:12.758977+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 4,
+        "total_tokens": 30,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-6-sol",
+      "finish_reason": "stop",
+      "elapsed_ms": 2317.13,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 4,
+          "total_tokens": 30,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 0,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "kimi-code-personal",
+      "model": "kimi-for-coding",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:03.352993+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 106,
+        "completion_tokens": 35,
+        "total_tokens": 141,
+        "completion_tokens_details": {
+          "reasoning_tokens": 19
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "kimi-for-coding",
+      "finish_reason": "stop",
+      "elapsed_ms": 12470.3,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 106,
+          "completion_tokens": 35,
+          "total_tokens": 141,
+          "completion_tokens_details": {
+            "reasoning_tokens": 19
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "deepseek-personal",
+      "model": "deepseek-flash",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:15.100684+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 24,
+        "completion_tokens": 1,
+        "total_tokens": 25,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 24
+      },
+      "first_text_ms": 630.84,
+      "http_status": 200,
+      "actual_model": "deepseek-flash",
+      "finish_reason": "stop",
+      "elapsed_ms": 883.07,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 24,
+          "completion_tokens": 1,
+          "total_tokens": 25,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 24,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.6-flash",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:15.846011+00:00",
+      "done": true,
+      "usage": {
+        "completion_tokens": 3,
+        "prompt_tokens": 29,
+        "total_tokens": 32,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": null
+      },
+      "first_text_ms": 540.23,
+      "http_status": 200,
+      "actual_model": "mimo-v2.6-flash",
+      "finish_reason": "stop",
+      "elapsed_ms": 712.44,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 29,
+          "completion_tokens": 3,
+          "total_tokens": 32,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "openai-personal",
+      "model": "gpt-6-sol",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:16.583323+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 4,
+        "total_tokens": 30,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "first_text_ms": 1828.58,
+      "http_status": 200,
+      "actual_model": "gpt-6-sol",
+      "finish_reason": "stop",
+      "elapsed_ms": 1835.5,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 4,
+          "total_tokens": 30,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 0,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-opus-4-6",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:02.556689+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 5442,
+        "completion_tokens": 1,
+        "total_tokens": 5443
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "claude-opus-4-6",
+      "finish_reason": "stop",
+      "elapsed_ms": 16723.34,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 5442,
+          "completion_tokens": 1,
+          "total_tokens": 5443
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-6.1-sol",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:34:16.008013+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": 3467.06,
+      "http_status": 200,
+      "actual_model": "gpt-6.1-sol",
+      "finish_reason": "stop",
+      "elapsed_ms": 3635.26,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "deepseek-personal",
+      "model": "deepseek-v4-pro",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:19.304541+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 24,
+        "completion_tokens": 1,
+        "total_tokens": 25,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 24
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "deepseek-v4-pro",
+      "finish_reason": "stop",
+      "elapsed_ms": 839.79,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 24,
+          "completion_tokens": 1,
+          "total_tokens": 25,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 24,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.6-pro",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:19.667053+00:00",
+      "done": true,
+      "usage": {
+        "completion_tokens": 3,
+        "prompt_tokens": 29,
+        "total_tokens": 32,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "mimo-v2.6-pro",
+      "finish_reason": "stop",
+      "elapsed_ms": 801.08,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 29,
+          "completion_tokens": 3,
+          "total_tokens": 32,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "openai-personal",
+      "model": "gpt-6.1-sol",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:20.170884+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 4,
+        "total_tokens": 30,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-6.1-sol",
+      "finish_reason": "stop",
+      "elapsed_ms": 2486.38,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 4,
+          "total_tokens": 30,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 0,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-opus-4-6",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:20.492378+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 5442,
+        "completion_tokens": 1,
+        "total_tokens": 5443
+      },
+      "first_text_ms": 3207.87,
+      "http_status": 200,
+      "actual_model": "claude-opus-4-6",
+      "finish_reason": "stop",
+      "elapsed_ms": 3214.79,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 5442,
+          "completion_tokens": 1,
+          "total_tokens": 5443
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "deepseek-personal",
+      "model": "deepseek-v4-pro",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:23.730647+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 24,
+        "completion_tokens": 1,
+        "total_tokens": 25,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 24
+      },
+      "first_text_ms": 1004.03,
+      "http_status": 200,
+      "actual_model": "deepseek-v4-pro",
+      "finish_reason": "stop",
+      "elapsed_ms": 1098.12,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 24,
+          "completion_tokens": 1,
+          "total_tokens": 25,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 24,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.6-pro",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:24.857044+00:00",
+      "done": true,
+      "usage": {
+        "completion_tokens": 3,
+        "prompt_tokens": 29,
+        "total_tokens": 32,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "first_text_ms": 458.03,
+      "http_status": 200,
+      "actual_model": "mimo-v2.6-pro",
+      "finish_reason": "stop",
+      "elapsed_ms": 638.92,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 29,
+          "completion_tokens": 3,
+          "total_tokens": 32,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-6-astra",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:34:22.682345+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-6-astra",
+      "finish_reason": "stop",
+      "elapsed_ms": 2933.84,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "openai-personal",
+      "model": "gpt-6.1-sol",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:25.520310+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 4,
+        "total_tokens": 30,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "first_text_ms": 1381.71,
+      "http_status": 200,
+      "actual_model": "gpt-6.1-sol",
+      "finish_reason": "stop",
+      "elapsed_ms": 1390.55,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 4,
+          "total_tokens": 30,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 0,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-opus-4-7",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:25.640663+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 7786,
+        "completion_tokens": 1,
+        "total_tokens": 7787
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "claude-opus-4-7",
+      "finish_reason": "stop",
+      "elapsed_ms": 2088.3,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 7786,
+          "completion_tokens": 1,
+          "total_tokens": 7787
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "json_fixture",
+      "connection_id": "deepseek-personal",
+      "model": "deepseek-flash",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 256,
+      "started_at": "2026-10-31T14:34:26.934942+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 28,
+        "completion_tokens": 12,
+        "total_tokens": 40,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 28
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "deepseek-flash",
+      "finish_reason": "stop",
+      "elapsed_ms": 1036.33,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 28,
+          "completion_tokens": 12,
+          "total_tokens": 40,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 28,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.6-pro-ultraspeed",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:27.752407+00:00",
+      "done": true,
+      "usage": {
+        "completion_tokens": 2,
+        "prompt_tokens": 29,
+        "total_tokens": 31,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "pd": {
+          "recv_ms": 216.85,
+          "inject_ms": 43.82,
+          "decode_forwards": 1,
+          "decode_tokens_per_second": 31.8,
+          "mean_accept_length": 2.12,
+          "accept_per_forward": 17.0,
+          "num_verify_steps": 8,
+          "dflash_draft_seq_len": 0,
+          "accepted_total": 17,
+          "compute_wait_ms": 1018.55,
+          "recv_phases": {
+            "build": 0.00025856494903564453,
+            "init": 0.000913131982088089,
+            "poll": 0.1651879958808422,
+            "aux_wait": 6.120651960372925e-06,
+            "aux_settle": 0.0502811037003994,
+            "scan": 0.00015918537974357605
+          },
+          "slot_in_use_at_alloc": 1,
+          "draft_width": 8,
+          "kv_bytes": 22937600,
+          "cached_tokens": {
+            "total": 0,
+            "device": 0,
+            "host": 0,
+            "storage": 0
+          }
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "mimo-v2.6-pro-ultraspeed",
+      "finish_reason": "stop",
+      "elapsed_ms": 1702.75,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 29,
+          "completion_tokens": 2,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-6-astra",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:34:27.996546+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": 2986.91,
+      "http_status": 200,
+      "actual_model": "gpt-6-astra",
+      "finish_reason": "stop",
+      "elapsed_ms": 3032.93,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "openai-personal",
+      "model": "gpt-6.1-terra",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:29.480450+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 4,
+        "total_tokens": 30,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-6.1-terra",
+      "finish_reason": "stop",
+      "elapsed_ms": 1772.82,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 4,
+          "total_tokens": 30,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 0,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "kimi-code-personal",
+      "model": "kimi-for-coding",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:18.444288+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 106,
+        "completion_tokens": 53,
+        "total_tokens": 159,
+        "cached_tokens": 106,
+        "completion_tokens_details": {
+          "reasoning_tokens": 37
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 106
+        }
+      },
+      "first_text_ms": 12935.2,
+      "http_status": 200,
+      "actual_model": "kimi-for-coding",
+      "finish_reason": "stop",
+      "elapsed_ms": 12942.05,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 106,
+          "completion_tokens": 53,
+          "total_tokens": 159,
+          "prompt_tokens_details": {
+            "cached_tokens": 106
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 37
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "code_function",
+      "connection_id": "deepseek-personal",
+      "model": "deepseek-flash",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 256,
+      "started_at": "2026-10-31T14:34:31.279136+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 28,
+        "completion_tokens": 15,
+        "total_tokens": 43,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 28
+      },
+      "first_text_ms": 652.67,
+      "http_status": 200,
+      "actual_model": "deepseek-flash",
+      "finish_reason": "stop",
+      "elapsed_ms": 774.27,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 28,
+          "completion_tokens": 15,
+          "total_tokens": 43,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 28,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.6-pro-ultraspeed",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:31.411128+00:00",
+      "done": true,
+      "usage": {
+        "completion_tokens": 2,
+        "prompt_tokens": 29,
+        "total_tokens": 31,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "pd": {
+          "recv_ms": 226.43,
+          "inject_ms": 43.72,
+          "decode_forwards": 1,
+          "decode_tokens_per_second": 31.7,
+          "mean_accept_length": 2.12,
+          "accept_per_forward": 17.0,
+          "num_verify_steps": 8,
+          "dflash_draft_seq_len": 0,
+          "accepted_total": 17,
+          "draft_width": 8,
+          "kv_bytes": 22937600,
+          "compute_wait_ms": 340.24,
+          "recv_phases": {
+            "build": 0.0004433519206941128,
+            "init": 0.0015871748328208923,
+            "poll": 0.17388444300740957,
+            "aux_wait": 6.7749060690402985e-06,
+            "aux_settle": 0.050285160075873137,
+            "scan": 0.00016827601939439774
+          },
+          "slot_in_use_at_alloc": 1,
+          "cached_tokens": {
+            "total": 0,
+            "device": 0,
+            "host": 0,
+            "storage": 0
+          }
+        }
+      },
+      "first_text_ms": 936.61,
+      "http_status": 200,
+      "actual_model": "mimo-v2.6-pro-ultraspeed",
+      "finish_reason": "stop",
+      "elapsed_ms": 1558.35,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 29,
+          "completion_tokens": 2,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-opus-4-7",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:31.054202+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 7786,
+        "completion_tokens": 1,
+        "total_tokens": 7787
+      },
+      "first_text_ms": 2169.0,
+      "http_status": 200,
+      "actual_model": "claude-opus-4-7",
+      "finish_reason": "stop",
+      "elapsed_ms": 2177.19,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 7786,
+          "completion_tokens": 1,
+          "total_tokens": 7787
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "kimi-code-personal",
+      "model": "kimi-for-coding-highspeed",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:33.258498+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 27,
+        "completion_tokens": 42,
+        "total_tokens": 69,
+        "completion_tokens_details": {
+          "reasoning_tokens": 39
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "kimi-for-coding-highspeed",
+      "finish_reason": "stop",
+      "elapsed_ms": 1028.15,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 27,
+          "completion_tokens": 42,
+          "total_tokens": 69,
+          "completion_tokens_details": {
+            "reasoning_tokens": 39
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-6.1-terra",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:34:32.079698+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-6.1-terra",
+      "finish_reason": "stop",
+      "elapsed_ms": 2844.37,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "openai-personal",
+      "model": "gpt-6.1-terra",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:32.997367+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 4,
+        "total_tokens": 30,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "first_text_ms": 2045.5,
+      "http_status": 200,
+      "actual_model": "gpt-6.1-terra",
+      "finish_reason": "stop",
+      "elapsed_ms": 2053.41,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 4,
+          "total_tokens": 30,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 0,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "kimi-code-personal",
+      "model": "kimi-for-coding-highspeed",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:35.076361+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 27,
+        "completion_tokens": 52,
+        "total_tokens": 79,
+        "cached_tokens": 27,
+        "completion_tokens_details": {
+          "reasoning_tokens": 49
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 27
+        }
+      },
+      "first_text_ms": 1242.42,
+      "http_status": 200,
+      "actual_model": "kimi-for-coding-highspeed",
+      "finish_reason": "stop",
+      "elapsed_ms": 1249.63,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 27,
+          "completion_tokens": 52,
+          "total_tokens": 79,
+          "prompt_tokens_details": {
+            "cached_tokens": 27
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 49
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-opus-4-8",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:34.951321+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 8447,
+        "completion_tokens": 1,
+        "total_tokens": 8448
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "claude-opus-4-8",
+      "finish_reason": "stop",
+      "elapsed_ms": 1886.93,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 8447,
+          "completion_tokens": 1,
+          "total_tokens": 8448
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "json_fixture",
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.6-flash",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 256,
+      "started_at": "2026-10-31T14:34:34.313392+00:00",
+      "done": true,
+      "usage": {
+        "completion_tokens": 18,
+        "prompt_tokens": 34,
+        "total_tokens": 52,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": null
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "mimo-v2.6-flash",
+      "finish_reason": "stop",
+      "elapsed_ms": 2632.97,
+      "transport_ok": true,
+      "content_ok": false,
+      "passed": false,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 34,
+          "completion_tokens": 18,
+          "total_tokens": 52,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "kimi-code-personal",
+      "model": "k3",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:36.973158+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 106,
+        "completion_tokens": 17,
+        "total_tokens": 123,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "k3",
+      "finish_reason": "stop",
+      "elapsed_ms": 1406.02,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 106,
+          "completion_tokens": 17,
+          "total_tokens": 123,
+          "completion_tokens_details": {
+            "reasoning_tokens": 1
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "openai-personal",
+      "model": "gpt-6-luna",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:36.862699+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 19,
+        "total_tokens": 45,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 9,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-6-luna",
+      "finish_reason": "stop",
+      "elapsed_ms": 2212.98,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 19,
+          "total_tokens": 45,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 0,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 9,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-opus-4-8",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:38.405105+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 8447,
+        "completion_tokens": 1,
+        "total_tokens": 8448
+      },
+      "first_text_ms": 1632.72,
+      "http_status": 200,
+      "actual_model": "claude-opus-4-8",
+      "finish_reason": "stop",
+      "elapsed_ms": 1645.49,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 8447,
+          "completion_tokens": 1,
+          "total_tokens": 8448
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "code_function",
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.6-flash",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 256,
+      "started_at": "2026-10-31T14:34:39.100461+00:00",
+      "done": true,
+      "usage": {
+        "completion_tokens": 17,
+        "prompt_tokens": 33,
+        "total_tokens": 50,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": null
+      },
+      "first_text_ms": 581.88,
+      "http_status": 200,
+      "actual_model": "mimo-v2.6-flash",
+      "finish_reason": "stop",
+      "elapsed_ms": 968.38,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 33,
+          "completion_tokens": 17,
+          "total_tokens": 50,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-6.1-terra",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:34:36.351813+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": 4190.5,
+      "http_status": 200,
+      "actual_model": "gpt-6.1-terra",
+      "finish_reason": "stop",
+      "elapsed_ms": 4223.0,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "kimi-code-personal",
+      "model": "k3",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:40.076714+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 106,
+        "completion_tokens": 26,
+        "total_tokens": 132,
+        "cached_tokens": 106,
+        "completion_tokens_details": {
+          "reasoning_tokens": 10
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 106
+        }
+      },
+      "first_text_ms": 1452.37,
+      "http_status": 200,
+      "actual_model": "k3",
+      "finish_reason": "stop",
+      "elapsed_ms": 1457.84,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 106,
+          "completion_tokens": 26,
+          "total_tokens": 132,
+          "prompt_tokens_details": {
+            "cached_tokens": 106
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 10
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "openai-personal",
+      "model": "gpt-6-luna",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:40.094935+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 19,
+        "total_tokens": 45,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 9,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "first_text_ms": 2100.47,
+      "http_status": 200,
+      "actual_model": "gpt-6-luna",
+      "finish_reason": "stop",
+      "elapsed_ms": 2116.39,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 19,
+          "total_tokens": 45,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 0,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 9,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-opus-5",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:40.600507+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 8795,
+        "completion_tokens": 1,
+        "total_tokens": 8796
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "claude-opus-5",
+      "finish_reason": "stop",
+      "elapsed_ms": 2692.22,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 8795,
+          "completion_tokens": 1,
+          "total_tokens": 8796
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "kimi-code-personal",
+      "model": "k3-256k",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:42.240468+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 106,
+        "completion_tokens": 18,
+        "total_tokens": 124,
+        "cached_tokens": 106,
+        "completion_tokens_details": {
+          "reasoning_tokens": 2
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 106
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "k3-256k",
+      "finish_reason": "stop",
+      "elapsed_ms": 1395.48,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 106,
+          "completion_tokens": 18,
+          "total_tokens": 124,
+          "prompt_tokens_details": {
+            "cached_tokens": 106
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 2
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-6-sol",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:34:41.560838+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-6-sol",
+      "finish_reason": "stop",
+      "elapsed_ms": 3039.75,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-opus-5",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:43.663507+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 8795,
+        "completion_tokens": 1,
+        "total_tokens": 8796
+      },
+      "first_text_ms": 1684.61,
+      "http_status": 200,
+      "actual_model": "claude-opus-5",
+      "finish_reason": "stop",
+      "elapsed_ms": 1694.76,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 8795,
+          "completion_tokens": 1,
+          "total_tokens": 8796
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "kimi-code-personal",
+      "model": "k3-256k",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:44.629321+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 106,
+        "completion_tokens": 26,
+        "total_tokens": 132,
+        "cached_tokens": 106,
+        "completion_tokens_details": {
+          "reasoning_tokens": 10
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 106
+        }
+      },
+      "first_text_ms": 1340.01,
+      "http_status": 200,
+      "actual_model": "k3-256k",
+      "finish_reason": "stop",
+      "elapsed_ms": 1356.31,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 106,
+          "completion_tokens": 26,
+          "total_tokens": 132,
+          "prompt_tokens_details": {
+            "cached_tokens": 106
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 10
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "openai-personal",
+      "model": "gpt-6-astra",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:43.319965+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 4,
+        "total_tokens": 30,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-6-astra",
+      "finish_reason": "stop",
+      "elapsed_ms": 2858.26,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 4,
+          "total_tokens": 30,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 0,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "kimi-code-personal",
+      "model": "k3.1-pro",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:46.207337+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 106,
+        "completion_tokens": 28,
+        "total_tokens": 134,
+        "completion_tokens_details": {
+          "reasoning_tokens": 12
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "k3.1-pro",
+      "finish_reason": "stop",
+      "elapsed_ms": 1751.86,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 106,
+          "completion_tokens": 28,
+          "total_tokens": 134,
+          "completion_tokens_details": {
+            "reasoning_tokens": 12
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-opus-5-5",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:46.011607+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 8796,
+        "completion_tokens": 1,
+        "total_tokens": 8797
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "claude-opus-5-5",
+      "finish_reason": "stop",
+      "elapsed_ms": 2168.75,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 8796,
+          "completion_tokens": 1,
+          "total_tokens": 8797
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-6-sol",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:34:45.390555+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": 4066.63,
+      "http_status": 200,
+      "actual_model": "gpt-6-sol",
+      "finish_reason": "stop",
+      "elapsed_ms": 4230.33,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "openai-personal",
+      "model": "gpt-6-astra",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:47.986550+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 4,
+        "total_tokens": 30,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "first_text_ms": 1579.5,
+      "http_status": 200,
+      "actual_model": "gpt-6-astra",
+      "finish_reason": "stop",
+      "elapsed_ms": 1653.5,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 4,
+          "total_tokens": 30,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 0,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "kimi-code-personal",
+      "model": "k3.1-pro",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:48.206281+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 106,
+        "completion_tokens": 34,
+        "total_tokens": 140,
+        "cached_tokens": 106,
+        "completion_tokens_details": {
+          "reasoning_tokens": 18
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 106
+        }
+      },
+      "first_text_ms": 1783.2,
+      "http_status": 200,
+      "actual_model": "k3.1-pro",
+      "finish_reason": "stop",
+      "elapsed_ms": 1799.8,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 106,
+          "completion_tokens": 34,
+          "total_tokens": 140,
+          "prompt_tokens_details": {
+            "cached_tokens": 106
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 18
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-opus-5-5",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:49.649493+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 8796,
+        "completion_tokens": 1,
+        "total_tokens": 8797
+      },
+      "first_text_ms": 1693.44,
+      "http_status": 200,
+      "actual_model": "claude-opus-5-5",
+      "finish_reason": "stop",
+      "elapsed_ms": 1699.71,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 8796,
+          "completion_tokens": 1,
+          "total_tokens": 8797
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "json_fixture",
+      "connection_id": "openai-personal",
+      "model": "gpt-6-sol",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:50.034614+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 30,
+        "completion_tokens": 29,
+        "total_tokens": 59,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 11,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-6-sol",
+      "finish_reason": "stop",
+      "elapsed_ms": 1537.18,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 30,
+          "completion_tokens": 29,
+          "total_tokens": 59,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 0,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 11,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-6-luna",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:34:49.666541+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-6-luna",
+      "finish_reason": "stop",
+      "elapsed_ms": 3237.83,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "kimi-code-personal",
+      "model": "k3.1-pro-highspeed",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:51.376981+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 106,
+        "completion_tokens": 26,
+        "total_tokens": 132,
+        "completion_tokens_details": {
+          "reasoning_tokens": 10
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "k3.1-pro-highspeed",
+      "finish_reason": "stop",
+      "elapsed_ms": 1932.73,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 106,
+          "completion_tokens": 26,
+          "total_tokens": 132,
+          "completion_tokens_details": {
+            "reasoning_tokens": 10
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-sonnet-4-6",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:51.599203+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 5361,
+        "completion_tokens": 1,
+        "total_tokens": 5362
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "claude-sonnet-4-6",
+      "finish_reason": "stop",
+      "elapsed_ms": 2158.98,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 5361,
+          "completion_tokens": 1,
+          "total_tokens": 5362
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "code_function",
+      "connection_id": "openai-personal",
+      "model": "gpt-6-sol",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:52.930765+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 30,
+        "completion_tokens": 14,
+        "total_tokens": 44,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "first_text_ms": 1333.52,
+      "http_status": 200,
+      "actual_model": "gpt-6-sol",
+      "finish_reason": "stop",
+      "elapsed_ms": 1339.5,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 30,
+          "completion_tokens": 14,
+          "total_tokens": 44,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 0,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "kimi-code-personal",
+      "model": "k3.1-pro-highspeed",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:53.786342+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 106,
+        "completion_tokens": 28,
+        "total_tokens": 134,
+        "cached_tokens": 106,
+        "completion_tokens_details": {
+          "reasoning_tokens": 12
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 106
+        }
+      },
+      "first_text_ms": 1234.04,
+      "http_status": 200,
+      "actual_model": "k3.1-pro-highspeed",
+      "finish_reason": "stop",
+      "elapsed_ms": 1256.3,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 106,
+          "completion_tokens": 28,
+          "total_tokens": 134,
+          "prompt_tokens_details": {
+            "cached_tokens": 106
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 12
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-sonnet-4-6",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:54.298748+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 5361,
+        "completion_tokens": 1,
+        "total_tokens": 5362
+      },
+      "first_text_ms": 1824.72,
+      "http_status": 200,
+      "actual_model": "claude-sonnet-4-6",
+      "finish_reason": "stop",
+      "elapsed_ms": 1838.53,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 5361,
+          "completion_tokens": 1,
+          "total_tokens": 5362
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-6-luna",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:34:53.338458+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": 4215.07,
+      "http_status": 200,
+      "actual_model": "gpt-6-luna",
+      "finish_reason": "stop",
+      "elapsed_ms": 4346.02,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "json_fixture",
+      "connection_id": "kimi-code-personal",
+      "model": "kimi-for-coding",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:55.070400+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 110,
+        "completion_tokens": 76,
+        "total_tokens": 186,
+        "completion_tokens_details": {
+          "reasoning_tokens": 52
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "kimi-for-coding",
+      "finish_reason": "stop",
+      "elapsed_ms": 2753.2,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 110,
+          "completion_tokens": 76,
+          "total_tokens": 186,
+          "completion_tokens_details": {
+            "reasoning_tokens": 52
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-sonnet-5",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:56.165719+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 8447,
+        "completion_tokens": 1,
+        "total_tokens": 8448
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "claude-sonnet-5",
+      "finish_reason": "stop",
+      "elapsed_ms": 3114.23,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 8447,
+          "completion_tokens": 1,
+          "total_tokens": 8448
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "code_function",
+      "connection_id": "kimi-code-personal",
+      "model": "kimi-for-coding",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 512,
+      "started_at": "2026-10-31T14:34:57.851709+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 110,
+        "completion_tokens": 38,
+        "total_tokens": 148,
+        "completion_tokens_details": {
+          "reasoning_tokens": 7
+        }
+      },
+      "first_text_ms": 1072.26,
+      "http_status": 200,
+      "actual_model": "kimi-for-coding",
+      "finish_reason": "stop",
+      "elapsed_ms": 1774.14,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 110,
+          "completion_tokens": 38,
+          "total_tokens": 148,
+          "completion_tokens_details": {
+            "reasoning_tokens": 7
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-sonnet-5",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:34:59.308062+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 8447,
+        "completion_tokens": 1,
+        "total_tokens": 8448
+      },
+      "first_text_ms": 1601.99,
+      "http_status": 200,
+      "actual_model": "claude-sonnet-5",
+      "finish_reason": "stop",
+      "elapsed_ms": 1602.43,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 8447,
+          "completion_tokens": 1,
+          "total_tokens": 8448
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-sonnet-5-5",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:35:00.916790+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 11867,
+        "completion_tokens": 1,
+        "total_tokens": 11868,
+        "usage_semantic": "openai",
+        "usage_source": "anthropic",
+        "billing_usage": {
+          "source": "claude_messages",
+          "semantic": "anthropic",
+          "claude_usage": {
+            "input_tokens": 0,
+            "cache_creation_input_tokens": 4843,
+            "cache_read_input_tokens": 7024,
+            "output_tokens": 1,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          }
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 7024,
+          "cached_creation_tokens": 4843,
+          "cache_write_tokens": 4843,
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 11867,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 4843,
+        "claude_cache_creation_1_h_tokens": 0
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "claude-sonnet-5-5",
+      "finish_reason": "stop",
+      "elapsed_ms": 4973.06,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 11867,
+          "completion_tokens": 1,
+          "total_tokens": 11868,
+          "input_tokens": 11867,
+          "output_tokens": 0,
+          "prompt_tokens_details": {
+            "cached_tokens": 7024,
+            "cache_write_tokens": 4843,
+            "audio_tokens": 0,
+            "image_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-5.6-sol",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:34:57.711796+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-5.6-sol",
+      "finish_reason": "stop",
+      "elapsed_ms": 8758.23,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "relay-personal",
+      "model": "claude-sonnet-5-5",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 64,
+      "started_at": "2026-10-31T14:35:05.917656+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 14069,
+        "completion_tokens": 1,
+        "total_tokens": 14070,
+        "usage_semantic": "openai",
+        "usage_source": "anthropic",
+        "billing_usage": {
+          "source": "claude_messages",
+          "semantic": "anthropic",
+          "claude_usage": {
+            "input_tokens": 0,
+            "cache_creation_input_tokens": 4174,
+            "cache_read_input_tokens": 9895,
+            "output_tokens": 1,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 4174
+            },
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          }
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 9895,
+          "cached_creation_tokens": 4174,
+          "cache_write_tokens": 4174,
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 14069,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 4174,
+        "claude_cache_creation_1_h_tokens": 0
+      },
+      "first_text_ms": 3612.44,
+      "http_status": 200,
+      "actual_model": "claude-sonnet-5-5",
+      "finish_reason": "stop",
+      "elapsed_ms": 4239.23,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 14069,
+          "completion_tokens": 1,
+          "total_tokens": 14070,
+          "input_tokens": 14069,
+          "output_tokens": 0,
+          "prompt_tokens_details": {
+            "cached_tokens": 9895,
+            "cache_write_tokens": 4174,
+            "audio_tokens": 0,
+            "image_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-5.6-sol",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:35:06.498482+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": 3946.78,
+      "http_status": 200,
+      "actual_model": "gpt-5.6-sol",
+      "finish_reason": "stop",
+      "elapsed_ms": 4222.6,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-5.6-terra",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:35:10.748247+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-5.6-terra",
+      "finish_reason": "stop",
+      "elapsed_ms": 3126.13,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-5.6-terra",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:35:13.905545+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": 3993.38,
+      "http_status": 200,
+      "actual_model": "gpt-5.6-terra",
+      "finish_reason": "stop",
+      "elapsed_ms": 4350.49,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "json_fixture",
+      "connection_id": "relay-personal",
+      "model": "claude-sonnet-4-6",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": 256,
+      "started_at": "2026-10-31T14:35:10.184666+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 961,
+        "completion_tokens": 73,
+        "total_tokens": 1034,
+        "prompt_tokens_details": {
+          "cached_tokens": 832
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "claude-sonnet-4-6",
+      "finish_reason": "stop",
+      "elapsed_ms": 8936.55,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 961,
+          "completion_tokens": 73,
+          "total_tokens": 1034,
+          "prompt_tokens_details": {
+            "cached_tokens": 832
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-5.6-luna",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:35:18.285708+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-5.6-luna",
+      "finish_reason": "stop",
+      "elapsed_ms": 3520.98,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-5.6-luna",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:35:21.835350+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 5,
+        "total_tokens": 31,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": 2748.86,
+      "http_status": 200,
+      "actual_model": "gpt-5.6-luna",
+      "finish_reason": "stop",
+      "elapsed_ms": 2860.53,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 26,
+          "completion_tokens": 5,
+          "total_tokens": 31,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "json_fixture",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-6-luna",
+      "mode": "nonstream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:35:24.725115+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 30,
+        "completion_tokens": 13,
+        "total_tokens": 43,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "gpt-6-luna",
+      "finish_reason": "stop",
+      "elapsed_ms": 3015.03,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 30,
+          "completion_tokens": 13,
+          "total_tokens": 43,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "code_function",
+      "connection_id": "relay-personal",
+      "model": "claude-sonnet-4-6",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": 256,
+      "started_at": "2026-10-31T14:35:19.153049+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 961,
+        "completion_tokens": 202,
+        "total_tokens": 1163,
+        "prompt_tokens_details": {
+          "cached_tokens": 832
+        }
+      },
+      "first_text_ms": 8667.03,
+      "http_status": 200,
+      "actual_model": "claude-sonnet-4-6",
+      "finish_reason": "stop",
+      "elapsed_ms": 9372.33,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": true,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 961,
+          "completion_tokens": 202,
+          "total_tokens": 1163,
+          "prompt_tokens_details": {
+            "cached_tokens": 832
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "code_function",
+      "connection_id": "chatgpt-personal",
+      "model": "gpt-6-luna",
+      "mode": "stream",
+      "route": "selark_text",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:35:27.768496+00:00",
+      "done": true,
+      "usage": {
+        "prompt_tokens": 30,
+        "completion_tokens": 29,
+        "total_tokens": 59,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 12
+        }
+      },
+      "first_text_ms": 2655.73,
+      "http_status": 200,
+      "actual_model": "gpt-6-luna",
+      "finish_reason": "stop",
+      "elapsed_ms": 2718.81,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "record": {
+        "status": "success",
+        "http_status": 200,
+        "upstream_status": 200,
+        "upstream_attempts": 1,
+        "upstream_result": "success",
+        "stream_status": null,
+        "usage_known": true,
+        "usage_final": true,
+        "delivery_status": "sent",
+        "error_code": null,
+        "reported_usage": {
+          "prompt_tokens": 30,
+          "completion_tokens": 29,
+          "total_tokens": 59,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 12
+          }
+        },
+        "actual_model": null
+      }
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.5-tts",
+      "mode": "nonstream",
+      "route": "mimo_native_audio",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:35:30.529540+00:00",
+      "done": true,
+      "usage": {
+        "completion_tokens": 16,
+        "prompt_tokens": 129,
+        "total_tokens": 145,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 121
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "mimo-v2.5-tts",
+      "finish_reason": "stop",
+      "elapsed_ms": 1250.89,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "audio_seconds": 2.24,
+      "sample_rate": 24000,
+      "audio_frames": 53760
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.5-tts-voicedesign",
+      "mode": "nonstream",
+      "route": "mimo_native_audio",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:35:31.794173+00:00",
+      "done": true,
+      "usage": {
+        "completion_tokens": 33,
+        "prompt_tokens": 37,
+        "total_tokens": 70,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 3
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "mimo-v2.5-tts-voicedesign",
+      "finish_reason": "stop",
+      "elapsed_ms": 1580.43,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "audio_seconds": 4.96,
+      "sample_rate": 24000,
+      "audio_frames": 119040
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.5-tts-voiceclone",
+      "mode": "nonstream",
+      "route": "mimo_native_audio",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:35:33.382038+00:00",
+      "done": true,
+      "usage": {
+        "completion_tokens": 22,
+        "prompt_tokens": 68,
+        "total_tokens": 90,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 9
+        }
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "mimo-v2.5-tts-voiceclone",
+      "finish_reason": "stop",
+      "elapsed_ms": 74154.06,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null,
+      "audio_seconds": 3.2,
+      "sample_rate": 24000,
+      "audio_frames": 76800
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.5-asr",
+      "mode": "nonstream",
+      "route": "mimo_native_audio",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:36:47.543889+00:00",
+      "done": true,
+      "usage": {
+        "completion_tokens": 14,
+        "prompt_tokens": 36,
+        "total_tokens": 50,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 15,
+          "cached_tokens": 4
+        },
+        "seconds": 3
+      },
+      "first_text_ms": null,
+      "http_status": 200,
+      "actual_model": "mimo-v2.5-asr",
+      "finish_reason": "stop",
+      "elapsed_ms": 460.35,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null
+    },
+    {
+      "case": "arithmetic",
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.5-asr",
+      "mode": "stream",
+      "route": "mimo_native_audio",
+      "output_cap": null,
+      "started_at": "2026-10-31T14:36:48.011138+00:00",
+      "done": true,
+      "usage": {
+        "completion_tokens": 14,
+        "prompt_tokens": 36,
+        "total_tokens": 50,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 15,
+          "cached_tokens": 4
+        },
+        "seconds": 3
+      },
+      "first_text_ms": 252.64,
+      "http_status": 200,
+      "actual_model": "mimo-v2.5-asr",
+      "finish_reason": "stop",
+      "elapsed_ms": 404.06,
+      "transport_ok": true,
+      "content_ok": true,
+      "passed": true,
+      "output_cap_respected": null
+    }
+  ],
+  "audio_gateway_checks": [
+    {
+      "model": "mimo-v2.5-asr",
+      "http_status": 400,
+      "error": {
+        "message": "请求参数无效，请检查消息、会话及生成参数；不支持的字段会被拒绝。",
+        "type": "invalid_request_error",
+        "code": "invalid_request"
+      },
+      "generation_sent": false
+    },
+    {
+      "model": "mimo-v2.5-tts",
+      "http_status": 400,
+      "error": {
+        "message": "请求参数无效，请检查消息、会话及生成参数；不支持的字段会被拒绝。",
+        "type": "invalid_request_error",
+        "code": "invalid_request"
+      },
+      "generation_sent": false
+    },
+    {
+      "model": "mimo-v2.5-tts-voiceclone",
+      "http_status": 400,
+      "error": {
+        "message": "请求参数无效，请检查消息、会话及生成参数；不支持的字段会被拒绝。",
+        "type": "invalid_request_error",
+        "code": "invalid_request"
+      },
+      "generation_sent": false
+    },
+    {
+      "model": "mimo-v2.5-tts-voicedesign",
+      "http_status": 400,
+      "error": {
+        "message": "请求参数无效，请检查消息、会话及生成参数；不支持的字段会被拒绝。",
+        "type": "invalid_request_error",
+        "code": "invalid_request"
+      },
+      "generation_sent": false
+    }
+  ],
+  "verification": {
+    "new_test_cases": 90,
+    "new_suite_successful_runs": 3,
+    "full_suite_passed": 839,
+    "full_suite_seconds": 93.79,
+    "focused_suite_passed": 173,
+    "focused_suite_seconds": 18.57,
+    "repeat_suite_seconds": [
+      13.3,
+      13.51
+    ],
+    "installed_from_local_wheel": true,
+    "wheel_sha256": "cef1febd6736889c1e3db2a3c451d6ade237cb10ea287e4f10102e700b7aebba"
+  },
+  "known_findings": [
+    {
+      "connection_id": "mimo-default",
+      "model": "mimo-v2.6-flash",
+      "case": "json_fixture",
+      "transport_ok": true,
+      "content_ok": false,
+      "reason": "Returned correct JSON inside Markdown code fences despite raw JSON requirement."
+    }
+  ]
+}

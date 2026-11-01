@@ -30,14 +30,15 @@ def change(runtime, **patch):
     }
 
 
-def test_model_approval_requires_admin_cookie_not_caller_token(runtime):
+def test_model_approval_requires_admin_session_not_caller_token(runtime):
     caller = runtime.store.create_token("not-admin")
     before = contents(runtime.directory)
     with dashboard(runtime.directory, offline=True) as client:
         result = client.post(
             ENDPOINT,
             json=change(runtime),
-            headers=WRITE_HEADERS | {"Authorization": "Bearer " + caller["token"]},
+            headers=WRITE_HEADERS
+            | {"Authorization": "Bearer " + caller["token"], "X-Selark-Session": caller["token"]},
         )
         assert result.status_code == 401
     assert contents(runtime.directory) == before

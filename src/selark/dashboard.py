@@ -68,7 +68,8 @@ class Session:
 
     def valid(self, value):
         return bool(
-            value
+            isinstance(value, str)
+            and 0 < len(value) <= 128
             and self.session
             and time.monotonic() < self.expires
             and secrets.compare_digest(digest(value), self.session)
@@ -94,7 +95,6 @@ def create_dashboard(directory, *, port, bootstrap, offline=False, read_only=Fal
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     authority = "127.0.0.1" if port == 80 else f"127.0.0.1:{port}"
     origin = f"http://{authority}"
-    cookie = f"selark_dashboard_{port}"
     session = Session(bootstrap)
     app.state.session = session
     cache = {}
@@ -123,8 +123,9 @@ def create_dashboard(directory, *, port, bootstrap, offline=False, read_only=Fal
             request.url.path.startswith("/api/")
             and request.url.path != "/api/session"
             and (
-                request.headers.get("x-selark-dashboard") != "1"
-                or not session.valid(request.cookies.get(cookie))
+                request.headers.getlist("x-selark-dashboard") != ["1"]
+                or len(request.headers.getlist("x-selark-session")) != 1
+                or not session.valid(request.headers.get("x-selark-session"))
             )
         ):
             response = error(401, "管理会话失效，请重新运行 selark dashboard。")
@@ -162,11 +163,11 @@ def create_dashboard(directory, *, port, bootstrap, offline=False, read_only=Fal
         token, status = session.exchange(value)
         if not token:
             return error(status, "链接已使用、过期或无效，请重新运行 selark dashboard。")
-        response = JSONResponse({"authenticated": True, "expires_in": SESSION_SECONDS})
-        response.set_cookie(
-            cookie, token, max_age=SESSION_SECONDS, httponly=True, samesite="strict", path="/"
+        # Cookies are shared across loopback ports. Send the session explicitly from
+        # origin-scoped sessionStorage so other local HTTP services never receive it.
+        return JSONResponse(
+            {"authenticated": True, "expires_in": SESSION_SECONDS, "session_token": token}
         )
-        return response
 
     async def query(request, kind):
         params = request.query_params
@@ -264,7 +265,7 @@ def create_dashboard(directory, *, port, bootstrap, offline=False, read_only=Fal
                 }
 
         async with query_lock:
-            if not session.valid(request.cookies.get(cookie)):
+            if not session.valid(request.headers.get("x-selark-session")):
                 return error(401, "管理会话已失效，请重新运行 selark dashboard。")
             operation = asyncio.create_task(asyncio.to_thread(change))
             try:

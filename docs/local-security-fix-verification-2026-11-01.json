@@ -1,0 +1,232 @@
+{
+  "date": "2026-11-01",
+  "project_version": "0.10.0",
+  "scope": "Single-user loopback use; targeted fixes without quota-ledger redesign",
+  "status": "fixed_verified_and_installed",
+  "findings_fixed": [
+    "SEC-01",
+    "SEC-02",
+    "DEP-01"
+  ],
+  "findings_deferred": [
+    "PERF-01"
+  ],
+  "real_provider_calls": 0,
+  "schema_version_changed": false,
+  "live_configuration_changed": false,
+  "daily_gateway_state": "stopped_preserved",
+  "changes": {
+    "ingress": "Authenticate before body read and generation admission; bound authentication lookups; preserve dispatch-time revocation checks",
+    "dashboard": "Explicit X-Selark-Session header from origin-scoped sessionStorage, no management cookie; memory fallback and expiry cleanup",
+    "build_dependency": {
+      "setuptools": "84.2.1",
+      "constraint": ">=84.1,<85"
+    }
+  },
+  "regressions": {
+    "full": {
+      "passed": 848,
+      "warnings": 1,
+      "seconds": 74.19
+    },
+    "focused": {
+      "passed": 195,
+      "warnings": 1,
+      "seconds": 11.76
+    },
+    "new_cases": 9
+  },
+  "real_tcp_and_browser_boundaries": {
+    "ingress": {
+      "cycles": [
+        {
+          "case": "missing",
+          "incomplete_requests": 20,
+          "immediate_401": 20,
+          "generation_admitted": 0,
+          "legitimate_status": 200
+        },
+        {
+          "case": "invalid",
+          "incomplete_requests": 20,
+          "immediate_401": 20,
+          "generation_admitted": 0,
+          "legitimate_status": 200
+        },
+        {
+          "case": "duplicate",
+          "incomplete_requests": 20,
+          "immediate_401": 20,
+          "generation_admitted": 0,
+          "legitimate_status": 200
+        }
+      ],
+      "mock_upstream_calls": 5,
+      "anonymous_ledger_records": 0,
+      "real_provider_calls": 0
+    },
+    "browser": [
+      {
+        "browser": "145.0.7632.6",
+        "storage_blocked": false,
+        "cross_port_cookie_absent": true,
+        "cross_port_session_header_absent": true,
+        "cookie_replay_read_status": 401,
+        "cookie_replay_write_status": 401,
+        "legitimate_model_change_status": 200,
+        "reload_preserves_session": true,
+        "expired_session_cleared": true,
+        "real_provider_calls": 0
+      },
+      {
+        "browser": "145.0.7632.6",
+        "storage_blocked": true,
+        "cross_port_cookie_absent": true,
+        "cross_port_session_header_absent": true,
+        "cookie_replay_read_status": 401,
+        "cookie_replay_write_status": 401,
+        "legitimate_model_change_status": 200,
+        "reload_preserves_session": false,
+        "expired_session_cleared": true,
+        "real_provider_calls": 0
+      }
+    ],
+    "temporary_services_stopped": true,
+    "real_configuration_modified": false
+  },
+  "installed_browser_acceptance": {
+    "dashboard_passed": true,
+    "dashboard_browser": {
+      "browser": "Chromium",
+      "console_errors": 0,
+      "external_requests": 0,
+      "responsive_widths": [
+        1440,
+        390
+      ],
+      "views_checked": 5,
+      "model_layers": 4,
+      "unapproved_catalog_model_denied": true,
+      "cross_port_credentials_absent": true,
+      "cross_port_cookie_replay_rejected": true,
+      "session_survives_page_reload": true
+    },
+    "model_controls_passed": true,
+    "model_controls_browser": {
+      "javascript_errors": 0,
+      "external_requests": 0,
+      "enable_disable_search_and_filter": true,
+      "default_confirmation": true,
+      "stale_revision_rejected": true,
+      "mobile_and_dark_theme": true
+    }
+  },
+  "installed_tcp_stress": {
+    "all_checks_passed": true,
+    "checks": [
+      {
+        "check": "80_simultaneous_clients_cycle_1",
+        "passed": true,
+        "status_counts": {
+          "200": 12,
+          "429": 68
+        },
+        "upstream_calls": 12,
+        "health_latency_ms": 2.29
+      },
+      {
+        "check": "80_simultaneous_clients_cycle_2",
+        "passed": true,
+        "status_counts": {
+          "200": 12,
+          "429": 68
+        },
+        "upstream_calls": 12,
+        "health_latency_ms": 2.2
+      },
+      {
+        "check": "80_simultaneous_clients_cycle_3",
+        "passed": true,
+        "status_counts": {
+          "200": 12,
+          "429": 68
+        },
+        "upstream_calls": 12,
+        "health_latency_ms": 2.68
+      },
+      {
+        "check": "12_simultaneous_disconnects_release_active_and_queued",
+        "passed": true
+      },
+      {
+        "check": "queued_revocation_and_connection_disable_follow_documented_rules",
+        "passed": true
+      },
+      {
+        "check": "10_invalid_or_slow_requests_generate_nothing",
+        "passed": true
+      },
+      {
+        "check": "4_live_streams_with_sqlite_writer_and_consistent_pending_backup",
+        "passed": true,
+        "data_events_per_stream": [
+          42,
+          42,
+          42,
+          42
+        ],
+        "pending_at_backup": 4,
+        "health_latency_ms": 2.63,
+        "recovered_tokens": 56
+      }
+    ],
+    "recovery_after_stop": {
+      "restored": 0,
+      "invalid": 0,
+      "failed": 0,
+      "pending": 0,
+      "interrupted": 0
+    }
+  },
+  "dependency_advisories_after_upgrade": {
+    "source": "https://api.osv.dev/v1/querybatch",
+    "checked_at": "2026-11-01T11:55:16.096052+00:00",
+    "packages_checked": 32,
+    "matched_advisories": 0
+  },
+  "packaging_and_installation": {
+    "protected_files_unchanged": 251,
+    "installed_files_matching_source": 44,
+    "wheel_sha256": "c08a30588fd662dbe4939060315d331cc54b0f325e980d2921d7f613d7450c0d",
+    "wheel_files": 49,
+    "sdist_files": 93,
+    "private_artifacts_absent": true,
+    "installed_entrypoint_updated": true,
+    "clean_environment_install_passed": true,
+    "pip_check_passed": true,
+    "daily_pipx_model_controls_passed": true,
+    "installed_setuptools": "84.2.1"
+  },
+  "notes": [
+    "Browser storage disabled: session works in memory; refreshing requires a new management link",
+    "Oversized-JSON fixture now supplies its media type so the body-limit check still verifies 413",
+    "An initial local browser helper used a CSP-incompatible wait; the helper was corrected without weakening application CSP",
+    "A sandboxed test launch was stopped and rerun with local socket permissions; completed suites passed"
+  ],
+  "artifacts": ".private/security-review-20261101/",
+  "validation_environment": {
+    "os": "Linux",
+    "python": "3.12",
+    "other_platforms_run": false
+  },
+  "static_checks": {
+    "ruff": "passed",
+    "format": "passed",
+    "javascript_syntax": "passed",
+    "diff_whitespace": "passed",
+    "repository_scan": {
+      "checked_files": 206,
+      "findings": 0
+    }
+  }
+}

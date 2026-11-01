@@ -190,15 +190,17 @@ def run(command, browser_output=None):
                             report["browser"] = browser_controls(url, directory, browser_output)
                         else:
                             bootstrap = urlsplit(url).fragment.removeprefix("login=")
-                            assert (
-                                client.post(
-                                    origin + "/api/session",
-                                    json={"token": bootstrap},
-                                    headers={"Origin": origin},
-                                ).status_code
-                                == 200
+                            auth = client.post(
+                                origin + "/api/session",
+                                json={"token": bootstrap},
+                                headers={"Origin": origin},
                             )
-                            headers = {"X-Selark-Dashboard": "1", "Origin": origin}
+                            assert auth.status_code == 200
+                            headers = {
+                                "X-Selark-Dashboard": "1",
+                                "Origin": origin,
+                                "X-Selark-Session": auth.json()["session_token"],
+                            }
                             state = client.get(origin + "/api/snapshot", headers=headers).json()
                             model = next(c for c in state["connections"] if c["id"] == "openai")
                             payload = {

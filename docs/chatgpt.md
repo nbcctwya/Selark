@@ -86,6 +86,12 @@ selark --config-dir "$HOME/.config/selark/clients/chatgpt-personal" ask \
 官方地址实际返回过 `response.metadata` 扩展事件（当前公开事件清单未列出）；Selark 只忽略
 其元数据，不用它判断身份、完成、用量或序号，也不把它作为任何新增能力的授权。
 
+2026-10-31 的真实请求还出现过最终 `response.completed.output=[]`、此前
+`response.output_item.done` 已包含完整文本的情况。适配器现在按消息 ID、输出位置和内容位置
+校验各级完成事件；只有所有已观察消息均完成、位置连续且文本一致时，才用消息快照还原省略的
+聚合文本。仍必须收到 `response.completed`；只有增量文本、缺失消息完成、矛盾文本或乱序
+不能被补成成功。恢复的尾部只发送一次，用量仍取最终响应。见 [修复验收](chatgpt-completion-fix-verification.md)。
+
 **官方订阅接口目前不支持 max_output_tokens。** Selark 对此连接拒绝 `--max-tokens`、
 max_completion_tokens、temperature、top_p、stop、presence/frequency_penalty、reasoning_effort，
 不会静默丢弃限制。其他 API 连接省略输出限制仍默认 1024。

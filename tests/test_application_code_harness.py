@@ -57,3 +57,9 @@ def test_implementation_side_effects_are_still_rejected(tmp_path):
     )
     assert result["status"] == "fail" and result["tests"] == 0
     assert not (tmp_path / "must-not-run").exists()
+
+
+def test_isspace_validation_is_accepted_and_executed(tmp_path):
+    code = IMPLEMENTATION.replace("not identity.strip()", "(not identity or identity.isspace())")
+    result = check(tmp_path, "```python\n" + code + "\n```")
+    assert result["status"] == "pass" and result["tests"] > 100

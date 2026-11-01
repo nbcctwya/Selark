@@ -284,6 +284,52 @@ def add_api_with_discovery(command, profile, env):
     }
 
 
+def check_browser_session_isolation(page, context, url):
+    """A peer loopback server receives no administrator credentials from the browser."""
+    observed = []
+
+    class Peer(BaseHTTPRequestHandler):
+        def do_GET(self):
+            observed.append(
+                {
+                    "cookie": self.headers.get("Cookie", ""),
+                    "session": self.headers.get("X-Selark-Session", ""),
+                }
+            )
+            body = b"<!doctype html><title>Isolated loopback peer</title>"
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *_):
+            pass
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Peer)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    peer = context.new_page()
+    try:
+        assert page.evaluate("Boolean(sessionStorage.getItem('selark-dashboard-session'))")
+        assert not context.cookies(url.split("#")[0])
+        peer.goto(f"http://127.0.0.1:{server.server_address[1]}/")
+        assert peer.evaluate("sessionStorage.getItem('selark-dashboard-session')") is None
+        assert observed and all(not item["cookie"] and not item["session"] for item in observed)
+        parts = urlsplit(url)
+        origin = f"{parts.scheme}://{parts.netloc}"
+        replay = context.request.get(
+            origin + "/api/snapshot",
+            headers={"X-Selark-Dashboard": "1", "Origin": origin, "Cookie": observed[0]["cookie"]},
+        )
+        assert replay.status == 401
+    finally:
+        peer.close()
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
 def browser_checks(url, output, first_caller):
     from playwright.sync_api import expect, sync_playwright
 
@@ -307,6 +353,7 @@ def browser_checks(url, output, first_caller):
         expect(page.locator("#freshness")).to_contain_text("快照")
         assert not urlsplit(page.url).fragment
         assert not page.evaluate("document.cookie")
+        check_browser_session_isolation(page, context, url)
         assert page.locator(".chart-bar").count() > 0
         assert page.evaluate("money('0.000016000')") == "0.000016"
         expect(page.locator(".resource-row")).to_have_count(6)
@@ -393,6 +440,9 @@ def browser_checks(url, output, first_caller):
         "views_checked": 5,
         "model_layers": 4,
         "unapproved_catalog_model_denied": True,
+        "cross_port_credentials_absent": True,
+        "cross_port_cookie_replay_rejected": True,
+        "session_survives_page_reload": True,
     }
 
 
@@ -464,7 +514,10 @@ def run(command, *, browser_output=None, rows=140):
                         headers={"Origin": origin},
                     )
                     assert auth.status_code == 200
-                    headers = {"X-Selark-Dashboard": "1"}
+                    headers = {
+                        "X-Selark-Dashboard": "1",
+                        "X-Selark-Session": auth.json()["session_token"],
+                    }
                     started = time.perf_counter()
                     result = client.get("/api/snapshot", headers=headers)
                     report["snapshot_seconds"] = round(time.perf_counter() - started, 3)

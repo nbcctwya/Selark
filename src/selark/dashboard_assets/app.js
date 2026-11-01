@@ -2,6 +2,14 @@
 "use strict";
 let bootstrap = new URLSearchParams(location.hash.slice(1)).get("login");
 if (location.hash || location.search) history.replaceState(null, "", location.pathname);
+const SESSION_KEY = "selark-dashboard-session";
+let adminSession = null;
+try { adminSession = sessionStorage.getItem(SESSION_KEY); } catch { /* Memory-only fallback. */ }
+function saveSession(value) {
+  adminSession = value;
+  try { if (value) sessionStorage.setItem(SESSION_KEY, value); else sessionStorage.removeItem(SESSION_KEY); } catch { /* Memory-only fallback. */ }
+}
+const sessionHeaders = () => ({"X-Selark-Dashboard":"1", "X-Selark-Session":adminSession || ""});
 
 const $ = (s) => document.querySelector(s);
 const escapeHTML = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -69,7 +77,7 @@ let activeQuery = new URLSearchParams({period:"7d"});
 const appName = (id) => snapshot?.applications.find(a => a.id === id)?.name || id || "未知应用";
 
 async function api(path, signal) {
-  const response = await fetch(`/api/${path}`, {headers:{"X-Selark-Dashboard":"1"}, credentials:"same-origin", cache:"no-store", signal});
+  const response = await fetch(`/api/${path}`, {headers:sessionHeaders(), credentials:"omit", mode:"same-origin", redirect:"error", cache:"no-store", signal});
   const body = await response.json();
   if (!response.ok) {
     const error = new Error(body.error || "本地数据读取失败。");
@@ -80,6 +88,7 @@ async function api(path, signal) {
 }
 function notice(message) { $("#notice").textContent=message; $("#notice").hidden=!message; }
 function loginRequired(message="从运行 selark dashboard 的本机终端，打开一次性管理链接。") {
+  saveSession(null);
   authorized=false; snapshot=null; requestRows=null; logs=null; backups=null;
   $("#filters").hidden=true;
   if ($("#details").open) $("#details").close();
@@ -258,7 +267,7 @@ async function changeModel(modelId, clearDefault=false) {
   const requestController=new AbortController(),deadline=setTimeout(()=>requestController.abort(),20000);
   let saved=false;
   try {
-    const response=await fetch("/api/model-approval",{method:"POST",headers:{"Content-Type":"application/json","X-Selark-Dashboard":"1"},credentials:"same-origin",cache:"no-store",signal:requestController.signal,body:JSON.stringify({connection_id:id,model:modelId,enabled:!m.approved,revision:c.model_catalog.approval_revision,clear_default:clearDefault})});
+    const response=await fetch("/api/model-approval",{method:"POST",headers:{"Content-Type":"application/json",...sessionHeaders()},credentials:"omit",mode:"same-origin",redirect:"error",cache:"no-store",signal:requestController.signal,body:JSON.stringify({connection_id:id,model:modelId,enabled:!m.approved,revision:c.model_catalog.approval_revision,clear_default:clearDefault})});
     const result=await response.json();
     if(!response.ok){const error=new Error(result.error || "模型设置保存失败。");error.status=response.status;throw error;}
     saved=true;
@@ -379,10 +388,15 @@ setInterval(()=>{if(!document.hidden && authorized && !$("#refresh").disabled &&
 async function start() {
   try {
     if(bootstrap) {
+      saveSession(null);
       const body=JSON.stringify({token:bootstrap});bootstrap=null;
-      const response=await fetch("/api/session",{method:"POST",headers:{"Content-Type":"application/json"},body,credentials:"same-origin",cache:"no-store"});
-      if(!response.ok)throw new Error((await response.json()).error);
+      const response=await fetch("/api/session",{method:"POST",headers:{"Content-Type":"application/json"},body,credentials:"omit",mode:"same-origin",redirect:"error",cache:"no-store"});
+      const result=await response.json();
+      if(!response.ok)throw new Error(result.error);
+      if(typeof result.session_token!=="string" || !result.session_token)throw new Error("管理会话无效，请重新运行 selark dashboard。");
+      saveSession(result.session_token);
     }
+    if(!adminSession){loginRequired();return;}
     authorized=true;await refresh();
   } catch(error) { bootstrap=null;loginRequired(error.message); }
 }

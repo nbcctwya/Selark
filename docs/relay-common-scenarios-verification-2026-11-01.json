@@ -1,0 +1,2810 @@
+{
+  "date": "2026-11-01",
+  "version": "0.10.0",
+  "installed_runtime_tested": true,
+  "started_at_utc": "2026-11-01T12:20:55.364841+00:00",
+  "finished_at_utc": "2026-11-01T12:27:21.397531+00:00",
+  "source": "existing enabled relay only, through installed localhost Selark HTTP gateway",
+  "model_identity": "relay-advertised identifiers; actual upstream vendor identity not verified",
+  "main_requests": 76,
+  "feedback_requests": 4,
+  "outgoing_attempts": 80,
+  "automatic_generation_retries": 0,
+  "other_provider_calls": 0,
+  "plain_responses": 44,
+  "stream_responses": 36,
+  "completed": true,
+  "stop_reason": null,
+  "daily_limits_preserved": {
+    "max_concurrent_requests": 4,
+    "max_queued_requests": 16,
+    "queue_timeout_seconds": 10.0,
+    "request_timeout_seconds": 120.0,
+    "body_timeout_seconds": 10.0,
+    "connect_timeout_seconds": 10.0,
+    "pool_timeout_seconds": 5.0,
+    "write_timeout_seconds": 10.0,
+    "send_timeout_seconds": 15.0,
+    "shutdown_grace_seconds": 15.0,
+    "storage_busy_timeout_seconds": 0.1,
+    "max_pending_records": 256
+  },
+  "source_files_unchanged": true,
+  "temporary_service_stopped": true,
+  "daily_ledger_contains_test_calls": false,
+  "price_available": false,
+  "actual_charge": null,
+  "ledger": {
+    "records": 80,
+    "upstream_attempts": 80,
+    "unknown_usage": 0,
+    "multiple_attempts": 0,
+    "running": 0
+  },
+  "ledger_usage_matched": 80,
+  "response_model_id_matched": 80,
+  "observed_output_cap_violations": 0,
+  "health": {
+    "samples": 262,
+    "errors": 0,
+    "latency_ms_max": 24.29,
+    "latency_ms_p95": 2.96,
+    "observed_active_max": 4,
+    "observed_queued_max": 0,
+    "final_capacity": {
+      "active": 0,
+      "queued": 0,
+      "admitted": 0,
+      "max_active": 4,
+      "max_queued": 16,
+      "accepting": true
+    },
+    "final_storage": {
+      "degraded": false,
+      "pending_records": 0,
+      "invalid_records": 0,
+      "accepting": true
+    }
+  },
+  "scope_limits": [
+    "Synthetic text scenarios; no real IDE agent, repository modification by models, deployment, tool calling, vision or audio tested.",
+    "Only four selected models received the full deep matrix; the other four received pagination, extraction and smoke cases.",
+    "Strict JSON means prompt-only JSON compliance; no response_format or tool schema was requested.",
+    "Reported usage is preserved upstream data, not independently verified billing; cache details are not added again.",
+    "Automatic checks do not certify complete semantic correctness; manual findings are separate.",
+    "Zero observed cap violations in this bounded workload does not invalidate earlier cap-stress failures."
+  ],
+  "smoke_schema_adjudication": {
+    "reason": "The prompt did not explicitly specify literal marker/value field names. Three raw JSON single-key maps are valid alternative interpretations, so they are not model errors.",
+    "raw_results_preserved": true,
+    "accepted_alternative_cases": [
+      "smoke-claude-opus-5-5",
+      "smoke-claude-opus-4-8",
+      "smoke-claude-opus-4-7"
+    ],
+    "fenced_answers_remain_format_failures": true
+  },
+  "offline_checker_correction": {
+    "allowed_attribute_added": "str.isspace",
+    "initial_false_rejections": 6,
+    "reevaluated_versions_passed": 6,
+    "new_live_requests_for_checker_fix": 0,
+    "focused_regression_tests_passed": 3
+  },
+  "summary": {
+    "requests": 80,
+    "transport_passed": 80,
+    "original_automatic_content_passed": 59,
+    "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 57,
+    "code_versions": 38,
+    "code_versions_passed": 33,
+    "code_assertions": 9998,
+    "code_assertions_failed": 298,
+    "structured_replies": 42,
+    "strict_json_parseable": 24,
+    "elapsed_ms_p50": 8222.39,
+    "elapsed_ms_p95_nearest_rank": 22152.77,
+    "reported_usage": {
+      "prompt_tokens": 379741,
+      "completion_tokens": 45126,
+      "total_tokens": 424867
+    }
+  },
+  "main_summary": {
+    "requests": 76,
+    "transport_passed": 76,
+    "original_automatic_content_passed": 57,
+    "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 56,
+    "code_versions": 36,
+    "code_versions_passed": 32,
+    "code_assertions": 9440,
+    "code_assertions_failed": 226,
+    "structured_replies": 40,
+    "strict_json_parseable": 24,
+    "elapsed_ms_p50": 8222.39,
+    "elapsed_ms_p95_nearest_rank": 23575.58,
+    "reported_usage": {
+      "prompt_tokens": 356515,
+      "completion_tokens": 42170,
+      "total_tokens": 398685
+    }
+  },
+  "feedback_summary": {
+    "requests": 4,
+    "transport_passed": 4,
+    "original_automatic_content_passed": 2,
+    "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 1,
+    "code_versions": 2,
+    "code_versions_passed": 1,
+    "code_assertions": 558,
+    "code_assertions_failed": 72,
+    "structured_replies": 2,
+    "strict_json_parseable": 0,
+    "elapsed_ms_p50": 6944.36,
+    "elapsed_ms_p95_nearest_rank": 11067.26,
+    "reported_usage": {
+      "prompt_tokens": 23226,
+      "completion_tokens": 2956,
+      "total_tokens": 26182
+    }
+  },
+  "by_model": {
+    "claude-opus-4-6": {
+      "requests": 14,
+      "transport_passed": 14,
+      "original_automatic_content_passed": 14,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 14,
+      "code_versions": 6,
+      "code_versions_passed": 6,
+      "code_assertions": 1648,
+      "code_assertions_failed": 0,
+      "structured_replies": 8,
+      "strict_json_parseable": 8,
+      "elapsed_ms_p50": 9709.31,
+      "elapsed_ms_p95_nearest_rank": 24862.22,
+      "reported_usage": {
+        "prompt_tokens": 15832,
+        "completion_tokens": 5391,
+        "total_tokens": 21223
+      }
+    },
+    "claude-opus-4-7": {
+      "requests": 5,
+      "transport_passed": 5,
+      "original_automatic_content_passed": 4,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 5,
+      "code_versions": 3,
+      "code_versions_passed": 3,
+      "code_assertions": 712,
+      "code_assertions_failed": 0,
+      "structured_replies": 2,
+      "strict_json_parseable": 2,
+      "elapsed_ms_p50": 4497.34,
+      "elapsed_ms_p95_nearest_rank": 34987.48,
+      "reported_usage": {
+        "prompt_tokens": 3053,
+        "completion_tokens": 1640,
+        "total_tokens": 4693
+      }
+    },
+    "claude-opus-4-8": {
+      "requests": 5,
+      "transport_passed": 5,
+      "original_automatic_content_passed": 4,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 5,
+      "code_versions": 3,
+      "code_versions_passed": 3,
+      "code_assertions": 712,
+      "code_assertions_failed": 0,
+      "structured_replies": 2,
+      "strict_json_parseable": 2,
+      "elapsed_ms_p50": 5365.87,
+      "elapsed_ms_p95_nearest_rank": 20883.87,
+      "reported_usage": {
+        "prompt_tokens": 3158,
+        "completion_tokens": 1744,
+        "total_tokens": 4902
+      }
+    },
+    "claude-opus-5": {
+      "requests": 5,
+      "transport_passed": 5,
+      "original_automatic_content_passed": 5,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 5,
+      "code_versions": 3,
+      "code_versions_passed": 3,
+      "code_assertions": 712,
+      "code_assertions_failed": 0,
+      "structured_replies": 2,
+      "strict_json_parseable": 2,
+      "elapsed_ms_p50": 3982.76,
+      "elapsed_ms_p95_nearest_rank": 8356.37,
+      "reported_usage": {
+        "prompt_tokens": 3043,
+        "completion_tokens": 1560,
+        "total_tokens": 4603
+      }
+    },
+    "claude-opus-5-5": {
+      "requests": 15,
+      "transport_passed": 15,
+      "original_automatic_content_passed": 14,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 13,
+      "code_versions": 7,
+      "code_versions_passed": 5,
+      "code_assertions": 1927,
+      "code_assertions_failed": 82,
+      "structured_replies": 8,
+      "strict_json_parseable": 8,
+      "elapsed_ms_p50": 4238.61,
+      "elapsed_ms_p95_nearest_rank": 15215.56,
+      "reported_usage": {
+        "prompt_tokens": 17988,
+        "completion_tokens": 6229,
+        "total_tokens": 24217
+      }
+    },
+    "claude-sonnet-4-6": {
+      "requests": 15,
+      "transport_passed": 15,
+      "original_automatic_content_passed": 6,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 6,
+      "code_versions": 6,
+      "code_versions_passed": 6,
+      "code_assertions": 1648,
+      "code_assertions_failed": 0,
+      "structured_replies": 9,
+      "strict_json_parseable": 0,
+      "elapsed_ms_p50": 11957.97,
+      "elapsed_ms_p95_nearest_rank": 22152.77,
+      "reported_usage": {
+        "prompt_tokens": 298399,
+        "completion_tokens": 8639,
+        "total_tokens": 307038
+      }
+    },
+    "claude-sonnet-5": {
+      "requests": 5,
+      "transport_passed": 5,
+      "original_automatic_content_passed": 5,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 5,
+      "code_versions": 3,
+      "code_versions_passed": 3,
+      "code_assertions": 712,
+      "code_assertions_failed": 0,
+      "structured_replies": 2,
+      "strict_json_parseable": 2,
+      "elapsed_ms_p50": 4874.7,
+      "elapsed_ms_p95_nearest_rank": 9757.15,
+      "reported_usage": {
+        "prompt_tokens": 3123,
+        "completion_tokens": 1671,
+        "total_tokens": 4794
+      }
+    },
+    "claude-sonnet-5-5": {
+      "requests": 16,
+      "transport_passed": 16,
+      "original_automatic_content_passed": 7,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 4,
+      "code_versions": 7,
+      "code_versions_passed": 4,
+      "code_assertions": 1927,
+      "code_assertions_failed": 216,
+      "structured_replies": 9,
+      "strict_json_parseable": 0,
+      "elapsed_ms_p50": 6495.08,
+      "elapsed_ms_p95_nearest_rank": 28170.89,
+      "reported_usage": {
+        "prompt_tokens": 35145,
+        "completion_tokens": 18252,
+        "total_tokens": 53397
+      }
+    }
+  },
+  "by_category": {
+    "smoke": {
+      "requests": 8,
+      "transport_passed": 8,
+      "original_automatic_content_passed": 3,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 6,
+      "code_versions": 0,
+      "code_versions_passed": 0,
+      "code_assertions": 0,
+      "code_assertions_failed": 0,
+      "structured_replies": 8,
+      "strict_json_parseable": 6,
+      "elapsed_ms_p50": 8635.28,
+      "elapsed_ms_p95_nearest_rank": 34987.48,
+      "reported_usage": {
+        "prompt_tokens": 16535,
+        "completion_tokens": 231,
+        "total_tokens": 16766
+      }
+    },
+    "pagination_three_turns": {
+      "requests": 24,
+      "transport_passed": 24,
+      "original_automatic_content_passed": 24,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 20,
+      "code_versions": 24,
+      "code_versions_passed": 20,
+      "code_assertions": 5696,
+      "code_assertions_failed": 226,
+      "structured_replies": 0,
+      "strict_json_parseable": 0,
+      "elapsed_ms_p50": 4849.65,
+      "elapsed_ms_p95_nearest_rank": 12481.71,
+      "reported_usage": {
+        "prompt_tokens": 173756,
+        "completion_tokens": 16438,
+        "total_tokens": 190194
+      }
+    },
+    "deduplication_three_turns": {
+      "requests": 12,
+      "transport_passed": 12,
+      "original_automatic_content_passed": 12,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 12,
+      "code_versions": 12,
+      "code_versions_passed": 12,
+      "code_assertions": 3744,
+      "code_assertions_failed": 0,
+      "structured_replies": 0,
+      "strict_json_parseable": 0,
+      "elapsed_ms_p50": 9390.92,
+      "elapsed_ms_p95_nearest_rank": 16908.34,
+      "reported_usage": {
+        "prompt_tokens": 57334,
+        "completion_tokens": 11633,
+        "total_tokens": 68967
+      }
+    },
+    "extract": {
+      "requests": 8,
+      "transport_passed": 8,
+      "original_automatic_content_passed": 6,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 6,
+      "code_versions": 0,
+      "code_versions_passed": 0,
+      "code_assertions": 0,
+      "code_assertions_failed": 0,
+      "structured_replies": 8,
+      "strict_json_parseable": 6,
+      "elapsed_ms_p50": 8327.3,
+      "elapsed_ms_p95_nearest_rank": 9443.75,
+      "reported_usage": {
+        "prompt_tokens": 14415,
+        "completion_tokens": 1342,
+        "total_tokens": 15757
+      }
+    },
+    "translation_two_turns": {
+      "requests": 8,
+      "transport_passed": 8,
+      "original_automatic_content_passed": 4,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 4,
+      "code_versions": 0,
+      "code_versions_passed": 0,
+      "code_assertions": 0,
+      "code_assertions_failed": 0,
+      "structured_replies": 8,
+      "strict_json_parseable": 4,
+      "elapsed_ms_p50": 7645.57,
+      "elapsed_ms_p95_nearest_rank": 24862.22,
+      "reported_usage": {
+        "prompt_tokens": 29399,
+        "completion_tokens": 2140,
+        "total_tokens": 31539
+      }
+    },
+    "long_reference": {
+      "requests": 4,
+      "transport_passed": 4,
+      "original_automatic_content_passed": 2,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 2,
+      "code_versions": 0,
+      "code_versions_passed": 0,
+      "code_assertions": 0,
+      "code_assertions_failed": 0,
+      "structured_replies": 4,
+      "strict_json_parseable": 2,
+      "elapsed_ms_p50": 6692.21,
+      "elapsed_ms_p95_nearest_rank": 11378.05,
+      "reported_usage": {
+        "prompt_tokens": 39424,
+        "completion_tokens": 247,
+        "total_tokens": 39671
+      }
+    },
+    "design": {
+      "requests": 4,
+      "transport_passed": 4,
+      "original_automatic_content_passed": 2,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 2,
+      "code_versions": 0,
+      "code_versions_passed": 0,
+      "code_assertions": 0,
+      "code_assertions_failed": 0,
+      "structured_replies": 4,
+      "strict_json_parseable": 2,
+      "elapsed_ms_p50": 18684.17,
+      "elapsed_ms_p95_nearest_rank": 28170.89,
+      "reported_usage": {
+        "prompt_tokens": 10686,
+        "completion_tokens": 5959,
+        "total_tokens": 16645
+      }
+    },
+    "review": {
+      "requests": 4,
+      "transport_passed": 4,
+      "original_automatic_content_passed": 2,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 2,
+      "code_versions": 0,
+      "code_versions_passed": 0,
+      "code_assertions": 0,
+      "code_assertions_failed": 0,
+      "structured_replies": 4,
+      "strict_json_parseable": 2,
+      "elapsed_ms_p50": 12396.86,
+      "elapsed_ms_p95_nearest_rank": 19166.67,
+      "reported_usage": {
+        "prompt_tokens": 13363,
+        "completion_tokens": 4063,
+        "total_tokens": 17426
+      }
+    },
+    "concurrent": {
+      "requests": 4,
+      "transport_passed": 4,
+      "original_automatic_content_passed": 2,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 2,
+      "code_versions": 0,
+      "code_versions_passed": 0,
+      "code_assertions": 0,
+      "code_assertions_failed": 0,
+      "structured_replies": 4,
+      "strict_json_parseable": 2,
+      "elapsed_ms_p50": 5565.51,
+      "elapsed_ms_p95_nearest_rank": 8146.55,
+      "reported_usage": {
+        "prompt_tokens": 1603,
+        "completion_tokens": 117,
+        "total_tokens": 1720
+      }
+    },
+    "translation_feedback": {
+      "requests": 2,
+      "transport_passed": 2,
+      "original_automatic_content_passed": 0,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 0,
+      "code_versions": 0,
+      "code_versions_passed": 0,
+      "code_assertions": 0,
+      "code_assertions_failed": 0,
+      "structured_replies": 2,
+      "strict_json_parseable": 0,
+      "elapsed_ms_p50": 7565.68,
+      "elapsed_ms_p95_nearest_rank": 11067.26,
+      "reported_usage": {
+        "prompt_tokens": 16874,
+        "completion_tokens": 728,
+        "total_tokens": 17602
+      }
+    },
+    "coding_feedback": {
+      "requests": 2,
+      "transport_passed": 2,
+      "original_automatic_content_passed": 2,
+      "deterministic_acceptance_passed_after_code_execution_and_smoke_adjudication": 1,
+      "code_versions": 2,
+      "code_versions_passed": 1,
+      "code_assertions": 558,
+      "code_assertions_failed": 72,
+      "structured_replies": 0,
+      "strict_json_parseable": 0,
+      "elapsed_ms_p50": 6944.36,
+      "elapsed_ms_p95_nearest_rank": 9547.28,
+      "reported_usage": {
+        "prompt_tokens": 6352,
+        "completion_tokens": 2228,
+        "total_tokens": 8580
+      }
+    }
+  },
+  "calls": [
+    {
+      "name": "smoke-claude-opus-5",
+      "model": "claude-opus-5",
+      "stream": true,
+      "cap": 256,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 3128.54,
+      "first_text_ms": 3121.37,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "smoke",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 256,
+        "completion_tokens": 19,
+        "total_tokens": 275
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "smoke-claude-opus-5-5",
+      "model": "claude-opus-5-5",
+      "stream": false,
+      "cap": 256,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 3035.65,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "smoke",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 256,
+        "completion_tokens": 53,
+        "total_tokens": 309
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": true,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "smoke-claude-opus-4-6",
+      "model": "claude-opus-4-6",
+      "stream": false,
+      "cap": 256,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 8617.94,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "smoke",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 256,
+        "completion_tokens": 19,
+        "total_tokens": 275
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "smoke-claude-sonnet-4-6",
+      "model": "claude-sonnet-4-6",
+      "stream": true,
+      "cap": 256,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 8652.62,
+      "first_text_ms": 7624.57,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "smoke",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 13982,
+        "completion_tokens": 16,
+        "total_tokens": 13998
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": true,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "smoke-claude-sonnet-5",
+      "model": "claude-sonnet-5",
+      "stream": false,
+      "cap": 256,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 9757.15,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "smoke",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 256,
+        "completion_tokens": 19,
+        "total_tokens": 275
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "smoke-claude-sonnet-5-5",
+      "model": "claude-sonnet-5-5",
+      "stream": true,
+      "cap": 256,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4025.56,
+      "first_text_ms": 4005.78,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "smoke",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 1017,
+        "completion_tokens": 33,
+        "total_tokens": 1050
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": true,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "smoke-claude-opus-4-8",
+      "model": "claude-opus-4-8",
+      "stream": false,
+      "cap": 256,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 20883.87,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "smoke",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 256,
+        "completion_tokens": 28,
+        "total_tokens": 284
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": true,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "smoke-claude-opus-4-7",
+      "model": "claude-opus-4-7",
+      "stream": true,
+      "cap": 256,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 34987.48,
+      "first_text_ms": 34969.3,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "smoke",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 256,
+        "completion_tokens": 44,
+        "total_tokens": 300
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": true,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-5-1",
+      "model": "claude-opus-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4355.25,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 367,
+        "completion_tokens": 474,
+        "total_tokens": 841
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 154,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-4-7-1",
+      "model": "claude-opus-4-7",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4405.39,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 367,
+        "completion_tokens": 453,
+        "total_tokens": 820
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 154,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-4-8-1",
+      "model": "claude-opus-4-8",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 5365.87,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 367,
+        "completion_tokens": 485,
+        "total_tokens": 852
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 154,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-5-5-1",
+      "model": "claude-opus-5-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4078.85,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 367,
+        "completion_tokens": 443,
+        "total_tokens": 810
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 154,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-sonnet-5-1",
+      "model": "claude-sonnet-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4367.21,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 367,
+        "completion_tokens": 534,
+        "total_tokens": 901
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 154,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-4-6-1",
+      "model": "claude-opus-4-6",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 12481.71,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 367,
+        "completion_tokens": 498,
+        "total_tokens": 865
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 154,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-5-2",
+      "model": "claude-opus-5",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 2984.05,
+      "first_text_ms": 2941.4,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 841,
+        "completion_tokens": 309,
+        "total_tokens": 1150
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-4-7-2",
+      "model": "claude-opus-4-7",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 3278.52,
+      "first_text_ms": 3222.45,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 844,
+        "completion_tokens": 369,
+        "total_tokens": 1213
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-sonnet-4-6-1",
+      "model": "claude-sonnet-4-6",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 12417.12,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 6684,
+        "completion_tokens": 890,
+        "total_tokens": 7574
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 154,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-4-8-2",
+      "model": "claude-opus-4-8",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4222.29,
+      "first_text_ms": 4205.38,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 883,
+        "completion_tokens": 422,
+        "total_tokens": 1305
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-sonnet-5-5-1",
+      "model": "claude-sonnet-5-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 8861.1,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 1240,
+        "completion_tokens": 1557,
+        "total_tokens": 2797
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 154,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-5-5-2",
+      "model": "claude-opus-5-5",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4001.64,
+      "first_text_ms": 3986.72,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 839,
+        "completion_tokens": 379,
+        "total_tokens": 1218
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 51,
+        "status": "fail"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-5-3",
+      "model": "claude-opus-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 3982.76,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 1240,
+        "completion_tokens": 618,
+        "total_tokens": 1858
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-sonnet-5-2",
+      "model": "claude-sonnet-5",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 5983.84,
+      "first_text_ms": 5941.29,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 880,
+        "completion_tokens": 311,
+        "total_tokens": 1191
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-4-7-3",
+      "model": "claude-opus-4-7",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4497.34,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 1247,
+        "completion_tokens": 630,
+        "total_tokens": 1877
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-4-8-3",
+      "model": "claude-opus-4-8",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4824.59,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 1313,
+        "completion_tokens": 623,
+        "total_tokens": 1936
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-sonnet-5-5-2",
+      "model": "claude-sonnet-5-5",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 6181.9,
+      "first_text_ms": 2266.33,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 2022,
+        "completion_tokens": 1245,
+        "total_tokens": 3267
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 72,
+        "status": "fail"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-5-5-3",
+      "model": "claude-opus-5-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4178.1,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 1229,
+        "completion_tokens": 627,
+        "total_tokens": 1856
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 31,
+        "status": "fail"
+      }
+    },
+    {
+      "name": "coding-a-claude-sonnet-4-6-2",
+      "model": "claude-sonnet-4-6",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 11957.97,
+      "first_text_ms": 11551.94,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 63865,
+        "completion_tokens": 989,
+        "total_tokens": 64854
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-sonnet-5-3",
+      "model": "claude-sonnet-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4874.7,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 1281,
+        "completion_tokens": 643,
+        "total_tokens": 1924
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-4-6-2",
+      "model": "claude-opus-4-6",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 23575.58,
+      "first_text_ms": 23563.14,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 846,
+        "completion_tokens": 371,
+        "total_tokens": 1217
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-sonnet-5-5-3",
+      "model": "claude-sonnet-5-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 8783.08,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 2857,
+        "completion_tokens": 1926,
+        "total_tokens": 4783
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 72,
+        "status": "fail"
+      }
+    },
+    {
+      "name": "coding-a-claude-sonnet-4-6-3",
+      "model": "claude-sonnet-4-6",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 11986.14,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 82194,
+        "completion_tokens": 1118,
+        "total_tokens": 83312
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-a-claude-opus-4-6-3",
+      "model": "claude-opus-4-6",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 8768.11,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "pagination_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 1249,
+        "completion_tokens": 524,
+        "total_tokens": 1773
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-b-claude-opus-5-5-1",
+      "model": "claude-opus-5-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 6589.74,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "deduplication_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 342,
+        "completion_tokens": 540,
+        "total_tokens": 882
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 160,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-b-claude-sonnet-5-5-1",
+      "model": "claude-sonnet-5-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 6966.19,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "deduplication_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 1206,
+        "completion_tokens": 1218,
+        "total_tokens": 2424
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 160,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-b-claude-opus-4-6-1",
+      "model": "claude-opus-4-6",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 11512.87,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "deduplication_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 342,
+        "completion_tokens": 647,
+        "total_tokens": 989
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 160,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-b-claude-opus-5-5-2",
+      "model": "claude-opus-5-5",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 6196.2,
+      "first_text_ms": 6127.26,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "deduplication_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 759,
+        "completion_tokens": 572,
+        "total_tokens": 1331
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 311,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-b-claude-sonnet-5-5-2",
+      "model": "claude-sonnet-5-5",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 6808.26,
+      "first_text_ms": 2215.15,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "deduplication_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 1847,
+        "completion_tokens": 1497,
+        "total_tokens": 3344
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 311,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-b-claude-sonnet-4-6-1",
+      "model": "claude-sonnet-4-6",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 13984.02,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "deduplication_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 13853,
+        "completion_tokens": 685,
+        "total_tokens": 14538
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 160,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-b-claude-opus-5-5-3",
+      "model": "claude-opus-5-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 5670.83,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "deduplication_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 1290,
+        "completion_tokens": 587,
+        "total_tokens": 1877
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 465,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-b-claude-opus-4-6-2",
+      "model": "claude-opus-4-6",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 8003.19,
+      "first_text_ms": 7935.43,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "deduplication_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 696,
+        "completion_tokens": 418,
+        "total_tokens": 1114
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 311,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-b-claude-sonnet-5-5-3",
+      "model": "claude-sonnet-5-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 10778.66,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "deduplication_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 2771,
+        "completion_tokens": 2562,
+        "total_tokens": 5333
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 465,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-b-claude-sonnet-4-6-2",
+      "model": "claude-sonnet-4-6",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 14899.22,
+      "first_text_ms": 7642.49,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "deduplication_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 14211,
+        "completion_tokens": 989,
+        "total_tokens": 15200
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 311,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-b-claude-opus-4-6-3",
+      "model": "claude-opus-4-6",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 14161.2,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "deduplication_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 1118,
+        "completion_tokens": 611,
+        "total_tokens": 1729
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 465,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "coding-b-claude-sonnet-4-6-3",
+      "model": "claude-sonnet-4-6",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 16908.34,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "deduplication_three_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 18899,
+        "completion_tokens": 1307,
+        "total_tokens": 20206
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 465,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "extract-claude-opus-4-6",
+      "model": "claude-opus-4-6",
+      "stream": false,
+      "cap": 1024,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 8298.23,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "extract",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 339,
+        "completion_tokens": 152,
+        "total_tokens": 491
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "extract-claude-opus-5",
+      "model": "claude-opus-5",
+      "stream": true,
+      "cap": 1024,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 8356.37,
+      "first_text_ms": 8341.69,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "extract",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 339,
+        "completion_tokens": 140,
+        "total_tokens": 479
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "extract-claude-opus-4-8",
+      "model": "claude-opus-4-8",
+      "stream": false,
+      "cap": 1024,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 8362.35,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "extract",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 339,
+        "completion_tokens": 186,
+        "total_tokens": 525
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "extract-claude-opus-4-7",
+      "model": "claude-opus-4-7",
+      "stream": true,
+      "cap": 1024,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 8849.16,
+      "first_text_ms": 8838.23,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "extract",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 339,
+        "completion_tokens": 144,
+        "total_tokens": 483
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "extract-claude-opus-5-5",
+      "model": "claude-opus-5-5",
+      "stream": false,
+      "cap": 1024,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 2782.76,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "extract",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 339,
+        "completion_tokens": 152,
+        "total_tokens": 491
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "extract-claude-sonnet-5",
+      "model": "claude-sonnet-5",
+      "stream": false,
+      "cap": 1024,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 3728.37,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "extract",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 339,
+        "completion_tokens": 164,
+        "total_tokens": 503
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "extract-claude-sonnet-5-5",
+      "model": "claude-sonnet-5-5",
+      "stream": true,
+      "cap": 1024,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 3939.86,
+      "first_text_ms": 2859.26,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "extract",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 1209,
+        "completion_tokens": 273,
+        "total_tokens": 1482
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "extract-claude-sonnet-4-6",
+      "model": "claude-sonnet-4-6",
+      "stream": true,
+      "cap": 1024,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 9443.75,
+      "first_text_ms": 7720.17,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "extract",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 11172,
+        "completion_tokens": 131,
+        "total_tokens": 11303
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "translation-a-claude-opus-5-5-1",
+      "model": "claude-opus-5-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 5328.69,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "translation_two_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 443,
+        "completion_tokens": 202,
+        "total_tokens": 645
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": true
+      }
+    },
+    {
+      "name": "translation-a-claude-sonnet-5-5-1",
+      "model": "claude-sonnet-5-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 5395.25,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "translation_two_turns",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 1368,
+        "completion_tokens": 570,
+        "total_tokens": 1938
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": false,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": false
+      }
+    },
+    {
+      "name": "translation-a-claude-sonnet-5-5-2",
+      "model": "claude-sonnet-5-5",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 3831.03,
+      "first_text_ms": 2442.81,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "translation_two_turns",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 1705,
+        "completion_tokens": 384,
+        "total_tokens": 2089
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": false,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": false
+      }
+    },
+    {
+      "name": "translation-a-claude-opus-5-5-2",
+      "model": "claude-opus-5-5",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4046.7,
+      "first_text_ms": 4003.46,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "translation_two_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 653,
+        "completion_tokens": 124,
+        "total_tokens": 777
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": true
+      }
+    },
+    {
+      "name": "translation-a-claude-opus-4-6-1",
+      "model": "claude-opus-4-6",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 10272.8,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "translation_two_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 443,
+        "completion_tokens": 291,
+        "total_tokens": 734
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": true
+      }
+    },
+    {
+      "name": "translation-a-claude-sonnet-4-6-1",
+      "model": "claude-sonnet-4-6",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 10710.57,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "translation_two_turns",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 11331,
+        "completion_tokens": 206,
+        "total_tokens": 11537
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": false,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": false
+      }
+    },
+    {
+      "name": "translation-a-claude-sonnet-4-6-2",
+      "model": "claude-sonnet-4-6",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 9895.9,
+      "first_text_ms": 7838.92,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "translation_two_turns",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 12802,
+        "completion_tokens": 186,
+        "total_tokens": 12988
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": false,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": false
+      }
+    },
+    {
+      "name": "translation-a-claude-opus-4-6-2",
+      "model": "claude-opus-4-6",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 24862.22,
+      "first_text_ms": 24819.2,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "translation_two_turns",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 654,
+        "completion_tokens": 177,
+        "total_tokens": 831
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": true
+      }
+    },
+    {
+      "name": "long-reference-claude-sonnet-5-5",
+      "model": "claude-sonnet-5-5",
+      "stream": true,
+      "cap": 512,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 3986.38,
+      "first_text_ms": 2690.6,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "long_reference",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 7146,
+        "completion_tokens": 99,
+        "total_tokens": 7245
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "long-reference-claude-opus-5-5",
+      "model": "claude-opus-5-5",
+      "stream": true,
+      "cap": 512,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4238.61,
+      "first_text_ms": 4232.08,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "long_reference",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 8359,
+        "completion_tokens": 59,
+        "total_tokens": 8418
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "long-reference-claude-opus-4-6",
+      "model": "claude-opus-4-6",
+      "stream": true,
+      "cap": 512,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 9145.81,
+      "first_text_ms": 9135.39,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "long_reference",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 8359,
+        "completion_tokens": 43,
+        "total_tokens": 8402
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "long-reference-claude-sonnet-4-6",
+      "model": "claude-sonnet-4-6",
+      "stream": true,
+      "cap": 512,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 11378.05,
+      "first_text_ms": 10383.94,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "long_reference",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 15560,
+        "completion_tokens": 46,
+        "total_tokens": 15606
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "design-a-claude-opus-4-6-1",
+      "model": "claude-opus-4-6",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 12074.98,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "design",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 496,
+        "completion_tokens": 783,
+        "total_tokens": 1279
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": true
+      }
+    },
+    {
+      "name": "design-a-claude-opus-5-5-1",
+      "model": "claude-opus-5-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 15215.56,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "design",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 496,
+        "completion_tokens": 1026,
+        "total_tokens": 1522
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": true
+      }
+    },
+    {
+      "name": "design-a-claude-sonnet-4-6-1",
+      "model": "claude-sonnet-4-6",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 22152.77,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "design",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 8014,
+        "completion_tokens": 1141,
+        "total_tokens": 9155
+      },
+      "manual_review_notes": [
+        "The proposed restore workflow copies over the main database before checking restored integrity; pre-validation and preservation of the original database are missing from that workflow."
+      ],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": true
+      }
+    },
+    {
+      "name": "design-a-claude-sonnet-5-5-1",
+      "model": "claude-sonnet-5-5",
+      "stream": false,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 28170.89,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "design",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 1680,
+        "completion_tokens": 3009,
+        "total_tokens": 4689
+      },
+      "manual_review_notes": [
+        "The backup design does not specify how to obtain a consistent SQLite snapshot. This requires implementation detail and a restore drill before adoption."
+      ],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": true,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": true
+      }
+    },
+    {
+      "name": "review-claude-opus-4-6",
+      "model": "claude-opus-4-6",
+      "stream": true,
+      "cap": 2048,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 8832.79,
+      "first_text_ms": 8737.71,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "review",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 423,
+        "completion_tokens": 836,
+        "total_tokens": 1259
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false
+      }
+    },
+    {
+      "name": "review-claude-opus-5-5",
+      "model": "claude-opus-5-5",
+      "stream": true,
+      "cap": 2048,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 11496.73,
+      "first_text_ms": 11372.62,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "review",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 423,
+        "completion_tokens": 977,
+        "total_tokens": 1400
+      },
+      "manual_review_notes": [
+        "Two suggested test expectations are wrong: [1,2,3], page=2, size=2 must return [3], not [2,3]; sorted [9,8], page=1, size=1 must return [8], not [8,9]."
+      ],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false
+      }
+    },
+    {
+      "name": "review-claude-sonnet-5-5",
+      "model": "claude-sonnet-5-5",
+      "stream": true,
+      "cap": 2048,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 13296.99,
+      "first_text_ms": 2856.54,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "review",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 1347,
+        "completion_tokens": 1524,
+        "total_tokens": 2871
+      },
+      "manual_review_notes": [
+        "The bad_validation finding only addresses bool and omits rejection of zero and negative parameters. An id(items) cache key also needs an input mutation/version policy."
+      ],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false
+      }
+    },
+    {
+      "name": "review-claude-sonnet-4-6",
+      "model": "claude-sonnet-4-6",
+      "stream": true,
+      "cap": 2048,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 19166.67,
+      "first_text_ms": 8065.95,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "review",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 11170,
+        "completion_tokens": 726,
+        "total_tokens": 11896
+      },
+      "manual_review_notes": [
+        "The bad_validation finding only addresses bool and omits rejection of zero and negative parameters. An id(items) cache key also needs an input mutation/version policy."
+      ],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false
+      }
+    },
+    {
+      "name": "concurrent-claude-opus-5-5",
+      "model": "claude-opus-5-5",
+      "stream": true,
+      "cap": 256,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 3403.05,
+      "first_text_ms": 3394.66,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "concurrent",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 244,
+        "completion_tokens": 21,
+        "total_tokens": 265
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "concurrent-claude-sonnet-5-5",
+      "model": "claude-sonnet-5-5",
+      "stream": true,
+      "cap": 256,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 3567.7,
+      "first_text_ms": 2678.6,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "concurrent",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 1003,
+        "completion_tokens": 48,
+        "total_tokens": 1051
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "concurrent-claude-opus-4-6",
+      "model": "claude-opus-4-6",
+      "stream": false,
+      "cap": 256,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 7563.33,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "concurrent",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 244,
+        "completion_tokens": 21,
+        "total_tokens": 265
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": true,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "concurrent-claude-sonnet-4-6",
+      "model": "claude-sonnet-4-6",
+      "stream": false,
+      "cap": 256,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 8146.55,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "concurrent",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 112,
+        "completion_tokens": 27,
+        "total_tokens": 139
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": true,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": true,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_expected_values_pass": true
+      }
+    },
+    {
+      "name": "repair-translation-a-claude-sonnet-5-5-2",
+      "model": "claude-sonnet-5-5",
+      "stream": false,
+      "cap": 1024,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4064.09,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "translation_feedback",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 2324,
+        "completion_tokens": 546,
+        "total_tokens": 2870
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": false,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": false
+      }
+    },
+    {
+      "name": "repair-coding-a-claude-opus-5-5-3",
+      "model": "claude-opus-5-5",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 4341.43,
+      "first_text_ms": 4211.03,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "coding_feedback",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": true,
+      "usage": {
+        "prompt_tokens": 1949,
+        "completion_tokens": 467,
+        "total_tokens": 2416
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 0,
+        "status": "pass"
+      }
+    },
+    {
+      "name": "repair-coding-a-claude-sonnet-5-5-3",
+      "model": "claude-sonnet-5-5",
+      "stream": true,
+      "cap": 3072,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 9547.28,
+      "first_text_ms": 3116.6,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "coding_feedback",
+      "original_automatic_content_pass": true,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 4403,
+        "completion_tokens": 1761,
+        "total_tokens": 6164
+      },
+      "manual_review_notes": [],
+      "code_execution": {
+        "tests": 279,
+        "failures": 72,
+        "status": "fail"
+      }
+    },
+    {
+      "name": "repair-translation-a-claude-sonnet-4-6-2",
+      "model": "claude-sonnet-4-6",
+      "stream": false,
+      "cap": 1024,
+      "http_status": 200,
+      "transport_ok": true,
+      "finish_reason": "stop",
+      "elapsed_ms": 11067.26,
+      "first_text_ms": null,
+      "output_cap_respected": true,
+      "usage_matches_ledger": true,
+      "category": "translation_feedback",
+      "original_automatic_content_pass": false,
+      "deterministic_acceptance_pass_after_code_execution_and_smoke_adjudication": false,
+      "usage": {
+        "prompt_tokens": 14550,
+        "completion_tokens": 182,
+        "total_tokens": 14732
+      },
+      "manual_review_notes": [],
+      "strict_json_parseable": false,
+      "diagnostic": {
+        "contains_markdown_fence": false,
+        "extra_text_outside_fence": false,
+        "inner_json_parseable": false,
+        "ambiguous_smoke_schema_alternative": false,
+        "inner_automatic_checks_pass": false
+      }
+    }
+  ]
+}

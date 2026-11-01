@@ -50,6 +50,7 @@ class RequestMiddleware:
         self.app, self.storage, self.gate, self.limits = app, storage, gate, limits
         self.route = route
         self.metadata_requests = 0
+        self.authentication_requests = 0
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -177,71 +178,79 @@ class RequestMiddleware:
                     return
                 await asyncio.sleep(0)
 
-        async def process(body):
-            nonlocal slot, caller_reserved
+        async def authenticate():
             if path.startswith("/v1/"):
                 values = [v for k, v in scope["headers"] if k == b"authorization"]
-                identity = (
-                    await self.storage.call("authenticate", values[0], chat=chat)
-                    if len(values) == 1
-                    else None
+                maximum = max(
+                    8, self.limits.max_concurrent_requests + self.limits.max_queued_requests
                 )
+                identity = None
+                if len(values) == 1:
+                    if self.authentication_requests >= maximum:
+                        raise GatewayError(
+                            429 if chat else 503,
+                            "server_overloaded",
+                            "本地身份校验繁忙，请稍后重试。",
+                        )
+                    self.authentication_requests += 1
+                    try:
+                        identity = await self.storage.call("authenticate", values[0], chat=chat)
+                    finally:
+                        self.authentication_requests -= 1
                 if identity:
                     state.update(identity)
                 if identity is None:
                     raise GatewayError(401, "invalid_token", "Selark 访问令牌无效、已撤销或缺失。")
-                if chat:
-                    media = dict(scope["headers"]).get(b"content-type", b"")
-                    if media.split(b";")[0].strip() != b"application/json":
-                        raise GatewayError(
-                            415, "invalid_content_type", "请使用 Content-Type: application/json。"
-                        )
-                    try:
-                        data = ChatRequest.model_validate_json(body)
-                    except ValidationError:
-                        raise GatewayError(
-                            400,
-                            "invalid_request",
-                            "请求参数无效，请检查消息、会话及生成参数；不支持的字段会被拒绝。",
-                        ) from None
-                    state["chat_input"] = data
-                    state["session_id"] = data.session_id
-                    state["model"] = data.model
-                    policy = Policy.model_validate(
-                        await self.storage.call("policy", state["caller_id"])
-                    )
-                    selected, model, alias, _ = await self.route(data)
-                    state["connection_id"] = selected.connection_id
-                    state["resource_type"] = selected.resource_type
-                    state["plan_id"] = (
-                        selected.connection_id
-                        if selected.resource_type in {"token_plan", "chatgpt_subscription"}
-                        else None
-                    )
-                    enforce_access(policy, selected.connection_id, model, selected.resource_type)
-                    enforce_approval(selected, model)
-                    if selected.resource_type == "token_plan":
-                        state["purpose"] = interaction_purpose(selected, data.interaction)
-                    state["requested_alias"] = alias
-                    self.gate.acquire_caller(state["caller_id"], policy.max_concurrent_requests)
-                    caller_reserved = True
-                    if selected.resource_type == "token_plan":
-                        self.gate.acquire_plan(selected.connection_id)
-                        state["plan_slot"] = selected.connection_id
-                    waiting = time.monotonic()
-                    try:
-                        await self.gate.acquire()
-                        slot = True
-                    finally:
-                        state["queue_ms"] = round((time.monotonic() - waiting) * 1000, 2)
-                    await self.storage.call(
-                        "begin_request",
-                        state["request_id"],
-                        state["started_at"],
-                        state["caller_id"],
-                        state["connection_id"],
-                        state["purpose"],
-                    )
+
+        async def process(body):
+            nonlocal slot, caller_reserved
+            if chat:
+                try:
+                    data = ChatRequest.model_validate_json(body)
+                except ValidationError:
+                    raise GatewayError(
+                        400,
+                        "invalid_request",
+                        "请求参数无效，请检查消息、会话及生成参数；不支持的字段会被拒绝。",
+                    ) from None
+                state["chat_input"] = data
+                state["session_id"] = data.session_id
+                state["model"] = data.model
+                policy = Policy.model_validate(
+                    await self.storage.call("policy", state["caller_id"])
+                )
+                selected, model, alias, _ = await self.route(data)
+                state["connection_id"] = selected.connection_id
+                state["resource_type"] = selected.resource_type
+                state["plan_id"] = (
+                    selected.connection_id
+                    if selected.resource_type in {"token_plan", "chatgpt_subscription"}
+                    else None
+                )
+                enforce_access(policy, selected.connection_id, model, selected.resource_type)
+                enforce_approval(selected, model)
+                if selected.resource_type == "token_plan":
+                    state["purpose"] = interaction_purpose(selected, data.interaction)
+                state["requested_alias"] = alias
+                self.gate.acquire_caller(state["caller_id"], policy.max_concurrent_requests)
+                caller_reserved = True
+                if selected.resource_type == "token_plan":
+                    self.gate.acquire_plan(selected.connection_id)
+                    state["plan_slot"] = selected.connection_id
+                waiting = time.monotonic()
+                try:
+                    await self.gate.acquire()
+                    slot = True
+                finally:
+                    state["queue_ms"] = round((time.monotonic() - waiting) * 1000, 2)
+                await self.storage.call(
+                    "begin_request",
+                    state["request_id"],
+                    state["started_at"],
+                    state["caller_id"],
+                    state["connection_id"],
+                    state["purpose"],
+                )
 
             async def replay_body():
                 return {"type": "http.request", "body": body, "more_body": False}
@@ -250,15 +259,12 @@ class RequestMiddleware:
 
         try:
             if chat:
-                self.gate.reserve()
-                reserved = True
                 if not self.storage.available():
                     raise GatewayError(
                         503,
                         "record_storage_unavailable",
                         "落账存储异常或积压已满，请运行 selark doctor。",
                     )
-                recordable = True
             elif path.startswith("/v1/"):
                 if self.metadata_requests >= 8:
                     raise GatewayError(503, "server_overloaded", "本地查询繁忙，请稍后重试。")
@@ -267,6 +273,19 @@ class RequestMiddleware:
             async with asyncio.timeout(self.limits.request_timeout_seconds) as deadline:
                 deadline_active = True
                 try:
+                    # Authenticate before reading a body or occupying generation capacity.
+                    # Only the short database lookup uses the bounded authentication pool.
+                    await authenticate()
+                    if chat:
+                        self.gate.reserve()
+                        reserved = recordable = True
+                        media = dict(scope["headers"]).get(b"content-type", b"")
+                        if media.split(b";")[0].strip() != b"application/json":
+                            raise GatewayError(
+                                415,
+                                "invalid_content_type",
+                                "请使用 Content-Type: application/json。",
+                            )
                     body = await read_body() if chat else b""
                     if chat:
                         watcher = asyncio.create_task(disconnected())

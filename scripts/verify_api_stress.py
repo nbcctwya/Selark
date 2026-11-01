@@ -301,7 +301,11 @@ async def exercise(client, runtime, upstream, callers):
             await client.post("/v1/chat/completions", headers=auth(), json=payload)
         ).status_code == code
     assert (
-        await client.post("/v1/chat/completions", headers=auth(), content=b"x" * (1024 * 1024 + 1))
+        await client.post(
+            "/v1/chat/completions",
+            headers=auth() | {"Content-Type": "application/json"},
+            content=b"x" * (1024 * 1024 + 1),
+        )
     ).status_code == 413
     assert (
         await client.post(

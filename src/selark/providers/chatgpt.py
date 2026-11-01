@@ -14,6 +14,7 @@ from selark.connections import valid_model
 from selark.errors import GatewayError
 from selark.protocol import strict_json
 from selark.providers.mimo import MiMoProvider, close_response, protocol_error, reported_usage
+from selark.providers.responses_text import ResponseText
 from selark.sse import SSEDecoder, async_sse_lines
 
 ERRORS = {
@@ -291,6 +292,7 @@ class ChatGPTProvider(MiMoProvider):
         identity = model = None
         created = int(time.time())
         pieces = []
+        text_evidence = ResponseText()
         size = count = 0
         sequence = -1
 
@@ -385,33 +387,8 @@ class ChatGPTProvider(MiMoProvider):
                             "官方响应未完成；已报告用量保留。",
                             200,
                         )
-                    output = result.get("output")
-                    if not isinstance(output, list) or len(output) > 64:
-                        raise ValueError
-                    complete = []
-                    for item in output:
-                        if not isinstance(item, dict):
-                            raise ValueError
-                        if item.get("type") == "reasoning":
-                            continue
-                        if (
-                            item.get("type") != "message"
-                            or item.get("role") != "assistant"
-                            or not isinstance(item.get("content"), list)
-                        ):
-                            raise protocol_error("此适配仅支持 Responses 文本回复。")
-                        for part in item["content"]:
-                            if (
-                                not isinstance(part, dict)
-                                or not isinstance(part.get("type"), str)
-                                or part["type"] not in {"output_text", "refusal"}
-                            ):
-                                raise ValueError
-                            value = part.get("text" if part["type"] == "output_text" else "refusal")
-                            if not isinstance(value, str):
-                                raise ValueError
-                            complete.append(value)
-                    final_text, emitted = "".join(complete), "".join(pieces)
+                    final_text = text_evidence.finish(result.get("output"))
+                    emitted = "".join(pieces)
                     if not final_text.startswith(emitted):
                         raise protocol_error("Responses 终态文本与已发送片段不一致。")
                     if len(final_text.encode()) > 8 * 1024 * 1024:
@@ -428,22 +405,25 @@ class ChatGPTProvider(MiMoProvider):
                     size += len(delta.encode())
                     if size > 8 * 1024 * 1024:
                         raise protocol_error("上游响应超过 8 MiB 上限。")
+                    text_evidence.delta(event)
                     pieces.append(delta)
                     yield chunk(delta)
                 elif event_type == "error":
                     raise response_error(event, 200)
                 elif event_type in {"response.output_item.added", "response.output_item.done"}:
-                    if (
-                        not isinstance(event.get("item"), dict)
-                        or not isinstance(event["item"].get("type"), str)
-                        or event["item"]["type"] not in {"message", "reasoning"}
-                    ):
-                        raise protocol_error("当前文本连接不执行 Responses 工具调用。")
+                    if identity is None:
+                        raise protocol_error("Responses 消息缺少请求身份。")
+                    text_evidence.item_event(event)
                 elif event_type in {
                     "response.content_part.added",
                     "response.content_part.done",
                     "response.output_text.done",
                     "response.refusal.done",
+                }:
+                    if identity is None:
+                        raise protocol_error("Responses 文本缺少请求身份。")
+                    text_evidence.part_event(event)
+                elif event_type in {
                     "response.output_text.annotation.added",
                 } or event_type.startswith(
                     ("response.reasoning_text.", "response.reasoning_summary_")

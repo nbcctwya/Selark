@@ -96,18 +96,21 @@ GET /api/backups
 禁用当前默认模型需确认同时清除默认值，不自动选替代。已派发请求仍按原快照完成，排队请求重新检查权限。
 如果其他标签页或 CLI 已修改相关连接，旧版本操作返回 409；刷新后由用户重新明确操作，不自动重试。
 
-模型写入须同时具备有效管理 cookie、专用请求头、精确 Origin 和 JSON 类型；请求体最多 4 KiB，读取最多 5 秒。
+模型写入须同时具备有效管理会话请求头、专用请求头、精确 Origin 和 JSON 类型；请求体最多 4 KiB，读取最多 5 秒。
 严格校验字段、模型 ID、布尔状态与配置版本，在核心管理锁下完成检查、备份和原子配置替换。
 不初始化或迁移数据库，账本以只读连接打开；写入后清除快照缓存。没有其他管理写入接口。
 
-管理凭证由安全随机数生成，与调用方令牌完全独立，不持久化，服务内仅保存摘要。会话 cookie 使用
-HttpOnly、SameSite=Strict、host-only，HTTP 回环连接不设置 Secure。任何可读取本机进程、终端、
+管理凭证由安全随机数生成，与调用方令牌完全独立，服务内仅保存摘要。
+登录成功后页面将会话保存在按 origin（包含端口）隔离的 sessionStorage 中，通过
+`X-Selark-Session` 请求头显式发送；不使用管理 Cookie，因此不会随访问其他本机端口而自动发送。
+刷新当前页面可继续使用会话；会话失效后会清除页面数据与存储。浏览器禁用存储时使用页面内存，
+刷新后需重新打开新的管理链接。任何可读取本机进程、终端、
 浏览器配置或本地文件的账号仍在信任边界内；Dashboard 不是操作系统用户隔离机制。
 
 严格校验带端口的 `127.0.0.1` Host、精确同源 Origin 与 Fetch Metadata；数据查询还需专用请求头。
 没有 CORS 放行，不信任反向代理请求头；登录限长、限时、限频。CSP 禁止内联脚本、第三方资源、iframe
 嵌入和表单提交；设置 `no-store`、`nosniff`、`no-referrer`，禁止访问日志记录管理链接。
-前端把记录文本转义后渲染；只有主题偏好写入 localStorage，没有资源或凭据的浏览器存储。
+前端把记录文本转义后渲染；只有主题偏好写入 localStorage；会话使用 sessionStorage，资源数据不写入浏览器存储。
 实现依据参见 [Starlette 中间件说明](https://www.starlette.io/middleware/)、
 [MDN CSP frame-ancestors](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/frame-ancestors)
 与 [Referrer-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Referrer-Policy)。

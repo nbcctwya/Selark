@@ -58,6 +58,7 @@ try:
         "add",
         "extend",
         "strip",
+        "isspace",
         "index",
         "count",
     }

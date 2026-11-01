@@ -1,0 +1,303 @@
+{
+  "date": "2026-11-01",
+  "project_version": "0.10.0",
+  "status": "review_complete_follow_up_fixes_verified",
+  "scope": {
+    "source": "current_workspace_including_previous_chatgpt_completion_fix",
+    "production_code_changed_this_review": false,
+    "live_configuration_changed": false,
+    "installed_version_changed": false,
+    "real_provider_calls": 0,
+    "temporary_services_stopped": true
+  },
+  "findings": [
+    {
+      "id": "SEC-01",
+      "severity": "medium",
+      "priority": "ordinary_maintenance",
+      "title": "Dashboard session cookie crosses loopback ports and can be replayed",
+      "locations": [
+        {
+          "path": "src/selark/dashboard.py",
+          "line": 97
+        },
+        {
+          "path": "src/selark/dashboard.py",
+          "line": 127
+        },
+        {
+          "path": "src/selark/dashboard.py",
+          "line": 166
+        }
+      ],
+      "preconditions": [
+        "Active administrator browser session",
+        "User visits an untrusted HTTP service on another port of the same 127.0.0.1 host"
+      ],
+      "evidence": {
+        "browser": "149.0.7827.55",
+        "login_status": 200,
+        "cookie_http_only": true,
+        "cookie_same_site": "Strict",
+        "cross_port_cookie_observed": true,
+        "replayed_snapshot_status": 200,
+        "replayed_model_approval_status": 200,
+        "synthetic_model_disabled": true,
+        "real_provider_calls": 0,
+        "real_configuration_modified": false,
+        "captured_token_persisted": false
+      },
+      "recommended_change": "Use an origin-scoped explicit session header, retain origin/host checks and CSP",
+      "references": [
+        "https://www.rfc-editor.org/rfc/rfc6265#section-8.5"
+      ],
+      "effective_risk_for_local_self_use": "low",
+      "local_self_use_decision": "Worth fixing when using multiple local web tools; not urgent; does not protect against a fully compromised same-user process",
+      "resolution": "fixed_and_verified"
+    },
+    {
+      "id": "SEC-02",
+      "severity": "medium",
+      "priority": "ordinary_maintenance",
+      "title": "Unauthenticated incomplete request bodies exhaust shared admission capacity",
+      "locations": [
+        {
+          "path": "src/selark/app.py",
+          "line": 253
+        },
+        {
+          "path": "src/selark/app.py",
+          "line": 270
+        },
+        {
+          "path": "src/selark/app.py",
+          "line": 182
+        }
+      ],
+      "preconditions": [
+        "Loopback network access"
+      ],
+      "evidence": {
+        "before_status": 200,
+        "anonymous_incomplete_requests": 20,
+        "capacity_during_attack": {
+          "active": 0,
+          "queued": 0,
+          "admitted": 20,
+          "max_active": 4,
+          "max_queued": 16,
+          "accepting": true
+        },
+        "legitimate_during_status": 429,
+        "legitimate_during_error": "server_overloaded",
+        "after_status": 200,
+        "mock_upstream_calls": 2,
+        "anonymous_persisted_records": 20,
+        "anonymous_upstream_attempts": 0,
+        "real_provider_calls": 0
+      },
+      "test_body_timeout_seconds": 3,
+      "default_body_timeout_seconds": 10,
+      "recommended_change": "Authenticate before full request body and generation admission; independently bound pre-authentication work",
+      "effective_risk_for_local_self_use": "low",
+      "local_self_use_decision": "Worth a focused robustness fix for bad or incomplete client requests; retain existing capacity and timeout boundaries",
+      "resolution": "fixed_and_verified"
+    },
+    {
+      "id": "DEP-01",
+      "severity_in_current_runtime": "low_conditional_build_install_risk",
+      "title": "Build dependency pinned below security fixes",
+      "locations": [
+        {
+          "path": "requirements.lock",
+          "line": 20
+        },
+        {
+          "path": "pyproject.toml",
+          "line": 2
+        }
+      ],
+      "package": "setuptools",
+      "locked_version": "82.0.1",
+      "audit_environment_version": "82.0.1",
+      "build_constraint": ">=75,<83",
+      "advisories": [
+        {
+          "id": "GHSA-h35f-9h28-mq5c",
+          "aliases": [
+            "CVE-2026-59890",
+            "PYSEC-2026-3447"
+          ],
+          "fixed": "83.0.0",
+          "scope": "Unicode normalization and MANIFEST.in exclusions when building sdists, notably macOS; no MANIFEST.in found in this project",
+          "source_metadata_note": "GHSA patched field says None; OSV and official release history identify 83.0.0",
+          "url": "https://github.com/pypa/setuptools/security/advisories/GHSA-h35f-9h28-mq5c"
+        },
+        {
+          "id": "GHSA-xmj3-9gf7-h52w",
+          "fixed": "84.1.0",
+          "scope": "Windows legacy Wheel.install_as_egg namespace path; official history says the PEP 517 backend does not reach this code path",
+          "url": "https://github.com/pypa/setuptools/security/advisories/GHSA-xmj3-9gf7-h52w"
+        }
+      ],
+      "recommended_change": "Validate a supported version at least 84.1.0, update both build constraint and lock, add dependency advisory CI",
+      "release_history": "https://setuptools.pypa.io/en/latest/history.html",
+      "priority": "routine_dependency_maintenance",
+      "local_self_use_decision": "Upgrade with packaging validation during regular maintenance; current Linux runtime exposure is low",
+      "resolution": "fixed_and_verified"
+    },
+    {
+      "id": "PERF-01",
+      "category": "performance",
+      "title": "Daily quota admission reparses all same-day allocations",
+      "locations": [
+        {
+          "path": "src/selark/governance.py",
+          "line": 243
+        },
+        {
+          "path": "src/selark/governance.py",
+          "line": 355
+        },
+        {
+          "path": "src/selark/storage.py",
+          "line": 474
+        }
+      ],
+      "preconditions": [
+        "Daily token quota or daily cost budget enabled",
+        "Large same-caller same-day history"
+      ],
+      "evidence": {
+        "scope": "Store.attempt with daily_token_limit, synthetic settled rows, temporary file-backed SQLite",
+        "samples_per_size": 5,
+        "results": [
+          {
+            "same_caller_same_day_rows": 0,
+            "samples_ms": [
+              1.217,
+              1.2,
+              1.451,
+              1.338,
+              1.32
+            ],
+            "median_ms": 1.32
+          },
+          {
+            "same_caller_same_day_rows": 1000,
+            "samples_ms": [
+              12.478,
+              12.437,
+              12.656,
+              13.244,
+              13.137
+            ],
+            "median_ms": 12.656
+          },
+          {
+            "same_caller_same_day_rows": 10000,
+            "samples_ms": [
+              124.998,
+              116.465,
+              114.678,
+              115.983,
+              114.994
+            ],
+            "median_ms": 115.983
+          },
+          {
+            "same_caller_same_day_rows": 50000,
+            "samples_ms": [
+              592.905,
+              590.551,
+              579.972,
+              581.896,
+              599.58
+            ],
+            "median_ms": 590.551
+          }
+        ],
+        "query_plan": [
+          "SEARCH a USING INDEX allocations_day (caller_id=? AND day=?)",
+          "SEARCH r USING INDEX sqlite_autoindex_requests_1 (request_id=?) LEFT-JOIN"
+        ],
+        "real_provider_calls": 0
+      },
+      "recommended_change": "Transactionally maintain validated daily aggregates while preserving unknown-usage and accounting consistency holds",
+      "priority": "deferred_until_measured_need",
+      "local_self_use_decision": "Do not redesign accounting at current observed maximum of 95 same-caller daily rows; reassess at tens of thousands of daily rows and measured latency",
+      "resolution": "deferred_for_local_scale"
+    }
+  ],
+  "verification": {
+    "pytest": {
+      "passed": 839,
+      "warnings": 1,
+      "seconds": 93.79
+    },
+    "ruff": "passed",
+    "pip_check": "passed",
+    "dependency_audit": {
+      "checked_at": "2026-11-01T02:18:08.770248+00:00",
+      "source": "https://api.osv.dev/v1/querybatch",
+      "pinned_packages_checked": 32,
+      "affected_packages": [
+        {
+          "name": "setuptools",
+          "version": "82.0.1"
+        }
+      ],
+      "matched_records": 3,
+      "distinct_advisories": 2
+    },
+    "live_file_metadata": {
+      "paths_checked": 370,
+      "overbroad_group_or_other_permissions": 0,
+      "symlinks": 0,
+      "file_contents_included": false
+    },
+    "raw_artifact_directory": ".private/security-review-20261101/",
+    "repository_security_scan": {
+      "checked_files": 203,
+      "findings": 0,
+      "passed": true
+    },
+    "git_diff_check": "passed"
+  },
+  "limitations": [
+    "Not a proof of absence of other vulnerabilities",
+    "No real vendor calls or invasive testing of live configuration",
+    "Dependency matching reflects public indexed advisories at audit time",
+    "Quota timings are local synthetic measurements, not live service latency"
+  ],
+  "local_self_use_reassessment": {
+    "date": "2026-11-01",
+    "user_context": "Single-user local personal use",
+    "assumptions": [
+      "Loopback listening only",
+      "No public exposure through reverse proxy or port forwarding"
+    ],
+    "urgent_remediation_required_for_reported_findings": false,
+    "ledger_observation": {
+      "read_only": true,
+      "max_same_caller_daily_allocation_rows": 95,
+      "request_bodies_read": false,
+      "credentials_read": false
+    },
+    "implementation_plan": "Targeted admission robustness and Dashboard session isolation during ordinary maintenance; update build dependencies routinely; defer daily aggregate redesign",
+    "production_code_changed": false
+  },
+  "follow_up_fix": {
+    "date": "2026-11-01",
+    "report": "local-security-fix-verification-2026-11-01.json",
+    "fixed": [
+      "SEC-01",
+      "SEC-02",
+      "DEP-01"
+    ],
+    "deferred": [
+      "PERF-01"
+    ],
+    "installed": true
+  }
+}

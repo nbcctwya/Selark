@@ -35,6 +35,7 @@ def dashboard(directory, **options):
 def login(client):
     result = client.post("/api/session", json={"token": BOOTSTRAP}, headers={"Origin": ORIGIN})
     assert result.status_code == 200
+    client.headers["X-Selark-Session"] = result.json()["session_token"]
     return result
 
 
@@ -49,9 +50,9 @@ def test_admin_authentication_is_separate_from_caller_tokens(runtime, path):
         assert result.status_code == 401
         assert caller["token"] not in result.text
         auth = login(client)
-        cookie = auth.headers["set-cookie"]
-        assert "HttpOnly" in cookie and "SameSite=strict" in cookie
-        assert "Domain=" not in cookie and "Max-Age=28800" in cookie
+        assert "set-cookie" not in auth.headers and not client.cookies
+        assert auth.json()["expires_in"] == 28800
+        assert auth.headers["cache-control"] == "no-store"
         assert client.get("/api/" + path, headers=HEADERS).status_code == 200
         assert client.get("/api/" + path).status_code == 401
         assert (
@@ -59,6 +60,29 @@ def test_admin_authentication_is_separate_from_caller_tokens(runtime, path):
                 "/api/session", json={"token": BOOTSTRAP}, headers={"Origin": ORIGIN}
             ).status_code
             == 401
+        )
+
+
+def test_admin_session_requires_single_explicit_header(runtime):
+    with dashboard(runtime.directory, offline=True) as client:
+        token = login(client).json()["session_token"]
+        del client.headers["X-Selark-Session"]
+        for path in ("/api/snapshot", "/api/snapshot?session_token=" + token):
+            assert (
+                client.get(
+                    path, headers=HEADERS | {"Cookie": "selark_dashboard_8790=" + token}
+                ).status_code
+                == 401
+            )
+        for headers in (
+            [*HEADERS.items(), ("X-Selark-Session", token), ("X-Selark-Session", token)],
+            [*HEADERS.items(), ("X-Selark-Dashboard", "1"), ("X-Selark-Session", token)],
+            [*HEADERS.items(), ("X-Selark-Session", "x" * 129)],
+        ):
+            assert client.get("/api/snapshot", headers=headers).status_code == 401
+        assert (
+            client.get("/api/snapshot", headers=HEADERS | {"X-Selark-Session": token}).status_code
+            == 200
         )
 
 
@@ -494,12 +518,11 @@ def test_default_http_port_origin_normalization_and_duplicate_headers(runtime):
         create_dashboard(runtime.directory, port=80, bootstrap=BOOTSTRAP, offline=True),
         base_url="http://127.0.0.1",
     ) as client:
-        assert (
-            client.post(
-                "/api/session", json={"token": BOOTSTRAP}, headers={"Origin": "http://127.0.0.1"}
-            ).status_code
-            == 200
+        auth = client.post(
+            "/api/session", json={"token": BOOTSTRAP}, headers={"Origin": "http://127.0.0.1"}
         )
+        assert auth.status_code == 200
+        client.headers["X-Selark-Session"] = auth.json()["session_token"]
         assert client.get("/api/snapshot", headers=HEADERS).status_code == 200
         assert (
             client.get(
