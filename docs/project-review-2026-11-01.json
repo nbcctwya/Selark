@@ -1,0 +1,422 @@
+{
+  "date": "2026-11-01",
+  "checked_at": "2026-11-01T13:21:11.410907+00:00",
+  "version": "0.10.0",
+  "baseline_commit": "13c0b088ef93dc66d98f60a4b2712f1e750bd44a",
+  "scope": "Personal Linux/WSL use, loopback only; source review, full regressions, installed browser/TCP/recovery checks, dependency and artifact checks",
+  "new_confirmed_runtime_or_security_defects": [],
+  "changes": [
+    {
+      "path": "README.md",
+      "type": "documentation",
+      "reason": "Correct the outdated claim that all management is CLI-only; Dashboard model approval requires its own administrative session."
+    }
+  ],
+  "unit_regressions": {
+    "passed": 849,
+    "failed": 0,
+    "seconds": 74.31,
+    "warnings": 1,
+    "warning": "Existing Starlette TestClient/httpx deprecation warning"
+  },
+  "static_checks": {
+    "ruff_check": true,
+    "ruff_format": true,
+    "javascript_syntax": true,
+    "dependency_compatibility": true,
+    "repository_secret_scan": true
+  },
+  "dependency_audit": {
+    "checked_at": "2026-11-01T13:12:27.944098+00:00",
+    "source": "https://api.osv.dev/v1/querybatch",
+    "packages": [
+      {
+        "name": "PyJWT",
+        "version": "2.15.1",
+        "advisories": []
+      },
+      {
+        "name": "annotated-doc",
+        "version": "0.0.5",
+        "advisories": []
+      },
+      {
+        "name": "annotated-types",
+        "version": "0.8.0",
+        "advisories": []
+      },
+      {
+        "name": "anyio",
+        "version": "4.15.1",
+        "advisories": []
+      },
+      {
+        "name": "certifi",
+        "version": "2026.10.23",
+        "advisories": []
+      },
+      {
+        "name": "cffi",
+        "version": "2.1.1",
+        "advisories": []
+      },
+      {
+        "name": "click",
+        "version": "8.5.0",
+        "advisories": []
+      },
+      {
+        "name": "cryptography",
+        "version": "50.0.2",
+        "advisories": []
+      },
+      {
+        "name": "fastapi",
+        "version": "0.162.0",
+        "advisories": []
+      },
+      {
+        "name": "greenlet",
+        "version": "3.5.6",
+        "advisories": []
+      },
+      {
+        "name": "h11",
+        "version": "0.16.0",
+        "advisories": []
+      },
+      {
+        "name": "httpcore",
+        "version": "1.0.9",
+        "advisories": []
+      },
+      {
+        "name": "httpx",
+        "version": "0.28.1",
+        "advisories": []
+      },
+      {
+        "name": "idna",
+        "version": "3.20",
+        "advisories": []
+      },
+      {
+        "name": "iniconfig",
+        "version": "2.3.1",
+        "advisories": []
+      },
+      {
+        "name": "opentelemetry-api",
+        "version": "1.45.1",
+        "advisories": []
+      },
+      {
+        "name": "packaging",
+        "version": "26.3",
+        "advisories": []
+      },
+      {
+        "name": "playwright",
+        "version": "1.58.0",
+        "advisories": []
+      },
+      {
+        "name": "pluggy",
+        "version": "1.7.0",
+        "advisories": []
+      },
+      {
+        "name": "pycparser",
+        "version": "3.12",
+        "advisories": []
+      },
+      {
+        "name": "pydantic",
+        "version": "2.14.1",
+        "advisories": []
+      },
+      {
+        "name": "pydantic-core",
+        "version": "2.50.1",
+        "advisories": []
+      },
+      {
+        "name": "pyee",
+        "version": "13.0.1",
+        "advisories": []
+      },
+      {
+        "name": "pygments",
+        "version": "2.21.0",
+        "advisories": []
+      },
+      {
+        "name": "pytest",
+        "version": "9.1.1",
+        "advisories": []
+      },
+      {
+        "name": "ruff",
+        "version": "0.17.3",
+        "advisories": []
+      },
+      {
+        "name": "setuptools",
+        "version": "84.2.1",
+        "advisories": []
+      },
+      {
+        "name": "starlette",
+        "version": "1.10.0",
+        "advisories": []
+      },
+      {
+        "name": "typing-extensions",
+        "version": "4.16.0",
+        "advisories": []
+      },
+      {
+        "name": "typing-inspection",
+        "version": "0.4.4",
+        "advisories": []
+      },
+      {
+        "name": "uvicorn",
+        "version": "0.54.0",
+        "advisories": []
+      },
+      {
+        "name": "wheel",
+        "version": "0.48.0",
+        "advisories": []
+      }
+    ],
+    "advisories": []
+  },
+  "installed_acceptance": [
+    {
+      "name": "dashboard",
+      "passed": true,
+      "elapsed_seconds": 7.63,
+      "named_checks": 6,
+      "stats": {},
+      "browser": {
+        "browser": "Chromium",
+        "console_errors": 0,
+        "external_requests": 0,
+        "responsive_widths": [
+          1440,
+          390
+        ],
+        "views_checked": 5,
+        "model_layers": 4,
+        "unapproved_catalog_model_denied": true,
+        "cross_port_credentials_absent": true,
+        "cross_port_cookie_replay_rejected": true,
+        "session_survives_page_reload": true
+      }
+    },
+    {
+      "name": "dashboard-controls",
+      "passed": true,
+      "elapsed_seconds": 5.33,
+      "named_checks": 0,
+      "stats": {
+        "restarts": 3
+      },
+      "browser": {
+        "javascript_errors": 0,
+        "external_requests": 0,
+        "enable_disable_search_and_filter": true,
+        "default_confirmation": true,
+        "stale_revision_rejected": true,
+        "mobile_and_dark_theme": true
+      }
+    },
+    {
+      "name": "stability",
+      "passed": true,
+      "elapsed_seconds": 6.43,
+      "named_checks": 9,
+      "stats": {
+        "simulated_upstream_requests": 9
+      },
+      "browser": null
+    },
+    {
+      "name": "api-stress",
+      "passed": true,
+      "elapsed_seconds": 5.38,
+      "named_checks": 7,
+      "stats": {
+        "client_chat_requests": 275,
+        "simulated_upstream_requests": 49,
+        "peak_upstream_concurrency": 4
+      },
+      "browser": null
+    },
+    {
+      "name": "resource-matrix",
+      "passed": true,
+      "elapsed_seconds": 14.05,
+      "named_checks": 16,
+      "stats": {
+        "http_chat_requests": 668,
+        "cli_and_example_generations": 14,
+        "simulated_upstream_generations": 141,
+        "simulated_quota_reads": 19,
+        "peak_upstream_concurrency": 4
+      },
+      "browser": null
+    },
+    {
+      "name": "six-apps",
+      "passed": true,
+      "elapsed_seconds": 13.49,
+      "named_checks": 13,
+      "stats": {
+        "simulated_upstream_requests": 641,
+        "client_requests": 702,
+        "application_count": 6,
+        "peak_upstream_concurrency": 4
+      },
+      "browser": null
+    },
+    {
+      "name": "four-api",
+      "passed": true,
+      "elapsed_seconds": 25.57,
+      "named_checks": 53,
+      "stats": {
+        "simulated_upstream_requests": 984,
+        "client_requests": 1824,
+        "application_count": 8,
+        "peak_upstream_concurrency": 4
+      },
+      "browser": null
+    },
+    {
+      "name": "operations",
+      "passed": true,
+      "elapsed_seconds": 7.68,
+      "named_checks": 7,
+      "stats": {
+        "fake_generations": 2,
+        "history_rows": 20000,
+        "overview_seconds": [
+          0.3749,
+          0.3665,
+          0.3713
+        ]
+      },
+      "browser": null
+    }
+  ],
+  "profile_audit": {
+    "metadata_paths": 370,
+    "permission_or_symlink_issues": [],
+    "configuration_valid": true,
+    "service_stopped": true,
+    "ledger": {
+      "integrity": "ok",
+      "schema": 5,
+      "records": 215,
+      "running": 0
+    },
+    "connections": 6,
+    "approved_models": 36,
+    "configured_prices": 0,
+    "installed_source_files": 44,
+    "installed_sources_match": true,
+    "model_generation_requests": 0,
+    "protected_files_unchanged": true
+  },
+  "packages": [
+    {
+      "file": "selark-0.10.0-py3-none-any.whl",
+      "entries": 49,
+      "bytes": 177816,
+      "sha256": "22eed6de7204623747f2872c045e1f7a72f4ba2c0a5361b46acdc17d51d3c1fe",
+      "private_entries": []
+    },
+    {
+      "file": "selark-0.10.0.tar.gz",
+      "entries": 93,
+      "bytes": 282803,
+      "sha256": "50d2411ea2b6ba2f671f97a6858269101bb4cc6a0242e61b9f1817e0d84c3690",
+      "private_entries": []
+    }
+  ],
+  "package_security": {
+    "archive_files_checked": 135,
+    "configured_credentials_checked": 6,
+    "findings": [],
+    "passed": true
+  },
+  "clean_install": {
+    "checks": {
+      "pip_check": {
+        "passed": true,
+        "output": "No broken requirements found."
+      },
+      "cli_help": {
+        "passed": true
+      },
+      "version": {
+        "passed": true,
+        "output": "Selark 0.10.0"
+      },
+      "status_help": {
+        "passed": true
+      },
+      "dashboard_help": {
+        "passed": true
+      },
+      "model_help": {
+        "passed": true
+      }
+    },
+    "installed_source_files": 44,
+    "installed_sources_match": true,
+    "version": "0.10.0",
+    "outside_repository": true,
+    "passed": true
+  },
+  "real_provider_generation_requests": 0,
+  "provider_metadata_requests": 0,
+  "oauth_operations": 0,
+  "ci_baseline": {
+    "url": "https://github.com/nbcctwya/Selark/actions/runs/41309241700",
+    "commit": "13c0b088ef93dc66d98f60a4b2712f1e750bd44a",
+    "conclusion": "success",
+    "python_versions": [
+      "3.11",
+      "3.12",
+      "3.13"
+    ]
+  },
+  "reviewed_boundaries": [
+    "entry authentication before body/admission and later revocation",
+    "per-caller/model authorization and dispatch-time approval",
+    "unknown usage, cumulative usage and budget reservations",
+    "SQLite write serialization, journal replay and crash recovery",
+    "backup integrity, isolation and restore destinations",
+    "Dashboard origin/session/CSP and model change revision checks",
+    "provider routing, redirects, protocol bounds and completion evidence",
+    "private filesystem permissions, build contents and installed-source parity"
+  ],
+  "known_limits": [
+    {
+      "id": "PERF-01",
+      "decision": "defer quota-ledger redesign at current personal usage scale; synthetic 20k-row overview tested separately"
+    },
+    {
+      "id": "upstream-content",
+      "decision": "Previous relay content and parameter failures remain historical upstream findings; this review does not repeat paid-model calls"
+    },
+    {
+      "id": "platform",
+      "decision": "Local runtime checks use Linux/WSL; cloud baseline covers Python 3.11–3.13 on Ubuntu, not macOS or Windows-native operation"
+    }
+  ]
+}
