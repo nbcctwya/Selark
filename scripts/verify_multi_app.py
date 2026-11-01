@@ -743,21 +743,39 @@ async def run(args):
                         and unknown_cost["error"] == "budget_cost_unknown",
                     )
                     runtime.store.revoke(tokens["batch-indexer"]["id"])
+                    before_revocation = len(upstream.calls)
                     revoked, alive = await asyncio.gather(
                         call("batch-indexer", "after-revocation"),
                         call("chat-desktop", "after-neighbor-revocation"),
                     )
                     check(
                         "revoking_one_application_keeps_others_usable",
-                        revoked["status"] == 401 and alive["correct_response"],
+                        revoked["status"] == 401
+                        and revoked["error"] == "invalid_token"
+                        and alive["correct_response"]
+                        and len(upstream.calls) == before_revocation + 1,
                     )
                     await wait_for(idle)
                     rows = runtime.store.records({}, limit=10000)
                     by_id = {r["request_id"]: r for r in rows}
+                    check(
+                        "entry_auth_rejection_has_no_generation_record",
+                        bool(revoked["request_id"]) and revoked["request_id"] not in by_id,
+                    )
                     for outcome in outcomes:
+                        # This token was revoked before entry authentication. Only this
+                        # known rejection is exempt; later revocations still need a row.
+                        if outcome is revoked:
+                            continue
                         row = by_id.get(outcome["request_id"])
                         if row is None:
-                            assert outcome["error"] == "server_overloaded"
+                            assert outcome["error"] == "server_overloaded", (
+                                "Missing generation record",
+                                outcome["application"],
+                                outcome["case"],
+                                outcome["status"],
+                                outcome["error"],
+                            )
                             continue
                         assert (
                             row["caller_id"] == tokens[outcome["application"]]["id"]
