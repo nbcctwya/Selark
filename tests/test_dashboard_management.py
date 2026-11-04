@@ -15,6 +15,7 @@ from selark.errors import GatewayError
 from selark.runtime import Runtime, connection_revision
 from selark.storage import Store
 
+from .support.contracts import dashboard_response
 from .support.governance import PAYLOAD, app_for, auth
 from .support.governance import runtime as runtime
 from .support.protocol import UPSTREAM_KEY, completion
@@ -47,7 +48,9 @@ def client(runtime):
 
 
 def write(client, method, path, payload):
-    return client.request(method, path, json=payload, headers={"Origin": ORIGIN})
+    return dashboard_response(
+        client.request(method, path, json=payload, headers={"Origin": ORIGIN})
+    )
 
 
 def no_network(*args, **kwargs):
@@ -128,6 +131,7 @@ def test_management_reads_do_not_expose_secrets_or_modify_state(runtime, monkeyp
         login(client)
         for path in paths:
             result = client.get(path, headers=HEADERS)
+            dashboard_response(result)
             assert result.status_code == 200, result.text
             assert result.headers["cache-control"] == "no-store"
             for secret in (

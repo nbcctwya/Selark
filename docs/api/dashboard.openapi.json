@@ -1,0 +1,6925 @@
+{
+  "components": {
+    "schemas": {
+      "Application": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "effective_resources": {
+            "items": {
+              "$ref": "#/components/schemas/EffectiveResource"
+            },
+            "title": "Effective Resources",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/PolicyView"
+          },
+          "quota": {
+            "$ref": "#/components/schemas/Quota"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "revoked_at",
+          "active",
+          "policy",
+          "quota",
+          "effective_resources"
+        ],
+        "title": "Application",
+        "type": "object"
+      },
+      "ApplicationCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "^[^\\x00-\\x1f\\x7f]+$",
+            "title": "Name",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/Policy"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ApplicationCreate",
+        "type": "object"
+      },
+      "ApplicationList": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ManagedApplication"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "ApplicationPolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/PolicyPatch"
+          },
+          "revision": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Revision",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision",
+          "policy"
+        ],
+        "title": "ApplicationPolicy",
+        "type": "object"
+      },
+      "ApplicationQuota": {
+        "additionalProperties": false,
+        "properties": {
+          "billed_cost": {
+            "title": "Billed Cost",
+            "type": "null"
+          },
+          "charged_or_reserved_tokens": {
+            "title": "Charged Or Reserved Tokens",
+            "type": "integer"
+          },
+          "day": {
+            "title": "Day",
+            "type": "string"
+          },
+          "estimated_cost_or_reservation": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Estimated Cost Or Reservation",
+            "type": "object"
+          },
+          "estimated_reserved_tokens": {
+            "title": "Estimated Reserved Tokens",
+            "type": "integer"
+          },
+          "historical_requests_excluded": {
+            "title": "Historical Requests Excluded",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "in_flight_requests": {
+            "title": "In Flight Requests",
+            "type": "integer"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/PolicyView"
+          },
+          "remaining_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Tokens"
+          },
+          "requests": {
+            "title": "Requests",
+            "type": "integer"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "timezone": {
+            "const": "UTC",
+            "title": "Timezone",
+            "type": "string"
+          },
+          "token_quota_state": {
+            "enum": [
+              "unlimited",
+              "limited",
+              "exhausted",
+              "blocked_unknown_usage"
+            ],
+            "title": "Token Quota State",
+            "type": "string"
+          },
+          "uncertain_requests": {
+            "title": "Uncertain Requests",
+            "type": "integer"
+          },
+          "unknown_cost_requests": {
+            "title": "Unknown Cost Requests",
+            "type": "integer"
+          },
+          "unknown_token_requests": {
+            "title": "Unknown Token Requests",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "day",
+          "timezone",
+          "policy",
+          "requests",
+          "in_flight_requests",
+          "uncertain_requests",
+          "remaining_tokens",
+          "token_quota_state",
+          "historical_requests_excluded",
+          "charged_or_reserved_tokens",
+          "unknown_token_requests",
+          "estimated_reserved_tokens",
+          "estimated_cost_or_reservation",
+          "unknown_cost_requests",
+          "billed_cost",
+          "scope",
+          "id"
+        ],
+        "title": "ApplicationQuota",
+        "type": "object"
+      },
+      "ApplicationRevoke": {
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Revision",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "ApplicationRevoke",
+        "type": "object"
+      },
+      "Authorization": {
+        "additionalProperties": false,
+        "properties": {
+          "access_expired": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Access Expired"
+          },
+          "credential_configured": {
+            "title": "Credential Configured",
+            "type": "boolean"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "plan_permission": {
+            "title": "Plan Permission",
+            "type": "boolean"
+          },
+          "ready": {
+            "title": "Ready",
+            "type": "boolean"
+          },
+          "refresh_available": {
+            "title": "Refresh Available",
+            "type": "boolean"
+          },
+          "refresh_state": {
+            "title": "Refresh State",
+            "type": "string"
+          },
+          "remote_validity": {
+            "title": "Remote Validity",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "Authorization",
+        "type": "object"
+      },
+      "Availability": {
+        "additionalProperties": false,
+        "properties": {
+          "blockers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Blockers",
+            "type": "array"
+          },
+          "checked_live": {
+            "title": "Checked Live",
+            "type": "boolean"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "checked_live",
+          "blockers"
+        ],
+        "title": "Availability",
+        "type": "object"
+      },
+      "BackupItem": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "integrity": {
+            "const": "not_checked",
+            "title": "Integrity",
+            "type": "string"
+          },
+          "manifest": {
+            "enum": [
+              "unreadable",
+              "sha256_present",
+              "legacy"
+            ],
+            "title": "Manifest",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "integrity",
+          "created_at",
+          "manifest"
+        ],
+        "title": "BackupItem",
+        "type": "object"
+      },
+      "Backups": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BackupItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit"
+        ],
+        "title": "Backups",
+        "type": "object"
+      },
+      "Capabilities": {
+        "additionalProperties": false,
+        "properties": {
+          "application_management": {
+            "title": "Application Management",
+            "type": "boolean"
+          },
+          "connection_management": {
+            "title": "Connection Management",
+            "type": "boolean"
+          },
+          "model_approval": {
+            "title": "Model Approval",
+            "type": "boolean"
+          },
+          "model_discovery": {
+            "title": "Model Discovery",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "connection_management",
+          "model_approval",
+          "model_discovery",
+          "application_management"
+        ],
+        "title": "Capabilities",
+        "type": "object"
+      },
+      "Capacity": {
+        "additionalProperties": false,
+        "properties": {
+          "accepting": {
+            "title": "Accepting",
+            "type": "boolean"
+          },
+          "active": {
+            "title": "Active",
+            "type": "integer"
+          },
+          "admitted": {
+            "title": "Admitted",
+            "type": "integer"
+          },
+          "max_active": {
+            "title": "Max Active",
+            "type": "integer"
+          },
+          "max_queued": {
+            "title": "Max Queued",
+            "type": "integer"
+          },
+          "queued": {
+            "title": "Queued",
+            "type": "integer"
+          }
+        },
+        "title": "Capacity",
+        "type": "object"
+      },
+      "CatalogModel": {
+        "additionalProperties": false,
+        "properties": {
+          "approved": {
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "authorized_applications": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Authorized Applications",
+            "type": "array"
+          },
+          "default": {
+            "title": "Default",
+            "type": "boolean"
+          },
+          "discovery": {
+            "enum": [
+              "listed",
+              "not_in_catalog",
+              "unknown"
+            ],
+            "title": "Discovery",
+            "type": "string"
+          },
+          "effective_applications": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Effective Applications",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "live_availability": {
+            "const": "unknown",
+            "title": "Live Availability",
+            "type": "string"
+          },
+          "verification": {
+            "items": {
+              "$ref": "#/components/schemas/ModelVerification"
+            },
+            "title": "Verification",
+            "type": "array"
+          },
+          "verified_capabilities": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Verified Capabilities",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "discovery",
+          "approved",
+          "default",
+          "authorized_applications",
+          "effective_applications",
+          "verified_capabilities",
+          "live_availability",
+          "verification"
+        ],
+        "title": "CatalogModel",
+        "type": "object"
+      },
+      "Connection": {
+        "additionalProperties": false,
+        "properties": {
+          "authorization": {
+            "$ref": "#/components/schemas/Authorization"
+          },
+          "availability": {
+            "$ref": "#/components/schemas/Availability"
+          },
+          "client_allowed_models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Client Allowed Models",
+            "type": "array"
+          },
+          "default_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Model"
+          },
+          "discovery": {
+            "$ref": "#/components/schemas/DiscoverySummary"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "model_catalog": {
+            "$ref": "#/components/schemas/ModelCatalog"
+          },
+          "models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "provider_quota": {
+            "$ref": "#/components/schemas/ProviderQuota"
+          },
+          "resource_type": {
+            "enum": [
+              "api",
+              "token_plan",
+              "chatgpt_subscription"
+            ],
+            "title": "Resource Type",
+            "type": "string"
+          },
+          "verification": {
+            "$ref": "#/components/schemas/Verification"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "resource_type",
+          "enabled",
+          "models",
+          "default_model",
+          "client_allowed_models",
+          "authorization",
+          "verification",
+          "availability",
+          "discovery",
+          "model_catalog",
+          "provider_quota"
+        ],
+        "title": "Connection",
+        "type": "object"
+      },
+      "ConnectionCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "anthropic_version": {
+            "default": "2026-10-21",
+            "enum": [
+              "2023-06-01",
+              "2026-10-21"
+            ],
+            "title": "Anthropic Version",
+            "type": "string"
+          },
+          "api_key": {
+            "format": "password",
+            "maxLength": 8192,
+            "minLength": 1,
+            "title": "Api Key",
+            "type": "string",
+            "writeOnly": true
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Base Url"
+          },
+          "id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "pattern": "^[^\\x00-\\x1f\\x7f]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Name"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanSettings"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "provider": {
+            "enum": [
+              "mimo",
+              "deepseek",
+              "zhipu",
+              "kimi",
+              "openai",
+              "anthropic",
+              "openai-compatible",
+              "kimi-code",
+              "glm-coding"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "stream_usage": {
+            "default": true,
+            "title": "Stream Usage",
+            "type": "boolean"
+          },
+          "timeout_seconds": {
+            "default": 60.0,
+            "maximum": 600,
+            "minimum": 1,
+            "title": "Timeout Seconds",
+            "type": "number"
+          },
+          "token_parameter": {
+            "default": "max_tokens",
+            "enum": [
+              "max_tokens",
+              "max_completion_tokens"
+            ],
+            "title": "Token Parameter",
+            "type": "string"
+          },
+          "workspace_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9_-]{1,128}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Workspace Id"
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "api_key"
+        ],
+        "title": "ConnectionCreate",
+        "type": "object"
+      },
+      "ConnectionList": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ManagedConnection"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "ConnectionPatch": {
+        "additionalProperties": false,
+        "minProperties": 2,
+        "properties": {
+          "anthropic_version": {
+            "enum": [
+              "2023-06-01",
+              "2026-10-21"
+            ],
+            "title": "Anthropic Version",
+            "type": "string"
+          },
+          "api_key": {
+            "format": "password",
+            "maxLength": 8192,
+            "minLength": 1,
+            "title": "Api Key",
+            "type": "string",
+            "writeOnly": true
+          },
+          "base_url": {
+            "maxLength": 2048,
+            "title": "Base Url",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "^[^\\x00-\\x1f\\x7f]+$",
+            "title": "Name",
+            "type": "string"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanSettings"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "revision": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Revision",
+            "type": "string"
+          },
+          "stream_usage": {
+            "title": "Stream Usage",
+            "type": "boolean"
+          },
+          "timeout_seconds": {
+            "maximum": 600,
+            "minimum": 1,
+            "title": "Timeout Seconds",
+            "type": "number"
+          },
+          "token_parameter": {
+            "enum": [
+              "max_tokens",
+              "max_completion_tokens"
+            ],
+            "title": "Token Parameter",
+            "type": "string"
+          },
+          "workspace_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9_-]{1,128}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Workspace Id"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "ConnectionPatch",
+        "type": "object"
+      },
+      "CreatedApplication": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/PolicyView"
+          },
+          "revision": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Revision",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "token": {
+            "description": "仅在创建响应中返回一次的应用令牌。",
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "revoked_at",
+          "active",
+          "policy",
+          "revision",
+          "token"
+        ],
+        "title": "CreatedApplication",
+        "type": "object"
+      },
+      "DashboardError": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "DashboardError",
+        "type": "object"
+      },
+      "DefaultModel": {
+        "additionalProperties": false,
+        "properties": {
+          "model": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^(?!.*::)[A-Za-z0-9][A-Za-z0-9_.:/@+-]{0,199}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "revision": {
+            "minimum": 1,
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revision",
+          "model"
+        ],
+        "title": "DefaultModel",
+        "type": "object"
+      },
+      "Discovery": {
+        "additionalProperties": false,
+        "properties": {
+          "checked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "current": {
+            "title": "Current",
+            "type": "boolean"
+          },
+          "discovered_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discovered At"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "state": {
+            "enum": [
+              "never",
+              "success",
+              "failure",
+              "stale"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "checked_at",
+          "discovered_at",
+          "current",
+          "count",
+          "models",
+          "error_code"
+        ],
+        "title": "Discovery",
+        "type": "object"
+      },
+      "DiscoverySummary": {
+        "additionalProperties": false,
+        "properties": {
+          "checked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "current": {
+            "title": "Current",
+            "type": "boolean"
+          },
+          "discovered_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discovered At"
+          },
+          "state": {
+            "enum": [
+              "never",
+              "success",
+              "failure",
+              "stale"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "checked_at",
+          "discovered_at",
+          "current",
+          "count"
+        ],
+        "title": "DiscoverySummary",
+        "type": "object"
+      },
+      "EffectiveResource": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "resource_type": {
+            "enum": [
+              "api",
+              "token_plan",
+              "chatgpt_subscription"
+            ],
+            "title": "Resource Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "resource_type",
+          "models"
+        ],
+        "title": "EffectiveResource",
+        "type": "object"
+      },
+      "EmptyRequest": {
+        "additionalProperties": false,
+        "properties": {},
+        "title": "EmptyRequest",
+        "type": "object"
+      },
+      "EmptyTrendPoint": {
+        "additionalProperties": false,
+        "properties": {
+          "average_latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Latency Ms"
+          },
+          "day": {
+            "title": "Day",
+            "type": "string"
+          },
+          "estimated_cost_by_currency": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Estimated Cost By Currency",
+            "type": "object"
+          },
+          "known_tokens": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KnownTokens"
+              },
+              {
+                "$ref": "#/components/schemas/EmptyTrendTokens"
+              }
+            ],
+            "title": "Known Tokens"
+          },
+          "requests": {
+            "title": "Requests",
+            "type": "integer"
+          },
+          "success_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Success Rate"
+          },
+          "unknown_consumption_requests": {
+            "title": "Unknown Consumption Requests",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "day",
+          "requests",
+          "known_tokens",
+          "estimated_cost_by_currency",
+          "unknown_consumption_requests",
+          "success_rate",
+          "average_latency_ms"
+        ],
+        "title": "EmptyTrendPoint",
+        "type": "object"
+      },
+      "EmptyTrendTokens": {
+        "additionalProperties": false,
+        "properties": {
+          "total_tokens": {
+            "title": "Total Tokens",
+            "type": "null"
+          }
+        },
+        "required": [
+          "total_tokens"
+        ],
+        "title": "EmptyTrendTokens",
+        "type": "object"
+      },
+      "KnownTokens": {
+        "additionalProperties": false,
+        "properties": {
+          "completion_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Tokens"
+          },
+          "prompt_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Tokens"
+          },
+          "total_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Tokens"
+          }
+        },
+        "required": [
+          "prompt_tokens",
+          "completion_tokens",
+          "total_tokens"
+        ],
+        "title": "KnownTokens",
+        "type": "object"
+      },
+      "LegacyModelApproval": {
+        "additionalProperties": false,
+        "properties": {
+          "clear_default": {
+            "default": false,
+            "title": "Clear Default",
+            "type": "boolean"
+          },
+          "connection_id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "model": {
+            "maxLength": 200,
+            "minLength": 1,
+            "pattern": "^(?!.*::)[A-Za-z0-9][A-Za-z0-9_.:/@+-]{0,199}$",
+            "title": "Model",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1,
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "connection_id",
+          "model",
+          "enabled",
+          "revision"
+        ],
+        "title": "ModelApproval",
+        "type": "object"
+      },
+      "LogEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "number"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "queue_ms": {
+            "title": "Queue Ms",
+            "type": "number"
+          },
+          "status": {
+            "title": "Status",
+            "type": "number"
+          },
+          "timestamp": {
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "upstream_attempts": {
+            "title": "Upstream Attempts",
+            "type": "number"
+          }
+        },
+        "required": [
+          "timestamp",
+          "path"
+        ],
+        "title": "LogEvent",
+        "type": "object"
+      },
+      "Logs": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LogEvent"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "omitted": {
+            "title": "Omitted",
+            "type": "integer"
+          },
+          "window": {
+            "title": "Window",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "omitted",
+          "window"
+        ],
+        "title": "Logs",
+        "type": "object"
+      },
+      "ManagedApplication": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/PolicyView"
+          },
+          "revision": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Revision",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "revoked_at",
+          "active",
+          "policy",
+          "revision"
+        ],
+        "title": "ManagedApplication",
+        "type": "object"
+      },
+      "ManagedConnection": {
+        "additionalProperties": false,
+        "properties": {
+          "allowed_models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Allowed Models",
+            "type": "array"
+          },
+          "anthropic_version": {
+            "enum": [
+              "2023-06-01",
+              "2026-10-21"
+            ],
+            "title": "Anthropic Version",
+            "type": "string"
+          },
+          "api_key_configured": {
+            "title": "Api Key Configured",
+            "type": "boolean"
+          },
+          "approval_revision": {
+            "title": "Approval Revision",
+            "type": "integer"
+          },
+          "base_url": {
+            "title": "Base Url",
+            "type": "string"
+          },
+          "default_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Model"
+          },
+          "discovery": {
+            "$ref": "#/components/schemas/Discovery"
+          },
+          "editable_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Editable Fields",
+            "type": "array"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "resource_type": {
+            "enum": [
+              "api",
+              "token_plan",
+              "chatgpt_subscription"
+            ],
+            "title": "Resource Type",
+            "type": "string"
+          },
+          "revision": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Revision",
+            "type": "string"
+          },
+          "stream_usage": {
+            "title": "Stream Usage",
+            "type": "boolean"
+          },
+          "timeout_seconds": {
+            "title": "Timeout Seconds",
+            "type": "number"
+          },
+          "token_parameter": {
+            "enum": [
+              "max_tokens",
+              "max_completion_tokens"
+            ],
+            "title": "Token Parameter",
+            "type": "string"
+          },
+          "workspace_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspace Id"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "resource_type",
+          "base_url",
+          "enabled",
+          "api_key_configured",
+          "timeout_seconds",
+          "stream_usage",
+          "token_parameter",
+          "workspace_id",
+          "anthropic_version",
+          "plan",
+          "allowed_models",
+          "default_model",
+          "revision",
+          "approval_revision",
+          "editable_fields",
+          "discovery"
+        ],
+        "title": "ManagedConnection",
+        "type": "object"
+      },
+      "ManagedModels": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_revision": {
+            "title": "Approval Revision",
+            "type": "integer"
+          },
+          "connection_enabled": {
+            "title": "Connection Enabled",
+            "type": "boolean"
+          },
+          "connection_id": {
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/ModelCounts"
+          },
+          "default_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Model"
+          },
+          "discovery": {
+            "$ref": "#/components/schemas/Discovery"
+          },
+          "live_availability": {
+            "const": "unknown",
+            "title": "Live Availability",
+            "type": "string"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogModel"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "protocol": {
+            "enum": [
+              "chat-completions",
+              "anthropic-messages",
+              "responses"
+            ],
+            "title": "Protocol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connection_id",
+          "connection_enabled",
+          "approval_revision",
+          "default_model",
+          "protocol",
+          "discovery",
+          "models",
+          "counts",
+          "live_availability"
+        ],
+        "title": "ManagedModels",
+        "type": "object"
+      },
+      "ModelApproval": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "properties": {
+              "all_models": {
+                "const": false
+              },
+              "models": {
+                "minItems": 1
+              }
+            },
+            "required": [
+              "models"
+            ]
+          },
+          {
+            "properties": {
+              "all_models": {
+                "const": true
+              },
+              "models": {
+                "maxItems": 0
+              }
+            },
+            "required": [
+              "all_models"
+            ]
+          }
+        ],
+        "properties": {
+          "all_models": {
+            "default": false,
+            "title": "All Models",
+            "type": "boolean"
+          },
+          "clear_default": {
+            "default": false,
+            "title": "Clear Default",
+            "type": "boolean"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "models": {
+            "items": {
+              "maxLength": 200,
+              "minLength": 1,
+              "pattern": "^(?!.*::)[A-Za-z0-9][A-Za-z0-9_.:/@+-]{0,199}$",
+              "type": "string"
+            },
+            "maxItems": 1000,
+            "title": "Models",
+            "type": "array"
+          },
+          "revision": {
+            "minimum": 1,
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revision",
+          "enabled"
+        ],
+        "title": "ModelApproval",
+        "type": "object"
+      },
+      "ModelApprovalResult": {
+        "additionalProperties": false,
+        "properties": {
+          "connection_id": {
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "default_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Model"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connection_id",
+          "model",
+          "enabled",
+          "default_model"
+        ],
+        "title": "ModelApprovalResult",
+        "type": "object"
+      },
+      "ModelCatalog": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_revision": {
+            "title": "Approval Revision",
+            "type": "integer"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/ModelCounts"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogModel"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protocol"
+          }
+        },
+        "required": [
+          "counts",
+          "protocol",
+          "approval_revision",
+          "models"
+        ],
+        "title": "ModelCatalog",
+        "type": "object"
+      },
+      "ModelCounts": {
+        "additionalProperties": false,
+        "properties": {
+          "application_authorized": {
+            "title": "Application Authorized",
+            "type": "integer"
+          },
+          "approved": {
+            "title": "Approved",
+            "type": "integer"
+          },
+          "discovered": {
+            "title": "Discovered",
+            "type": "integer"
+          },
+          "historically_verified": {
+            "title": "Historically Verified",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "discovered",
+          "approved",
+          "application_authorized",
+          "historically_verified"
+        ],
+        "title": "ModelCounts",
+        "type": "object"
+      },
+      "ModelUsage": {
+        "additionalProperties": false,
+        "properties": {
+          "average_latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Latency Ms"
+          },
+          "billed_cost": {
+            "title": "Billed Cost",
+            "type": "null"
+          },
+          "completed_requests": {
+            "title": "Completed Requests",
+            "type": "integer"
+          },
+          "connection_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connection Id"
+          },
+          "estimated_cost_by_currency": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Estimated Cost By Currency",
+            "type": "object"
+          },
+          "in_flight_requests": {
+            "title": "In Flight Requests",
+            "type": "integer"
+          },
+          "known_tokens": {
+            "$ref": "#/components/schemas/KnownTokens"
+          },
+          "known_usage_requests": {
+            "title": "Known Usage Requests",
+            "type": "integer"
+          },
+          "latency_samples": {
+            "title": "Latency Samples",
+            "type": "integer"
+          },
+          "local_rejected_requests": {
+            "title": "Local Rejected Requests",
+            "type": "integer"
+          },
+          "missing_field_requests": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Missing Field Requests",
+            "type": "object"
+          },
+          "missing_usage_requests": {
+            "title": "Missing Usage Requests",
+            "type": "integer"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "reported_usage_requests": {
+            "title": "Reported Usage Requests",
+            "type": "integer"
+          },
+          "requests": {
+            "title": "Requests",
+            "type": "integer"
+          },
+          "resource_accounting": {
+            "$ref": "#/components/schemas/ResourceAccounting"
+          },
+          "status_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Status Counts",
+            "type": "object"
+          },
+          "success_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Success Rate"
+          },
+          "unknown_attempt_count_requests": {
+            "title": "Unknown Attempt Count Requests",
+            "type": "integer"
+          },
+          "unknown_consumption_requests": {
+            "title": "Unknown Consumption Requests",
+            "type": "integer"
+          },
+          "unknown_cost_requests": {
+            "title": "Unknown Cost Requests",
+            "type": "integer"
+          },
+          "unknown_time_requests": {
+            "title": "Unknown Time Requests",
+            "type": "integer"
+          },
+          "upstream_attempts": {
+            "title": "Upstream Attempts",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "requests",
+          "known_usage_requests",
+          "missing_usage_requests",
+          "local_rejected_requests",
+          "unknown_consumption_requests",
+          "in_flight_requests",
+          "reported_usage_requests",
+          "upstream_attempts",
+          "unknown_attempt_count_requests",
+          "unknown_time_requests",
+          "status_counts",
+          "known_tokens",
+          "missing_field_requests",
+          "estimated_cost_by_currency",
+          "unknown_cost_requests",
+          "billed_cost",
+          "resource_accounting",
+          "connection_id",
+          "model"
+        ],
+        "title": "ModelUsage",
+        "type": "object"
+      },
+      "ModelVerification": {
+        "additionalProperties": false,
+        "properties": {
+          "account_access_observed": {
+            "title": "Account Access Observed",
+            "type": "string"
+          },
+          "actual_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Model"
+          },
+          "capability": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capability"
+          },
+          "current_configuration": {
+            "title": "Current Configuration",
+            "type": "boolean"
+          },
+          "live_availability": {
+            "const": "unknown",
+            "title": "Live Availability",
+            "type": "string"
+          },
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protocol"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          }
+        },
+        "required": [
+          "state",
+          "outcome",
+          "verified_at",
+          "request_id",
+          "actual_model",
+          "protocol",
+          "capability",
+          "scope",
+          "current_configuration",
+          "account_access_observed",
+          "live_availability"
+        ],
+        "title": "ModelVerification",
+        "type": "object"
+      },
+      "PlanSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "extra_usage_policy": {
+            "const": "forbid",
+            "default": "forbid",
+            "title": "Extra Usage Policy",
+            "type": "string"
+          },
+          "reasoning_effort": {
+            "default": "low",
+            "enum": [
+              "low",
+              "high",
+              "max"
+            ],
+            "title": "Reasoning Effort",
+            "type": "string"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "pattern": "^[^\\x00-\\x1f\\x7f]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tier"
+          },
+          "use": {
+            "default": "personal_interactive_coding",
+            "enum": [
+              "personal_interactive_coding",
+              "personal_interactive"
+            ],
+            "title": "Use",
+            "type": "string"
+          }
+        },
+        "title": "PlanSettings",
+        "type": "object"
+      },
+      "PlanView": {
+        "additionalProperties": false,
+        "properties": {
+          "extra_usage_policy": {
+            "const": "forbid",
+            "title": "Extra Usage Policy",
+            "type": "string"
+          },
+          "reasoning_effort": {
+            "enum": [
+              "low",
+              "high",
+              "max"
+            ],
+            "title": "Reasoning Effort",
+            "type": "string"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier"
+          },
+          "use": {
+            "enum": [
+              "personal_interactive_coding",
+              "personal_interactive"
+            ],
+            "title": "Use",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tier",
+          "use",
+          "reasoning_effort",
+          "extra_usage_policy"
+        ],
+        "title": "PlanView",
+        "type": "object"
+      },
+      "Policy": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_chatgpt_subscriptions": {
+            "default": false,
+            "title": "Allow Chatgpt Subscriptions",
+            "type": "boolean"
+          },
+          "allow_token_plans": {
+            "default": false,
+            "title": "Allow Token Plans",
+            "type": "boolean"
+          },
+          "allowed_connections": {
+            "anyOf": [
+              {
+                "items": {
+                  "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+                  "type": "string"
+                },
+                "maxItems": 32,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Allowed Connections"
+          },
+          "allowed_models": {
+            "anyOf": [
+              {
+                "items": {
+                  "pattern": "^[a-z][a-z0-9_-]{0,63}::(?!.*::)[A-Za-z0-9][A-Za-z0-9_.:/@+-]{0,199}$",
+                  "type": "string"
+                },
+                "maxItems": 1000,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Allowed Models"
+          },
+          "budget_currency": {
+            "default": "USD",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Budget Currency",
+            "type": "string"
+          },
+          "chatgpt_output_reservation": {
+            "anyOf": [
+              {
+                "maximum": 131072,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Chatgpt Output Reservation"
+          },
+          "daily_budget": {
+            "anyOf": [
+              {
+                "description": "非负十进制字符串，最多 9 位小数，数值不超过 1000000000。",
+                "pattern": "^\\d{1,10}(?:\\.\\d{1,9})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Daily Budget"
+          },
+          "daily_token_limit": {
+            "anyOf": [
+              {
+                "maximum": 1000000000000,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Daily Token Limit"
+          },
+          "max_concurrent_requests": {
+            "anyOf": [
+              {
+                "maximum": 256,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Concurrent Requests"
+          },
+          "max_estimated_input_tokens": {
+            "anyOf": [
+              {
+                "maximum": 2000000,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Estimated Input Tokens"
+          },
+          "max_output_tokens": {
+            "anyOf": [
+              {
+                "maximum": 131072,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Output Tokens"
+          },
+          "requests_per_minute": {
+            "anyOf": [
+              {
+                "maximum": 100000,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Requests Per Minute"
+          }
+        },
+        "title": "Policy",
+        "type": "object"
+      },
+      "PolicyPatch": {
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "allow_chatgpt_subscriptions": {
+            "default": false,
+            "title": "Allow Chatgpt Subscriptions",
+            "type": "boolean"
+          },
+          "allow_token_plans": {
+            "default": false,
+            "title": "Allow Token Plans",
+            "type": "boolean"
+          },
+          "allowed_connections": {
+            "anyOf": [
+              {
+                "items": {
+                  "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+                  "type": "string"
+                },
+                "maxItems": 32,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Allowed Connections"
+          },
+          "allowed_models": {
+            "anyOf": [
+              {
+                "items": {
+                  "pattern": "^[a-z][a-z0-9_-]{0,63}::(?!.*::)[A-Za-z0-9][A-Za-z0-9_.:/@+-]{0,199}$",
+                  "type": "string"
+                },
+                "maxItems": 1000,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Allowed Models"
+          },
+          "budget_currency": {
+            "default": "USD",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Budget Currency",
+            "type": "string"
+          },
+          "chatgpt_output_reservation": {
+            "anyOf": [
+              {
+                "maximum": 131072,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Chatgpt Output Reservation"
+          },
+          "daily_budget": {
+            "anyOf": [
+              {
+                "description": "非负十进制字符串，最多 9 位小数，数值不超过 1000000000。",
+                "pattern": "^\\d{1,10}(?:\\.\\d{1,9})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Daily Budget"
+          },
+          "daily_token_limit": {
+            "anyOf": [
+              {
+                "maximum": 1000000000000,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Daily Token Limit"
+          },
+          "max_concurrent_requests": {
+            "anyOf": [
+              {
+                "maximum": 256,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Concurrent Requests"
+          },
+          "max_estimated_input_tokens": {
+            "anyOf": [
+              {
+                "maximum": 2000000,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Estimated Input Tokens"
+          },
+          "max_output_tokens": {
+            "anyOf": [
+              {
+                "maximum": 131072,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Output Tokens"
+          },
+          "requests_per_minute": {
+            "anyOf": [
+              {
+                "maximum": 100000,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Requests Per Minute"
+          }
+        },
+        "title": "Policy",
+        "type": "object"
+      },
+      "PolicyView": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_chatgpt_subscriptions": {
+            "title": "Allow Chatgpt Subscriptions",
+            "type": "boolean"
+          },
+          "allow_token_plans": {
+            "title": "Allow Token Plans",
+            "type": "boolean"
+          },
+          "allowed_connections": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowed Connections"
+          },
+          "allowed_models": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowed Models"
+          },
+          "budget_currency": {
+            "title": "Budget Currency",
+            "type": "string"
+          },
+          "chatgpt_output_reservation": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chatgpt Output Reservation"
+          },
+          "daily_budget": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily Budget"
+          },
+          "daily_token_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily Token Limit"
+          },
+          "max_concurrent_requests": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Concurrent Requests"
+          },
+          "max_estimated_input_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Estimated Input Tokens"
+          },
+          "max_output_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Output Tokens"
+          },
+          "requests_per_minute": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requests Per Minute"
+          }
+        },
+        "required": [
+          "allow_token_plans",
+          "allow_chatgpt_subscriptions",
+          "chatgpt_output_reservation",
+          "allowed_connections",
+          "allowed_models",
+          "requests_per_minute",
+          "max_concurrent_requests",
+          "max_output_tokens",
+          "max_estimated_input_tokens",
+          "daily_token_limit",
+          "daily_budget",
+          "budget_currency"
+        ],
+        "title": "PolicyView",
+        "type": "object"
+      },
+      "PopulatedTrendPoint": {
+        "additionalProperties": false,
+        "properties": {
+          "average_latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Latency Ms"
+          },
+          "billed_cost": {
+            "title": "Billed Cost",
+            "type": "null"
+          },
+          "completed_requests": {
+            "title": "Completed Requests",
+            "type": "integer"
+          },
+          "day": {
+            "title": "Day",
+            "type": "string"
+          },
+          "estimated_cost_by_currency": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Estimated Cost By Currency",
+            "type": "object"
+          },
+          "in_flight_requests": {
+            "title": "In Flight Requests",
+            "type": "integer"
+          },
+          "known_tokens": {
+            "$ref": "#/components/schemas/KnownTokens"
+          },
+          "known_usage_requests": {
+            "title": "Known Usage Requests",
+            "type": "integer"
+          },
+          "latency_samples": {
+            "title": "Latency Samples",
+            "type": "integer"
+          },
+          "local_rejected_requests": {
+            "title": "Local Rejected Requests",
+            "type": "integer"
+          },
+          "missing_field_requests": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Missing Field Requests",
+            "type": "object"
+          },
+          "missing_usage_requests": {
+            "title": "Missing Usage Requests",
+            "type": "integer"
+          },
+          "reported_usage_requests": {
+            "title": "Reported Usage Requests",
+            "type": "integer"
+          },
+          "requests": {
+            "title": "Requests",
+            "type": "integer"
+          },
+          "resource_accounting": {
+            "$ref": "#/components/schemas/ResourceAccounting"
+          },
+          "status_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Status Counts",
+            "type": "object"
+          },
+          "success_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Success Rate"
+          },
+          "unknown_attempt_count_requests": {
+            "title": "Unknown Attempt Count Requests",
+            "type": "integer"
+          },
+          "unknown_consumption_requests": {
+            "title": "Unknown Consumption Requests",
+            "type": "integer"
+          },
+          "unknown_cost_requests": {
+            "title": "Unknown Cost Requests",
+            "type": "integer"
+          },
+          "unknown_time_requests": {
+            "title": "Unknown Time Requests",
+            "type": "integer"
+          },
+          "upstream_attempts": {
+            "title": "Upstream Attempts",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "requests",
+          "known_usage_requests",
+          "missing_usage_requests",
+          "local_rejected_requests",
+          "unknown_consumption_requests",
+          "in_flight_requests",
+          "reported_usage_requests",
+          "upstream_attempts",
+          "unknown_attempt_count_requests",
+          "unknown_time_requests",
+          "status_counts",
+          "known_tokens",
+          "missing_field_requests",
+          "estimated_cost_by_currency",
+          "unknown_cost_requests",
+          "billed_cost",
+          "resource_accounting",
+          "average_latency_ms",
+          "success_rate",
+          "day"
+        ],
+        "title": "PopulatedTrendPoint",
+        "type": "object"
+      },
+      "Provider": {
+        "additionalProperties": false,
+        "properties": {
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "can_create": {
+            "title": "Can Create",
+            "type": "boolean"
+          },
+          "credential_type": {
+            "enum": [
+              "api_key",
+              "oauth"
+            ],
+            "title": "Credential Type",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "resource_type": {
+            "enum": [
+              "api",
+              "token_plan",
+              "chatgpt_subscription"
+            ],
+            "title": "Resource Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "base_url",
+          "resource_type",
+          "can_create",
+          "credential_type"
+        ],
+        "title": "Provider",
+        "type": "object"
+      },
+      "ProviderList": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Provider"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "ProviderQuota": {
+        "additionalProperties": false,
+        "properties": {
+          "age_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Seconds"
+          },
+          "checked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "conflicting_fields": {
+            "title": "Conflicting Fields",
+            "type": "boolean"
+          },
+          "current_remaining_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Remaining Tokens"
+          },
+          "extra_usage": {
+            "title": "Extra Usage",
+            "type": "string"
+          },
+          "historical_snapshot": {
+            "title": "Historical Snapshot",
+            "type": "boolean"
+          },
+          "invalid_fields": {
+            "title": "Invalid Fields",
+            "type": "boolean"
+          },
+          "membership_status": {
+            "title": "Membership Status",
+            "type": "string"
+          },
+          "remaining_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Tokens"
+          },
+          "reported_counters": {
+            "items": {
+              "$ref": "#/components/schemas/QuotaCounter"
+            },
+            "title": "Reported Counters",
+            "type": "array"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "windows": {
+            "items": {
+              "$ref": "#/components/schemas/QuotaWindow"
+            },
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "state",
+          "windows",
+          "reported_counters"
+        ],
+        "title": "ProviderQuota",
+        "type": "object"
+      },
+      "Quota": {
+        "additionalProperties": false,
+        "properties": {
+          "billed_cost": {
+            "title": "Billed Cost",
+            "type": "null"
+          },
+          "charged_or_reserved_tokens": {
+            "title": "Charged Or Reserved Tokens",
+            "type": "integer"
+          },
+          "day": {
+            "title": "Day",
+            "type": "string"
+          },
+          "estimated_cost_or_reservation": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Estimated Cost Or Reservation",
+            "type": "object"
+          },
+          "estimated_reserved_tokens": {
+            "title": "Estimated Reserved Tokens",
+            "type": "integer"
+          },
+          "historical_requests_excluded": {
+            "title": "Historical Requests Excluded",
+            "type": "integer"
+          },
+          "in_flight_requests": {
+            "title": "In Flight Requests",
+            "type": "integer"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/PolicyView"
+          },
+          "remaining_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Tokens"
+          },
+          "requests": {
+            "title": "Requests",
+            "type": "integer"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "timezone": {
+            "const": "UTC",
+            "title": "Timezone",
+            "type": "string"
+          },
+          "token_quota_state": {
+            "enum": [
+              "unlimited",
+              "limited",
+              "exhausted",
+              "blocked_unknown_usage"
+            ],
+            "title": "Token Quota State",
+            "type": "string"
+          },
+          "uncertain_requests": {
+            "title": "Uncertain Requests",
+            "type": "integer"
+          },
+          "unknown_cost_requests": {
+            "title": "Unknown Cost Requests",
+            "type": "integer"
+          },
+          "unknown_token_requests": {
+            "title": "Unknown Token Requests",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "day",
+          "timezone",
+          "policy",
+          "requests",
+          "in_flight_requests",
+          "uncertain_requests",
+          "remaining_tokens",
+          "token_quota_state",
+          "historical_requests_excluded",
+          "charged_or_reserved_tokens",
+          "unknown_token_requests",
+          "estimated_reserved_tokens",
+          "estimated_cost_or_reservation",
+          "unknown_cost_requests",
+          "billed_cost",
+          "scope"
+        ],
+        "title": "Quota",
+        "type": "object"
+      },
+      "QuotaCounter": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "remaining": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining"
+          },
+          "reset_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reset At"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "used": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used"
+          },
+          "window": {
+            "title": "Window",
+            "type": "string"
+          }
+        },
+        "required": [
+          "window",
+          "unit",
+          "limit",
+          "used",
+          "remaining",
+          "reset_at"
+        ],
+        "title": "QuotaCounter",
+        "type": "object"
+      },
+      "QuotaWindow": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "reset_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reset At"
+          },
+          "used_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used Ratio"
+          }
+        },
+        "required": [
+          "name",
+          "used_ratio",
+          "reset_at"
+        ],
+        "title": "QuotaWindow",
+        "type": "object"
+      },
+      "RecordCost": {
+        "additionalProperties": false,
+        "properties": {
+          "cost_status": {
+            "title": "Cost Status",
+            "type": "string"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "estimated_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Cost"
+          },
+          "token_basis": {
+            "title": "Token Basis",
+            "type": "string"
+          }
+        },
+        "title": "RecordCost",
+        "type": "object"
+      },
+      "RecordsPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RequestRecord"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "const": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "offset",
+          "limit"
+        ],
+        "title": "RecordsPage",
+        "type": "object"
+      },
+      "RequestRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "caller_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caller Id"
+          },
+          "completion_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Tokens"
+          },
+          "connection_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connection Id"
+          },
+          "cost": {
+            "$ref": "#/components/schemas/RecordCost"
+          },
+          "delivery_error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Error Code"
+          },
+          "delivery_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Status"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "http_status": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Http Status"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "prompt_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Tokens"
+          },
+          "purpose": {
+            "title": "Purpose",
+            "type": "string"
+          },
+          "queue_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Queue Ms"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "resource_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "api",
+                  "token_plan",
+                  "chatgpt_subscription"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Type"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "total_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Tokens"
+          },
+          "upstream_attempts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upstream Attempts"
+          },
+          "upstream_error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upstream Error Code"
+          },
+          "upstream_result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upstream Result"
+          },
+          "upstream_status": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upstream Status"
+          },
+          "usage_consistency": {
+            "title": "Usage Consistency",
+            "type": "string"
+          },
+          "usage_final": {
+            "title": "Usage Final",
+            "type": "boolean"
+          },
+          "usage_known": {
+            "title": "Usage Known",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "request_id",
+          "started_at",
+          "finished_at",
+          "caller_id",
+          "connection_id",
+          "model",
+          "resource_type",
+          "purpose",
+          "status",
+          "http_status",
+          "upstream_status",
+          "duration_ms",
+          "queue_ms",
+          "upstream_attempts",
+          "upstream_result",
+          "delivery_status",
+          "error_code",
+          "upstream_error_code",
+          "delivery_error_code",
+          "usage_final",
+          "usage_known",
+          "usage_consistency",
+          "prompt_tokens",
+          "completion_tokens",
+          "total_tokens",
+          "origin",
+          "cost"
+        ],
+        "title": "RequestRecord",
+        "type": "object"
+      },
+      "ResourceAccounting": {
+        "additionalProperties": false,
+        "properties": {
+          "requests": {
+            "title": "Requests",
+            "type": "integer"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "tokens_by_basis": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Tokens By Basis",
+            "type": "object"
+          }
+        },
+        "required": [
+          "scope",
+          "requests",
+          "tokens_by_basis"
+        ],
+        "title": "ResourceAccounting",
+        "type": "object"
+      },
+      "RevokedApplication": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "in_flight_policy": {
+            "const": "already_admitted_requests_continue",
+            "title": "In Flight Policy",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/PolicyView"
+          },
+          "revision": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Revision",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "revoked_at",
+          "active",
+          "policy",
+          "revision",
+          "in_flight_policy"
+        ],
+        "title": "RevokedApplication",
+        "type": "object"
+      },
+      "Service": {
+        "additionalProperties": false,
+        "properties": {
+          "capacity": {
+            "$ref": "#/components/schemas/Capacity"
+          },
+          "pid": {
+            "title": "Pid",
+            "type": "integer"
+          },
+          "reachable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reachable"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/StorageHealth"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          },
+          "version_matches": {
+            "title": "Version Matches",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "state",
+          "reachable"
+        ],
+        "title": "Service",
+        "type": "object"
+      },
+      "SessionRequest": {
+        "additionalProperties": true,
+        "properties": {
+          "token": {
+            "maxLength": 128,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "SessionRequest",
+        "type": "object"
+      },
+      "SessionResult": {
+        "additionalProperties": false,
+        "properties": {
+          "authenticated": {
+            "const": true,
+            "title": "Authenticated",
+            "type": "boolean"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "session_token": {
+            "title": "Session Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "authenticated",
+          "expires_in",
+          "session_token"
+        ],
+        "title": "SessionResult",
+        "type": "object"
+      },
+      "Snapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "applications": {
+            "items": {
+              "$ref": "#/components/schemas/Application"
+            },
+            "title": "Applications",
+            "type": "array"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/SnapshotCapabilities"
+          },
+          "checked_at": {
+            "title": "Checked At",
+            "type": "string"
+          },
+          "connections": {
+            "items": {
+              "$ref": "#/components/schemas/Connection"
+            },
+            "title": "Connections",
+            "type": "array"
+          },
+          "issues": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "limits": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            "title": "Limits",
+            "type": "object"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "options": {
+            "$ref": "#/components/schemas/SnapshotOptions"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "service": {
+            "$ref": "#/components/schemas/Service"
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Usage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "checked_at",
+          "version",
+          "scope",
+          "ok",
+          "issues",
+          "connections",
+          "applications",
+          "service",
+          "usage",
+          "options",
+          "capabilities"
+        ],
+        "title": "Snapshot",
+        "type": "object"
+      },
+      "SnapshotCapabilities": {
+        "additionalProperties": false,
+        "properties": {
+          "model_approval": {
+            "title": "Model Approval",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "model_approval"
+        ],
+        "title": "SnapshotCapabilities",
+        "type": "object"
+      },
+      "SnapshotOptions": {
+        "additionalProperties": false,
+        "properties": {
+          "connections": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Connections",
+            "type": "array"
+          },
+          "models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Models",
+            "type": "array"
+          }
+        },
+        "required": [
+          "models",
+          "connections"
+        ],
+        "title": "SnapshotOptions",
+        "type": "object"
+      },
+      "StorageHealth": {
+        "additionalProperties": false,
+        "properties": {
+          "accepting": {
+            "title": "Accepting",
+            "type": "boolean"
+          },
+          "degraded": {
+            "title": "Degraded",
+            "type": "boolean"
+          },
+          "invalid_records": {
+            "title": "Invalid Records",
+            "type": "integer"
+          },
+          "pending_records": {
+            "title": "Pending Records",
+            "type": "integer"
+          }
+        },
+        "title": "StorageHealth",
+        "type": "object"
+      },
+      "Usage": {
+        "additionalProperties": false,
+        "properties": {
+          "filters": {
+            "$ref": "#/components/schemas/UsageFilters"
+          },
+          "group_by": {
+            "title": "Group By",
+            "type": "string"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelUsage"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/UsageSummary"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "trend": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PopulatedTrendPoint"
+                },
+                {
+                  "$ref": "#/components/schemas/EmptyTrendPoint"
+                }
+              ]
+            },
+            "title": "Trend",
+            "type": "array"
+          },
+          "unknown_time_excluded": {
+            "title": "Unknown Time Excluded",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "timezone",
+          "filters",
+          "summary",
+          "group_by",
+          "trend",
+          "models",
+          "unknown_time_excluded"
+        ],
+        "title": "Usage",
+        "type": "object"
+      },
+      "UsageFilters": {
+        "additionalProperties": false,
+        "properties": {
+          "caller_id": {
+            "title": "Caller Id",
+            "type": "string"
+          },
+          "connection_id": {
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "since": {
+            "title": "Since",
+            "type": "string"
+          },
+          "until": {
+            "title": "Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "since",
+          "until"
+        ],
+        "title": "UsageFilters",
+        "type": "object"
+      },
+      "UsageSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "average_latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Latency Ms"
+          },
+          "billed_cost": {
+            "title": "Billed Cost",
+            "type": "null"
+          },
+          "completed_requests": {
+            "title": "Completed Requests",
+            "type": "integer"
+          },
+          "estimated_cost_by_currency": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Estimated Cost By Currency",
+            "type": "object"
+          },
+          "in_flight_requests": {
+            "title": "In Flight Requests",
+            "type": "integer"
+          },
+          "known_tokens": {
+            "$ref": "#/components/schemas/KnownTokens"
+          },
+          "known_usage_requests": {
+            "title": "Known Usage Requests",
+            "type": "integer"
+          },
+          "latency_samples": {
+            "title": "Latency Samples",
+            "type": "integer"
+          },
+          "local_rejected_requests": {
+            "title": "Local Rejected Requests",
+            "type": "integer"
+          },
+          "missing_field_requests": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Missing Field Requests",
+            "type": "object"
+          },
+          "missing_usage_requests": {
+            "title": "Missing Usage Requests",
+            "type": "integer"
+          },
+          "reported_usage_requests": {
+            "title": "Reported Usage Requests",
+            "type": "integer"
+          },
+          "requests": {
+            "title": "Requests",
+            "type": "integer"
+          },
+          "resource_accounting": {
+            "$ref": "#/components/schemas/ResourceAccounting"
+          },
+          "status_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Status Counts",
+            "type": "object"
+          },
+          "success_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Success Rate"
+          },
+          "unknown_attempt_count_requests": {
+            "title": "Unknown Attempt Count Requests",
+            "type": "integer"
+          },
+          "unknown_consumption_requests": {
+            "title": "Unknown Consumption Requests",
+            "type": "integer"
+          },
+          "unknown_cost_requests": {
+            "title": "Unknown Cost Requests",
+            "type": "integer"
+          },
+          "unknown_time_requests": {
+            "title": "Unknown Time Requests",
+            "type": "integer"
+          },
+          "upstream_attempts": {
+            "title": "Upstream Attempts",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "requests",
+          "known_usage_requests",
+          "missing_usage_requests",
+          "local_rejected_requests",
+          "unknown_consumption_requests",
+          "in_flight_requests",
+          "reported_usage_requests",
+          "upstream_attempts",
+          "unknown_attempt_count_requests",
+          "unknown_time_requests",
+          "status_counts",
+          "known_tokens",
+          "missing_field_requests",
+          "estimated_cost_by_currency",
+          "unknown_cost_requests",
+          "billed_cost",
+          "resource_accounting"
+        ],
+        "title": "UsageSummary",
+        "type": "object"
+      },
+      "Verification": {
+        "additionalProperties": false,
+        "properties": {
+          "age_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Seconds"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "previous_state": {
+            "title": "Previous State",
+            "type": "string"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "Verification",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "DashboardSession": {
+        "in": "header",
+        "name": "X-Selark-Session",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "本机管理接口。应用调用令牌不能代替管理会话；所有响应 no-store。新管理接口补充既有查询契约，路径没有版本前缀。只读模式拒绝业务写入，离线模式关闭模型发现。",
+    "title": "Selark Dashboard API",
+    "version": "2.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/applications": {
+      "get": {
+        "description": "列出应用，包含已撤销应用",
+        "operationId": "getApplications",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationList"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "列出应用，包含已撤销应用",
+        "tags": [
+          "management"
+        ],
+        "x-reject-query-parameters": true
+      },
+      "post": {
+        "description": "默认普通 API 通配权限，不授予订阅权限。token 明文仅在本次响应返回；不要记录或持久存储。写入超时不代表未创建，先刷新确认，不自动重试。",
+        "operationId": "createApplication",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "必须与 Dashboard 精确同源；浏览器自动设置。",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedApplication"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "读取请求体超时"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "编辑版本或操作冲突"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "请求体过大"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "创建应用；令牌仅返回一次",
+        "tags": [
+          "management"
+        ],
+        "x-automatic-retry": false,
+        "x-body-timeout-seconds": 5,
+        "x-max-body-bytes": 262144,
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/applications/{identity}": {
+      "get": {
+        "description": "读取应用策略和编辑版本",
+        "operationId": "getApplication",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "列表返回的连接或应用 ID；编码为单个 URL 路径段。",
+            "in": "path",
+            "name": "identity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedApplication"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "读取应用策略和编辑版本",
+        "tags": [
+          "management"
+        ],
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/applications/{identity}/policy": {
+      "patch": {
+        "description": "revision 取应用详情。policy 为非空补丁；省略字段保持不变，列表 null 为通配权限、[] 为不允许任何资源。预算是十进制字符串。",
+        "operationId": "updateApplicationPolicy",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "列表返回的连接或应用 ID；编码为单个 URL 路径段。",
+            "in": "path",
+            "name": "identity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "必须与 Dashboard 精确同源；浏览器自动设置。",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationPolicy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedApplication"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "读取请求体超时"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "编辑版本或操作冲突"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "请求体过大"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "修改应用权限和限额",
+        "tags": [
+          "management"
+        ],
+        "x-automatic-retry": false,
+        "x-body-timeout-seconds": 5,
+        "x-max-body-bytes": 262144,
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/applications/{identity}/quota": {
+      "get": {
+        "description": "UTC 当日保守扣除与预留，billed_cost=null 不代表真实账单为零。未知用量可能阻止有限配额继续派发。",
+        "operationId": "getApplicationQuota",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "列表返回的连接或应用 ID；编码为单个 URL 路径段。",
+            "in": "path",
+            "name": "identity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationQuota"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "读取 UTC 当日配额与预留",
+        "tags": [
+          "management"
+        ],
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/applications/{identity}/revoke": {
+      "post": {
+        "description": "撤销后的新调用返回 401。already_admitted_requests_continue 表示撤销前已接纳的请求继续完成。",
+        "operationId": "revokeApplication",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "列表返回的连接或应用 ID；编码为单个 URL 路径段。",
+            "in": "path",
+            "name": "identity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "必须与 Dashboard 精确同源；浏览器自动设置。",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationRevoke"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedApplication"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "读取请求体超时"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "编辑版本或操作冲突"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "请求体过大"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "撤销令牌；已接纳请求继续",
+        "tags": [
+          "management"
+        ],
+        "x-automatic-retry": false,
+        "x-body-timeout-seconds": 5,
+        "x-max-body-bytes": 262144,
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/backups": {
+      "get": {
+        "description": "最多返回最近 20 个备份的清单。integrity=not_checked，不代表已通过完整性验证。通用筛选参数不会过滤此清单。",
+        "operationId": "getBackups",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "period",
+            "schema": {
+              "default": "7d",
+              "enum": [
+                "24h",
+                "7d",
+                "30d",
+                "90d",
+                "custom"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "caller_id",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "connection_id",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "model",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "maximum": 10000000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "errors",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Backups"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "读取备份清单",
+        "tags": [
+          "queries"
+        ]
+      }
+    },
+    "/api/capabilities": {
+      "get": {
+        "description": "读取当前管理能力",
+        "operationId": "getCapabilities",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Capabilities"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "读取当前管理能力",
+        "tags": [
+          "management"
+        ],
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/connections": {
+      "get": {
+        "description": "列出连接",
+        "operationId": "getConnections",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionList"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "列出连接",
+        "tags": [
+          "management"
+        ],
+        "x-reject-query-parameters": true
+      },
+      "post": {
+        "description": "Key 只写入，不在任何响应中返回。连接 ID 不可重复或使用 mimo-default；最多 32 个连接。ChatGPT 授权需先通过 CLI。返回 enabled=true、空 allowed_models、default_model=null。",
+        "operationId": "createConnection",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "必须与 Dashboard 精确同源；浏览器自动设置。",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedConnection"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "读取请求体超时"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "编辑版本或操作冲突"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "请求体过大"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "创建连接，不自动发现或启用模型",
+        "tags": [
+          "management"
+        ],
+        "x-automatic-retry": false,
+        "x-body-timeout-seconds": 5,
+        "x-max-body-bytes": 262144,
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/connections/{identity}": {
+      "get": {
+        "description": "读取连接详情与编辑版本",
+        "operationId": "getConnection",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "列表返回的连接或应用 ID；编码为单个 URL 路径段。",
+            "in": "path",
+            "name": "identity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedConnection"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "读取连接详情与编辑版本",
+        "tags": [
+          "management"
+        ],
+        "x-reject-query-parameters": true
+      },
+      "patch": {
+        "description": "revision 原样取自详情，过期返回 409 connection_changed。只提交要修改的字段；只有 workspace_id 和 plan 接受 null。可修改字段以 editable_fields 为准；保持 Key 时省略 api_key。",
+        "operationId": "updateConnection",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "列表返回的连接或应用 ID；编码为单个 URL 路径段。",
+            "in": "path",
+            "name": "identity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "必须与 Dashboard 精确同源；浏览器自动设置。",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectionPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedConnection"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "读取请求体超时"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "编辑版本或操作冲突"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "请求体过大"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "修改连接配置或轮换 Key",
+        "tags": [
+          "management"
+        ],
+        "x-automatic-retry": false,
+        "x-body-timeout-seconds": 5,
+        "x-max-body-bytes": 262144,
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/connections/{identity}/discover": {
+      "post": {
+        "description": "请求体为 {}，前端超时至少 45 秒。HTTP 200 表示发现结果已保存，仍须检查 discovery.state。失败保留旧目录。并行发现返回 discovery_busy，连接或目录变化返回 state_changed。离线和只读模式拒绝此操作。",
+        "operationId": "discoverModels",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "列表返回的连接或应用 ID；编码为单个 URL 路径段。",
+            "in": "path",
+            "name": "identity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "必须与 Dashboard 精确同源；浏览器自动设置。",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedModels"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "读取请求体超时"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "编辑版本或操作冲突"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "请求体过大"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "显式刷新上游模型目录",
+        "tags": [
+          "management"
+        ],
+        "x-automatic-retry": false,
+        "x-body-timeout-seconds": 5,
+        "x-max-body-bytes": 262144,
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/connections/{identity}/models": {
+      "get": {
+        "description": "读取模型目录和授权状态",
+        "operationId": "getConnectionModels",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "列表返回的连接或应用 ID；编码为单个 URL 路径段。",
+            "in": "path",
+            "name": "identity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedModels"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "读取模型目录和授权状态",
+        "tags": [
+          "management"
+        ],
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/connections/{identity}/models/approval": {
+      "post": {
+        "description": "revision 取 approval_revision。models 非空列表与 all_models=true 二选一。批量启用要求当前成功发现目录；禁用默认模型需显式 clear_default=true。409 后刷新并由用户重新确认，不自动重试。",
+        "operationId": "approveModels",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "列表返回的连接或应用 ID；编码为单个 URL 路径段。",
+            "in": "path",
+            "name": "identity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "必须与 Dashboard 精确同源；浏览器自动设置。",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelApproval"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedModels"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "读取请求体超时"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "编辑版本或操作冲突"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "请求体过大"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "批量启用或禁用模型",
+        "tags": [
+          "management"
+        ],
+        "x-automatic-retry": false,
+        "x-body-timeout-seconds": 5,
+        "x-max-body-bytes": 262144,
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/connections/{identity}/models/default": {
+      "put": {
+        "description": "revision 取 approval_revision。model 必须已启用；null 清空默认值，不自动选择其他模型。",
+        "operationId": "setDefaultModel",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "列表返回的连接或应用 ID；编码为单个 URL 路径段。",
+            "in": "path",
+            "name": "identity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "必须与 Dashboard 精确同源；浏览器自动设置。",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DefaultModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedModels"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "读取请求体超时"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "编辑版本或操作冲突"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "请求体过大"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "设置或清除默认模型",
+        "tags": [
+          "management"
+        ],
+        "x-automatic-retry": false,
+        "x-body-timeout-seconds": 5,
+        "x-max-body-bytes": 262144,
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/logs": {
+      "get": {
+        "description": "只返回最近日志的脱敏元数据，不返回原始正文。接受通用筛选参数但不会据此过滤日志。",
+        "operationId": "getLogs",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "period",
+            "schema": {
+              "default": "7d",
+              "enum": [
+                "24h",
+                "7d",
+                "30d",
+                "90d",
+                "custom"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "caller_id",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "connection_id",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "model",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "maximum": 10000000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "errors",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Logs"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "读取脱敏日志摘要",
+        "tags": [
+          "queries"
+        ]
+      }
+    },
+    "/api/model-approval": {
+      "post": {
+        "description": "兼容单模型启停",
+        "operationId": "setModelApproval",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "必须与 Dashboard 精确同源；浏览器自动设置。",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LegacyModelApproval"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelApprovalResult"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "读取请求体超时"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "编辑版本或操作冲突"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "请求体过大"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "兼容单模型启停",
+        "tags": [
+          "management"
+        ],
+        "x-automatic-retry": false,
+        "x-body-timeout-seconds": 5,
+        "x-max-body-bytes": 4096,
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/providers": {
+      "get": {
+        "description": "读取供应商预设",
+        "operationId": "getProviders",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderList"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "读取供应商预设",
+        "tags": [
+          "management"
+        ],
+        "x-reject-query-parameters": true
+      }
+    },
+    "/api/records": {
+      "get": {
+        "description": "每页固定 25 条，按 started_at 倒序排列。errors=true 包含 failed、cancelled、interrupted。建议使用 snapshot 返回的 since/until 固定查询窗口。",
+        "operationId": "getRecords",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "period",
+            "schema": {
+              "default": "7d",
+              "enum": [
+                "24h",
+                "7d",
+                "30d",
+                "90d",
+                "custom"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "caller_id",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "connection_id",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "model",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "maximum": 10000000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "errors",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordsPage"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "分页读取调用记录",
+        "tags": [
+          "queries"
+        ]
+      }
+    },
+    "/api/session": {
+      "post": {
+        "description": "从 selark dashboard 的登录链接取 fragment 并立即移除；凭证 5 分钟有效且只能兑换一次。会话最长 8 小时，Dashboard 重启后失效。需要精确同源 Origin 和 application/json。",
+        "operationId": "createSession",
+        "parameters": [
+          {
+            "description": "必须与 Dashboard 精确同源；浏览器自动设置。",
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResult"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "读取请求体超时"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "请求体过大"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "登录过于频繁"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "security": [],
+        "summary": "兑换一次性管理会话",
+        "tags": [
+          "session"
+        ],
+        "x-automatic-retry": false,
+        "x-body-timeout-seconds": 5,
+        "x-max-body-bytes": 1024
+      }
+    },
+    "/api/snapshot": {
+      "get": {
+        "description": "时间及资源筛选只影响 usage；连接、应用和今日配额始终是全局状态。ok=false 时仍可能包含可用数据。null 表示未知，不可当作零。",
+        "operationId": "getSnapshot",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Selark-Dashboard",
+            "required": true,
+            "schema": {
+              "const": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "period",
+            "schema": {
+              "default": "7d",
+              "enum": [
+                "24h",
+                "7d",
+                "30d",
+                "90d",
+                "custom"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "caller_id",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "connection_id",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "model",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "maximum": 10000000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "custom 需提供带时区 since/until，区间大于 0 且至多 366 天；offset/errors 仅影响 records。",
+            "in": "query",
+            "name": "errors",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "参数或本机 Host 无效"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "管理会话失效"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "同源或 JSON 检查未通过"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "方法或启动模式不允许"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardError"
+                }
+              }
+            },
+            "description": "本地状态不可用"
+          }
+        },
+        "summary": "读取概览与筛选用量",
+        "tags": [
+          "queries"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "DashboardSession": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "默认本机 Dashboard；端口以启动输出为准",
+      "url": "http://127.0.0.1:8790"
+    }
+  ],
+  "x-selark-version": "0.10.0"
+}

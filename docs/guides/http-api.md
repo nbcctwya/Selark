@@ -2,6 +2,7 @@
 
 本文说明网关上的模型调用接口。连接、模型与应用配置由独立 Dashboard 端口提供，见
 [日常管理 API](../development/management-api.md)，使用独立管理会话。
+完整目录见 [HTTP 接口文档](../api/README.md)，机器可读定义为 [网关 OpenAPI](../api/gateway.openapi.json)。
 
 | 接口 | 认证 | 行为 |
 | --- | --- | --- |
@@ -16,7 +17,7 @@
 - `connection_id` 或 `连接ID::模型ID` 明确选连接；裸模型名继续指向原 MiMo。model 省略或 null 使用所选连接默认模型，指定模型须在该连接允许列表中。
 - `stream` 默认为 false。流式 `data: <JSON>` 逐事件转发，以 `data: [DONE]` 结束；保持上游分片和实际 usage。
 - 普通 API 支持 `max_completion_tokens`，以及映射到它的别名 `max_tokens`（两者不可同时给出，范围 1–131072，省略默认 1024）；ChatGPT 订阅拒绝这些参数。
-- 支持 `temperature`（0–1.5）、`top_p`（0.01–1）、`stop`（字符串或最多四个字符串）、`presence_penalty/frequency_penalty`（-2–2）。
+- 支持 `temperature`（0–1.5）、`top_p`（0–1）、`stop`（字符串或 1–4 个字符串）、`presence_penalty/frequency_penalty`（-2–2）。
 - 这些参数由上游执行；MiMo 实测中存在已传入 `stop` 但仍输出停止序列的情况，见 [MiMo 实测报告](../verification/mimo-credit-live-verification.md)。
   Selark 保留原始回答和用量；需要严格格式的调用方应检查结果，输出预算仍须设置 Token 上限。
 - MiMo/DeepSeek 及可关闭思考的 GLM/Kimi 模式关闭 thinking；Kimi K3 等保留调用方显式提供的 assistant reasoning_content，不自动管理历史。原生 Anthropic 转换为统一文本响应。
@@ -39,8 +40,9 @@ Content-Type: application/json
 错误统一为 `{"error":{"message":"可理解说明","type":"...","code":"..."}}`。
 无效参数/连接/模型 400，Selark 鉴权失败 401，过大请求 413，错误媒体类型 415，上游限流 429，
 上游鉴权/额度/网络/协议失败 502，等待上游超时 504。错误信息不透传上游原始正文，以免泄露凭据。
+应用权限或订阅用途不满足时返回 403；派发前连接配置已变化可返回 409。
 连接停用或本地记录库不可用时返回 503；撤销后的调用方令牌返回 401。
-连接、调用方和备份管理通过本机 CLI 提供；Dashboard 支持已发现模型的启停及禁用默认模型时清除默认设置，需独立管理会话。
+连接、模型和应用的日常管理同时提供本机 CLI 与独立 Dashboard API；备份恢复、服务控制和 OAuth 操作仍通过 CLI 完成。
 执行与等待名额用尽返回 429，排队超时返回 503，请求体超时返回 408，请求总时限返回 504。
 本地过载和不可用响应附带 `Retry-After`；服务不会自行重试模型生成。
 流开始之后无法修改 HTTP 状态：发送 `event: error` 及同形 JSON，不发送成功 `[DONE]`；CLI 非零退出。

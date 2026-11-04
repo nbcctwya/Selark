@@ -3,6 +3,10 @@ import logging
 
 import httpx
 import pytest
+from pydantic import TypeAdapter
+
+from selark.contracts.gateway import ChatCompletion, GatewayError, GatewayModels, Health
+from selark.contracts.openapi import gateway_document
 
 from .support.protocol import AUTH, TOKEN, UPSTREAM_KEY, ByteStream, completion, event, sse
 
@@ -15,17 +19,22 @@ def records(caplog):
 
 def test_health_models_and_auth_never_call_upstream(gateway):
     client, calls = gateway()
-    assert client.get("/health").json()["status"] == "ok"
+    health = client.get("/health").json()
+    assert health["status"] == "ok"
+    TypeAdapter(Health).validate_python(health)
+    assert set(client.app.openapi()["paths"]) == set(gateway_document()["paths"])
     for path in ("/v1/models", "/v1/chat/completions"):
         for headers in ({}, {"Authorization": "Bearer wrong"}):
             response = client.request(
                 "GET" if path.endswith("models") else "POST", path, headers=headers, json=PAYLOAD
             )
             assert response.status_code == 401
+            TypeAdapter(GatewayError).validate_python(response.json())
             assert response.json()["error"]["code"] == "invalid_token"
             assert response.headers["www-authenticate"] == "Bearer"
     response = client.get("/v1/models", headers=AUTH)
     assert response.status_code == 200
+    TypeAdapter(GatewayModels).validate_python(response.json())
     assert [m["id"] for m in response.json()["data"]] == ["mimo-test", "mimo-other"]
     assert response.json()["default_model"] == "mimo-test"
     assert calls == []
@@ -45,6 +54,7 @@ def test_regular_multiturn_default_usage_and_safe_log(gateway, caplog):
     )
     assert response.status_code == 200
     assert response.json() == completion()
+    TypeAdapter(ChatCompletion).validate_python(response.json())
     request = calls[0]
     assert str(request.url) == "https://api.xiaomimimo.com/v1/chat/completions"
     assert request.headers["api-key"] == UPSTREAM_KEY

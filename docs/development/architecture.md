@@ -10,13 +10,14 @@ Selark 采用 Python `src/` 布局。可安装代码在 `src/selark/`，测试�
 | `src/selark/management/` | 管理命令的参数解析、执行、诊断、连接操作和订阅 CLI |
 | `src/selark/providers/` | 各供应商协议及文本响应适配 |
 | `src/selark/dashboard_api/` | 日常管理的 HTTP 路由、请求结构和公开业务数据 |
+| `src/selark/contracts/` | 公开响应字段、接口目录及离线 OpenAPI 导出；不参与运行时响应过滤 |
 | `src/selark/dashboard_assets/` | 当前随 Python 包发布的 Dashboard |
 | `frontend/` | Selark-Web 子模块；独立设计和模拟开发，后续接入正式页面 |
 | `tests/` | 按领域命名的回归用例；`support/` 提供共享的合成响应与账本构造 |
 | `scripts/` | 仓库检查、数据契约导出、进程验收和显式真实验收工具 |
 | `config/` | 服务端、客户端和连接文件的占位模板 |
 | `examples/` | 外部客户端示例、请求消息和应用策略模板 |
-| `docs/` | `guides/` 使用说明、`development/` 开发约定、`verification/` 验收证据、`history/` 历史资料 |
+| `docs/` | `api/` 接口规范、`guides/` 使用说明、`development/` 开发约定、`verification/` 验收证据、`history/` 历史资料 |
 
 ## 请求路径与管理路径
 

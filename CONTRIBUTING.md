@@ -34,6 +34,8 @@ git diff --check
 
 ```bash
 npm ci
+npm run setup:api
+npm run check:api
 npm test
 npx playwright install chromium
 npm run test:browser
@@ -48,6 +50,7 @@ npm run test:browser
 - 本机管理参数、命令执行、诊断和连接交互分别放在 `management/` 的对应模块。
 - 服务、配置、账本等基础模块不依赖 CLI 解析模块；可共享的逻辑放回所属领域。
 - Dashboard 查询在 `dashboard_data.py` 投影，日常管理请求和响应在 `dashboard_api/` 定义，避免让前端接触内部配置对象。
+- 公开响应字段与 OpenAPI 操作目录在 `contracts/` 维护；接口改动同时更新 [接口规范及前端生成类型](docs/api/README.md)。
 - 当前用户指南放在 `docs/guides/`，开发约定放在 `docs/development/`；已审阅的验收证据放在 `docs/verification/`。
 - 临时验收输出放在 Git 忽略的 `reports/` 或系统临时目录。真实配置和凭据保持在用户配置目录。
 

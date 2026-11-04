@@ -4,8 +4,13 @@ import json
 from pathlib import Path
 
 import httpx
+from pydantic import TypeAdapter
 
+from scripts.export_api_contracts import export
 from scripts.export_dashboard_fixtures import export_fixture
+from selark.contracts import dashboard as contract
+from selark.contracts.openapi import dashboard_document
+from selark.dashboard import create_dashboard
 
 FIXTURE = Path(__file__).resolve().parents[1] / "frontend/src/mocks/fixture.json"
 
@@ -41,6 +46,43 @@ def test_frontend_fixture_tracks_current_backend_without_personal_data_or_networ
     monkeypatch.setenv("SELARK_DATA_DIR", "/unreadable-personal-data")
     fresh = export_fixture()
     committed = json.loads(FIXTURE.read_text())
+    export(check=True, frontend=True)
+    for document in (fresh, committed):
+        TypeAdapter(contract.Snapshot).validate_python(document["snapshot"])
+        TypeAdapter(list[contract.RequestRecord]).validate_python(document["records"])
+        TypeAdapter(contract.Logs).validate_python(document["logs"])
+        TypeAdapter(contract.Backups).validate_python(document["backups"])
+        management = document["management"]
+        TypeAdapter(contract.Capabilities).validate_python(management["capabilities"])
+        for key, schema in (
+            ("connections", contract.ManagedConnection),
+            ("applications", contract.ManagedApplication),
+            ("providers", contract.Provider),
+        ):
+            TypeAdapter(list[schema]).validate_python(management[key])
+        for value in management["models"].values():
+            TypeAdapter(contract.ManagedModels).validate_python(value)
+        for value in management["quotas"].values():
+            TypeAdapter(contract.ApplicationQuota).validate_python(value)
+    # Building route metadata must not open a profile or start a server.
+    routes = create_dashboard(
+        Path("/unreadable-personal-data"), port=8790, bootstrap="fixture-bootstrap"
+    ).openapi()["paths"]
+    actual = {
+        (method, path)
+        for path, methods in routes.items()
+        if path.startswith("/api/")
+        for method in methods
+        if method in {"get", "post", "patch", "put"}
+    }
+    actual.remove(("get", "/api/{kind}"))
+    actual.update(("get", f"/api/{kind}") for kind in ("snapshot", "records", "logs", "backups"))
+    expected = {
+        (method, path)
+        for path, methods in dashboard_document()["paths"].items()
+        for method in methods
+    }
+    assert actual == expected
     assert contract_shapes(fresh) == contract_shapes(committed)
     assert fresh["fixture_only"] is True
     assert len(fresh["records"]) == 65

@@ -2,6 +2,8 @@
 
 当前安装和使用从 [项目首页](../README.md) 开始；开发环境和检查命令见 [开发指南](../CONTRIBUTING.md)。
 
+接口接入从 [HTTP 接口文档](api/README.md) 开始，包含网关和 Dashboard 的完整目录、OpenAPI 规范与前端同步步骤。
+
 ## 使用指南
 
 | 主题 | 文档 |

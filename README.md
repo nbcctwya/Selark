@@ -66,6 +66,7 @@ selark dashboard
 | 管理应用权限、配额和费用 | [应用资源管理](docs/guides/governance.md) |
 | 使用个人订阅 | [ChatGPT](docs/guides/chatgpt.md)、[Token Plan](docs/guides/token-plans.md) |
 | 对接外部程序 | [HTTP API](docs/guides/http-api.md)、[示例](examples/) |
+| 前端与客户端接口开发 | [完整接口目录与 OpenAPI](docs/api/README.md) |
 | 服务、日志、备份和恢复 | [日常运维](docs/guides/operations.md)、[稳定性与恢复](docs/guides/stability.md) |
 
 完整入口见 [文档索引](docs/README.md)。版本变化见 [CHANGELOG](CHANGELOG.md)，历次测试证据见 [验收记录](docs/verification/README.md)。

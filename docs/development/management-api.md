@@ -1,5 +1,8 @@
 # 日常管理 HTTP API
 
+完整接口目录及生成方式见 [HTTP 接口文档](../api/README.md)，机器可读定义见 [Dashboard OpenAPI](../api/dashboard.openapi.json)。
+字段类型以该规范及生成的 TypeScript 类型为准；本文的类型片段和示例用于解释业务语义。
+
 本契约供 Selark-Web 的页面、模拟数据和 HTTP 适配器使用。接口由 `selark dashboard` 提供，
 默认地址为 `http://127.0.0.1:8790`；它与网关 `8787` 上的 `/v1/*` 接口分开。
 当前补齐后端接口，随 Python 发布的现有页面仍主要提供查询和逐模型启停。

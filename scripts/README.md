@@ -6,6 +6,7 @@
 | --- | --- |
 | Git 文件与凭据模式检查 | `check_repository_security.py` |
 | 导出前端合成数据契约 | `export_dashboard_fixtures.py` |
+| 导出/检查网关与 Dashboard OpenAPI | `export_api_contracts.py` |
 | Dashboard 页面与模型操作 | `verify_dashboard.py`、`verify_dashboard_controls.py` |
 | 本机 TCP、取消、退出与恢复 | `verify_stability.py`、`verify_api_stress.py` |
 | 多资源与应用隔离 | `verify_resource_matrix.py`、`verify_multi_app.py` |
@@ -19,10 +20,12 @@
 ```bash
 python scripts/check_repository_security.py
 python -m scripts.export_dashboard_fixtures
+python -m scripts.export_api_contracts --frontend
 python scripts/verify_dashboard.py --help
 ```
 
 前端契约导出需要先初始化子模块。浏览器验收另外需要 `requirements-dashboard.lock` 中的依赖；标准参数见 [CI 工作流](../.github/workflows/ci.yml)。
+OpenAPI 导出本身不需要个人配置或数据库，`--check --frontend` 检查后端文件与前端副本；维护流程见 [接口文档](../docs/api/README.md)。
 
 真实验收脚本的参数、额度与授权边界各不相同，不属于常规测试，也不应作为批量默认入口。对应历史证据见 [验收索引](../docs/verification/README.md)。
 新生成的原始输出放在 Git 忽略的 `reports/` 或系统临时目录；审阅后的说明与脱敏 JSON 才放入 `docs/verification/`。

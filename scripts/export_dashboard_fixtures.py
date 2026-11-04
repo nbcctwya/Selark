@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 from scripts.verify_dashboard import seed
 from selark import dashboard_data as data
+from selark.dashboard_api import service as management
 from selark.runtime import Runtime
 
 
@@ -47,18 +48,41 @@ def export_fixture():
             filters = data.query_filters({})
             snapshot = data.snapshot(directory, filters, offline=True)
             snapshot["capabilities"] = {"model_approval": True}
+            with Runtime(directory, readonly=True) as runtime:
+                managed_connections = management.connections(runtime)["items"]
+                managed_applications = management.applications(runtime)["items"]
+                management_data = {
+                    "capabilities": {
+                        "connection_management": True,
+                        "model_approval": True,
+                        "model_discovery": True,
+                        "application_management": True,
+                    },
+                    "providers": management.providers()["items"],
+                    "connections": managed_connections,
+                    "models": {
+                        item["id"]: management.models(runtime, item["id"])
+                        for item in managed_connections
+                    },
+                    "applications": managed_applications,
+                    "quotas": {
+                        item["id"]: management.application_quota(runtime, item["id"])
+                        for item in managed_applications
+                    },
+                }
             records = []
             for offset in range(0, 65, 25):
                 records.extend(data.records(directory, filters, offset=offset)["items"])
             result = {
                 "fixture_only": True,
-                "contract": "selark-dashboard-v1",
+                "contract": "selark-dashboard-v2",
                 "reference_time": snapshot["checked_at"],
                 "snapshot": snapshot,
                 "records": records,
                 "accounting": accounting,
                 "logs": data.log_events(directory),
                 "backups": data.backup_inventory(directory),
+                "management": management_data,
             }
             # Stable synthetic caller IDs make component fixtures easier to discuss.
             encoded = json.dumps(result, ensure_ascii=False, indent=2)

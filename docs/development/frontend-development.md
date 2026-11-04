@@ -31,8 +31,9 @@ Claude 直接克隆 Selark-Web，在其开发分支设计和实现页面。先�
 `npm ci`、`npm run dev` 即可使用模拟数据，不依赖 Selark 后端。
 
 新增连接、模型和应用编辑页面按主仓库的 [日常管理 API](management-api.md) 实现类型与模拟适配器。
-它补充了原有查询/单模型契约；前端仓库当前固定的旧后端基线尚不包含这些接口。
-交接时明确同时提供该契约所在的 Selark 提交，避免把主仓库后续变化误当作已接入的前端能力。
+前端已有对应的类型、HTTP 与模拟适配器，支持连接、发现、批量审批、默认模型及应用策略/撤销流程；表单和视觉设计由 Claude 完成。
+`contracts/dashboard.openapi.json` 是后端规范的固定副本，`src/api/generated.ts` 自动生成；不手工维护另一套字段定义。
+交接时提供 `API.md` 记录的后端实现基线及前端提交，避免把后续主仓库变化误当作当前页面能力。
 
 交接提供分支或 PR 链接、完整提交 SHA、检查结果和 `BACKEND_REQUESTS.md` 中的后端需求。
 Selark 现有 Dashboard 仍使用 `src/selark/dashboard_assets/`；引入子模块尚不代表新界面已替换日常页面。
@@ -66,8 +67,13 @@ git push
 
 ## 数据契约与 CI
 
+接口的唯一维护入口及生成步骤见 [HTTP 接口文档](../api/README.md)。在主仓库运行
+`python -m scripts.export_api_contracts --frontend` 同步规范，再在前端运行 `npm run setup:api` 和 `npm run generate:api`。
+生成器只读取本地规范；`npm run check:api` 确认类型与规范一致，两个仓库的前端 CI 均执行该检查。
+
 初始化前端后，后端维护者可以运行 `python -m scripts.export_dashboard_fixtures`，通过隔离的合成账本更新 `frontend/src/mocks/fixture.json`。
-此变更属于 Selark-Web，先提交前端，再更新 Selark 引用。`tests/test_frontend_contract.py` 比较该 fixture 和当前后端公开响应形状，防止接口无意漂移。
+此变更属于 Selark-Web，先提交前端，再更新 Selark 引用。fixture 包括查询、管理详情、供应商和配额。
+`tests/test_frontend_contract.py` 校验规范副本、路由目录及这些实际响应，防止接口无意漂移；管理 API 原有回归也核对响应契约。
 
 Selark-Web 的 CI 独立执行前端测试、构建及浏览器验收；Selark 的 CI 使用 `submodules: recursive` 检出固定提交，并执行前端与 Python 集成检查。
 前端子模块中的工作流仅在 Selark-Web 仓库触发；主仓库有自己的前端检查任务。
