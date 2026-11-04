@@ -649,13 +649,19 @@ def test_final_record_is_visible_before_client_receives_completion(runtime, stre
 
     async def scenario():
         observed = False
-
-        async def receive():
-            return {
+        incoming = asyncio.Queue()
+        incoming.put_nowait(
+            {
                 "type": "http.request",
                 "body": json.dumps(PAYLOAD | {"stream": streaming}).encode(),
                 "more_body": False,
             }
+        )
+
+        async def receive():
+            # A real ASGI connection sends the body once, then waits for disconnect.
+            # Replaying it immediately starves storage threads with a busy watcher.
+            return await incoming.get()
 
         async def send(message):
             nonlocal observed
