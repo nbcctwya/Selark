@@ -14,6 +14,7 @@ from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 
 from selark.config import ConfigError, private_directory
+from selark.errors import GatewayError
 from selark.governance import (
     Policy,
     allocations,
@@ -50,6 +51,11 @@ def utc_now() -> str:
 
 def token_digest(value: str) -> str:
     return hashlib.sha256(b"selark-token-v1:" + value.encode()).hexdigest()
+
+
+def application_revision(application):
+    document = {key: application[key] for key in ("id", "policy", "revoked_at")}
+    return hashlib.sha256(json.dumps(document, sort_keys=True).encode()).hexdigest()
 
 
 def usage_values(usage: dict | None, final: bool) -> dict:
@@ -121,32 +127,54 @@ def request_status(state: dict, http_status: int) -> str:
     return "success" if http_status == 200 else "failed"
 
 
+def verification_outcome(state, status=None):
+    # A terminal provider response can prove usage while failing our text protocol.
+    # Delivery errors alone do not invalidate a successfully validated response.
+    succeeded = state.get("upstream_result") == "success" or (
+        state.get("upstream_result") is None and status == "success"
+    )
+    failed = (
+        state.get("upstream_error_code") or state.get("error_code") == "upstream_protocol_error"
+    )
+    return "success" if succeeded and not failed else "failure"
+
+
 class Store:
-    def __init__(self, path: Path | None = None, *, readonly=False):
+    def __init__(self, path: Path | None = None, *, readonly=False, initialize=True):
         self.path = path
         if path:
-            if not readonly:
+            if not readonly and initialize:
                 private_directory(path.parent)
             if path.is_symlink():
                 raise ConfigError("记录数据库不能是符号链接。")
-            if not path.exists() and not readonly:
+            if not path.exists() and not readonly and initialize:
                 path.touch(mode=0o600)
             if path.stat().st_mode & 0o077:
                 raise ConfigError("记录数据库权限过宽，请设置为 0600。")
         self.lock = threading.RLock()
+        existing = readonly or not initialize
+        if existing and path is None:
+            raise ConfigError("必须提供已有记录库的路径。")
         self.db = sqlite3.connect(
-            path.as_uri() + "?mode=ro" if readonly else str(path) if path else ":memory:",
-            uri=readonly,
+            path.as_uri() + ("?mode=ro" if readonly else "?mode=rw")
+            if existing
+            else str(path)
+            if path
+            else ":memory:",
+            uri=existing,
             check_same_thread=False,
             timeout=0.1 if readonly else 5,
         )
         self.db.row_factory = sqlite3.Row
         try:
             validate_schema(self.db)
-            if readonly:
+            if existing:
                 if self.db.execute("PRAGMA user_version").fetchone()[0] != SCHEMA_VERSION:
                     raise ConfigError("记录库需要迁移；停服后运行 selark migrate。")
-                self.db.execute("PRAGMA query_only=ON")
+                if readonly:
+                    self.db.execute("PRAGMA query_only=ON")
+                else:
+                    self.db.execute("PRAGMA synchronous=FULL")
             else:
                 self._initialize_schema(path)
             validate_schema(self.db)
@@ -343,19 +371,46 @@ class Store:
         with self.lock:
             return policy_for(self.db, caller).model_dump()
 
-    def set_policy(self, caller, patch):
-        if not isinstance(patch, dict) or not patch:
-            raise ConfigError("策略修改必须是非空 JSON 对象。")
-        with self.transaction() as db:
-            row = db.execute(
-                "SELECT policy_json FROM tokens WHERE id=? AND kind='caller'", (caller,)
+    def application(self, caller, *, expected_revision=None):
+        """Public caller metadata; also used inside write transactions for atomic CAS."""
+        with self.lock:
+            row = self.db.execute(
+                "SELECT id,name,created_at,revoked_at,policy_json FROM tokens "
+                "WHERE id=? AND kind='caller'",
+                (caller,),
             ).fetchone()
             if row is None:
-                raise ConfigError("未找到普通调用方 ID。")
-            try:
-                policy = Policy.model_validate(json.loads(row[0]) | patch)
-            except (ValidationError, ValueError, TypeError):
-                raise ConfigError("调用方策略无效；null 清除限制、空允许列表拒绝全部。") from None
+                raise GatewayError(404, "application_not_found", "未找到应用。")
+            result = dict(row)
+            result["policy"] = Policy.model_validate(
+                json.loads(result.pop("policy_json"))
+            ).model_dump()
+            result["active"] = result["revoked_at"] is None
+            result["revision"] = application_revision(result)
+            if expected_revision is not None and expected_revision != result["revision"]:
+                raise GatewayError(
+                    409, "application_changed", "应用已被其他操作更新，请刷新后重试。"
+                )
+            return result
+
+    def validate_policy_change(self, caller, patch, *, expected_revision=None):
+        if not isinstance(patch, dict) or not patch:
+            raise ConfigError("策略修改必须是非空 JSON 对象。")
+        try:
+            current = self.application(caller, expected_revision=expected_revision)
+        except GatewayError as exc:
+            if expected_revision is None and exc.status == 404:
+                raise ConfigError("未找到普通调用方 ID。") from None
+            raise
+        try:
+            return Policy.model_validate(current["policy"] | patch)
+        except (ValidationError, ValueError, TypeError):
+            raise ConfigError("调用方策略无效；null 清除限制、空允许列表拒绝全部。") from None
+
+    def set_policy(self, caller, patch, *, expected_revision=None):
+        with self.transaction() as db:
+            db.execute("BEGIN IMMEDIATE")
+            policy = self.validate_policy_change(caller, patch, expected_revision=expected_revision)
             db.execute(
                 "UPDATE tokens SET policy_json=? WHERE id=?", (policy.model_dump_json(), caller)
             )
@@ -417,8 +472,11 @@ class Store:
                 "scope": "Selark 0.5+ admissions; historical usage remains in usage queries",
             }
 
-    def revoke(self, identity: str):
+    def revoke(self, identity: str, *, expected_revision=None):
         with self.transaction() as db:
+            if expected_revision is not None:
+                db.execute("BEGIN IMMEDIATE")
+                self.application(identity, expected_revision=expected_revision)
             result = db.execute(
                 "UPDATE tokens SET revoked_at=COALESCE(revoked_at,?) WHERE id=?",
                 (utc_now(), identity),
@@ -599,9 +657,7 @@ class Store:
                         state["connection_id"],
                         state["fingerprint"],
                         state.get("upstream_completed_at", utc_now()),
-                        "success"
-                        if upstream == "success" or (upstream is None and status == "success")
-                        else "failure",
+                        verification_outcome(state, status),
                         request_id,
                         state.get("upstream_error_code", state.get("error_code")),
                         state.get("started_at", utc_now()) + ":" + request_id,
@@ -632,9 +688,23 @@ class Store:
                 "ORDER BY (fingerprint=?) DESC,order_key DESC LIMIT 1",
                 (connection_id, fingerprint),
             ).fetchone()
+            evidence = (
+                self.db.execute(
+                    "SELECT upstream_result,error_code,upstream_error_code,status "
+                    "FROM requests WHERE request_id=?",
+                    (row["request_id"],),
+                ).fetchone()
+                if row is not None
+                else None
+            )
         if row is None:
             return {"state": "never", "verified_at": None}
         result = dict(row)
+        # Correct older false successes on read without rewriting historical records.
+        if result["state"] == "success" and evidence is not None:
+            result["state"] = verification_outcome(dict(evidence), evidence["status"])
+            if result["state"] == "failure":
+                result["error_code"] = evidence["upstream_error_code"] or evidence["error_code"]
         previous = result.pop("fingerprint")
         result.pop("order_key", None)
         if previous != fingerprint:

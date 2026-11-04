@@ -19,10 +19,9 @@ from selark.runtime import Runtime, fingerprint
 from selark.schemas import ChatRequest
 from selark.storage import Store, utc_now
 
-from .conftest import completion, event
-from .test_governance import app_for, auth, finished
-from .test_governance import runtime as runtime
-from .test_service import sse
+from .support.governance import app_for, auth, finished
+from .support.governance import runtime as runtime
+from .support.protocol import completion, event, sse
 
 MODEL = "kimi-for-coding"
 PLAN = "personal-code"

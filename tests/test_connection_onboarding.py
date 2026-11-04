@@ -9,7 +9,7 @@ import pytest
 from selark.cli import main
 from selark.connections import require_connection
 
-from .test_governance import runtime as runtime
+from .support.governance import runtime as runtime
 
 KEY = "fixture-onboarding-key"
 
@@ -103,7 +103,7 @@ def test_interactive_blank_model_input_discovers_after_hidden_key(runtime, monke
     prompts = []
     monkeypatch.setattr("sys.stdin.isatty", lambda: True)
     monkeypatch.setattr("builtins.input", lambda prompt: prompts.append(prompt) or next(answers))
-    monkeypatch.setattr("selark.management.getpass.getpass", lambda prompt: KEY)
+    monkeypatch.setattr("selark.management.connections.getpass.getpass", lambda prompt: KEY)
     assert (
         main(
             [
@@ -193,14 +193,6 @@ def test_failed_discovery_retains_key_returns_failure_and_supports_explicit_retr
     assert not runtime.store.records({})
 
 
-@pytest.mark.parametrize("model", ["model-a", "not-returned"])
-def test_default_cannot_implicitly_enable_discovered_models(runtime, monkeypatch, capsys, model):
-    calls = upstream(monkeypatch)
-    assert main(add_args(runtime, "openai", "--default-model", model)) == 1
-    assert not calls
-    assert runtime.registry().connections == []
-
-
 def test_concurrent_manual_configuration_is_not_overwritten(runtime, monkeypatch, capsys):
     def changed(request):
         runtime.change_connection({"allowed_models": ["concurrent-choice"]}, "new-api")
@@ -217,7 +209,8 @@ def test_duplicate_id_invalid_options_and_key_rotation_do_not_discover(
     runtime, monkeypatch, capsys
 ):
     calls = upstream(monkeypatch)
-    assert main(add_args(runtime, "openai", "--default-model", "invalid model")) == 1
+    # A valid default still cannot implicitly approve a discovered model.
+    assert main(add_args(runtime, "openai", "--default-model", "model-a")) == 1
     assert runtime.registry().connections == []
     runtime.add_connection("new-api", "openai", "old-fixture-key", allowed_models=["manual"])
     assert main(add_args(runtime)) == 1

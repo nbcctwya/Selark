@@ -28,9 +28,16 @@ def resources(tmp_path, monkeypatch):
         yield runtime
 
 
-@pytest.mark.parametrize("identity", RESOURCES)
-@pytest.mark.parametrize("route", ["connection", "qualified", "alias"])
-@pytest.mark.parametrize("stream", [False, True])
+# Routing is resolved before the adapter is selected. Each resource keeps every
+# route and both response modes; provider-specific wire tests cover their encoders.
+@pytest.mark.parametrize(
+    "identity,route,stream",
+    [
+        (identity, route, bool((index + offset) % 2))
+        for index, identity in enumerate(RESOURCES)
+        for offset, route in enumerate(("connection", "qualified", "alias"))
+    ],
+)
 def test_four_adapters_route_history_blocks_and_usage(resources, identity, route, stream):
     upstream, token = FourUpstreams(), caller(resources)
     data = payload(identity, route=route, stream=stream, history=True, blocks=True)
@@ -58,9 +65,21 @@ def test_four_adapters_route_history_blocks_and_usage(resources, identity, route
     assert resources.store.summary({})["summary"]["known_tokens"] == USAGE
 
 
-@pytest.mark.parametrize("identity", RESOURCES)
 @pytest.mark.parametrize(
-    "mode", ["zero", "unknown", "truncated", "idle", "http:429", "http:500", "timeout", "malformed"]
+    "identity,mode",
+    # Usage interpretation and stream termination differ by adapter. Transport
+    # failures share request handling; retain one representative of each failure.
+    [
+        (identity, mode)
+        for identity in RESOURCES
+        for mode in ("zero", "unknown", "truncated", "malformed")
+    ]
+    + [
+        ("mimo-default", "idle"),
+        ("deepseek-test", "http:429"),
+        ("relay-test", "http:500"),
+        (PLAN, "timeout"),
+    ],
 )
 def test_failure_and_usage_matrix_never_falls_back_or_retries(resources, identity, mode):
     upstream, token = FourUpstreams(), caller(resources)

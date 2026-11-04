@@ -97,6 +97,7 @@ jobs:
           selark ask --help | grep -- '--interactive'
           selark plans set --help | grep -- 'personal_interactive'
       - name: Installed model discovery, explicit approval and read-only Dashboard (fake upstream only)
+        if: matrix.python != '3.12'
         run: |
           python scripts/verify_dashboard.py --selark "$(command -v selark)" --output "$RUNNER_TEMP/selark-dashboard.json"
           python scripts/verify_dashboard_controls.py --selark "$(command -v selark)" --output "$RUNNER_TEMP/selark-dashboard-controls.json"

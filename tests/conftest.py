@@ -5,39 +5,7 @@ from fastapi.testclient import TestClient
 from selark.app import create_app
 from selark.config import ServerConfig
 
-TOKEN = "unit-test-selark-token-0000000000000000"
-UPSTREAM_KEY = "unit-test-upstream-key"
-AUTH = {"Authorization": f"Bearer {TOKEN}"}
-
-
-def completion(usage=True):
-    data = {
-        "id": "test-completion",
-        "object": "chat.completion",
-        "created": 1,
-        "model": "mimo-test",
-        "choices": [
-            {
-                "index": 0,
-                "message": {"role": "assistant", "content": "你好"},
-                "finish_reason": "stop",
-            }
-        ],
-    }
-    if usage:
-        data["usage"] = {"prompt_tokens": 12, "completion_tokens": 2, "total_tokens": 14}
-    return data
-
-
-def event(content="你好", finish=None, usage=None):
-    return {
-        "id": "test-stream",
-        "object": "chat.completion.chunk",
-        "created": 1,
-        "model": "mimo-test",
-        "choices": [{"index": 0, "delta": {"content": content}, "finish_reason": finish}],
-        "usage": usage,
-    }
+from .support.protocol import TOKEN, UPSTREAM_KEY, completion
 
 
 @pytest.fixture

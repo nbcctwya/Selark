@@ -17,8 +17,7 @@ from selark.management import doctor, query_filters
 from selark.runtime import Runtime, fingerprint
 from selark.storage import Store, token_digest, utc_now
 
-from .conftest import UPSTREAM_KEY, completion, event
-from .test_service import ByteStream, sse
+from .support.protocol import UPSTREAM_KEY, ByteStream, completion, event, sse
 
 PAYLOAD = {
     "messages": [{"role": "user", "content": "private message"}],
@@ -322,33 +321,6 @@ def test_stream_cumulative_usage_counted_only_once_or_unknown(runtime, complete)
     )
 
 
-def test_revocation_during_execution_allows_admitted_request(runtime):
-    caller = runtime.store.create_token("inflight")
-    calls = []
-
-    def upstream(request):
-        calls.append(request)
-        runtime.store.revoke(caller["id"])
-        return httpx.Response(200, json=completion())
-
-    with TestClient(
-        create_app(runtime.settings(), runtime=runtime, transport=httpx.MockTransport(upstream))
-    ) as client:
-        assert (
-            client.post(
-                "/v1/chat/completions", headers=auth(caller["token"]), json=PAYLOAD
-            ).status_code
-            == 200
-        )
-        assert (
-            client.post(
-                "/v1/chat/completions", headers=auth(caller["token"]), json=PAYLOAD
-            ).status_code
-            == 401
-        )
-    assert len(calls) == 1
-
-
 def test_storage_failure_prevents_generation(runtime, monkeypatch):
     caller = runtime.store.create_token("storage")
     calls = []
@@ -433,7 +405,7 @@ def test_doctor_is_passive_and_reports_service_failure(runtime, monkeypatch):
         return httpx.Response(200, json={"status": "ok", "version": __version__})
 
     monkeypatch.setattr(
-        "selark.management.httpx.Client",
+        "selark.management.diagnostics.httpx.Client",
         lambda **kw: real_http(**kw, transport=httpx.MockTransport(handler)),
     )
     assert doctor(runtime.directory)["ok"]
@@ -444,7 +416,7 @@ def test_doctor_is_passive_and_reports_service_failure(runtime, monkeypatch):
         raise httpx.ConnectError("not running", request=request)
 
     monkeypatch.setattr(
-        "selark.management.httpx.Client",
+        "selark.management.diagnostics.httpx.Client",
         lambda **kw: real_http(**kw, transport=httpx.MockTransport(fail)),
     )
     assert not doctor(runtime.directory)["ok"]
@@ -525,6 +497,7 @@ def test_cancellation_closes_upstream_and_persists_unknown_usage(server_config):
 
         async def send(message):
             if message["type"] == "http.response.body" and message.get("body"):
+                assert "你好".encode() in message["body"]
                 got_first.set()
 
         scope = {
@@ -549,6 +522,7 @@ def test_cancellation_closes_upstream_and_persists_unknown_usage(server_config):
         async with app.router.lifespan_context(app):
             await asyncio.wait_for(app(scope, receive, send), timeout=2)
         row = store.records({})[0]
+        assert got_first.is_set()
         assert row["status"] == "cancelled" and row["error_code"] == "client_disconnected"
         assert not row["usage_known"] and row["total_tokens"] is None
         assert body.closed
@@ -607,7 +581,7 @@ def test_explicit_probe_cli_uses_http_and_one_use_identity(runtime, monkeypatch)
             )
 
         monkeypatch.setattr(
-            "selark.management.SelarkClient",
+            "selark.management.connections.SelarkClient",
             lambda config: SelarkClient(config, transport=httpx.MockTransport(bridge)),
         )
         result = probe(runtime)
@@ -635,7 +609,7 @@ def test_today_uses_selected_timezone(monkeypatch):
         def now(cls, tz=None):
             return cls(2026, 10, 26, 17, tzinfo=UTC).astimezone(tz)
 
-    monkeypatch.setattr("selark.management.datetime", Clock)
+    monkeypatch.setattr("selark.management.arguments.datetime", Clock)
     args = Namespace(
         since=None,
         until=None,

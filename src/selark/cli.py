@@ -37,16 +37,16 @@ def parser() -> argparse.ArgumentParser:
     init.add_argument("--default-model", help="默认使用 --models 中第一个模型")
     init.add_argument("--port", type=int, default=8787)
     commands.add_parser("serve", help="按持久配置启动 HTTP 服务")
-    dashboard = commands.add_parser("dashboard", help="打开本地资源仪表盘与模型启用管理")
+    dashboard = commands.add_parser("dashboard", help="打开本地资源仪表盘与日常管理接口")
     dashboard.add_argument(
         "--port", type=int, default=8790, help="本机端口（默认 8790；0 自动分配）"
     )
     dashboard.add_argument(
         "--no-open", action="store_true", help="仅打印管理链接，不自动打开浏览器"
     )
-    dashboard.add_argument("--offline", action="store_true", help="也不查询本机网关健康状态")
+    dashboard.add_argument("--offline", action="store_true", help="关闭模型发现和本机网关健康查询")
     dashboard.add_argument(
-        "--read-only", action="store_true", help="仅查看状态，关闭模型启用/禁用操作"
+        "--read-only", action="store_true", help="仅查看状态，关闭所有管理写入操作"
     )
     models = commands.add_parser("models", help="通过 Selark HTTP 获取允许模型")
     models.add_argument("--json", action="store_true")

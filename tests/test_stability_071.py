@@ -16,10 +16,9 @@ from selark.persistence import Journal, snapshot
 from selark.plans import enforce_quota, parse_quota, query_quota
 from selark.providers.mimo import retry_after_seconds
 
-from .conftest import TOKEN, completion, event
-from .test_governance import PAYLOAD, allocation, app_for, auth, finished, price
-from .test_governance import runtime as runtime
-from .test_service import sse
+from .support.governance import PAYLOAD, allocation, app_for, auth, finished, price
+from .support.governance import runtime as runtime
+from .support.protocol import TOKEN, completion, event, sse
 
 
 @pytest.mark.parametrize("streaming", [False, True])

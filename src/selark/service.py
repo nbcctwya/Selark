@@ -21,6 +21,7 @@ from selark.config import (
     data_directory,
     load_config,
     private_directory,
+    server_url,
 )
 from selark.locking import file_lock
 
@@ -270,7 +271,6 @@ def start_process(directory, data_dir):
             raise ConfigError("后台服务启动失败；运行 selark doctor 或前台 selark serve 查看原因。")
         process = running_process(directory, data_dir)
         if process and process["pid"] == child.pid:
-            from selark.management import server_url
             from selark.overview import health_status
 
             health = health_status(server_url(runtime.settings()))
@@ -284,7 +284,6 @@ def start_process(directory, data_dir):
 
 
 def wait_systemd_ready(directory, data_dir, *, timeout=10):
-    from selark.management import server_url
     from selark.overview import health_status
 
     url = server_url(load_config(directory / "server.json", ServerConfig))

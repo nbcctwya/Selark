@@ -28,6 +28,14 @@ class ConfigError(ValueError):
     pass
 
 
+class StateConflict(ConfigError):
+    """An administrative read became stale before its result could be saved."""
+
+    def __init__(self, message, *, code="state_changed"):
+        super().__init__(message)
+        self.code = code
+
+
 def config_directory(explicit: Path | None = None) -> Path:
     """Resolve private configuration without ever falling back to the working directory."""
     override = os.environ.get("SELARK_CONFIG_DIR")
@@ -136,6 +144,11 @@ class ServerConfig(StrictConfig):
         if self.host not in {"127.0.0.1", "::1", "localhost"}:
             raise ValueError("第一阶段仅支持本机监听")
         return self
+
+
+def server_url(config: ServerConfig) -> str:
+    host = "[::1]" if config.host == "::1" else config.host
+    return f"http://{host}:{config.port}"
 
 
 class ClientConfig(StrictConfig):

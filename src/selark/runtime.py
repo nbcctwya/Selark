@@ -14,6 +14,7 @@ from selark.config import (
     ConfigError,
     ServerConfig,
     ServiceLimits,
+    StateConflict,
     _write_private,
     data_directory,
     load_config,
@@ -31,6 +32,7 @@ from selark.connections import (
     require_connection,
     valid_model,
 )
+from selark.errors import GatewayError
 from selark.governance import Price, ResourcesConfig, Target
 from selark.locking import file_lock
 from selark.plans import PLAN_PRESETS, PlanSettings, empty_quota
@@ -102,15 +104,30 @@ def capability_fingerprint(config):
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
 
+def connection_revision(config):
+    """Opaque edit version based on public settings, never a digest of credentials."""
+    document = config.model_dump(mode="json", exclude={"api_key", "discovery"})
+    return hashlib.sha256(json.dumps(document, sort_keys=True).encode()).hexdigest()
+
+
+def check_connection_revision(config, expected):
+    if expected is not None and expected != connection_revision(config):
+        raise GatewayError(409, "connection_changed", "连接已被其他操作更新，请刷新后重试。")
+
+
 class Runtime:
-    def __init__(self, directory: Path, *, readonly=False, data_path=None):
+    def __init__(self, directory: Path, *, readonly=False, data_path=None, initialize=True):
         self.directory = directory
         self.data_dir = data_path if data_path is not None else data_directory(directory)
         self.config_path = directory / "server.json"
         config = self.settings()
-        if readonly:
+        if readonly or not initialize:
+            if not initialize and config.access_token is not None:
+                raise ConfigError("配置需要迁移；停服后运行 selark migrate。")
             self.migration_backup = None
-            self.store = Store(self.data_dir / "records.sqlite3", readonly=True)
+            self.store = Store(
+                self.data_dir / "records.sqlite3", readonly=readonly, initialize=False
+            )
             return
         private_directory(self.data_dir)
         self.migration_backup = None
@@ -236,10 +253,11 @@ class Runtime:
             _write_private(self.directory / "resources.json", updated.model_dump(mode="json"))
         return updated.model_dump(mode="json")
 
-    def change_policy(self, caller, patch):
+    def change_policy(self, caller, patch, *, expected_revision=None):
         with file_lock(self.data_dir / "management.lock"):
+            self.store.validate_policy_change(caller, patch, expected_revision=expected_revision)
             self.backup("before-caller-policy-change")
-            return self.store.set_policy(caller, patch)
+            return self.store.set_policy(caller, patch, expected_revision=expected_revision)
 
     def add_connection(self, identity, provider, key, **options):
         if provider not in PRESETS:
@@ -276,7 +294,11 @@ class Runtime:
                     registry.model_dump() | {"connections": [*registry.connections, config]}
                 )
             except ValidationError:
-                raise ConfigError("连接 ID 已存在、使用了保留 ID 或超过 32 个连接上限。") from None
+                if identity == "mimo-default" or any(
+                    connection.connection_id == identity for connection in registry.connections
+                ):
+                    raise StateConflict("连接 ID 已存在。", code="connection_exists") from None
+                raise ConfigError("连接配置无效或超过 32 个连接上限。") from None
             self.backup("before-connection-add")
             _write_private(self.directory / "connections.json", registry_document(updated))
         return self.connection(identity)
@@ -448,12 +470,15 @@ class Runtime:
         }
         self.save_plan_status(config, result, checked_at)
 
-    def change_connection(self, changes: dict, identity="mimo-default") -> dict:
+    def change_connection(
+        self, changes: dict, identity="mimo-default", *, expected_revision=None
+    ) -> dict:
         if identity != "mimo-default":
-            return self._change_extra(changes, identity)
+            return self._change_extra(changes, identity, expected_revision=expected_revision)
         with file_lock(self.data_dir / "management.lock"):
             current = self.settings()
             registry = self.registry()
+            check_connection_revision(legacy_connection(current, registry), expected_revision)
             document = server_document(current)
             allowed = {
                 "base_url",
@@ -489,7 +514,7 @@ class Runtime:
                     _write_private(self.directory / "connections.json", registry_document(renamed))
         return self.connection()
 
-    def _change_extra(self, changes, identity):
+    def _change_extra(self, changes, identity, *, expected_revision=None):
         allowed = {
             "name",
             "base_url",
@@ -509,6 +534,7 @@ class Runtime:
         with file_lock(self.data_dir / "management.lock"):
             registry = self.registry()
             current = require_connection(registry.connections, identity)
+            check_connection_revision(current, expected_revision)
             document = connection_document(current)
             try:
                 updated = ConnectionConfig.model_validate(document | changes)
@@ -534,9 +560,9 @@ class Runtime:
         with file_lock(self.data_dir / "management.lock"):
             current = require_connection(self.connection_settings(), original.connection_id)
             if discovery_fingerprint(current) != discovery_fingerprint(original):
-                raise ConfigError("发现期间连接来源或授权已改变；结果未应用，请重新发现。")
+                raise StateConflict("发现期间连接来源或授权已改变；结果未应用，请重新发现。")
             if current.discovery != original.discovery:
-                raise ConfigError("发现目录已被另一查询更新；迟到结果未应用。")
+                raise StateConflict("发现目录已被另一查询更新；迟到结果未应用。")
             # Approval may change during a network query. Keep the current approval,
             # not the pre-query copy. A failed refresh retains the last catalog.
             previous = current.discovery

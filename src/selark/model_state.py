@@ -3,6 +3,7 @@
 from selark.config import ConfigError
 from selark.governance import Policy, permitted
 from selark.runtime import capability_fingerprint, discovery_fingerprint
+from selark.storage import verification_outcome
 
 
 def protocol(config):
@@ -34,7 +35,8 @@ def observations(store, config):
     with store.lock:
         rows = store.db.execute(
             "SELECT * FROM (SELECT requested_model,model,model_fingerprint,protocol,capability,"
-            "verified_at,finished_at,upstream_result,upstream_status,request_id,started_at,"
+            "verified_at,finished_at,upstream_result,upstream_status,error_code,"
+            "upstream_error_code,request_id,started_at,"
             "ROW_NUMBER() OVER (PARTITION BY requested_model,capability ORDER BY "
             "(model_fingerprint=?) DESC,started_at DESC,request_id DESC) AS position "
             "FROM requests WHERE connection_id=? AND origin='live' AND upstream_attempts>0 "
@@ -44,7 +46,7 @@ def observations(store, config):
     result = {}
     for row in rows:
         current = row["model_fingerprint"] == stamp
-        outcome = "success" if row["upstream_result"] == "success" else "failure"
+        outcome = verification_outcome(dict(row))
         scope = "model_connection_configuration" if row["model_fingerprint"] else "legacy_unknown"
         observation = {
             "state": outcome if current else "stale" if row["model_fingerprint"] else "unscoped",

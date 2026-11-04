@@ -2,16 +2,23 @@
 
 ## Unreleased
 
+- 精简重复回归：将 7 个独立重复测试的有效断言归入现有场景，缩减共用协议处理中的重复模式/路由/分块组合，移除已不使用的测试辅助函数转导出。保留各协议、权限、并发及迁移恢复验证，并取消 Python 3.12 上重复的 Dashboard TCP 验收。
+- 修正并发创建同名连接的冲突反馈：在管理锁内统一识别重复 ID，HTTP 稳定返回 409 `connection_exists`，CLI 保持配置错误处理。
+- 补齐本机日常管理 API：连接新增、编辑、Key 轮换和启停，显式模型发现、批量审批与默认值，应用令牌创建、权限/限额、配额查询与撤销。沿用独立管理会话、同源校验、配置备份及业务校验；加入编辑版本和事务冲突检查，只打开已有账本，不通过 HTTP 初始化或迁移。保持现有前端契约兼容，新页面按 [管理接口契约](docs/development/management-api.md) 接入。
+- 整理项目结构：将本机管理命令按参数、连接、诊断和执行拆为 `management/` 包，监听地址工具归入配置层；公共测试构造移入 `tests/support/`。首页聚焦当前使用，文档按指南、开发、验收和历史归类，保留既有命令入口和验收数据。
 - 通过 Git submodule 在 `frontend/` 接入独立仓库 Selark-Web（React / TypeScript / Vite）：五页组件骨架、真实 HTTP 与模拟适配器、类型化接口、10 种开发场景及 Claude Git 交接说明；前端与主仓库分别进行测试和构建检查。此阶段不替换现有 Dashboard 页面，正式接入留待设计交回后完成。
+- 修复 ChatGPT 协议失败被误标为连接或模型能力验证成功；保留已报告用量，读取历史时纠正旧误标，单纯下游交付失败不撤销有效能力证据。
+- 推理 Token 超过输出或总量时改为未知用量，保留预留并以已观察推理计数作为下限，阻止按矛盾计数结算配额或费用。
+- Dashboard 健康检查复用网关实际监听地址，支持 IPv6 `::1`，离线模式仍不查询。
 - 修正多应用验收对入口鉴权失败的账本预期：已撤销令牌应返回 401、零上游请求且不写生成账本；仍要求已接纳请求落账，避免 GitHub CI 将正常拒绝误判为丢账。
-- 补充 8 个已启用中转模型的 80 次常用场景验收，覆盖多轮开发、代码执行、结构化提取、翻译、长文和并发；修正离线代码检查器误拦 `str.isspace()`，模型内容失败及反馈结果见 [中转场景实测](docs/relay-common-scenarios-verification-2026-11-01.md)。
+- 补充 8 个已启用中转模型的 80 次常用场景验收，覆盖多轮开发、代码执行、结构化提取、翻译、长文和并发；修正离线代码检查器误拦 `str.isspace()`，模型内容失败及反馈结果见 [中转场景实测](docs/verification/relay-common-scenarios-verification-2026-11-01.md)。
 - 本机入口在读取请求体及占用生成名额前鉴权，并限制同时在途的鉴权查询；匿名失败不再写入生成账本，仍保留结构化请求日志及派发前权限复查。
 - Dashboard 管理会话改为按 origin 隔离的 sessionStorage 与显式请求头，避免 Cookie 向其他本机端口泄露；保留页面刷新、同源校验、过期和模型写入前的会话复查。
 - 将 setuptools 锁定为 84.2.1，构建范围调整为 `>=84.1,<85`，覆盖已发现的两项构建/安装公告修复。
-- 本机自用修复通过 848 项回归、60 个匿名不完整请求、真实浏览器会话隔离和三轮 80 客户端并发验收，并更新日常安装；见 [修复验收](docs/local-security-fix-verification-2026-11-01.md)。
+- 本机自用修复通过 848 项回归、60 个匿名不完整请求、真实浏览器会话隔离和三轮 80 客户端并发验收，并更新日常安装；见 [修复验收](docs/verification/local-security-fix-verification-2026-11-01.md)。
 - 修复 ChatGPT 订阅在 Responses 最终 `output=[]` 时误报协议失败：从已校验的完整消息完成事件还原文本，仍要求成功终态，拒绝缺失、矛盾、乱序或重复的完成证据。
-- 增加 90 项分块、Unicode、多消息及异常流回归；完整套件 839 项通过。安装后复测全部 36 个启用模型，ChatGPT 8 个模型的普通和流式调用均通过，详见 [修复验收](docs/chatgpt-completion-fix-verification.md)。
-- 补充多应用故障模拟和三个 MiMo 文本模型的真实多轮、代码执行、长文、缓存及并发验收；模型内容与格式问题按实际结果记录，见 [常见场景验收](docs/common-scenarios-verification-2026-10-31.md)。
+- 增加 90 项分块、Unicode、多消息及异常流回归；完整套件 839 项通过。安装后复测全部 36 个启用模型，ChatGPT 8 个模型的普通和流式调用均通过，详见 [修复验收](docs/verification/chatgpt-completion-fix-verification.md)。
+- 补充多应用故障模拟和三个 MiMo 文本模型的真实多轮、代码执行、长文、缓存及并发验收；模型内容与格式问题按实际结果记录，见 [常见场景验收](docs/verification/common-scenarios-verification-2026-10-31.md)。
 
 ## 0.10.0 — 2026-10-31
 
@@ -24,8 +31,8 @@
 - 手机模型操作列固定可见，点击区域至少 44 px 高；大目录的其他状态仍可横向滚动查看。
 - 真实 MiMo 验收增加显式费用预留上限及有限持续负载矩阵，检查源连接已启用模型、旧配置兼容、累计预算和连续上游错误；付费测试不进入 CI。
 
-验收见 [按钮、端口与安装](docs/dashboard-controls-verification.md) 和
-[Core 高强度测试](docs/core-010-stress-verification.md)：749 项回归通过，518 次真实发送尝试、
+验收见 [按钮、端口与安装](docs/verification/dashboard-controls-verification.md) 和
+[Core 高强度测试](docs/verification/core-010-stress-verification.md)：749 项回归通过，518 次真实发送尝试、
 约 149 万已报告 tokens；供应商参数/内容失败、未知费用和主动取消按实际结果记录。
 
 ## 0.9.0 — 2026-10-31
@@ -39,7 +46,7 @@
 - schema 5 只追加证据列和索引，先备份；已有授权、默认模型、配置、OAuth、历史记录不重写、不补标验证。
 - 增加模拟并发/迁移/恢复测试、安装后 CLI 验收和 Chromium 四层状态检查，沿用 Python 3.11–3.13 CI。
 
-设计与使用见 [模型治理说明](docs/model-governance.md)，结果见 [0.9.0 验收](docs/model-governance-verification.md)。
+设计与使用见 [模型治理说明](docs/guides/model-governance.md)，结果见 [0.9.0 验收](docs/verification/model-governance-verification.md)。
 
 ## 0.8.1 — 2026-10-31
 
@@ -50,7 +57,7 @@
 - 增加 CLI 自动发现回归及安装后真实回环 HTTP 验收，浏览器验证第 6 个连接可见。
 - 脱敏旧验收文档的本机路径和中转地址，补全私有产物忽略规则，并加入 CI 防泄漏检查。
 
-说明见 [连接配置](docs/connections.md)，结果见 [0.8.1 验收](docs/model-discovery-verification.md)。
+说明见 [连接配置](docs/guides/connections.md)，结果见 [0.8.1 验收](docs/verification/model-discovery-verification.md)。
 
 ## 0.8.0 — 2026-10-31
 
@@ -61,7 +68,7 @@
 - 新增安全与只读回归、安装后 TCP 验收和 Chromium 桌面 / 手机验收，并纳入 CI。
 
 不新增运行时依赖，不迁移数据，不更改既有 OAuth、模型网关或调用方权限。
-使用方法与边界见 [Dashboard 说明](docs/dashboard.md)。
+使用方法与边界见 [Dashboard 说明](docs/guides/dashboard.md)。
 
 ## 0.7.2 — 2026-10-30
 
@@ -77,7 +84,7 @@
 
 兼容 0.7.0 / 0.7.1 配置与 schema 4。OAuth 登录、授权、刷新、退出机制未修改；
 订阅适配器只调整纯用量解析。本版本验收不调用真实模型、供应商额度或 OAuth。
-详见 [修复说明](docs/stability-072.md) 和 [验收报告](docs/stability-072-verification.md)。
+详见 [修复说明](docs/history/stability-072.md) 和 [验收报告](docs/verification/stability-072-verification.md)。
 
 ## 0.7.1 — 2026-10-30
 
@@ -91,8 +98,8 @@
 
 兼容 0.7.0 的配置、数据库、令牌、连接和 HTTP 行为；OAuth 实现未修改。
 本版本开发验收没有真实模型、供应商额度或 OAuth 调用。
-操作与边界见 [0.7.1 使用说明](docs/stability-071.md)，证据见 [验收报告](docs/stability-071-verification.md)。
+操作与边界见 [0.7.1 使用说明](docs/guides/operations.md)，证据见 [验收报告](docs/verification/stability-071-verification.md)。
 
 ## 0.7.0
 
-ChatGPT 个人订阅与官方 OAuth 接入。历史说明见 [ChatGPT 接入](docs/chatgpt.md)。
+ChatGPT 个人订阅与官方 OAuth 接入。历史说明见 [ChatGPT 接入](docs/guides/chatgpt.md)。

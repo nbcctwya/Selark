@@ -14,10 +14,12 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import Field, ValidationError, field_validator
+from starlette.routing import Match
 
 from selark import dashboard_data as data
 from selark.config import ConfigError, StrictConfig
 from selark.connections import valid_model
+from selark.dashboard_api import management_router
 from selark.errors import GatewayError
 from selark.runtime import Runtime
 
@@ -99,6 +101,15 @@ def create_dashboard(directory, *, port, bootstrap, offline=False, read_only=Fal
     app.state.session = session
     cache = {}
     query_lock = asyncio.Lock()
+    management = management_router(
+        directory,
+        origin=origin,
+        session=session,
+        lock=query_lock,
+        cache=cache,
+        offline=offline,
+        read_only=read_only,
+    )
 
     def error(status, message):
         return JSONResponse({"error": message}, status_code=status)
@@ -112,10 +123,15 @@ def create_dashboard(directory, *, port, bootstrap, offline=False, read_only=Fal
         ) not in (None, "same-origin", "none"):
             response = error(403, "拒绝跨源请求。")
         elif request.method not in {"GET", "HEAD"} and not (
-            request.method == "POST"
-            and (
-                request.url.path == "/api/session"
-                or (not read_only and request.url.path == "/api/model-approval")
+            (request.method == "POST" and request.url.path == "/api/session")
+            or (
+                not read_only
+                and (
+                    (request.method == "POST" and request.url.path == "/api/model-approval")
+                    or any(
+                        route.matches(request.scope)[0] == Match.FULL for route in management.routes
+                    )
+                )
             )
         ):
             response = error(405, "此 Dashboard 接口不允许该操作。")
@@ -284,6 +300,8 @@ def create_dashboard(directory, *, port, bootstrap, offline=False, read_only=Fal
             finally:
                 cache.clear()
 
+    app.include_router(management)
+
     @app.get("/api/{kind}")
     async def api(kind: str, request: Request):
         if kind not in {"snapshot", "records", "logs", "backups"}:
@@ -325,7 +343,7 @@ def run_dashboard(directory, *, port=8790, open_browser=True, offline=False, rea
             async def startup(self, sockets=None):
                 await super().startup(sockets=sockets)
                 if self.started:
-                    mode = "只读模式" if read_only else "模型启用管理"
+                    mode = "只读模式" if read_only else "日常管理接口已启用"
                     print(
                         f"Selark Dashboard V0.2 · {mode} · Ctrl+C 关闭服务（关闭浏览器不会停服）",
                         flush=True,

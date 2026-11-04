@@ -7,7 +7,7 @@ import sqlite3
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from selark.config import ConfigError, data_directory
+from selark.config import ConfigError, data_directory, server_url
 from selark.governance import Policy, permitted
 from selark.logs import read_logs
 from selark.overview import health_status, overview
@@ -343,8 +343,8 @@ def snapshot(directory: Path, filters, *, offline=False):
             }
             result["limits"] = runtime.settings().limits.model_dump()
             config = runtime.settings()
-            if not offline and config.host in {"127.0.0.1", "localhost", "0.0.0.0"}:
-                result["service"] = health_status(f"http://127.0.0.1:{config.port}")
+            if not offline:
+                result["service"] = health_status(server_url(config))
             # Health is unauthenticated: project even this response before exposing it.
             service = result["service"]
             result["service"] = pick(service, "state reachable version version_matches pid")

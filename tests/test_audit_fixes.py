@@ -16,10 +16,9 @@ from selark.runtime import Runtime
 from selark.storage import Store
 from selark.usage import inconsistent_usage, sanitize_usage
 
-from .conftest import completion, event
-from .test_governance import PAYLOAD, allocation, app_for, auth, finished, price
-from .test_governance import runtime as runtime
-from .test_service import sse
+from .support.governance import PAYLOAD, allocation, app_for, auth, finished, price
+from .support.governance import runtime as runtime
+from .support.protocol import completion, event, sse
 
 
 @pytest.mark.parametrize(

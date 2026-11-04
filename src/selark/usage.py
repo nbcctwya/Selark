@@ -96,6 +96,14 @@ def inconsistent_usage(usage):
         parts = [v for v in (prompt, completion) if valid_count(v)]
         if sum(parts) > total or (len(parts) == 2 and sum(parts) != total):
             return True
+    output_details = usage.get("completion_tokens_details")
+    reasoning = output_details.get("reasoning_tokens") if isinstance(output_details, dict) else None
+    if valid_count(reasoning):
+        if valid_count(completion) and reasoning > completion:
+            return True
+        minimum = reasoning + (prompt if valid_count(prompt) else 0)
+        if valid_count(total) and minimum > total:
+            return True
     details = usage.get("prompt_tokens_details")
     details = details if isinstance(details, dict) else {}
     cached = usage.get("prompt_cache_hit_tokens", details.get("cached_tokens"))
@@ -130,6 +138,13 @@ def observed_token_floor(usage, provider):
             "cache_creation_input_tokens",
         )
     parts = sum(usage[k] for k in fields if valid_count(usage.get(k)))
+    if provider != "anthropic":
+        details = usage.get("completion_tokens_details")
+        reasoning = details.get("reasoning_tokens") if isinstance(details, dict) else None
+        if valid_count(reasoning):
+            prompt = usage.get("prompt_tokens")
+            # Reasoning is included in output, so use it as a lower bound, not an addition.
+            parts = max(parts, reasoning + (prompt if valid_count(prompt) else 0))
     total = usage.get("total_tokens")
     return min(MAX_COUNT, max(parts, total if valid_count(total) else 0))
 

@@ -10,9 +10,9 @@ from selark.connections import require_connection
 from selark.errors import GatewayError
 from selark.runtime import Runtime
 
+from .support.governance import PAYLOAD, app_for, auth
+from .support.governance import runtime as runtime
 from .test_dashboard import HEADERS, ORIGIN, dashboard, login
-from .test_governance import PAYLOAD, app_for, auth
-from .test_governance import runtime as runtime
 from .test_operations_071 import contents
 
 ENDPOINT = "/api/model-approval"
@@ -137,7 +137,16 @@ def test_approval_updates_gateway_and_cached_dashboard_without_changing_other_po
     with dashboard(runtime.directory, offline=True) as client:
         login(client)
         before = client.get("/api/snapshot", headers=HEADERS).json()
-        assert before["connections"][0]["model_catalog"]["counts"]["approved"] == 2
+        catalog = before["connections"][0]["model_catalog"]
+        assert catalog["counts"] == {
+            "discovered": 1,
+            "approved": 2,
+            "application_authorized": 2,
+            "historically_verified": 0,
+        }
+        discovered = next(model for model in catalog["models"] if model["id"] == "new")
+        assert not discovered["approved"] and discovered["effective_applications"] == []
+        assert "fingerprint" not in json.dumps(before)
         response = client.post(
             ENDPOINT, json=change(runtime, model="new", enabled=True), headers=WRITE_HEADERS
         )

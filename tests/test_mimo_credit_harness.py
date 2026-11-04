@@ -15,7 +15,7 @@ from selark.app import create_app
 from selark.config import _write_private, initialize
 from selark.runtime import Runtime
 
-from .conftest import completion
+from .support.protocol import completion
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 spec = importlib.util.spec_from_file_location("mimo_credit", SCRIPTS / "verify_mimo_credit.py")

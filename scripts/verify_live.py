@@ -23,7 +23,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--allow-real-requests", action="store_true", required=True)
     parser.add_argument("--config-dir", type=Path, default=config_directory())
-    parser.add_argument("--output", type=Path, default=ROOT / "docs/live-verification.json")
+    parser.add_argument("--output", type=Path, default=ROOT / "reports/live-verification.json")
     parser.add_argument("--include-probe", type=Path)
     args = parser.parse_args()
     directory = args.config_dir.expanduser().resolve()

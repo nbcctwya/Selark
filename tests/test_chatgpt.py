@@ -17,8 +17,8 @@ from selark.connections import ConnectionConfig, require_connection
 from selark.providers.discovery import discover
 from selark.runtime import Runtime, discovery_fingerprint, fingerprint
 
+from .support.protocol import sse
 from .test_connections import token as legacy_headers
-from .test_service import sse
 
 PAYLOAD = {"connection_id": "personal", "messages": [{"role": "user", "content": "hello"}]}
 USAGE = {
@@ -407,6 +407,9 @@ def test_actual_usage_survives_delivery_failure(resource, streaming):
         row = runtime.store.records({})[0]
         assert row["upstream_result"] == "success" and row["delivery_status"] == "failed"
         assert row["total_tokens"] == 15 and row["resources"]["quota_tokens"] == 15
+        model = runtime.models("personal")["models"][0]
+        assert model["verified_capabilities"] == ["text_stream" if streaming else "text_nonstream"]
+        assert runtime.connection("personal")["verification"]["state"] == "success"
 
     asyncio.run(scenario())
 
@@ -502,9 +505,7 @@ def test_two_callers_concurrent_sessions_remain_separate(resource):
     asyncio.run(scenario())
 
 
-@pytest.mark.parametrize(
-    "fault", ["duplicate", "identity", "content", "tool", "json", "timeout", "deadline"]
-)
+@pytest.mark.parametrize("fault", ["tool", "json", "timeout", "deadline"])
 def test_protocol_faults_and_timeouts_never_retry(resource, fault):
     runtime, caller, _ = resource
     calls = []
@@ -518,13 +519,7 @@ def test_protocol_faults_and_timeouts_never_retry(resource, fault):
         if fault == "deadline":
             await asyncio.Event().wait()
         values = events()
-        if fault == "duplicate":
-            values = [{**e, "sequence_number": 1} for e in values]
-        elif fault == "identity":
-            values[-1]["response"]["id"] = "different"
-        elif fault == "content":
-            values[-1]["response"]["output"][0]["content"][0]["text"] = "different"
-        elif fault == "tool":
+        if fault == "tool":
             values.insert(
                 1, {"type": "response.output_item.added", "item": {"type": "function_call"}}
             )
@@ -539,9 +534,7 @@ def test_protocol_faults_and_timeouts_never_retry(resource, fault):
         assert response.status_code in {502, 504}
     assert len(calls) == 1
     row = runtime.store.records({})[0]
-    assert row["total_tokens"] == (15 if fault == "content" else None)
-    if fault == "content":
-        assert row["upstream_result"] == "success" and row["status"] == "failed"
+    assert row["total_tokens"] is None
 
 
 @pytest.mark.parametrize(

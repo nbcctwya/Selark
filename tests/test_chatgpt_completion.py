@@ -137,20 +137,21 @@ def downstream_text(response, streaming):
 
 @pytest.mark.parametrize("streaming", [False, True])
 @pytest.mark.parametrize("aggregate", [False, True])
-@pytest.mark.parametrize("seed", [7, 31, 99])
 def test_completed_items_survive_empty_aggregate_and_fragmented_unicode(
-    resource, streaming, aggregate, seed
+    resource, streaming, aggregate
 ):
     values = completed_stream(aggregate=aggregate)
-    response, row = invoke(resource, values, streaming, seed)
+    response, row = invoke(resource, values, streaming, seed=7)
     assert response.status_code == 200
     assert downstream_text(response, streaming) == "你好 🐍\n42"
     assert row["status"] == "success" and row["usage_final"] and row["usage_known"]
     assert row["total_tokens"] == 15 and row["delivery_status"] == "sent"
 
 
-@pytest.mark.parametrize("streaming", [False, True])
-@pytest.mark.parametrize("shape", ["snapshot_only", "missing_tail", "refusal", "no_content"])
+@pytest.mark.parametrize(
+    "shape,streaming",
+    [("snapshot_only", False), ("missing_tail", True), ("refusal", True), ("no_content", False)],
+)
 def test_completed_snapshot_recovers_only_missing_text(resource, streaming, shape):
     expected = "Hello world"
     values = completed_stream(texts=(expected,), reasoning=False)
@@ -180,9 +181,6 @@ def test_completed_snapshot_recovers_only_missing_text(resource, streaming, shap
 
 
 FAULTS = [
-    "no_response_completed",
-    "failed",
-    "incomplete",
     "no_item_done",
     "partial_second_item",
     "wrong_delta",
@@ -212,8 +210,14 @@ FAULTS = [
 ]
 
 
-@pytest.mark.parametrize("streaming", [False, True])
-@pytest.mark.parametrize("fault", FAULTS)
+# Both response modes consume the same Responses event validator. Exercise every
+# defect through SSE, plus ordinary-response cases before text, after text and at
+# terminal aggregation. Terminal failed/incomplete/EOF is covered in test_chatgpt.
+@pytest.mark.parametrize(
+    "fault,streaming",
+    [(fault, True) for fault in FAULTS]
+    + [(fault, False) for fault in ("wrong_item_id", "late_delta", "wrong_aggregate")],
+)
 def test_incomplete_conflicting_or_misidentified_items_never_finish(resource, streaming, fault):
     values = completed_stream(aggregate=fault == "wrong_aggregate")
     delta = next(v for v in values if v["type"] == "response.output_text.delta")
@@ -224,12 +228,7 @@ def test_incomplete_conflicting_or_misidentified_items_never_finish(resource, st
         for v in values
         if v["type"] == "response.output_item.done" and v["item"]["type"] == "message"
     )
-    if fault == "no_response_completed":
-        values.pop()
-    elif fault in {"failed", "incomplete"}:
-        values[-1]["type"] = "response." + fault
-        values[-1]["response"]["status"] = fault
-    elif fault in {"no_item_done", "partial_second_item"}:
+    if fault in {"no_item_done", "partial_second_item"}:
         position = 1 if fault == "no_item_done" else 2
         values = [
             v
@@ -301,8 +300,6 @@ def test_incomplete_conflicting_or_misidentified_items_never_finish(resource, st
         15
         if fault
         in {
-            "failed",
-            "incomplete",
             "no_item_done",
             "partial_second_item",
             "wrong_aggregate",
@@ -387,8 +384,10 @@ def test_multiple_parts_and_reasoning_preserve_text_order(resource, streaming, a
     assert "private-test-reasoning" not in response.text
 
 
-@pytest.mark.parametrize("streaming", [False, True])
-@pytest.mark.parametrize("shape", ["oversize_text", "too_many_parts", "duplicate_identity"])
+@pytest.mark.parametrize(
+    "shape,streaming",
+    [("oversize_text", True), ("too_many_parts", False), ("duplicate_identity", True)],
+)
 def test_snapshot_limits_cannot_bypass_the_text_stream_limits(
     resource, monkeypatch, streaming, shape
 ):

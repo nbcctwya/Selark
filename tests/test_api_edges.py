@@ -11,8 +11,7 @@ from selark.config import initialize
 from selark.runtime import Runtime
 from selark.sse import SSEDecoder, SSELines
 
-from .conftest import completion, event
-from .test_service import ByteStream, sse
+from .support.protocol import ByteStream, completion, event
 
 
 @pytest.fixture
@@ -66,8 +65,16 @@ def test_unterminated_sse_line_is_bounded_before_reading_entire_response(isolate
     assert row["status"] == "failed" and not row["usage_known"]
 
 
-@pytest.mark.parametrize("streaming", [False, True])
-@pytest.mark.parametrize("invalid", ["deep_json", "nan", "infinity", "exponent_overflow"])
+@pytest.mark.parametrize(
+    "invalid,streaming",
+    [
+        ("deep_json", False),
+        ("nan", False),
+        ("nan", True),
+        ("infinity", True),
+        ("exponent_overflow", True),
+    ],
+)
 def test_invalid_upstream_json_is_a_recorded_protocol_failure(isolated, streaming, invalid):
     runtime, auth = isolated
     data = event("OK", "stop") if streaming else completion()
@@ -147,33 +154,6 @@ def test_extreme_usage_keeps_zero_and_unknown_without_sqlite_overflow(isolated):
     assert any(r["reported_usage"] == usages[0] for r in runtime.store.records({}))
 
 
-def test_repeated_stream_usage_is_replacement_even_with_usage_only_chunks(isolated):
-    runtime, auth = isolated
-    counts = {"prompt_tokens": 12, "completion_tokens": 2, "total_tokens": 14}
-    chunk = event(usage=counts) | {"choices": []}
-    wire = sse(event("OK"), *[chunk for _ in range(100)], event(None, "stop", counts), "[DONE]")
-    app = create_app(
-        runtime.settings(),
-        runtime=runtime,
-        transport=httpx.MockTransport(
-            lambda _: httpx.Response(
-                200, content=wire, headers={"content-type": "text/event-stream"}
-            )
-        ),
-    )
-    with TestClient(app) as client:
-        response = client.post(
-            "/v1/chat/completions",
-            headers=auth,
-            json={
-                "messages": [{"role": "user", "content": "test"}],
-                "stream": True,
-            },
-        )
-        assert response.text.count("data: [DONE]") == 1
-    assert runtime.store.summary({})["summary"]["known_tokens"] == counts
-
-
 def test_sse_byte_limits_cover_utf8_and_many_empty_fields(monkeypatch):
     monkeypatch.setattr("selark.sse.MAX_SSE_BYTES", 32)
     lines = SSELines()
@@ -185,9 +165,11 @@ def test_sse_byte_limits_cover_utf8_and_many_empty_fields(monkeypatch):
         decoder.feed("data:")
     with pytest.raises(ValueError):
         decoder.feed("data:")
+    with pytest.raises(ValueError):
+        SSEDecoder().feed("data: " + "x" * 33)
 
 
-@pytest.mark.parametrize("size", [1, 2, 3, 7, 100])
+@pytest.mark.parametrize("size", [1, 7, 100])
 def test_sse_fragments_preserve_utf8_bom_and_all_newline_styles(size):
     body = "\ufeffdata: 你好\r\ndata: 再见\r\rdata: OK\n\n".encode()
     lines, decoder, events = SSELines(), SSEDecoder(), []

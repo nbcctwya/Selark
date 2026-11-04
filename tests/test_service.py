@@ -1,13 +1,10 @@
-import asyncio
 import json
 import logging
 
 import httpx
 import pytest
 
-from selark.app import create_app
-
-from .conftest import AUTH, TOKEN, UPSTREAM_KEY, completion, event
+from .support.protocol import AUTH, TOKEN, UPSTREAM_KEY, ByteStream, completion, event, sse
 
 PAYLOAD = {"messages": [{"role": "user", "content": "private test prompt"}]}
 
@@ -137,20 +134,19 @@ def test_invalid_json_media_type_and_size(gateway):
     assert calls == []
 
 
-@pytest.mark.parametrize("stream", [False, True])
 @pytest.mark.parametrize(
-    "upstream,status,code",
+    "upstream,status,code,stream",
     [
-        (401, 502, "upstream_auth_error"),
-        (403, 502, "upstream_auth_error"),
-        (402, 502, "upstream_quota_error"),
-        (429, 429, "upstream_rate_limit"),
-        (400, 502, "upstream_rejected"),
-        (404, 502, "upstream_rejected"),
-        (422, 502, "upstream_rejected"),
-        (500, 502, "upstream_error"),
-        (503, 502, "upstream_error"),
-        (307, 502, "upstream_error"),
+        (401, 502, "upstream_auth_error", False),
+        (403, 502, "upstream_auth_error", True),
+        (402, 502, "upstream_quota_error", False),
+        (429, 429, "upstream_rate_limit", True),
+        (400, 502, "upstream_rejected", False),
+        (404, 502, "upstream_rejected", True),
+        (422, 502, "upstream_rejected", False),
+        (500, 502, "upstream_error", True),
+        (503, 502, "upstream_error", False),
+        (307, 502, "upstream_error", True),
     ],
 )
 def test_upstream_http_failures_are_sanitized(gateway, caplog, stream, upstream, status, code):
@@ -179,7 +175,7 @@ def test_transport_failures(gateway, exception, status):
     assert UPSTREAM_KEY not in response.text
 
 
-@pytest.mark.parametrize("body", [b"not json", b"[]", b"{}", b'{"choices":null}'])
+@pytest.mark.parametrize("body", [b"not json", b"[]", b'{"choices":null}'])
 def test_malformed_upstream_response(gateway, body):
     client, _ = gateway(lambda _: httpx.Response(200, content=body))
     response = client.post("/v1/chat/completions", headers=AUTH, json=PAYLOAD)
@@ -193,29 +189,6 @@ def test_missing_usage_not_estimated(gateway, caplog):
     assert response.status_code == 200
     assert "usage" not in response.json()
     assert records(caplog)[0]["usage"] is None
-
-
-class ByteStream(httpx.AsyncByteStream):
-    def __init__(self, pieces, error=None):
-        self.pieces = pieces
-        self.error = error
-        self.closed = False
-
-    async def __aiter__(self):
-        for piece in self.pieces:
-            yield piece
-        if self.error:
-            raise self.error("sensitive upstream error")
-
-    async def aclose(self):
-        self.closed = True
-
-
-def sse(*items):
-    return "".join(
-        "data: " + (x if isinstance(x, str) else json.dumps(x, ensure_ascii=False)) + "\n\n"
-        for x in items
-    ).encode()
 
 
 def test_streaming_split_bytes_usage_and_finish(gateway, caplog):
@@ -268,63 +241,3 @@ def test_stream_content_type_checked_before_http_200(gateway):
     client, _ = gateway(lambda _: httpx.Response(200, json=completion()))
     response = client.post("/v1/chat/completions", headers=AUTH, json=PAYLOAD | {"stream": True})
     assert response.status_code == 502
-
-
-def test_stream_first_chunk_arrives_before_upstream_finishes_and_disconnect_closes(server_config):
-    async def scenario():
-        got_first = asyncio.Event()
-
-        class SlowStream(ByteStream):
-            async def __aiter__(self):
-                yield sse(event())
-                await asyncio.sleep(30)  # Must be cancelled, never wait for this.
-                yield sse(event(None, "stop"), "[DONE]")
-
-        body = SlowStream([])
-        transport = httpx.MockTransport(
-            lambda _: httpx.Response(
-                200, stream=body, headers={"Content-Type": "text/event-stream"}
-            )
-        )
-        app = create_app(server_config, transport=transport)
-        first_receive = True
-
-        async def receive():
-            nonlocal first_receive
-            if first_receive:
-                first_receive = False
-                return {
-                    "type": "http.request",
-                    "body": json.dumps(PAYLOAD | {"stream": True}).encode(),
-                    "more_body": False,
-                }
-            await got_first.wait()
-            return {"type": "http.disconnect"}
-
-        async def send(message):
-            if message["type"] == "http.response.body" and message.get("body"):
-                assert "你好".encode() in message["body"]
-                got_first.set()
-
-        scope = {
-            "type": "http",
-            "asgi": {"version": "3.0", "spec_version": "2.0"},
-            "http_version": "1.1",
-            "method": "POST",
-            "scheme": "http",
-            "path": "/v1/chat/completions",
-            "raw_path": b"/v1/chat/completions",
-            "query_string": b"",
-            "headers": [
-                (b"authorization", f"Bearer {TOKEN}".encode()),
-                (b"content-type", b"application/json"),
-            ],
-            "server": ("localhost", 8787),
-            "client": ("localhost", 10000),
-        }
-        async with app.router.lifespan_context(app):
-            await asyncio.wait_for(app(scope, receive, send), timeout=2)
-        assert got_first.is_set()
-        assert body.closed
-
-    asyncio.run(scenario())

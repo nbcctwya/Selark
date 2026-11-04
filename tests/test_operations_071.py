@@ -27,8 +27,8 @@ from selark.service import (
     unit_text,
 )
 
-from .test_governance import allocation, finished
-from .test_governance import runtime as runtime
+from .support.governance import allocation, finished
+from .support.governance import runtime as runtime
 
 
 def contents(directory):

@@ -24,6 +24,11 @@ dev = ["pytest==9.1.1", "ruff==0.17.3"]
 [project.scripts]
 selark = "selark.cli:main"
 
+[project.urls]
+Repository = "https://github.com/nbcctwya/Selark"
+Documentation = "https://github.com/nbcctwya/Selark/tree/main/docs"
+Issues = "https://github.com/nbcctwya/Selark/issues"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

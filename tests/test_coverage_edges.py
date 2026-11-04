@@ -13,7 +13,6 @@ from selark.client import SelarkClient
 from selark.config import ClientConfig
 from selark.persistence import Journal, snapshot
 
-from .conftest import completion, event
 from .four_resources import (
     PLAN,
     RESOURCES,
@@ -25,10 +24,10 @@ from .four_resources import (
     quota,
     until,
 )
-from .test_governance import allocation, finished, price
-from .test_governance import runtime as runtime
+from .support.governance import allocation, finished, price
+from .support.governance import runtime as runtime
+from .support.protocol import ByteStream, completion, event, sse
 from .test_resource_matrix import resources as resources
-from .test_service import ByteStream, sse
 
 
 @pytest.mark.parametrize("ending", ["deadline", "task_cancel", "shutdown"])

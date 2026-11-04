@@ -12,83 +12,16 @@ from fastapi.testclient import TestClient
 from selark.app import create_app
 from selark.cli import main
 from selark.config import ConfigError, initialize
-from selark.governance import Price, input_estimate, usage_cost
+from selark.governance import input_estimate, usage_cost
 from selark.persistence import Journal, snapshot
 from selark.runtime import Runtime, fingerprint
 from selark.schemas import ChatRequest
-from selark.storage import Store, utc_now
+from selark.storage import Store
 
-from .conftest import UPSTREAM_KEY, completion, event
+from .support.governance import PAYLOAD, allocation, app_for, auth, finished, price
+from .support.governance import runtime as runtime
+from .support.protocol import UPSTREAM_KEY, completion, event, sse
 from .test_connections import native_events, native_reply
-from .test_service import sse
-
-PAYLOAD = {"messages": [{"role": "user", "content": "test"}], "max_tokens": 16}
-
-
-@pytest.fixture
-def runtime(tmp_path, monkeypatch):
-    monkeypatch.delenv("SELARK_DATA_DIR", raising=False)
-    directory = tmp_path / "config"
-    initialize(directory, UPSTREAM_KEY, models=["mimo-test", "other"], default_model="mimo-test")
-    with Runtime(directory) as runtime:
-        yield runtime
-
-
-def auth(caller):
-    return {"Authorization": "Bearer " + caller["token"]}
-
-
-def app_for(runtime, handler):
-    return create_app(runtime.settings(), runtime=runtime, transport=httpx.MockTransport(handler))
-
-
-def price(runtime, **values):
-    document = {
-        "connection_id": "mimo-default",
-        "model": "mimo-test",
-        "currency": "USD",
-        "input_per_million": "1",
-        "output_per_million": "2",
-        **values,
-    }
-    runtime.edit_resource("price", (document["connection_id"], document["model"]), document)
-    return Price.model_validate(document)
-
-
-def allocation(runtime, caller, identity, *, tokens=400, quote=None):
-    runtime.store.begin_request(identity, utc_now(), caller["id"], "mimo-default", "chat")
-    runtime.store.attempt(
-        identity,
-        "mimo-test",
-        None,
-        "mimo-default",
-        resource={
-            "caller": caller["id"],
-            "provider": "mimo",
-            "estimate": tokens - 16,
-            "output": 16,
-            "price": quote,
-            "alias": None,
-        },
-    )
-
-
-def finished(caller, identity, **changes):
-    return {
-        "request_id": identity,
-        "caller_id": caller["id"],
-        "started_at": utc_now(),
-        "connection_id": "mimo-default",
-        "purpose": "chat",
-        "model": "mimo-test",
-        "actual_model": "mimo-test",
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "usage_final": True,
-        "usage": completion()["usage"],
-        "delivery_status": "sent",
-        **changes,
-    }
 
 
 def test_alias_permissions_and_legacy_defaults(runtime):

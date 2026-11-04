@@ -10,10 +10,9 @@ from selark.cli import main
 from selark.runtime import fingerprint
 from selark.storage import utc_now
 
-from .conftest import event
-from .test_governance import app_for, auth
-from .test_governance import runtime as runtime
-from .test_service import sse
+from .support.governance import app_for, auth
+from .support.governance import runtime as runtime
+from .support.protocol import event, sse
 from .test_token_plans import MODEL, PAYLOAD, PLAN, caller, handler, quota, reply
 from .test_token_plans import plan as plan
 

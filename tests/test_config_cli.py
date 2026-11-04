@@ -17,10 +17,8 @@ from selark.config import (
     initialize,
     load_config,
 )
-from selark.sse import SSEDecoder
 
-from .conftest import TOKEN, UPSTREAM_KEY, completion, event
-from .test_service import sse
+from .support.protocol import TOKEN, UPSTREAM_KEY, completion, event, sse
 
 
 @pytest.mark.parametrize("xdg", [None, "", "relative-config"])
@@ -316,13 +314,3 @@ def test_example_standalone_help_and_empty_input(tmp_path):
     )
     assert result.returncode == 1
     assert TOKEN not in result.stdout + result.stderr
-
-
-def test_sse_multiline_and_limits():
-    decoder = SSEDecoder()
-    assert decoder.feed(": heartbeat") is None
-    assert decoder.feed('data: {"key":') is None
-    assert decoder.feed('data: "value"}') is None
-    assert json.loads(decoder.feed("")) == {"key": "value"}
-    with pytest.raises(ValueError, match="过大"):
-        decoder.feed("data: " + "x" * 1_048_577)

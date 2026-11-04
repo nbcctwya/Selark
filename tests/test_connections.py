@@ -14,8 +14,7 @@ from selark.errors import GatewayError
 from selark.providers.discovery import discover
 from selark.runtime import Runtime, fingerprint
 
-from .conftest import completion, event
-from .test_service import sse
+from .support.protocol import completion, event, sse
 
 
 @pytest.fixture

@@ -15,9 +15,9 @@ from selark.dashboard import Session, create_dashboard
 from selark.runtime import fingerprint
 from selark.storage import utc_now
 
-from .conftest import UPSTREAM_KEY
-from .test_governance import allocation, finished, price
-from .test_governance import runtime as runtime
+from .support.governance import allocation, finished, price
+from .support.governance import runtime as runtime
+from .support.protocol import UPSTREAM_KEY
 from .test_operations_071 import contents
 
 ORIGIN = "http://127.0.0.1:8790"
@@ -110,11 +110,11 @@ def test_rebinding_and_cross_origin_blocked_even_with_valid_session(runtime, hea
 
 
 @pytest.mark.parametrize("method", ["POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
-def test_no_business_mutation_routes(runtime, method):
+def test_undeclared_mutations_and_gateway_routes_are_unavailable(runtime, method):
     before = contents(runtime.directory)
     with dashboard(runtime.directory, offline=True) as client:
         login(client)
-        for path in ("/api/snapshot", "/api/tokens", "/api/connections", "/v1/chat/completions"):
+        for path in ("/api/snapshot", "/api/tokens", "/api/service", "/v1/chat/completions"):
             assert client.request(method, path, headers=HEADERS).status_code == 405
         assert client.get("/openapi.json").status_code == 404
         assert client.get("/docs").status_code == 404

@@ -13,8 +13,7 @@ from selark.app import create_app
 from selark.config import initialize
 from selark.runtime import Runtime, fingerprint
 
-from .conftest import UPSTREAM_KEY, completion, event
-from .test_service import sse
+from .support.protocol import UPSTREAM_KEY, completion, event, sse
 
 PAYLOAD = {"messages": [{"role": "user", "content": "test"}]}
 
@@ -63,9 +62,12 @@ def test_sqlite_contention_does_not_block_health(runtime):
 
 @pytest.mark.parametrize("streaming", [False, True])
 @pytest.mark.parametrize("stage", ["headers", "first_body", "terminal"])
-def test_final_send_failure_preserves_usage_and_records_delivery(runtime, streaming, stage):
-    from .test_service import ByteStream
+def test_final_send_failure_preserves_usage_and_records_delivery(runtime, streaming, stage, caplog):
+    import logging
 
+    from .support.protocol import ByteStream
+
+    caplog.set_level(logging.INFO, logger="selark.requests")
     caller = runtime.store.create_token("delivery")
 
     async def scenario():
@@ -128,6 +130,14 @@ def test_final_send_failure_preserves_usage_and_records_delivery(runtime, stream
         row = runtime.store.records({})[0]
         assert row["status"] == "failed"
         assert row["delivery_status"] == "failed"
+        log = next(
+            json.loads(item.message) for item in caplog.records if item.name == "selark.requests"
+        )
+        assert log["request_status"] == row["status"]
+        for key in ("upstream_result", "delivery_status", "error_code", "upstream_attempts"):
+            assert log[key] == row[key]
+        assert log["usage"] == row["reported_usage"]
+        assert "simulated broken pipe" not in caplog.text
         if not streaming or stage == "terminal":
             assert row["upstream_result"] == "success"
             assert row["usage_known"] and row["total_tokens"] == 14
@@ -334,7 +344,7 @@ def test_queue_timeout_has_no_upstream_attempt(runtime):
 
 @pytest.mark.parametrize("streaming", [False, True])
 def test_total_deadline_stops_slow_generation_and_releases_resources(runtime, streaming):
-    from .test_service import ByteStream
+    from .support.protocol import ByteStream
 
     async def scenario():
         caller = runtime.store.create_token("deadline")
@@ -643,7 +653,7 @@ def test_shutdown_cancels_slow_active_request_without_regeneration(runtime):
 
 
 def test_storage_writer_competition_does_not_pause_stream_chunks(runtime):
-    from .test_service import ByteStream
+    from .support.protocol import ByteStream
 
     async def scenario():
         caller = runtime.store.create_token("stream-under-lock")
@@ -707,38 +717,6 @@ def test_storage_writer_competition_does_not_pause_stream_chunks(runtime):
         assert body.closed
         successful = runtime.store.records({"status": "success"})
         assert len(successful) == 1 and successful[0]["total_tokens"] == 14
-
-    asyncio.run(scenario())
-
-
-def test_delivery_failure_has_same_database_and_request_log_status(runtime, caplog):
-    import logging
-
-    caplog.set_level(logging.INFO, logger="selark.requests")
-
-    async def scenario():
-        caller = runtime.store.create_token("log-consistency")
-        app = create_app(
-            runtime.settings(),
-            runtime=runtime,
-            transport=httpx.MockTransport(lambda _: httpx.Response(200, json=completion())),
-        )
-
-        async def failure(message):
-            if message["type"] == "http.response.body":
-                raise OSError("private socket error")
-
-        async with app.router.lifespan_context(app):
-            await Wire(caller["token"], send_hook=failure).run(app)
-        row = runtime.store.records({})[0]
-        log = next(
-            json.loads(item.message) for item in caplog.records if item.name == "selark.requests"
-        )
-        assert row["status"] == log["request_status"] == "failed"
-        for key in ("upstream_result", "delivery_status", "error_code", "upstream_attempts"):
-            assert row[key] == log[key]
-        assert row["reported_usage"] == log["usage"]
-        assert "private socket error" not in caplog.text
 
     asyncio.run(scenario())
 
@@ -898,7 +876,7 @@ def test_limits_changes_keep_probe_fingerprint_and_require_restart(runtime, caps
 
 
 def test_delivered_done_is_not_followed_by_timeout_during_cleanup(runtime):
-    from .test_service import ByteStream
+    from .support.protocol import ByteStream
 
     async def scenario():
         caller = runtime.store.create_token("terminal-cleanup")
@@ -975,7 +953,7 @@ def test_doctor_identifies_writer_lock_without_generation(runtime, monkeypatch):
 
     original = httpx.Client
     monkeypatch.setattr(
-        "selark.management.httpx.Client",
+        "selark.management.diagnostics.httpx.Client",
         lambda **kwargs: original(
             transport=httpx.MockTransport(
                 lambda _: httpx.Response(200, json={"status": "ok", "version": "0.3.0"})
@@ -1147,7 +1125,7 @@ def test_same_configuration_probe_order_uses_start_time_not_finish_time(runtime)
 
 
 def test_ordinary_disconnect_during_body_read_closes_response(runtime):
-    from .test_service import ByteStream
+    from .support.protocol import ByteStream
 
     async def scenario():
         caller = runtime.store.create_token("body-disconnect")

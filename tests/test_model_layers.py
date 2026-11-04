@@ -13,7 +13,6 @@ from fastapi.testclient import TestClient
 from selark.cli import main
 from selark.config import ConfigError, initialize
 from selark.connections import require_connection
-from selark.dashboard_data import query_filters, snapshot
 from selark.errors import GatewayError
 from selark.persistence import Journal
 from selark.persistence import snapshot as receipt
@@ -21,10 +20,9 @@ from selark.providers.discovery import discover
 from selark.runtime import Runtime, capability_fingerprint, fingerprint
 from selark.storage import SCHEMA_VERSION, Store
 
-from .conftest import completion, event
-from .test_governance import PAYLOAD, allocation, app_for, auth, finished
-from .test_governance import runtime as runtime
-from .test_service import sse
+from .support.governance import PAYLOAD, allocation, app_for, auth, finished
+from .support.governance import runtime as runtime
+from .support.protocol import completion, event, sse
 
 
 def current(runtime, identity="mimo-default"):
@@ -365,7 +363,7 @@ def test_explicit_model_verification_binds_one_request_to_selected_enabled_model
             )
 
         monkeypatch.setattr(
-            "selark.management.SelarkClient",
+            "selark.management.connections.SelarkClient",
             lambda profile: SelarkClient(profile, transport=httpx.MockTransport(bridge)),
         )
         result = probe(runtime, model="other", stream=stream)
@@ -509,20 +507,3 @@ def test_schema_five_migration_failure_rolls_back_and_retry_is_idempotent(runtim
         assert migrated.migration_backup
     with Runtime(runtime.directory) as repeated:
         assert repeated.migration_backup is None
-
-
-def test_dashboard_exposes_four_layers_without_mutating_them(runtime):
-    runtime.save_discovery(current(runtime), ["new"])
-    before = runtime.config_path.read_bytes()
-    report = snapshot(runtime.directory, query_filters({}), offline=True)
-    counts = report["connections"][0]["model_catalog"]["counts"]
-    assert counts == {
-        "discovered": 1,
-        "approved": 2,
-        "application_authorized": 2,
-        "historically_verified": 0,
-    }
-    model = next(m for m in report["connections"][0]["model_catalog"]["models"] if m["id"] == "new")
-    assert not model["approved"] and model["effective_applications"] == []
-    assert runtime.config_path.read_bytes() == before
-    assert "fingerprint" not in json.dumps(report)

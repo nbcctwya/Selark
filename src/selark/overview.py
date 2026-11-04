@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import httpx
 
 from selark import __version__
-from selark.config import ClientConfig, ConfigError, load_config
+from selark.config import ClientConfig, ConfigError, load_config, server_url
 from selark.connections import legacy_connection
 from selark.governance import Policy, permitted
 from selark.runtime import Runtime
@@ -58,8 +58,6 @@ def age_seconds(value):
 
 
 def overview(directory, *, offline=False):
-    from selark.management import server_url
-
     result = {
         "version": __version__,
         "checked_at": utc_now(),

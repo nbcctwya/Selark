@@ -508,9 +508,10 @@ def create_app(
         request.state.error_code, request.state.error_message = exc.code, exc.message
         if exc.upstream_status is not None:
             request.state.upstream_status = exc.upstream_status
-        if request.state.upstream_attempts and request.state.upstream_result != "success":
-            request.state.upstream_result = "failed"
+        if request.state.upstream_attempts:
             request.state.upstream_error_code = exc.code
+            if request.state.upstream_result != "success":
+                request.state.upstream_result = "failed"
         return JSONResponse(
             exc.body(),
             status_code=exc.status,

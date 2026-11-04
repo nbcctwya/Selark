@@ -7,7 +7,7 @@ import pytest
 
 from selark.app import create_app
 
-from .conftest import completion
+from .support.protocol import completion
 from .test_resilience import Wire, limited, wait_until
 from .test_resilience import runtime as runtime
 
