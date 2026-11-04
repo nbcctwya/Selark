@@ -504,6 +504,16 @@ def test_final_accounting_failure_replays_once_and_bounds_backlog(runtime, monke
                 transport=httpx.ASGITransport(app=app), base_url="http://selark"
             ) as client,
         ):
+            scans = []
+            entries = app.state.storage.journal.entries
+
+            def counted_entries():
+                scans.append(True)
+                return entries()
+
+            monkeypatch.setattr(app.state.storage.journal, "entries", counted_entries)
+            await asyncio.sleep(1.1)
+            assert not scans  # Healthy idle ledgers do not poll the filesystem.
             monkeypatch.setattr(runtime.store, "finish", unavailable)
             assert (
                 await client.post(
@@ -519,6 +529,14 @@ def test_final_accounting_failure_replays_once_and_bounds_backlog(runtime, monke
                 assert response.status_code == 503
             assert len(calls) == 1 and len(list((runtime.data_dir / "pending").glob("*.json"))) == 1
             monkeypatch.setattr(runtime.store, "finish", finish)
+            # A failed write wakes recovery without another request or a manual replay.
+            async with asyncio.timeout(4):
+                while app.state.storage.health()["pending_records"]:
+                    await asyncio.sleep(0.02)
+            assert scans and len(calls) == 1
+            scans.clear()
+            await asyncio.sleep(1.1)
+            assert not scans  # Recovery goes back to sleep after draining the backlog.
             await app.state.storage.replay()
             await app.state.storage.replay()
             assert app.state.storage.health()["pending_records"] == 0

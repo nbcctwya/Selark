@@ -50,7 +50,9 @@ def test_regular_multiturn_default_usage_and_safe_log(gateway, caplog):
         {"role": "user", "content": "Repeat it."},
     ]
     response = client.post(
-        "/v1/chat/completions", headers=AUTH, json={"messages": messages, "max_tokens": 42}
+        "/v1/chat/completions",
+        headers=AUTH,
+        json={"messages": messages, "max_tokens": 42, "session_id": "same-session"},
     )
     assert response.status_code == 200
     assert response.json() == completion()
@@ -65,6 +67,7 @@ def test_regular_multiturn_default_usage_and_safe_log(gateway, caplog):
     assert sent["max_completion_tokens"] == 42
     assert sent["thinking"] == {"type": "disabled"}
     assert "max_tokens" not in sent
+    assert len(calls) == 1 and "instructions" not in sent and "session_id" not in sent
     log = records(caplog)[0]
     assert log["usage"] == completion()["usage"]
     assert log["model"] == "mimo-test"
@@ -73,6 +76,17 @@ def test_regular_multiturn_default_usage_and_safe_log(gateway, caplog):
     assert log["request_id"] == response.headers["x-request-id"]
     for private in (TOKEN, UPSTREAM_KEY, "private test prompt", "你好"):
         assert private not in caplog.text
+    # A session is only a local grouping label, never an invitation to resend history.
+    followup = [{"role": "user", "content": "  New input\n中文 😀  "}]
+    assert (
+        client.post(
+            "/v1/chat/completions",
+            headers=AUTH,
+            json={"messages": followup, "session_id": "same-session"},
+        ).status_code
+        == 200
+    )
+    assert len(calls) == 2 and json.loads(calls[1].content)["messages"] == followup
 
 
 def test_text_parts_and_sampling_parameters(gateway):

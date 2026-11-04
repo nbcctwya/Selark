@@ -2,7 +2,6 @@
 
 import asyncio
 
-from selark.chatgpt_auth import ChatGPTAuth
 from selark.connections import require_connection
 from selark.errors import GatewayError
 
@@ -12,8 +11,13 @@ def discover_connection(runtime, identity):
     from selark.providers.discovery import discover
 
     original = require_connection(runtime.connection_settings(), identity)
+    auth = None
+    if original.provider == "chatgpt":
+        from selark.chatgpt_auth import ChatGPTAuth
+
+        auth = ChatGPTAuth(runtime.directory)
     try:
-        models = asyncio.run(discover(original, auth=ChatGPTAuth(runtime.directory)))
+        models = asyncio.run(discover(original, auth=auth))
         return runtime.save_discovery(original, models)
     except GatewayError as error:
         if error.upstream_status and original.provider != "chatgpt":

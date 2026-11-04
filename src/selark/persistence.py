@@ -218,6 +218,7 @@ class AsyncLedger:
         self.invalid = 0
         self.closed = False
         self.recovery_task = None
+        self.recovery_needed = asyncio.Event()
         self.receipt_lock = asyncio.Lock()
 
     async def call(self, method, *args, **kwargs):
@@ -244,6 +245,8 @@ class AsyncLedger:
         await self.call("set_busy_timeout", self.limits.storage_busy_timeout_seconds)
         if self.journal:
             self.pending = len(await self.io(self.journal.entries))
+            if self.pending:
+                self.recovery_needed.set()
             self.recovery_task = asyncio.create_task(self.recovery_loop())
 
     def available(self):
@@ -300,6 +303,8 @@ class AsyncLedger:
                     self.pending = len(await self.io(self.journal.entries))
                 except OSError:
                     self.degraded = True
+                if self.degraded or (settled and self.pending):
+                    self.recovery_needed.set()
             return result
 
     async def replay(self):
@@ -321,11 +326,19 @@ class AsyncLedger:
 
     async def recovery_loop(self):
         while not self.closed:
+            # A healthy idle gateway has nothing to replay. Receipts are written by
+            # this ledger; startup recovery handles those left by an earlier process.
+            await self.recovery_needed.wait()
+            self.recovery_needed.clear()
             await asyncio.sleep(1)
+            if not self.pending and not self.degraded:
+                continue
             try:
                 await self.replay()
             except (sqlite3.Error, OSError, ValueError, ConfigError):
                 self.degraded = True
+            if self.pending or self.degraded:
+                self.recovery_needed.set()
 
     async def close(self):
         self.closed = True

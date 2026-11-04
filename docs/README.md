@@ -13,6 +13,7 @@
 | 普通 API 连接与模型来源 | [连接](guides/connections.md) |
 | 发现、启用、授权与验证 | [模型治理](guides/model-governance.md) |
 | 页面、会话与模型启停 | [Dashboard](guides/dashboard.md) |
+| 系统占用与中转 Token 边界 | [资源占用与转发开销](guides/efficiency.md) |
 | 应用令牌、策略、用量、费用 | [应用资源管理](guides/governance.md)、[管理命令](guides/management.md) |
 | 个人订阅 | [ChatGPT](guides/chatgpt.md)、[Token Plan](guides/token-plans.md) |
 | 外部程序接入与参数范围 | [HTTP API](guides/http-api.md) |

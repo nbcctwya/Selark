@@ -180,15 +180,14 @@ class Runtime:
 
     def connection_settings(self):
         server, registry = self.settings(), self.registry()
-        from selark.chatgpt_auth import ChatGPTAuth
-
-        auth = ChatGPTAuth(self.directory)
         connections = [legacy_connection(server, registry)]
         for config in registry.connections:
             generation, unreadable = 0, False
             if config.provider == "chatgpt":
+                from selark.chatgpt_auth import ChatGPTAuth
+
                 try:
-                    generation = auth.read(config.connection_id).generation
+                    generation = ChatGPTAuth(self.directory).read(config.connection_id).generation
                 except (ConfigError, OSError):
                     unreadable = True
             connections.append(

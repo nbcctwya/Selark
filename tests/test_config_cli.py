@@ -286,9 +286,11 @@ def test_client_redirect_is_not_followed():
 
 def test_client_cli_import_does_not_import_provider():
     source = (
-        "import sys; import selark.cli; "
+        "import sys; import selark.cli; selark.cli.parser(); "
         "assert 'selark.providers.mimo' not in sys.modules; "
-        "assert 'selark.app' not in sys.modules"
+        "assert 'selark.app' not in sys.modules; "
+        "assert 'jwt' not in sys.modules; "
+        "assert 'cryptography' not in sys.modules"
     )
     result = subprocess.run([sys.executable, "-c", source], capture_output=True)
     assert result.returncode == 0, result.stderr.decode()

@@ -85,11 +85,23 @@ def test_provider_auth_payload_stream_and_actual_usage(multi, provider, streamin
         allowed_models=[model],
     )
     calls = []
+    messages = [
+        {"role": "system", "content": "Be brief"},
+        {"role": "user", "content": "  Hi\n中文 😀  "},
+        {"role": "assistant", "content": "Earlier reply"},
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Again"},
+                {"type": "text", "text": "\nSame request"},
+            ],
+        },
+    ]
 
     def upstream(request):
         calls.append(request)
         payload = json.loads(request.content)
-        assert "session_id" not in payload and "connection_id" not in payload
+        assert not {"session_id", "connection_id", "instructions"} & payload.keys()
         assert payload["model"] == model
         assert payload["stream"] is streaming
         if provider == "anthropic":
@@ -99,7 +111,13 @@ def test_provider_auth_payload_stream_and_actual_usage(multi, provider, streamin
             assert payload["max_tokens"] == 16
             assert payload["system"] == [{"type": "text", "text": "Be brief"}]
             assert payload["messages"] == [
-                {"role": "user", "content": [{"type": "text", "text": "Hi"}]}
+                {
+                    "role": m["role"],
+                    "content": [{"type": "text", "text": m["content"]}]
+                    if isinstance(m["content"], str)
+                    else m["content"],
+                }
+                for m in messages[1:]
             ]
             return (
                 httpx.Response(
@@ -113,6 +131,10 @@ def test_provider_auth_payload_stream_and_actual_usage(multi, provider, streamin
         else:
             assert request.headers["authorization"] == "Bearer fake-" + provider
             assert "api-key" not in request.headers
+        expected = [dict(message) for message in messages]
+        if provider not in {"mimo", "openai", "openai-compatible"}:
+            expected[-1]["content"] = "Again\nSame request"
+        assert payload["messages"] == expected
         parameter = (
             "max_tokens"
             if provider in {"deepseek", "zhipu", "openai-compatible"}
@@ -151,10 +173,7 @@ def test_provider_auth_payload_stream_and_actual_usage(multi, provider, streamin
                 "stream": streaming,
                 "max_tokens": 16,
                 "session_id": "shared-session",
-                "messages": [
-                    {"role": "system", "content": "Be brief"},
-                    {"role": "user", "content": "Hi"},
-                ],
+                "messages": messages,
             },
         )
         assert response.status_code == 200

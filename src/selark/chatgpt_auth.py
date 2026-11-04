@@ -21,7 +21,6 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 from uuid import uuid4
 
 import httpx
-import jwt
 from pydantic import Field, SecretStr
 
 from selark.config import ConfigError, StrictConfig, _write_private, load_config, private_directory
@@ -309,6 +308,10 @@ class ChatGPTAuth:
         return data
 
     async def verify_identity(self, client, encoded, issued, *, nonce=None):
+        # Signature verification is needed only during OAuth, not normal API relay
+        # or local status/backup reads. Keep its crypto dependencies out of idle apps.
+        import jwt
+
         metadata = await self.metadata(client)
         status, jwks = await self.document(client, "GET", metadata["jwks_uri"])
         try:

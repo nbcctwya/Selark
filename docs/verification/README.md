@@ -6,6 +6,7 @@
 
 | 报告 | 文件 |
 | --- | --- |
+| [资源占用与转发边界验收 · 2026-11-04](efficiency-verification-2026-11-04.md) | `efficiency-verification-2026-11-04.md`、`efficiency-measurements-2026-11-04.json` |
 | [Selark 0.4.1：API 极端场景与并发追加验收](api-stress-verification.md) | `api-stress-verification.md` |
 | [六类应用场景：真实回答样本（0.6.2）](application-live-samples.md) | `application-live-samples.md` |
 | [六类应用场景、多轮与并发真实验收（0.6.2）](application-live-verification.md) | `application-live-verification.md` |

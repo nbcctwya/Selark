@@ -1,0 +1,175 @@
+{
+  "date": "2026-11-04",
+  "environment": {
+    "platform": "Linux",
+    "python": "3.12.2",
+    "rss_unit": "bytes",
+    "same_interpreter_and_dependencies": true
+  },
+  "baseline_revision": "4cec838184682187c37840e13b4841c442eff5d5",
+  "frontend_revision": "fb4cecccab6a",
+  "real_provider_requests": 0,
+  "in_process": {
+    "before": [
+      {
+        "python": "3.12.2",
+        "real_provider_requests": 0,
+        "fake_generation_requests": 101,
+        "forwarded_messages_unchanged": true,
+        "reported_tokens": 1414,
+        "idle_seconds": 10.001,
+        "idle_cpu_seconds": 0.008332,
+        "idle_journal_scans": 20,
+        "idle_rss_bytes": 63852544,
+        "requests": 100,
+        "request_wall_seconds": 1.972973,
+        "request_cpu_seconds": 0.926396,
+        "after_requests_rss_bytes": 64348160,
+        "jwt_loaded": true
+      },
+      {
+        "python": "3.12.2",
+        "real_provider_requests": 0,
+        "fake_generation_requests": 101,
+        "forwarded_messages_unchanged": true,
+        "reported_tokens": 1414,
+        "idle_seconds": 10.001,
+        "idle_cpu_seconds": 0.006913,
+        "idle_journal_scans": 20,
+        "idle_rss_bytes": 63623168,
+        "requests": 100,
+        "request_wall_seconds": 2.023597,
+        "request_cpu_seconds": 0.985147,
+        "after_requests_rss_bytes": 64118784,
+        "jwt_loaded": true
+      },
+      {
+        "python": "3.12.2",
+        "real_provider_requests": 0,
+        "fake_generation_requests": 101,
+        "forwarded_messages_unchanged": true,
+        "reported_tokens": 1414,
+        "idle_seconds": 10.001,
+        "idle_cpu_seconds": 0.006124,
+        "idle_journal_scans": 20,
+        "idle_rss_bytes": 63160320,
+        "requests": 100,
+        "request_wall_seconds": 2.061835,
+        "request_cpu_seconds": 0.954184,
+        "after_requests_rss_bytes": 65794048,
+        "jwt_loaded": true
+      }
+    ],
+    "after": [
+      {
+        "python": "3.12.2",
+        "real_provider_requests": 0,
+        "fake_generation_requests": 101,
+        "forwarded_messages_unchanged": true,
+        "reported_tokens": 1414,
+        "idle_seconds": 10.01,
+        "idle_cpu_seconds": 0.000111,
+        "idle_journal_scans": 0,
+        "idle_rss_bytes": 57077760,
+        "requests": 100,
+        "request_wall_seconds": 1.98675,
+        "request_cpu_seconds": 0.936412,
+        "after_requests_rss_bytes": 57614336,
+        "jwt_loaded": false
+      },
+      {
+        "python": "3.12.2",
+        "real_provider_requests": 0,
+        "fake_generation_requests": 101,
+        "forwarded_messages_unchanged": true,
+        "reported_tokens": 1414,
+        "idle_seconds": 10.01,
+        "idle_cpu_seconds": 0.000241,
+        "idle_journal_scans": 0,
+        "idle_rss_bytes": 54915072,
+        "requests": 100,
+        "request_wall_seconds": 2.134808,
+        "request_cpu_seconds": 1.000081,
+        "after_requests_rss_bytes": 57548800,
+        "jwt_loaded": false
+      },
+      {
+        "python": "3.12.2",
+        "real_provider_requests": 0,
+        "fake_generation_requests": 101,
+        "forwarded_messages_unchanged": true,
+        "reported_tokens": 1414,
+        "idle_seconds": 10.005,
+        "idle_cpu_seconds": 0.000121,
+        "idle_journal_scans": 0,
+        "idle_rss_bytes": 56995840,
+        "requests": 100,
+        "request_wall_seconds": 2.270876,
+        "request_cpu_seconds": 1.075444,
+        "after_requests_rss_bytes": 57532416,
+        "jwt_loaded": false
+      }
+    ]
+  },
+  "tcp": {
+    "results": [
+      {
+        "stage": "before",
+        "run": 1,
+        "rss_bytes": 69042176,
+        "idle_seconds": 10,
+        "idle_cpu_seconds": 0.01,
+        "after_idle_rss_bytes": 69042176
+      },
+      {
+        "stage": "before",
+        "run": 2,
+        "rss_bytes": 71069696,
+        "idle_seconds": 10,
+        "idle_cpu_seconds": 0.02,
+        "after_idle_rss_bytes": 71069696
+      },
+      {
+        "stage": "before",
+        "run": 3,
+        "rss_bytes": 69091328,
+        "idle_seconds": 10,
+        "idle_cpu_seconds": 0.02,
+        "after_idle_rss_bytes": 69091328
+      },
+      {
+        "stage": "after",
+        "run": 1,
+        "rss_bytes": 60805120,
+        "idle_seconds": 10,
+        "idle_cpu_seconds": 0.03,
+        "after_idle_rss_bytes": 60805120
+      },
+      {
+        "stage": "after",
+        "run": 2,
+        "rss_bytes": 60768256,
+        "idle_seconds": 10,
+        "idle_cpu_seconds": 0.02,
+        "after_idle_rss_bytes": 60768256
+      },
+      {
+        "stage": "after",
+        "run": 3,
+        "rss_bytes": 61091840,
+        "idle_seconds": 10,
+        "idle_cpu_seconds": 0.03,
+        "after_idle_rss_bytes": 61091840
+      }
+    ],
+    "fake_generation_requests": 6,
+    "real_provider_requests": 0
+  },
+  "source_sha256": {
+    "persistence.py": "2bf78b999aeeef42b4f1ea18c7458f1ab1344205818a4fbc892b02e9b829e59b",
+    "chatgpt_auth.py": "cff59f85bddc1e5b08a100b6bcd4d1d46d649d71821c9ee3b83866f4928a18c2",
+    "runtime.py": "d735f43c96f5ec63fc515287191b33e7b4d0ae4025e6c286c66d982961f2f640",
+    "discovery.py": "f0cdec96edb619dec593ed62e16339f1863faf89049f8889c819b79155b07b05",
+    "management/diagnostics.py": "df8f86e9a297361f6d44b93497efd4203ee421a445df03be7c951d9c6703eecb"
+  }
+}
