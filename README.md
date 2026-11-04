@@ -72,6 +72,21 @@ Dashboard 独立于模型网关运行：只监听 `127.0.0.1`，不自动启动�
 完整使用、统计口径与安全边界见 [Dashboard 说明](docs/dashboard.md)，
 测试、浏览器与安装验收见 [Dashboard 验收](docs/dashboard-verification.md)。
 
+## 独立前端开发：React + TypeScript + Vite
+
+`frontend/` 是独立仓库 [Selark-Web](https://github.com/nbcctwya/Selark-Web)
+的 Git submodule，提供五页组件骨架、类型化接口、内存模拟数据和异常场景，
+由 Claude 设计后再由 Codex 适配。Selark 固定使用经过验收的前端提交。
+
+首次克隆使用 `git clone --recurse-submodules https://github.com/nbcctwya/Selark.git`；
+已有仓库先运行 `git submodule update --init --recursive`。
+运行 `cd frontend`、`npm ci`、`npm run dev` 即可预览，无需 Python、后端服务或真实凭据。
+交接说明见 [CLAUDE.md](https://github.com/nbcctwya/Selark-Web/blob/main/CLAUDE.md)，
+真实接口边界见 [API.md](https://github.com/nbcctwya/Selark-Web/blob/main/API.md)。
+两仓库的开发、更新与提交顺序见 [前端 Git 协作](docs/frontend-development.md)。
+正式构建使用真实 HTTP 适配器，并检查模拟数据不会进入产物。
+本阶段尚未将新前端替换进日常 Dashboard；后续接入需处理构建产物打包及真实接口验收。
+
 ## 0.7.2：审查修复与稳定性加固
 
 修复备份业务结构漏检、损坏订阅影响其他连接、未发送请求错误占用配额、非法及缓存
