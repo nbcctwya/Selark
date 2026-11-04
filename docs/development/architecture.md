@@ -2,6 +2,8 @@
 
 Selark 采用 Python `src/` 布局。可安装代码在 `src/selark/`，测试、维护脚本和文档留在仓库中；React 前端通过固定提交的 Git submodule 引入。这样普通 Python 安装不依赖开发目录和 Node 工具链。
 
+[硬性设计原则与性能预算](design-principles.md) 约束所有模块和未来 Windows/macOS 版本：转发不引入 LLM 加工或提示文本；后台维持一个轻量核心进程，界面按需启动。
+
 ## 目录边界
 
 | 路径 | 职责 |

@@ -1,0 +1,288 @@
+{
+  "date": "2026-11-04",
+  "runtime_baseline_revision": "9f8e4404432d2713817f699a7fbf2acc5769f59e",
+  "budget_limits": {
+    "idle_rss_mib": 72,
+    "idle_cpu_percent": 0.5,
+    "relay_p95_ms": 10
+  },
+  "samples_per_mode": 300,
+  "warmup_pairs_per_mode": 5,
+  "real_provider_requests": 0,
+  "percentile_method": "nearest-rank of signed per-pair relay-minus-direct differences",
+  "calibration_read_timeouts": 2,
+  "calibration_timeout_cause": "undetermined; no request retried; excluded from successful-run percentiles, retained as failures",
+  "measurement_source_sha256": "09e2fa851399a7018294cbdf4565bdf672b39b473ea31dba2e445466ef72d6e8",
+  "runs": [
+    {
+      "version": "0.10.0",
+      "python": "3.12.2",
+      "platform": "Linux",
+      "machine": "x86_64",
+      "concurrency": 1,
+      "samples_per_mode": 300,
+      "warmup_pairs_per_mode": 5,
+      "real_provider_requests": 0,
+      "budgets": {
+        "idle_rss_mib": 72,
+        "idle_cpu_percent": 0.5,
+        "relay_p95_ms": 10
+      },
+      "nonstream": {
+        "direct_ms": {
+          "p50": 0.9863,
+          "p95": 1.5991,
+          "p99": 2.1099
+        },
+        "relay_ms": {
+          "p50": 20.111,
+          "p95": 27.544,
+          "p99": 30.9548
+        },
+        "overhead_ms": {
+          "p50": 19.1552,
+          "p95": 26.5597,
+          "p99": 30.0978
+        },
+        "negative_differences": 0
+      },
+      "stream_first_text": {
+        "direct_ms": {
+          "p50": 1.0225,
+          "p95": 1.6864,
+          "p99": 2.3957
+        },
+        "relay_ms": {
+          "p50": 14.265,
+          "p95": 19.9797,
+          "p99": 23.7468
+        },
+        "overhead_ms": {
+          "p50": 13.162,
+          "p95": 18.9522,
+          "p99": 22.7671
+        },
+        "negative_differences": 0
+      },
+      "stream_complete": {
+        "direct_ms": {
+          "p50": 1.0905,
+          "p95": 1.7941,
+          "p99": 2.6819
+        },
+        "relay_ms": {
+          "p50": 19.7327,
+          "p95": 25.8839,
+          "p99": 30.3262
+        },
+        "overhead_ms": {
+          "p50": 18.6276,
+          "p95": 24.7867,
+          "p99": 29.4118
+        },
+        "negative_differences": 0
+      },
+      "idle": {
+        "seconds": 30.0001,
+        "cpu_seconds": 0.040000000000000036,
+        "cpu_percent": 0.13333293539228525,
+        "rss_bytes": 69316608,
+        "upstream_requests": 0
+      },
+      "fake_direct_generations": 610,
+      "fake_relay_generations": 610,
+      "extra_generations": 0,
+      "forwarded_payloads_unchanged": true,
+      "reported_relay_tokens": 8540,
+      "budget_checks": {
+        "idle_rss": true,
+        "idle_cpu": true,
+        "nonstream_p95": false,
+        "stream_first_text_p95": false
+      },
+      "reference_sample_size": true,
+      "raw_report_sha256": "99b48b141b6f46981a132bd81c2a2404bc40ad6aaa42baabecc8cf98e577c968",
+      "raw_report_local_path": "reports/design-budgets/run-1.json"
+    },
+    {
+      "version": "0.10.0",
+      "python": "3.12.2",
+      "platform": "Linux",
+      "machine": "x86_64",
+      "concurrency": 1,
+      "samples_per_mode": 300,
+      "warmup_pairs_per_mode": 5,
+      "real_provider_requests": 0,
+      "budgets": {
+        "idle_rss_mib": 72,
+        "idle_cpu_percent": 0.5,
+        "relay_p95_ms": 10
+      },
+      "nonstream": {
+        "direct_ms": {
+          "p50": 0.9855,
+          "p95": 1.9529,
+          "p99": 2.7526
+        },
+        "relay_ms": {
+          "p50": 22.3911,
+          "p95": 29.5266,
+          "p99": 33.7711
+        },
+        "overhead_ms": {
+          "p50": 21.2943,
+          "p95": 28.6167,
+          "p99": 31.86
+        },
+        "negative_differences": 0
+      },
+      "stream_first_text": {
+        "direct_ms": {
+          "p50": 0.9933,
+          "p95": 1.8874,
+          "p99": 4.1335
+        },
+        "relay_ms": {
+          "p50": 16.6387,
+          "p95": 22.9114,
+          "p99": 28.5286
+        },
+        "overhead_ms": {
+          "p50": 15.4031,
+          "p95": 22.0163,
+          "p99": 27.5653
+        },
+        "negative_differences": 0
+      },
+      "stream_complete": {
+        "direct_ms": {
+          "p50": 1.0561,
+          "p95": 1.9503,
+          "p99": 4.3493
+        },
+        "relay_ms": {
+          "p50": 22.2394,
+          "p95": 30.1704,
+          "p99": 35.8711
+        },
+        "overhead_ms": {
+          "p50": 21.0135,
+          "p95": 29.0808,
+          "p99": 34.789
+        },
+        "negative_differences": 0
+      },
+      "idle": {
+        "seconds": 30.0001,
+        "cpu_seconds": 0.030000000000001137,
+        "cpu_percent": 0.09999970759418914,
+        "rss_bytes": 69378048,
+        "upstream_requests": 0
+      },
+      "fake_direct_generations": 610,
+      "fake_relay_generations": 610,
+      "extra_generations": 0,
+      "forwarded_payloads_unchanged": true,
+      "reported_relay_tokens": 8540,
+      "budget_checks": {
+        "idle_rss": true,
+        "idle_cpu": true,
+        "nonstream_p95": false,
+        "stream_first_text_p95": false
+      },
+      "reference_sample_size": true,
+      "raw_report_sha256": "5fccbc0935b51f5658ad2fa983c9cfb6418e08c935fad5b8f06151d53cd560fa",
+      "raw_report_local_path": "reports/design-budgets/run-2.json"
+    },
+    {
+      "version": "0.10.0",
+      "python": "3.12.2",
+      "platform": "Linux",
+      "machine": "x86_64",
+      "concurrency": 1,
+      "samples_per_mode": 300,
+      "warmup_pairs_per_mode": 5,
+      "real_provider_requests": 0,
+      "budgets": {
+        "idle_rss_mib": 72,
+        "idle_cpu_percent": 0.5,
+        "relay_p95_ms": 10
+      },
+      "nonstream": {
+        "direct_ms": {
+          "p50": 0.9941,
+          "p95": 1.8907,
+          "p99": 2.5886
+        },
+        "relay_ms": {
+          "p50": 23.5102,
+          "p95": 29.4762,
+          "p99": 34.1424
+        },
+        "overhead_ms": {
+          "p50": 22.3942,
+          "p95": 28.5969,
+          "p99": 33.2801
+        },
+        "negative_differences": 0
+      },
+      "stream_first_text": {
+        "direct_ms": {
+          "p50": 1.0534,
+          "p95": 2.3582,
+          "p99": 4.7087
+        },
+        "relay_ms": {
+          "p50": 18.6506,
+          "p95": 24.9195,
+          "p99": 28.5032
+        },
+        "overhead_ms": {
+          "p50": 17.2764,
+          "p95": 23.5302,
+          "p99": 27.5479
+        },
+        "negative_differences": 0
+      },
+      "stream_complete": {
+        "direct_ms": {
+          "p50": 1.1163,
+          "p95": 2.5028,
+          "p99": 4.8227
+        },
+        "relay_ms": {
+          "p50": 24.6337,
+          "p95": 31.9498,
+          "p99": 33.9131
+        },
+        "overhead_ms": {
+          "p50": 23.3871,
+          "p95": 30.6354,
+          "p99": 33.028
+        },
+        "negative_differences": 0
+      },
+      "idle": {
+        "seconds": 30.0001,
+        "cpu_seconds": 0.049999999999998934,
+        "cpu_percent": 0.1666661571960479,
+        "rss_bytes": 69545984,
+        "upstream_requests": 0
+      },
+      "fake_direct_generations": 610,
+      "fake_relay_generations": 610,
+      "extra_generations": 0,
+      "forwarded_payloads_unchanged": true,
+      "reported_relay_tokens": 8540,
+      "budget_checks": {
+        "idle_rss": true,
+        "idle_cpu": true,
+        "nonstream_p95": false,
+        "stream_first_text_p95": false
+      },
+      "reference_sample_size": true,
+      "raw_report_sha256": "6b056c09ea043a3435902b4f477627ef36fd61f7fdd554d0fb4c27b00cf8198f",
+      "raw_report_local_path": "reports/design-budgets/run-3.json"
+    }
+  ]
+}

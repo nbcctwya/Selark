@@ -100,6 +100,16 @@ jobs:
           selark ask --help
           selark ask --help | grep -- '--interactive'
           selark plans set --help | grep -- 'personal_interactive'
+      - name: Zero-extra-generation and idle invariants
+        if: matrix.python == '3.12'
+        run: |
+          python -m scripts.measure_runtime --check-invariants --idle-seconds 2 --requests 10 --output "$RUNNER_TEMP/selark-idle-invariants.json"
+      - name: Measure relay budgets (informational shared-runner sample)
+        if: matrix.python == '3.12'
+        continue-on-error: true
+        run: |
+          python -m scripts.measure_relay --samples 100 --idle-seconds 10 --output "$RUNNER_TEMP/selark-relay-budget.json"
+        # Sampling failures stay explicit in JSON; reference-host acceptance uses --check-budget.
       - name: Installed model discovery, explicit approval and read-only Dashboard (fake upstream only)
         if: matrix.python != '3.12'
         run: |

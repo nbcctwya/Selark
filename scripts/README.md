@@ -13,6 +13,7 @@
 | 多资源与应用隔离 | `verify_resource_matrix.py`、`verify_multi_app.py` |
 | 服务、备份、日志与历史查询 | `verify_operations.py` |
 | 空闲 CPU、内存与模拟转发对比 | `measure_runtime.py` |
+| 本机直连/中转逐对 p95 与核心预算 | `measure_relay.py`（以 `python -m scripts.measure_relay` 运行） |
 | 显式真实调用验收 | `verify_live.py`、`verify_multiconnection_live.py`、`verify_api_live_stress.py`、`verify_four_api_live.py` |
 | 特定供应商的显式验收 | `verify_mimo_credit.py`、`verify_mimo_credit_extra.py`、`verify_relay_stress.py`、`verify_openai_luna.py`、`verify_mimo_extended.py` |
 | 合成场景与离线回答检查 | `application_scenarios.py`、`mimo_extended_cases.py`、`check_application_code.py` |
@@ -25,10 +26,13 @@ python -m scripts.export_dashboard_fixtures
 python -m scripts.export_api_contracts --frontend
 python scripts/verify_dashboard.py --help
 python scripts/measure_runtime.py --idle-seconds 10 --requests 100
+python -m scripts.measure_relay --output /tmp/selark-relay-budget.json
 ```
 
 前端契约导出和资源打包需要先初始化子模块。资源打包另需在 `frontend/` 按锁文件安装 Node 依赖；`build_dashboard.py --check` 校验重新构建的产物，刚运行过前端构建时可加 `--skip-build`。浏览器验收另外需要 `requirements-dashboard.lock` 中的依赖；标准参数见 [CI 工作流](../.github/workflows/ci.yml)。
 OpenAPI 导出本身不需要个人配置或数据库，`--check --frontend` 检查后端文件与前端副本；维护流程见 [接口文档](../docs/api/README.md)。
+
+`measure_runtime.py --check-invariants` 检查健康空闲零扫描、普通转发不加载 JWT；默认仍可用于前后版本对比。`measure_relay.py` 只启动临时核心与回环模拟上游，分别报告普通响应和 SSE 首段的逐对额外延迟，以及仅核心 PID 的 RSS/CPU。默认 300 对/模式、30 秒空闲；参考环境加 `--check-budget` 才将性能未达标变成非零退出码，报告始终保存。预算与验收口径见 [硬性设计原则](../docs/development/design-principles.md)。
 
 真实验收脚本的参数、额度与授权边界各不相同，不属于常规测试，也不应作为批量默认入口。对应历史证据见 [验收索引](../docs/verification/README.md)。
 新生成的原始输出放在 Git 忽略的 `reports/` 或系统临时目录；审阅后的说明与脱敏 JSON 才放入 `docs/verification/`。

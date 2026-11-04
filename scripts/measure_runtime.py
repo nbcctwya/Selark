@@ -128,9 +128,15 @@ def main():
     arguments = argparse.ArgumentParser(description=__doc__)
     arguments.add_argument("--idle-seconds", type=float, default=10)
     arguments.add_argument("--requests", type=int, default=100)
+    arguments.add_argument("--output", type=Path)
+    arguments.add_argument(
+        "--check-invariants", action="store_true", help="Reject idle scans or eager JWT loading."
+    )
     args = arguments.parse_args()
     if not 0 < args.idle_seconds <= 60 or not 1 <= args.requests <= 10000:
         arguments.error("idle-seconds must be in (0, 60], requests in [1, 10000]")
+    if args.check_invariants and args.idle_seconds < 2:
+        arguments.error("checking idle behaviour requires at least 2 seconds")
     # Include command parsing imports, as in an ordinary selark serve process.
     parser()
     for name in list(os.environ):
@@ -143,7 +149,14 @@ def main():
             result = asyncio.run(
                 measure(runtime, idle_seconds=args.idle_seconds, requests=args.requests)
             )
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    document = json.dumps(result, ensure_ascii=False, indent=2)
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(document + "\n")
+    print(document)
+    if args.check_invariants:
+        assert result["idle_journal_scans"] == 0, "Healthy idle recovery polled the filesystem."
+        assert not result["jwt_loaded"], "Ordinary API relay loaded OAuth crypto dependencies."
 
 
 if __name__ == "__main__":

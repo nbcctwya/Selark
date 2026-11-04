@@ -2,6 +2,8 @@
 
 Selark 的 Python 后端和集成代码在本仓库，React 页面在 [Selark-Web](https://github.com/nbcctwya/Selark-Web) 独立维护。模块分工见 [架构说明](docs/development/architecture.md)。
 
+所有改动必须遵守 [硬性设计原则与性能预算](docs/development/design-principles.md)：零额外模型调用、零自动提示文本、单核心进程和按需 Dashboard。性能用同环境模拟负载实测，不通过削弱权限、落账或恢复来达标；未达到的预算必须明确记录。
+
 ## 开发环境
 
 ```bash
@@ -43,6 +45,8 @@ npm run test:browser
 
 浏览器验收包含类型检查、正式构建、模拟代码隔离检查和页面交互。Linux 需要浏览器系统运行库。
 常规 CI 还验证安装后的 CLI、Dashboard、本机服务、并发与恢复，定义见 [工作流](.github/workflows/ci.yml)。维护脚本入口见 [scripts/README.md](scripts/README.md)。
+
+性能改动在固定环境运行 `python -m scripts.measure_relay --check-budget --output /tmp/selark-relay-budget.json`；它以模拟上游比较直连/中转，不调用真实模型。未达标保留报告并说明原因。共享 CI 产出性能报告，同时用 `measure_runtime.py --check-invariants` 强制检查空闲零扫描和按需依赖加载。
 
 ## 放置新代码
 
