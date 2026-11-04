@@ -1,6 +1,8 @@
 """Dashboard security, accounting and strict read-only regression tests. Fake data only."""
 
+import hashlib
 import json
+import re
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -11,7 +13,7 @@ from selark import dashboard_data as data
 from selark.chatgpt_auth import PLAN_SCOPES, ChatGPTAuth, Profile
 from selark.cli import main
 from selark.config import ConfigError, _write_private, initialize, server_document
-from selark.dashboard import Session, create_dashboard
+from selark.dashboard import ASSETS, Session, create_dashboard
 from selark.runtime import fingerprint
 from selark.storage import utc_now
 
@@ -506,11 +508,23 @@ def test_cli_dispatch_readonly_option_and_assets_are_packaged(runtime, monkeypat
     )
     assert calls[0][1] == {"port": 8795, "open_browser": False, "offline": True, "read_only": True}
     with dashboard(runtime.directory, offline=True) as client:
-        for path in ("/", "/assets/style.css", "/assets/app.js", "/assets/mark.svg"):
-            result = client.get(path)
+        manifest = json.loads((ASSETS / "manifest.json").read_text())
+        index = client.get("/").text
+        assert '<div id="root"></div>' in index
+        references = set(re.findall(r'(?:src|href)="(/[^" ]+)"', index))
+        assert references and references <= {"/" + name for name in manifest["files"]}
+        assert {p.relative_to(ASSETS).as_posix() for p in ASSETS.rglob("*") if p.is_file()} == (
+            set(manifest["files"]) | {"manifest.json"}
+        )
+        for name, checksum in manifest["files"].items():
+            result = client.get("/" if name == "index.html" else "/" + name)
             assert result.status_code == 200
+            assert hashlib.sha256(result.content).hexdigest() == checksum
             assert "no-store" in result.headers["cache-control"]
+            assert "script-src 'self'" in result.headers["content-security-policy"]
             assert UPSTREAM_KEY not in result.text
+        for path in ("/manifest.json", "/.vite/manifest.json", "/src/main.tsx"):
+            assert client.get(path).status_code == 404
 
 
 def test_default_http_port_origin_normalization_and_duplicate_headers(runtime):

@@ -16,7 +16,7 @@ Python 3.11+，使用 FastAPI、HTTPX 和 SQLite。当前版本 **0.10.0**，日
 - 文本请求与 SSE：提供 OpenAI Chat Completions 的文本子集，支持多轮消息、取消、超时和有界排队。
 - 模型治理：模型发现、启用、应用授权、历史验证分别管理；调用方令牌可以限定连接、模型和额度。
 - 用量与恢复：SQLite 调用记录、Token 与费用估算、日志、备份、迁移及中断恢复。
-- 本机 Dashboard：概览、连接与模型、用量、应用、运行监控；支持模型启停和默认模型清除确认。
+- 本机 Dashboard：概览、连接与模型、用量、应用、运行监控；支持连接配置与 Key 轮换、模型发现/审批/默认值、应用创建/策略/配额/撤销。
 - 日常管理 API：连接配置、模型发现与批量启停、默认模型、应用令牌和权限；供独立前端接入，见 [接口契约](docs/development/management-api.md)。
 
 调用明确选择资源，不自动切换收费来源。费用是估算，未知用量保留为未知。当前网关处理文本，不提供图片、音视频、工具调用或远程管理接口。
@@ -31,7 +31,7 @@ cd Selark
 pipx install .
 ```
 
-普通安装包含现有 Dashboard，无需安装 Node.js。解释器选择、升级及 pipx 路径见 [安装指南](docs/guides/installation.md)。
+普通安装包含 React Dashboard，无需安装 Node.js。解释器选择、升级及 pipx 路径见 [安装指南](docs/guides/installation.md)。
 
 首次使用时初始化本机配置，并明确选择要启用的模型：
 
@@ -77,8 +77,8 @@ selark dashboard
 src/selark/           Python 运行时代码
   management/        本机管理命令的解析、执行、诊断与连接操作
   providers/         供应商协议适配器
-  dashboard_assets/  当前随 Python 包发布的界面
-frontend/            Selark-Web Git 子模块，独立 React 前端
+  dashboard_assets/  Selark-Web 正式构建，随 Python 包发布
+frontend/            Selark-Web Git 子模块，Dashboard 的 React 源码
 tests/               按功能组织的回归测试与共享测试支持
 scripts/             仓库检查、合成验收与显式真实验收工具
 config/              服务端、客户端与连接配置占位示例

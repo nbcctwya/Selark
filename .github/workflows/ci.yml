@@ -35,6 +35,8 @@ jobs:
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
+      - name: Packaged Dashboard matches the pinned frontend
+        run: python ../scripts/build_dashboard.py --check --skip-build
       - name: Preserve frontend browser diagnostics (synthetic fixtures only)
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -108,7 +110,6 @@ jobs:
         run: |
           python -m pip install -r requirements-dashboard.lock
           python -m playwright install --with-deps chromium
-          node --check src/selark/dashboard_assets/app.js
           python scripts/verify_dashboard.py --selark "$(command -v selark)" --browser-output "$RUNNER_TEMP/selark-dashboard-screenshots" --output "$RUNNER_TEMP/selark-dashboard-browser.json"
           python scripts/verify_dashboard_controls.py --selark "$(command -v selark)" --browser-output "$RUNNER_TEMP/selark-dashboard-screenshots" --output "$RUNNER_TEMP/selark-dashboard-controls-browser.json"
       - name: Local TCP and process recovery (fake upstream only)

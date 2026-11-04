@@ -1,9 +1,33 @@
-# Dashboard V0.1 验收记录
+# Dashboard 验收记录
+
+## React 页面接入 · 2026-11-04
+
+以 Selark-Web 的 `claude/upbeat-lovelace-87ubf5`（`c656d19`）为设计来源，在独立适配分支修正并接入 Python Dashboard。接口规范和依赖保持不变；普通 Python 安装使用包内 React 正式构建，无需 Node。资源清单记录前端提交与 SHA-256，CI 重新构建并检查一致性。
+
+本轮在 Linux / WSL、Python 3.12、Node 22.22.3、Chromium 下验证：
+
+- Python 完整回归 **824 项通过**，前端单元测试 **23 项通过**，前端浏览器流程 **11 项通过**；复用现有用例，没有增加 Python 用例数量。
+- 从 sdist 构建 wheel，在独立临时环境安装并从仓库外启动，完成真实 HTTP 服务的只读与管理浏览器验收。
+- 五页、筛选、分页、详情、1440px / 390px、深浅主题、CSP、刷新保留会话和跨端口身份隔离通过；只读验收前后配置/账本/OAuth/备份内容哈希不变。
+- 管理验收实际完成连接创建/Key 轮换、模型发现/批量审批/默认值，以及应用创建/配额/策略/撤销；旧版本修改返回 409，需要再次明确操作。
+- 修正详情读取的 401 清理与超时、创建期间的误关闭、真实长度应用标识的手机溢出；模型开关点击区为 44 × 44 像素。
+- 运行中监听端口不会被接管，同一端口关闭后连续重启三次通过；原应用权限与生成请求账本保持不变。
+- 浏览器脚本/CSP 错误、外部浏览器请求、真实供应商与模型生成请求均为 **0**。模型发现仅调用临时本机假供应商。
+
+代码检查、资源清单检查与敏感信息检查通过。保留一条既有 Starlette / HTTPX TestClient 弃用提示。浏览器覆盖 Chromium；本轮仅使用临时安装环境，用户日常安装需要另外更新。
+
+以下截图来自临时合成账本，不代表个人用量或真实供应商可用性：
+
+![React Dashboard 浅色概览，临时合成数据](../assets/dashboard-react-overview.png)
+
+复现流程见 [前端 Git 协作](../development/frontend-development.md)，远端状态见 [GitHub Actions](https://github.com/nbcctwya/Selark/actions/workflows/ci.yml)。
+
+## V0.1 历史记录
 
 2026-10-31，Selark 0.8.0，Linux / Python 3.12.2。
 机器可读结果见 [dashboard-verification.json](dashboard-verification.json)。
 
-## 交付
+### 交付
 
 `selark dashboard` 打开本地只读仪表盘；默认 `127.0.0.1:8790`，独立管理会话。
 资源概览、连接与模型、用量分析、应用管理、运行监控五个页面均已实现。
@@ -15,7 +39,7 @@
 
 ![本地 Dashboard 浅色界面，隔离合成数据](../assets/dashboard-overview.png)
 
-## 回归与安全
+### 回归与安全
 
 - **656 项测试通过**，其中 **39 项 Dashboard 回归**；耗时 54.53 秒。
 - 一条既有 Starlette / HTTPX TestClient 弃用提示，不影响结果，未调整既有运行依赖。
@@ -31,7 +55,7 @@
 - 汇总与 CLI 核算一致；时间含开始不含结束，支持时区换算；成功率排除进行中 / 状态未知，
   无时间戳记录明确排除。健康响应只访问本机，并限制返回字段的类型。
 
-## 浏览器与安装
+### 浏览器与安装
 
 Chromium 145 / Playwright 1.58.0 在真实本地 HTTP 服务上完成验收：
 
@@ -55,7 +79,7 @@ wheel 与 sdist 均包含静态资源，`pip check` 无依赖问题，没有新�
 安装前后及查询前后 **163 份配置、OAuth、账本和备份相关文件内容哈希一致**。
 共享内存、WAL、锁文件和运行日志不列入静态文件哈希比较。未触发真实模型调用、OAuth 刷新或供应商额度查询。
 
-## CI 与范围
+### CI 与范围
 
 保留原工作区已有 CI 和验证脚本改动，新增：
 

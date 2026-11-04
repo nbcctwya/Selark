@@ -11,8 +11,8 @@ Selark 采用 Python `src/` 布局。可安装代码在 `src/selark/`，测试�
 | `src/selark/providers/` | 各供应商协议及文本响应适配 |
 | `src/selark/dashboard_api/` | 日常管理的 HTTP 路由、请求结构和公开业务数据 |
 | `src/selark/contracts/` | 公开响应字段、接口目录及离线 OpenAPI 导出；不参与运行时响应过滤 |
-| `src/selark/dashboard_assets/` | 当前随 Python 包发布的 Dashboard |
-| `frontend/` | Selark-Web 子模块；独立设计和模拟开发，后续接入正式页面 |
+| `src/selark/dashboard_assets/` | 固定前端提交生成的 React 正式资源与校验清单 |
+| `frontend/` | Selark-Web 子模块；Dashboard 页面源码，支持独立设计、模拟开发与正式构建 |
 | `tests/` | 按领域命名的回归用例；`support/` 提供共享的合成响应与账本构造 |
 | `scripts/` | 仓库检查、数据契约导出、进程验收和显式真实验收工具 |
 | `config/` | 服务端、客户端和连接文件的占位模板 |
@@ -60,7 +60,7 @@ flowchart TD
 
 ## 界面与平台
 
-当前 Dashboard 由 `dashboard.py` 提供同源 API 与 `dashboard_assets/` 静态文件，`dashboard_data.py` 只投影允许公开到页面的数据。
+当前 Dashboard 由 `dashboard.py` 提供同源 API 与 `dashboard_assets/` 静态文件，`dashboard_data.py` 只投影允许公开到页面的数据。React 源码在 `frontend/` 子模块；`scripts/build_dashboard.py` 将其正式构建与提交/hash 清单同步到包内，CI 校验二者一致。静态资源只开放清单内的文件，普通 Python 安装不需要 Node。
 `dashboard_api/` 在同一管理会话边界内提供连接、模型和应用操作；复用领域模块，独立于页面实现。
 应用写入使用只打开已有账本的模式，HTTP 管理不触发初始化或迁移。接口契约见 [日常管理 API](management-api.md)。
 Selark-Web 中的 `DashboardApi` 把组件与模拟/HTTP 数据源分开。前端目录是独立 Git 仓库，改动和版本引用需要分别提交。

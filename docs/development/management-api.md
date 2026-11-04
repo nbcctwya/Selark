@@ -341,5 +341,5 @@ GET `/api/applications/{id}/quota` 返回 `{id, ...quota}`，其中 `quota` 与�
 不会创建、迁移、修复或恢复账本，也不会从旧凭据重新生成应用令牌。缺失或旧版状态返回 503。
 
 服务启动/停止、备份恢复、迁移、OAuth 登录退出、价格与别名编辑仍由 CLI 提供。
-新 API 不替换既有页面；Claude 可据此补充 Selark-Web 的类型、模拟实现、表单和确认流程，
-再按 [前端 Git 协作](frontend-development.md) 交付具体提交进行联调。
+Selark-Web 的 React 页面已接入这些 API、模拟实现、表单和确认流程；
+后续页面更新按 [前端 Git 协作](frontend-development.md) 交付具体提交并联调。

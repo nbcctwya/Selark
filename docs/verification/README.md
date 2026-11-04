@@ -16,7 +16,7 @@
 | [0.10.0 Core 与 Dashboard 高强度验收](core-010-stress-verification.md) | `core-010-stress-verification.md` |
 | [覆盖检查与修复验收（0.6.3）](coverage-review-verification.md) | `coverage-review-verification.md` |
 | [0.10.0 模型按钮与端口验收](dashboard-controls-verification.md) | `dashboard-controls-verification.md` |
-| [Dashboard V0.1 验收记录](dashboard-verification.md) | `dashboard-verification.md` |
+| [Dashboard React 接入与 V0.1 历史验收](dashboard-verification.md) | `dashboard-verification.md` |
 | [已启用模型实测 · 2026-10-31](enabled-models-verification-2026-10-31.md) | `enabled-models-verification-2026-10-31.md` |
 | [四 API 并发与极端场景验收](four-api-concurrency-verification.md) | `four-api-concurrency-verification.md` |
 | [Selark 0.5.0 验收记录](governance-verification.md) | `governance-verification.md` |

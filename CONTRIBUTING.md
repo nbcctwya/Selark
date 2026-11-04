@@ -59,4 +59,4 @@ npm run test:browser
 ## 前端交接
 
 先提交并推送 Selark-Web 的代码，再在本仓库更新 `frontend/` 引用和后端适配。开发分支、固定提交和契约更新步骤见 [前端 Git 协作](docs/development/frontend-development.md)。
-现有 `dashboard_assets/` 仍是已安装 Dashboard 的来源；前端子模块的构建不会自动替换它。
+在前端提交后运行 `python scripts/build_dashboard.py`，将正式构建与提交/hash 清单更新到 `src/selark/dashboard_assets/`。这些生成文件与子模块引用一起提交；CI 校验二者一致。普通 Python 安装无需 Node。

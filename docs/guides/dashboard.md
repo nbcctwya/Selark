@@ -1,8 +1,8 @@
-# 本地 Web Dashboard V0.2
+# 本地 Web Dashboard
 
-Selark 的本地个人 AI 资源控制台。现有页面浏览 API、Token Plan 和 ChatGPT 订阅，并明确启用/禁用连接中的模型。
-后端还提供连接配置、模型发现/批量审批/默认值、应用令牌及权限管理接口，供独立前端接入，
-详见 [日常管理 API](../development/management-api.md)。这些新接口尚未增加到现有页面的表单中。
+Selark 的本地个人 AI 资源控制台，采用独立仓库 Selark-Web 的 React 页面。
+支持连接新增/编辑与 Key 轮换、显式模型发现、单个/批量启停、默认模型，以及应用创建、权限与配额编辑、令牌撤销。
+接口细节见 [日常管理 API](../development/management-api.md)，开发与版本交接见 [前端 Git 协作](../development/frontend-development.md)。
 
 ## 启动与安装
 
@@ -18,7 +18,7 @@ selark dashboard
 仅关闭浏览器标签页不会结束 Dashboard 进程。0.10 修复关闭服务后 TCP 连接残留导致端口暂时无法重用；
 若仍提示端口不可用，用 `ss -ltnp 'sport = :8790'` 检查实际监听，或显式选择其他端口。
 会话最长 8 小时，过期后关闭原 Dashboard 并重新运行命令。重新启动后旧会话全部失效。
-同一浏览器的其他标签页可直接打开根地址，未登录的其他浏览器需重新启动取得新链接。
+当前标签页刷新可继续使用会话；会话按标签页保存，未登录的新标签页或其他浏览器需取得新的管理链接。
 
 ```bash
 selark dashboard --no-open           # 不自动打开浏览器
@@ -33,7 +33,8 @@ selark --config-dir /absolute/profile dashboard
 在 WSL 中可用 `--no-open` 后手动在本机浏览器打开终端链接；是否能跨 WSL / Windows
 访问回环地址取决于宿主网络设置，本阶段不提供端口暴露或远程转发。
 
-前端静态文件随 wheel / sdist 分发，不需要 Node、构建步骤、CDN、外部字体或浏览器扩展。
+React 正式构建随 wheel / sdist 分发，普通安装不需要 Node、构建步骤、CDN、外部字体或浏览器扩展。
+更新源码或前端子模块后，已安装的 Selark 不会自行升级；按 README 更新安装并重启 Dashboard 才会使用新页面。
 网关未运行时仍可查看历史记录；首次未配置时显示空状态，不自动 `init` 或迁移旧账本。
 
 ## 页面与统计口径
@@ -43,12 +44,12 @@ selark --config-dir /absolute/profile dashboard
 | 资源概览 | 当前筛选的用量、费用、成功率、耗时、历史趋势；全部连接和本机健康快照 |
 | 连接与模型 | 发现、启用、应用获权、历史能力四层数量；每模型的目录状态、权限、协议/模式/时间及历史套餐窗口；实时可用性未知 |
 | 用量分析 | 最近 24 小时 / 7 / 30 / 90 天或不超过 366 天的自定义范围；应用、连接、模型交叉筛选；图表与数据表 |
-| 应用管理 | 普通调用方的有效 / 撤销状态、资源权限、并发和频率限制、UTC 今日 Token 与估算预算占用；无令牌明文或摘要 |
+| 应用管理 | 普通调用方的有效 / 撤销状态、资源权限、并发和频率限制、UTC 今日 Token 与估算预算占用；创建时仅一次展示新令牌，列表与详情不提供令牌查询 |
 | 运行监控 | 本机 `/health` 报告的全局并发、队列与落账状态；分页异常记录、结构化日志、备份清单 |
 
 0.8.1 起首页资源池显示全部连接，超过卡片高度时可滚动查看。
 在终端新增普通 API 连接时，模型留空默认自动发现。管理 API 新增连接则只保存配置，模型发现由独立操作显式触发；
-现有页面的自动刷新和查询不会访问供应商。
+页面的自动刷新和查询不会访问供应商；点击「发现模型」才会读取供应商目录。
 0.9.0 起自动发现只保存目录，未启用模型不会进入可调用资源池。连接详情同时展示目录与启用列表，
 包括已下架但仍启用的模型；应用策略匹配数与有效授权分别展示。历史能力按当前连接配置和文本普通/SSE
 证据计数，不将旧版本范围未知的记录补标为通过。旧账本需先停服并执行 `selark migrate`；Dashboard 自身不迁移。
@@ -77,7 +78,7 @@ selark --config-dir /absolute/profile dashboard
 
 页面可手动刷新，前台可见时每 30 秒自动刷新；打开详情、聚焦内容控件、页面隐藏或上一次刷新未完成时暂停自动刷新。
 同一查询复用最多 10 秒的内存快照，并显示快照时间。读取失败时明确标记旧快照；会话失效则清空页面数据。
-读取超过 20 秒会提示超时。调用列表使用汇总返回的相同时间边界，避免滚动窗口在两次查询间偏移。
+查询（包括设置详情）超过 20 秒会提示超时；手动模型发现单独等待约 45 秒。调用列表使用汇总返回的相同时间边界，避免滚动窗口在两次查询间偏移。
 概览显示最近 6 条记录，分析与监控每页 25 条；模型分布取调用数前 10 名。历史模型 / 连接选项各最多 1,000 个。
 
 ## 安全与实现
@@ -120,9 +121,9 @@ GET /api/backups
 [MDN CSP frame-ancestors](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/frame-ancestors)
 与 [Referrer-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Referrer-Policy)。
 
-`dashboard_data.py` 使用 `Runtime(readonly=True)` 和 SQLite `mode=ro` / `query_only`；
+查询路径 `dashboard_data.py` 使用 `Runtime(readonly=True)` 和 SQLite `mode=ro` / `query_only`；
 复用 `overview`、`Store.summary` / 账本校正和配额逻辑，接口输出显式筛选字段。
-不会初始化数据目录、迁移、恢复、写配置、修改令牌或刷新 OAuth。SQLite 在 WAL 模式下可能维护其共享内存，
+这些查询不会初始化数据目录、迁移、恢复、写配置、修改令牌或刷新 OAuth。管理表单的显式提交由独立写入接口处理。SQLite 在 WAL 模式下可能维护其共享内存，
 网关收到健康查询可能按原机制写访问事件；二者均不改变配置、权限或调用账本。需要完全离线时使用 `--offline`。
 
 本地查询与修改串行化、使用后台线程执行；显式模型发现单独执行，不阻塞本地操作，每次最多一个。
@@ -138,13 +139,15 @@ python -m pip install --no-deps --no-build-isolation .
 ruff check .
 ruff format --check .
 pytest -q
-python scripts/verify_dashboard.py --selark /absolute/path/to/selark
+python scripts/verify_dashboard.py --selark /absolute/path/to/selark --output /tmp/dashboard.json
 
 # 可选的开发 / CI 浏览器验收依赖；产品运行不需要
 python -m pip install -r requirements-dashboard.lock
 python -m playwright install chromium
 python scripts/verify_dashboard.py --selark /absolute/path/to/selark \
-  --browser-output /tmp/selark-dashboard-screenshots
+  --browser-output /tmp/selark-dashboard-screenshots --output /tmp/dashboard-browser.json
+python scripts/verify_dashboard_controls.py --selark /absolute/path/to/selark \
+  --browser-output /tmp/selark-dashboard-screenshots --output /tmp/dashboard-controls.json
 ```
 
 验收脚本仅创建临时合成账本和虚构凭据，明确输出 `fixture_only: true` 与零真实供应商请求，

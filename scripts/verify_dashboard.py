@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import queue
+import re
 import signal
 import subprocess
 import tempfile
@@ -18,6 +19,7 @@ from urllib.parse import urlsplit
 import httpx
 
 from selark.config import initialize
+from selark.dashboard import ASSET_FILES
 from selark.governance import Price
 from selark.model_state import protocol
 from selark.runtime import Runtime, capability_fingerprint, fingerprint
@@ -335,102 +337,113 @@ def browser_checks(url, output, first_caller):
 
     output.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch()
+        browser = playwright.chromium.launch(
+            executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE")
+        )
         context = browser.new_context(
             viewport={"width": 1440, "height": 1050}, locale="zh-CN", color_scheme="light"
         )
         page = context.new_page()
-        errors = []
-        requests = []
+        errors, requests = [], []
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.on(
             "console",
             lambda message: errors.append(message.text) if message.type == "error" else None,
         )
         page.on("request", lambda request: requests.append(request.url))
+        nav = page.get_by_role("navigation", name="主导航")
         page.goto(url)
-        expect(page.locator(".metrics")).to_be_visible()
-        expect(page.locator("#freshness")).to_contain_text("快照")
+        expect(page.get_by_role("region", name="所选范围的用量汇总")).to_be_visible()
         assert not urlsplit(page.url).fragment
         assert not page.evaluate("document.cookie")
         check_browser_session_isolation(page, context, url)
-        assert page.locator(".chart-bar").count() > 0
-        assert page.evaluate("money('0.000016000')") == "0.000016"
-        expect(page.locator(".resource-row")).to_have_count(6)
-        page.locator('.resource-list [data-connection="openai"]').click()
-        expect(page.locator("#detail-content")).to_contain_text("openai-fixture-small")
-        for label in ("01 发现目录", "02 明确启用", "03 应用获权", "04 历史能力"):
-            expect(page.locator("#detail-content")).to_contain_text(label)
-        disabled = page.locator(".model-table tbody tr").filter(has_text="openai-fixture-small")
+        expect(page.get_by_role("img", name="Token每日趋势", exact=False)).to_be_visible()
+        page.screenshot(path=str(output / "overview-light.png"), full_page=True)
+        nav.get_by_role("button", name="连接与模型", exact=True).click()
+        expect(page.locator(".entity-card")).to_have_count(6)
+        expect(page.get_by_role("button", name="新建连接")).to_be_disabled()
+        page.screenshot(path=str(output / "resources-light.png"), full_page=True)
+        for label in ("发现目录", "明确启用", "应用获权", "历史能力"):
+            expect(page.get_by_role("region", name="全部连接的模型四层状态")).to_contain_text(label)
+        page.get_by_role("button", name="OpenAI", exact=True).click()
+        detail = page.get_by_role("dialog", name="OpenAI", exact=True)
+        expect(detail).to_contain_text("openai-fixture-small")
+        disabled = detail.locator(".model-row").filter(has_text="openai-fixture-small")
         expect(disabled).to_contain_text("未启用")
-        expect(disabled).to_contain_text("无有效授权")
+        expect(disabled).to_contain_text("0 生效")
         expect(disabled).to_contain_text("尚无模型级证据")
+        expect(detail.get_by_role("switch")).to_have_count(0)
+        expect(detail.get_by_role("button", name="重新发现")).to_be_disabled()
         page.screenshot(path=str(output / "model-layers-light.png"), full_page=True)
         page.keyboard.press("Escape")
-        page.screenshot(path=str(output / "overview-light.png"), full_page=True)
-        page.locator('[data-view="resources"]').click()
-        expect(page.locator(".connection-card")).to_have_count(6)
-        expect(page.locator(".connection-card .model-layers")).to_have_count(6)
-        page.screenshot(path=str(output / "resources-light.png"), full_page=True)
-        page.locator('[data-connection="coding"]').click()
-        expect(page.locator("#details")).to_be_visible()
-        expect(page.locator("#detail-content")).to_contain_text("当前剩余 Token")
+        page.get_by_role("button", name="Kimi Coding Plan", exact=True).click()
+        detail = page.get_by_role("dialog", name="Kimi Coding Plan")
+        detail.get_by_role("tab", name="官方套餐窗口").click()
+        expect(detail).to_contain_text("当前剩余 Token")
         page.keyboard.press("Escape")
-        expect(page.locator("#details")).not_to_be_visible()
-        page.locator('[data-view="usage"]').click()
-        page.locator("#caller_id").select_option(first_caller)
-        expect(page.locator("#refresh")).to_be_enabled()
-        expect(page.locator("#content")).to_contain_text("Cursor Workspace")
-        for metric in ("requests", "cost", "success", "latency", "tokens"):
-            page.locator(f'[data-metric="{metric}"]').click()
-            expect(page.locator(f'[data-metric="{metric}"]')).to_have_attribute(
-                "aria-pressed", "true"
+        expect(page.get_by_role("dialog")).to_have_count(0)
+        nav.get_by_role("button", name="用量分析", exact=True).click()
+        page.get_by_label("应用", exact=True).select_option(first_caller)
+        expect(page.get_by_label("应用", exact=True)).to_have_value(first_caller)
+        for metric in ("调用", "费用估算", "成功率", "平均耗时", "Token"):
+            button = page.get_by_role("radiogroup", name="图表指标").get_by_role(
+                "radio", name=metric, exact=True
             )
-        page.locator("#period").select_option("custom")
-        page.locator("#since").fill("2000-01-01T00:00")
-        page.locator("#until").fill("2000-01-02T00:00")
-        page.locator("#apply-range").click()
-        expect(page.locator("#content")).to_contain_text("这个时段还没有调用记录")
-        page.locator("#reset-filters").click()
-        expect(page.locator(".chart-bar").first).to_be_visible()
-        page.locator("#next").click()
-        expect(page.locator(".page-count")).to_contain_text("26–50")
-        page.locator('[data-record="0"]').click()
-        expect(page.locator("#details")).to_be_visible()
-        assert "fixture-private-error-never-expose" not in page.locator("#details").inner_text()
-        page.locator("#close-details").click()
-        page.locator('[data-view="applications"]').click()
-        expect(page.locator(".application-card")).to_have_count(5)
-        page.locator("[data-application]").first.click()
-        expect(page.locator("#detail-content")).to_contain_text("允许模型")
+            button.click()
+            expect(button).to_have_attribute("aria-checked", "true")
+        page.get_by_role("radio", name="自定义").click()
+        page.get_by_label("开始时间").fill("2000-01-01T00:00")
+        page.get_by_label("结束时间").fill("2000-01-02T00:00")
+        page.get_by_role("button", name="应用时间").click()
+        expect(page.get_by_text("这个时段还没有调用记录").first).to_be_visible()
+        page.get_by_role("button", name="重置筛选").click()
+        pager = page.get_by_role("navigation", name="调用记录分页")
+        expect(pager).to_contain_text("1–25")
+        pager.get_by_role("button", name="下一页").click()
+        expect(pager).to_contain_text("26–50")
+        page.get_by_role("button", name=re.compile(r"^查看 .+ 详情$")).first.click()
+        expect(page.get_by_role("dialog")).to_contain_text("调用详情")
+        assert "fixture-private-error-never-expose" not in page.get_by_role("dialog").inner_text()
+        page.get_by_role("button", name="关闭详情").click()
+        nav.get_by_role("button", name="应用管理", exact=True).click()
+        expect(page.locator(".entity-card")).to_have_count(5)
+        expect(page.get_by_role("button", name="新建应用")).to_be_disabled()
+        page.get_by_role("button", name="Cursor Workspace", exact=True).click()
+        expect(page.get_by_role("dialog")).to_contain_text("已扣除或预留 Token")
         page.keyboard.press("Escape")
-        page.locator('[data-view="monitor"]').click()
-        expect(page.locator("#content")).to_contain_text("完整性未检查")
-        expect(page.locator(".log-line")).to_have_count(1)
+        nav.get_by_role("button", name="运行监控", exact=True).click()
+        expect(page.get_by_role("main")).to_contain_text("完整性未检查")
+        expect(page.locator(".log-list > li")).to_have_count(1)
         page.screenshot(path=str(output / "monitor-light.png"), full_page=True)
-        page.locator('[data-view="overview"]').click()
-        page.locator("#theme").click()  # system -> light
-        page.locator("#theme").click()  # light -> dark
+        nav.get_by_role("button", name="资源概览", exact=True).click()
+        page.get_by_role("radiogroup", name="主题").get_by_role(
+            "radio", name="深色", exact=True
+        ).click()
         expect(page.locator("html")).to_have_attribute("data-theme", "dark")
         page.screenshot(path=str(output / "overview-dark.png"), full_page=True)
         page.reload()
-        expect(page.locator(".metrics")).to_be_visible()
+        expect(page.get_by_role("region", name="所选范围的用量汇总")).to_be_visible()
         expect(page.locator("html")).to_have_attribute("data-theme", "dark")
         page.set_viewport_size({"width": 390, "height": 844})
-        for view in ("overview", "resources", "usage", "applications", "monitor"):
-            page.locator(f'[data-view="{view}"]').click()
-            expect(page.locator("#refresh")).to_be_enabled()
-            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), view
-        page.locator('[data-view="overview"]').click()
-        expect(page.locator('[data-view="overview"]')).to_have_class("nav-item active")
-        expect(page.locator("#refresh")).to_be_enabled()
+        for view in ("资源概览", "连接与模型", "用量分析", "应用管理", "运行监控"):
+            nav.get_by_role("button", name=view, exact=True).click()
+            expect(page.get_by_role("heading", name=view, exact=True, level=1)).to_be_visible()
+            if not page.evaluate("document.documentElement.scrollWidth <= innerWidth"):
+                page.screenshot(path=str(output / "overflow.png"), full_page=True)
+                overflow = page.evaluate("""() => [...document.querySelectorAll('main *')]
+                    .filter(e => e.getBoundingClientRect().right > innerWidth + 1)
+                    .slice(0, 15).map(e => ({tag: e.tagName, cls: e.className,
+                        text: e.textContent.slice(0, 100),
+                        right: e.getBoundingClientRect().right}))""")
+                raise AssertionError(f"{view}: {overflow}")
+        nav.get_by_role("button", name="资源概览", exact=True).click()
         page.screenshot(path=str(output / "overview-mobile.png"), full_page=True)
         assert not errors, errors
         assert all(urlsplit(r).netloc == urlsplit(url).netloc for r in requests)
         isolated = browser.new_context()
         unauth = isolated.new_page()
         unauth.goto(url.split("#")[0])
-        expect(unauth.locator("#content")).to_contain_text("需要本机管理会话")
+        expect(unauth.get_by_role("heading", name="需要本机管理会话")).to_be_visible()
         browser.close()
     return {
         "browser": "Chromium",
@@ -497,8 +510,10 @@ def run(command, *, browser_output=None, rows=140):
             origin = url.split("/#")[0]
             report["host"] = urlsplit(origin).hostname
             with httpx.Client(base_url=origin, trust_env=False, timeout=30) as client:
-                for path in ("/", "/assets/app.js", "/assets/style.css", "/assets/mark.svg"):
-                    assert client.get(path).status_code == 200
+                for path in ASSET_FILES:
+                    assert (
+                        client.get("/" if path == "index.html" else "/" + path).status_code == 200
+                    )
                 checks.append("installed_assets_outside_repository")
                 assert client.get("/api/snapshot").status_code == 401
                 assert client.get("/", headers={"Host": "evil.example"}).status_code == 400

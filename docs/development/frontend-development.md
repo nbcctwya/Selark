@@ -36,7 +36,7 @@ Claude 直接克隆 Selark-Web，在其开发分支设计和实现页面。先�
 交接时提供 `API.md` 记录的后端实现基线及前端提交，避免把后续主仓库变化误当作当前页面能力。
 
 交接提供分支或 PR 链接、完整提交 SHA、检查结果和 `BACKEND_REQUESTS.md` 中的后端需求。
-Selark 现有 Dashboard 仍使用 `src/selark/dashboard_assets/`；引入子模块尚不代表新界面已替换日常页面。
+Selark 将经过验收的 React 正式构建放入 `src/selark/dashboard_assets/`，由 `selark dashboard` 提供页面与同源 API。Node 只用于前端开发和集成打包，普通 Python 安装直接使用包内静态文件。
 
 ## 接入前端新版本
 
@@ -48,15 +48,19 @@ git -C frontend switch --detach FRONTEND_COMMIT
 npm --prefix frontend ci
 npm --prefix frontend test
 npm --prefix frontend run test:browser
+python scripts/build_dashboard.py --skip-build
+python scripts/build_dashboard.py --check --skip-build
 python -m pytest -q tests/test_frontend_contract.py tests/test_dashboard.py tests/test_dashboard_controls.py tests/test_dashboard_management.py
 ```
 
 首次浏览器验收先在 `frontend/` 执行 `npx playwright install chromium`；Linux 还需要浏览器运行库。
 浏览器验收命令包含 TypeScript 检查、正式构建及模拟代码隔离检查。
-完成 HTTP、会话、权限、错误状态等联调后，提交并推送主仓库的前端引用与相关适配文件：
+`scripts/build_dashboard.py` 默认先执行前端正式构建，`--skip-build` 复用刚通过验收的 `frontend/dist/`。脚本根据 Vite manifest 校验入口，替换包内旧资源，并记录前端提交与各文件 SHA-256 到 `dashboard_assets/manifest.json`；该清单不对浏览器开放。不要手工修改生成文件。
+
+适配需要修改前端时，先在子模块自己的分支完成修改、提交并推送，再重新打包，以记录最终提交。完成 HTTP、会话、权限、错误状态等联调后，提交并推送主仓库的前端引用、构建文件与适配代码：
 
 ```bash
-git add frontend
+git add frontend src/selark/dashboard_assets
 git diff --cached --submodule=log
 git commit -m "Update Selark-Web to the validated frontend revision"
 git push
@@ -64,6 +68,8 @@ git push
 
 如果适配需要修改前端，先在子模块中新建分支，提交并推送到 Selark-Web，再提交主仓库引用。子模块通常处于 detached HEAD；先创建分支再编辑，可明确保留待交付的提交。
 不要使用自动跟随远端最新提交的构建流程，发布应使用主仓库记录的版本。
+
+发布前运行 `python -m build`，从 sdist 构建 wheel，再在临时环境安装，执行 `scripts/verify_dashboard.py` 和 `scripts/verify_dashboard_controls.py`，两者传入 `--selark /absolute/path/to/selark --output /tmp/report.json`；附加 `--browser-output /tmp/screenshots` 可检查真实后端与安装后的页面。只读验收检查原配置与账本不变，管理验收只操作临时连接、虚构供应商及一次性测试应用。
 
 ## 数据契约与 CI
 
@@ -76,9 +82,9 @@ git push
 `tests/test_frontend_contract.py` 校验规范副本、路由目录及这些实际响应，防止接口无意漂移；管理 API 原有回归也核对响应契约。
 
 Selark-Web 的 CI 独立执行前端测试、构建及浏览器验收；Selark 的 CI 使用 `submodules: recursive` 检出固定提交，并执行前端与 Python 集成检查。
-前端子模块中的工作流仅在 Selark-Web 仓库触发；主仓库有自己的前端检查任务。
+前端子模块中的工作流仅在 Selark-Web 仓库触发；主仓库另用 `build_dashboard.py --check --skip-build` 核对正式产物、文件清单与固定提交，漏更新包内资源会使 CI 失败。
 
 ## 后续桌面版
 
 Windows、macOS 先共用前端和桌面工程，将系统能力放入平台适配代码。需要独立发布桌面工程时再拆分仓库，仍可引用同一个 Selark-Web 仓库。
-当前接入仅建立源码与版本关系，桌面运行、后端进程管理及安装包需要后续实现。
+当前 React 页面已作为本机 Web Dashboard 发布；桌面窗口、后端进程管理及 Windows/macOS 安装包需要后续实现。

@@ -24,6 +24,7 @@ from selark.errors import GatewayError
 from selark.runtime import Runtime
 
 ASSETS = Path(__file__).with_name("dashboard_assets")
+ASSET_FILES = frozenset(json.loads((ASSETS / "manifest.json").read_text())["files"])
 SESSION_SECONDS = 8 * 60 * 60
 SECURITY_HEADERS = {
     "Cache-Control": "no-store",
@@ -314,9 +315,14 @@ def create_dashboard(directory, *, port, bootstrap, offline=False, read_only=Fal
 
     @app.get("/assets/{name}")
     async def asset(name: str):
-        if name not in {"app.js", "style.css", "mark.svg"}:
+        path = f"assets/{name}"
+        if path not in ASSET_FILES:
             return error(404, "文件不存在。")
-        return FileResponse(ASSETS / name)
+        return FileResponse(ASSETS / path)
+
+    @app.get("/favicon.svg")
+    async def favicon():
+        return FileResponse(ASSETS / "favicon.svg")
 
     return app
 
