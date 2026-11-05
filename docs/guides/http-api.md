@@ -8,11 +8,11 @@
 | --- | --- | --- |
 | `GET /health` | 无 | 本进程存活，不访问 MiMo，不代表上游可用 |
 | `GET /v1/models` | `Authorization: Bearer <SELARK_TOKEN>` | 汇总已启用连接中该令牌获权的模型；不发起上游发现或生成 |
-| `POST /v1/chat/completions` | 同上 | 文本与 function 工具；普通 JSON 或 SSE |
+| `POST /v1/chat/completions` | 同上 | 文本/图片输入与 function 工具；普通 JSON 或 SSE |
 | `POST /v1/responses` | 同上 | 官方 Responses 原生请求与响应 |
 | `POST /v1/messages` | Bearer 或 `x-api-key` 应用令牌 | 官方 Messages 原生请求与响应 |
 
-支持文本与官方工具调用格式；工具由调用方 harness 执行，Selark 不执行工具、不添加提示文本、不补写历史、不重试模型生成。
+支持文本、图片输入与官方工具调用格式；图片理解需要上游模型具备对应能力。工具由调用方 harness 执行，Selark 不执行工具、不添加提示文本、不补写历史、不重试模型生成。
 
 ## 入口与供应商
 
@@ -35,7 +35,9 @@ MiMo、DeepSeek、Kimi 的 Messages 地址按官方路径使用配置 origin 下
 
 ## Chat Completions
 
-- `messages` 支持 `system/developer/user/assistant/tool`。文本为字符串或 text 块数组；assistant 工具调用可省略 content 或使用 null；tool 消息须提供 `tool_call_id` 和 content。
+- `messages` 支持 `system/developer/user/assistant/tool`。content 为字符串或混合 `text` / `image_url` 块数组；assistant 工具调用可省略 content 或使用 null；tool 消息须提供 `tool_call_id` 和 content，允许截图工具返回混合文本和图片。
+- 图片块使用 `{"type":"image_url","image_url":{"url":"data:image/png;base64,..."}}`，也可提供 HTTP(S) 图片 URL，`detail` 可为 `auto/low/high/original`。同协议转发保留块顺序、原始图片字符串和调用方指定的 detail；Selark 不下载、解码、压缩或保存图片，也不把图片转写为提示文本。上游模型校验自己支持的格式、detail 和消息角色。
+- Anthropic Chat 转换会把图片 URL / PNG、JPEG、GIF、WebP base64 映射为原生 `image.source`，包括 `tool_result.content` 内的图片。显式 `low/high/original` 无法无损映射，须使用原生 `/v1/messages`；ChatGPT 订阅的图片输入使用原生 `/v1/responses`。
 - 支持 `tools`、`tool_choice`、`parallel_tool_calls`、assistant `tool_calls`、`reasoning_content`、tool 结果及 SDK 消息扩展字段。JSON Schema、工具参数字符串、调用 ID、结果、空白和顺序保留；工具调用请求不再强制关闭思考。
 - 支持调用方显式提供 `thinking`、`reasoning_effort`、`stream_options`、`response_format`；供应商执行并校验其支持范围。Kimi Code 的强制思考要求仍检查，未知模型不隐式回退。
 - 支持桌面 SDK 常用的 `store`（布尔值）、`prompt_cache_key`（字符串）、`prompt_cache_retention`（`in_memory` / `24h`），同协议转发时保留调用方指定值。DSH 默认发送 `store:false`，Kimi Code 会发送缓存键；这些字段不会让 Selark 保存或补写对话，也不会产生额外生成。Anthropic Chat 转换仅接受 `store:false` / 未设置；其余存储与缓存参数无法无损映射，须改用原生 Messages 参数。
@@ -43,9 +45,11 @@ MiMo、DeepSeek、Kimi 的 Messages 地址按官方路径使用配置 origin 下
 - 普通 API 的 `max_tokens` 与 `max_completion_tokens` 互斥，范围 1–131072。普通文本省略时保留既有默认 1024；带工具定义的同协议请求省略时保留供应商默认行为，应用硬上限优先。Anthropic 的 Chat 转换仍使用默认 1024，因为 Messages 要求显式 max_tokens。
 - 支持 `temperature`（0–1.5）、`top_p`（0.01–1）、`stop`（字符串或 1–4 个字符串）、`presence_penalty/frequency_penalty`（-2–2）。这些参数由上游执行；Selark 不修复或重新生成不满足要求的答案。
 - 不带工具的既有文本模式保留原有低成本默认。Anthropic Chat 适配会映射 function / tool_use、工具结果与结束原因；签名思考块、供应商原生工具等完整能力使用 `/v1/messages`。ChatGPT 工具调用使用 `/v1/responses`，不会通过文本 JSON 模拟。
-- 单 choice（index=0），最多 256 条消息、128 个工具。根级未知参数仍返回 400；不支持 Chat 多模态和 `n` 多候选。
+- 单 choice（index=0），最多 256 条消息、128 个工具。根级未知参数仍返回 400；Chat 暂不支持音频、视频、file 内容块和 `n` 多候选。包含 Base64 图片的完整请求仍受 1 MiB 上限约束；本地输入预留是启发式估算，不是视觉 Token 测量，实际用量以供应商回报为准。
 
 参数校验失败时，400 错误信息会列出字段位置与校验类型，例如 `prompt_cache_key (string_type)`，请求日志对应记录 `invalid_fields`（最多 8 项）。仅输出已知字段名和校验类型，不记录消息正文、密钥、字段值或任意未知键名。生成请求仍经过原有权限、限额和持久化检查。
+
+图片协议依据：[MiMo 图片输入](https://mimo.mi.com/docs/en-US/quick-start/usage-guide/multimodal-understanding/image-understanding)、[OpenAI 图片块定义](https://github.com/openai/openai-python/blob/main/src/openai/types/chat/chat_completion_content_part_image_param.py)、[Anthropic 图片与工具结果](https://platform.claude.com/docs/en/build-with-claude/vision)。
 
 ## 原生 Responses / Messages
 

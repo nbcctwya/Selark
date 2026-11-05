@@ -36,6 +36,24 @@ def finish_reason(reason):
     raise protocol_error("上游返回了当前文本子集不支持的结束原因。")
 
 
+def image_block(part):
+    image = part["image_url"]
+    if image.get("detail") not in (None, "auto"):
+        unsupported("Anthropic 无法无损映射 image_url.detail；请使用原生 /v1/messages。")
+    url = image["url"]
+    if url.startswith(("https://", "http://")):
+        source = {"type": "url", "url": url}
+    else:
+        header, separator, data = url.partition(",")
+        formats = {
+            f"data:image/{kind};base64": f"image/{kind}" for kind in ("png", "jpeg", "gif", "webp")
+        }
+        if not separator or not data or header not in formats:
+            unsupported("Anthropic 图片须为 HTTP(S) URL 或 PNG/JPEG/GIF/WebP base64 data URL。")
+        source = {"type": "base64", "media_type": formats[header], "data": data}
+    return {"type": "image", "source": source}
+
+
 class AnthropicProvider(MiMoProvider):
     endpoint = "/messages"
 
@@ -79,11 +97,12 @@ class AnthropicProvider(MiMoProvider):
             parts = (
                 [{"type": "text", "text": content}] if isinstance(content, str) else (content or [])
             )
+            parts = [image_block(part) if part["type"] == "image_url" else part for part in parts]
             if message["role"] == "tool":
                 part = {
                     "type": "tool_result",
                     "tool_use_id": message["tool_call_id"],
-                    "content": content,
+                    "content": content if isinstance(content, str) else parts,
                 }
                 if (
                     messages
@@ -94,7 +113,6 @@ class AnthropicProvider(MiMoProvider):
                 else:
                     messages.append({"role": "user", "content": [part]})
                 continue
-            parts = list(parts)
             for call in message.get("tool_calls") or []:
                 try:
                     arguments = strict_json(call["function"]["arguments"])

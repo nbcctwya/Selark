@@ -12,6 +12,12 @@ UPSTREAM_KEY = "unit-test-upstream-key"
 
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 
+# A synthetic one-pixel PNG; never use a user's screenshot in regression fixtures.
+PNG_DATA_URL = (
+    "data:image/png;base64,"
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC"
+)
+
 
 def function_tools():
     return [

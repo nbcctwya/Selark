@@ -49,7 +49,9 @@ class KimiCodeProvider(CompatibleProvider):
         for message in data["messages"]:
             if message["role"] == "developer":
                 message["role"] = "system"
-            if isinstance(message.get("content"), list):
+            if isinstance(message.get("content"), list) and all(
+                part["type"] == "text" for part in message["content"]
+            ):
                 message["content"] = "".join(part["text"] for part in message["content"])
             if message["role"] == "assistant" and "reasoning_content" not in message:
                 unsupported(

@@ -8,7 +8,16 @@ from pydantic import TypeAdapter
 from selark.contracts.gateway import ChatCompletion, GatewayError, GatewayModels, Health
 from selark.contracts.openapi import gateway_document
 
-from .support.protocol import AUTH, TOKEN, UPSTREAM_KEY, ByteStream, completion, event, sse
+from .support.protocol import (
+    AUTH,
+    PNG_DATA_URL,
+    TOKEN,
+    UPSTREAM_KEY,
+    ByteStream,
+    completion,
+    event,
+    sse,
+)
 
 PAYLOAD = {"messages": [{"role": "user", "content": "private test prompt"}]}
 
@@ -89,10 +98,22 @@ def test_regular_multiturn_default_usage_and_safe_log(gateway, caplog):
     assert len(calls) == 2 and json.loads(calls[1].content)["messages"] == followup
 
 
-def test_text_parts_and_sampling_parameters(gateway):
+def test_text_parts_and_sampling_parameters(gateway, caplog):
+    caplog.set_level(logging.INFO, logger="selark.requests")
     client, calls = gateway()
     payload = {
-        "messages": [{"role": "developer", "content": [{"type": "text", "text": "hi"}]}],
+        "messages": [
+            {"role": "developer", "content": [{"type": "text", "text": "hi"}]},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "  Before\n"},
+                    {"type": "image_url", "image_url": {"url": PNG_DATA_URL, "detail": "original"}},
+                    {"type": "image_url", "image_url": {"url": "https://image.invalid/test.png"}},
+                    {"type": "text", "text": "\nAfter  "},
+                ],
+            },
+        ],
         "model": "mimo-other",
         "temperature": 0.0,
         "top_p": 1.0,
@@ -108,6 +129,16 @@ def test_text_parts_and_sampling_parameters(gateway):
     for key, value in payload.items():
         assert sent[key] == value
     assert sent["max_completion_tokens"] == 1024
+    image_only = [
+        {"role": "user", "content": [{"type": "image_url", "image_url": {"url": PNG_DATA_URL}}]}
+    ]
+    assert (
+        client.post("/v1/chat/completions", headers=AUTH, json={"messages": image_only}).status_code
+        == 200
+    )
+    assert json.loads(calls[1].content)["messages"] == image_only
+    assert len(calls) == 2  # Image references are passed through, never fetched by the gateway.
+    assert PNG_DATA_URL not in caplog.text and "image.invalid" not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -169,6 +200,19 @@ def test_invalid_json_media_type_and_size(gateway, caplog):
     assert "prompt_cache_key (string_type)" in response.json()["error"]["message"]
     assert records(caplog)[-1]["invalid_fields"] == [
         {"field": "prompt_cache_key", "reason": "string_type"}
+    ]
+    response = client.post(
+        "/v1/chat/completions",
+        headers=AUTH,
+        json={
+            "messages": [
+                {"role": "user", "content": [{"type": "image_url", "image_url": {"url": False}}]}
+            ]
+        },
+    )
+    assert response.status_code == 400
+    assert records(caplog)[-1]["invalid_fields"] == [
+        {"field": "messages.0.content.0.image_url.url", "reason": "string_type"}
     ]
     # Unknown keys themselves may contain private data: never reflect them or input values.
     private = "private-field-name"

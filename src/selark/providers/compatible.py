@@ -24,7 +24,9 @@ class CompatibleProvider(MiMoProvider):
             for message in data["messages"]:
                 if message["role"] == "developer":
                     message["role"] = "system"
-                if isinstance(message.get("content"), list):
+                if isinstance(message.get("content"), list) and all(
+                    part["type"] == "text" for part in message["content"]
+                ):
                     message["content"] = "".join(p["text"] for p in message["content"])
         if "max_completion_tokens" in data and (
             provider in {"deepseek", "zhipu"}

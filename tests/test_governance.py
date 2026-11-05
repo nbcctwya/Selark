@@ -20,7 +20,7 @@ from selark.storage import Store
 
 from .support.governance import PAYLOAD, allocation, app_for, auth, finished, price
 from .support.governance import runtime as runtime
-from .support.protocol import UPSTREAM_KEY, completion, event, sse
+from .support.protocol import PNG_DATA_URL, UPSTREAM_KEY, completion, event, sse
 from .test_connections import native_events, native_reply
 
 
@@ -532,7 +532,15 @@ def test_output_input_limits_and_refusal_usage(runtime):
         return httpx.Response(200, json=reply)
 
     with TestClient(app_for(runtime, upstream)) as client:
-        payload = {"messages": PAYLOAD["messages"], "model": "openai::mimo-test"}
+        payload = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [{"type": "image_url", "image_url": {"url": PNG_DATA_URL}}],
+                }
+            ],
+            "model": "openai::mimo-test",
+        }
         assert (
             client.post(
                 "/v1/chat/completions", headers=auth(caller), json=payload | {"max_tokens": 16}

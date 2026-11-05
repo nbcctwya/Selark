@@ -114,6 +114,14 @@ class ChatGPTProvider(MiMoProvider):
             raise GatewayError(
                 400, "unsupported_provider_option", "ChatGPT 文本适配不接收其他供应商的思考历史。"
             )
+        if any(
+            isinstance(message.content, list)
+            and any(part.type != "text" for part in message.content)
+            for message in request.messages
+        ):
+            raise GatewayError(
+                400, "unsupported_provider_option", "ChatGPT 图片输入请使用原生 /v1/responses。"
+            )
         return {
             "model": model,
             "store": False,

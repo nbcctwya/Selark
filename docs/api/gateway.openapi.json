@@ -731,6 +731,58 @@
         "title": "Health",
         "type": "object"
       },
+      "ImagePart": {
+        "additionalProperties": false,
+        "properties": {
+          "image_url": {
+            "$ref": "#/components/schemas/ImageURL"
+          },
+          "type": {
+            "const": "image_url",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "image_url"
+        ],
+        "title": "ImagePart",
+        "type": "object"
+      },
+      "ImageURL": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "enum": [
+                  "auto",
+                  "low",
+                  "high",
+                  "original"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Detail"
+          },
+          "url": {
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "ImageURL",
+        "type": "object"
+      },
       "Message": {
         "additionalProperties": true,
         "properties": {
@@ -741,7 +793,21 @@
               },
               {
                 "items": {
-                  "$ref": "#/components/schemas/TextPart"
+                  "discriminator": {
+                    "mapping": {
+                      "image_url": "#/components/schemas/ImagePart",
+                      "text": "#/components/schemas/TextPart"
+                    },
+                    "propertyName": "type"
+                  },
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/TextPart"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ImagePart"
+                    }
+                  ]
                 },
                 "type": "array"
               },

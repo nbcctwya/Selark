@@ -14,7 +14,7 @@ from selark.errors import GatewayError
 from selark.providers.discovery import discover
 from selark.runtime import Runtime, fingerprint
 
-from .support.protocol import completion, event, function_tools, sse, tool_calls
+from .support.protocol import PNG_DATA_URL, completion, event, function_tools, sse, tool_calls
 
 
 @pytest.fixture
@@ -170,6 +170,29 @@ def test_provider_auth_payload_stream_and_actual_usage(multi, provider, streamin
                 {"store": True},
                 {"prompt_cache_key": "synthetic-session"},
                 {"prompt_cache_retention": "24h"},
+                {
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "image_url",
+                                    "image_url": {"url": PNG_DATA_URL, "detail": "high"},
+                                }
+                            ],
+                        }
+                    ]
+                },
+                {
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "image_url", "image_url": {"url": "file:///private.png"}}
+                            ],
+                        }
+                    ]
+                },
             ):
                 rejected = client.post(
                     "/v1/chat/completions",
@@ -637,9 +660,25 @@ def test_official_tool_roundtrip_preserves_calls_results_and_usage(multi, provid
         allowed_models=["shared"],
     )
     tools, calls, captured = function_tools(), tool_calls(), []
+    image_result = [
+        {"type": "text", "text": "  截图前\n"},
+        {"type": "image_url", "image_url": {"url": PNG_DATA_URL}},
+        {"type": "text", "text": "\n截图后  "},
+    ]
     request_body = {
         "connection_id": "tools",
-        "messages": [{"role": "user", "content": "读取两个文件\n  保留空白"}],
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "读取两个文件\n  保留空白"},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": "https://image.invalid/reference.png"},
+                    },
+                ],
+            }
+        ],
         "tools": tools,
         "tool_choice": "auto",
         "parallel_tool_calls": True,
@@ -663,6 +702,13 @@ def test_official_tool_roundtrip_preserves_calls_results_and_usage(multi, provid
         data = json.loads(request.content)
         captured.append(data)
         if provider == "anthropic":
+            assert data["messages"][0]["content"] == [
+                request_body["messages"][0]["content"][0],
+                {
+                    "type": "image",
+                    "source": {"type": "url", "url": "https://image.invalid/reference.png"},
+                },
+            ]
             assert data["tools"][0]["input_schema"] == tools[0]["function"]["parameters"]
             assert data["tool_choice"] == {"type": "auto", "disable_parallel_tool_use": False}
             result = native_reply() | {"model": "shared"}
@@ -781,8 +827,12 @@ def test_official_tool_roundtrip_preserves_calls_results_and_usage(multi, provid
             request_body["messages"]
             + [{"role": "assistant", "content": None, "tool_calls": returned, "refusal": None}]
             + [
-                {"role": "tool", "tool_call_id": call["id"], "content": "  文件内容\n"}
-                for call in returned
+                {
+                    "role": "tool",
+                    "tool_call_id": call["id"],
+                    "content": image_result if i == 0 else "  文件内容\n",
+                }
+                for i, call in enumerate(returned)
             ]
         )
         second = client.post(
@@ -796,9 +846,20 @@ def test_official_tool_roundtrip_preserves_calls_results_and_usage(multi, provid
         assert [block["tool_use_id"] for block in captured[1]["messages"][-1]["content"]] == [
             c["id"] for c in calls
         ]
-        assert all(
-            block["content"] == "  文件内容\n" for block in captured[1]["messages"][-1]["content"]
-        )
+        blocks = captured[1]["messages"][-1]["content"]
+        assert blocks[0]["content"] == [
+            image_result[0],
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/png",
+                    "data": PNG_DATA_URL.split(",", 1)[1],
+                },
+            },
+            image_result[2],
+        ]
+        assert blocks[1]["content"] == "  文件内容\n"
     else:
         assert captured[1]["messages"] == history
     rows = multi.store.records({"connection_id": "tools"})

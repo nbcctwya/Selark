@@ -17,7 +17,7 @@ from selark.connections import ConnectionConfig, require_connection
 from selark.providers.discovery import discover
 from selark.runtime import Runtime, discovery_fingerprint, fingerprint
 
-from .support.protocol import sse
+from .support.protocol import PNG_DATA_URL, sse
 from .test_connections import token as legacy_headers
 
 PAYLOAD = {"connection_id": "personal", "messages": [{"role": "user", "content": "hello"}]}
@@ -234,6 +234,14 @@ def test_terminal_failures_and_unknown_usage(resource, streaming, status):
         {"stop": "end"},
         {"reasoning_effort": "low"},
         {"presence_penalty": 0.1},
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [{"type": "image_url", "image_url": {"url": PNG_DATA_URL}}],
+                }
+            ]
+        },
     ],
 )
 def test_unsupported_parameters_never_generate(resource, patch):

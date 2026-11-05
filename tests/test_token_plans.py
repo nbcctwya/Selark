@@ -21,7 +21,7 @@ from selark.storage import Store, utc_now
 
 from .support.governance import app_for, auth, finished
 from .support.governance import runtime as runtime
-from .support.protocol import completion, event, sse
+from .support.protocol import PNG_DATA_URL, completion, event, sse
 
 MODEL = "kimi-for-coding"
 PLAN = "personal-code"
@@ -588,7 +588,14 @@ def test_plan_official_tools_keep_intent_quota_and_real_identity(runtime, plan, 
             "tool_calls": tool_calls(),
         },
         *[
-            {"role": "tool", "tool_call_id": call["id"], "content": "文件内容"}
+            {
+                "role": "tool",
+                "tool_call_id": call["id"],
+                "content": [
+                    {"type": "text", "text": "文件内容"},
+                    {"type": "image_url", "image_url": {"url": PNG_DATA_URL}},
+                ],
+            }
             for call in tool_calls()
         ],
     ]

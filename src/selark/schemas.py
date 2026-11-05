@@ -1,4 +1,4 @@
-from typing import ClassVar, Literal
+from typing import Annotated, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -12,11 +12,24 @@ class TextPart(StrictModel):
     text: str
 
 
+class ImageURL(StrictModel):
+    url: str = Field(min_length=1)
+    detail: Literal["auto", "low", "high", "original"] | None = None
+
+
+class ImagePart(StrictModel):
+    type: Literal["image_url"]
+    image_url: ImageURL
+
+
+ContentPart = Annotated[TextPart | ImagePart, Field(discriminator="type")]
+
+
 class Message(StrictModel):
     # Official SDKs return extension fields (e.g. refusal/annotations) in model_dump().
     model_config = ConfigDict(extra="allow", strict=True)
     role: Literal["system", "developer", "user", "assistant", "tool"]
-    content: str | list[TextPart] | None = None
+    content: str | list[ContentPart] | None = None
     reasoning_content: str | None = None
     name: str | None = None
     tool_calls: list[dict] | None = Field(default=None, max_length=128)
@@ -90,7 +103,8 @@ class ChatRequest(StrictModel):
         if not any(
             m.content.strip()
             if isinstance(m.content, str)
-            else bool(m.tool_calls) or any(p.text.strip() for p in (m.content or []))
+            else bool(m.tool_calls)
+            or any(p.type == "image_url" or p.text.strip() for p in (m.content or []))
             for m in self.messages
         ):
             raise ValueError("messages 不能全部为空")
@@ -168,16 +182,32 @@ REQUEST_MODELS = {
 def validation_fields(error):
     """Return bounded field diagnostics, never input values or arbitrary JSON keys."""
     known = {"n", "seed", "metadata", "user", "service_tier", "verbosity", "logprobs"}
-    for schema in (*REQUEST_MODELS.values(), Message, TextPart):
+    for schema in (*REQUEST_MODELS.values(), Message, TextPart, ImagePart, ImageURL):
         known.update(schema.model_fields)
+    issues = error.errors(include_url=False, include_input=False, include_context=False)[:16]
+    # Pydantic's union branch names are implementation details, not request fields.
+    branches = {"str", "list[tagged-union[TextPart,ImagePart]]"}
+    list_paths = {
+        issue["loc"][:i]
+        for issue in issues
+        for i, part in enumerate(issue["loc"])
+        if part == "list[tagged-union[TextPart,ImagePart]]"
+    }
+    issues = [
+        issue
+        for issue in issues
+        if not (issue["loc"][-1:] == ("str",) and issue["loc"][:-1] in list_paths)
+    ][:8]
     return [
         {
             "field": ".".join(
                 str(part) if isinstance(part, int) or part in known else "<extra>"
-                for part in issue["loc"]
+                for i, part in enumerate(issue["loc"])
+                if part not in branches
+                and not (part in {"image_url", "text"} and issue["loc"][i + 1 : i + 2] == (part,))
             )
             or "<body>",
             "reason": issue["type"],
         }
-        for issue in error.errors(include_url=False, include_input=False, include_context=False)[:8]
+        for issue in issues
     ]
