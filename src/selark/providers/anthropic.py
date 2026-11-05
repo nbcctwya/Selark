@@ -49,6 +49,14 @@ class AnthropicProvider(MiMoProvider):
         return headers
 
     def prepare(self, request, model):
+        if (
+            request.store is True
+            or request.prompt_cache_key is not None
+            or request.prompt_cache_retention is not None
+        ):
+            unsupported(
+                "Anthropic 缓存及存储参数不能从 Chat 字段无损映射，请使用原生 /v1/messages。"
+            )
         if request.reasoning_effort is not None:
             unsupported("当前 Anthropic 文本子集不支持 reasoning_effort。")
         if any(m.reasoning_content is not None for m in request.messages):

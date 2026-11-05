@@ -211,6 +211,34 @@
             "default": null,
             "title": "Presence Penalty"
           },
+          "prompt_cache_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Prompt Cache Key"
+          },
+          "prompt_cache_retention": {
+            "anyOf": [
+              {
+                "enum": [
+                  "in_memory",
+                  "24h"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Prompt Cache Retention"
+          },
           "reasoning_effort": {
             "anyOf": [
               {
@@ -278,6 +306,18 @@
             ],
             "default": null,
             "title": "Stop"
+          },
+          "store": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Store"
           },
           "stream": {
             "default": false,

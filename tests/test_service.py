@@ -99,6 +99,9 @@ def test_text_parts_and_sampling_parameters(gateway):
         "stop": ["END"],
         "presence_penalty": -2,
         "frequency_penalty": 2,
+        "store": True,
+        "prompt_cache_key": "synthetic-cache-key",
+        "prompt_cache_retention": "24h",
     }
     assert client.post("/v1/chat/completions", headers=AUTH, json=payload).status_code == 200
     sent = json.loads(calls[0].content)
@@ -134,6 +137,9 @@ def test_text_parts_and_sampling_parameters(gateway):
         {"n": 2},
         {"thinking": []},
         {"stream_options": []},
+        {"store": "false"},
+        {"prompt_cache_key": False},
+        {"prompt_cache_retention": "forever"},
     ],
 )
 def test_invalid_parameters_do_not_call_upstream(gateway, patch):
@@ -144,7 +150,8 @@ def test_invalid_parameters_do_not_call_upstream(gateway, patch):
     assert calls == []
 
 
-def test_invalid_json_media_type_and_size(gateway):
+def test_invalid_json_media_type_and_size(gateway, caplog):
+    caplog.set_level(logging.INFO, logger="selark.requests")
     client, calls = gateway()
     assert client.post("/v1/chat/completions", headers=AUTH, content="bad").status_code == 415
     headers = AUTH | {"Content-Type": "application/json"}
@@ -155,6 +162,25 @@ def test_invalid_json_media_type_and_size(gateway):
         ).status_code
         == 413
     )
+    response = client.post(
+        "/v1/chat/completions", headers=AUTH, json=PAYLOAD | {"prompt_cache_key": False}
+    )
+    assert response.status_code == 400
+    assert "prompt_cache_key (string_type)" in response.json()["error"]["message"]
+    assert records(caplog)[-1]["invalid_fields"] == [
+        {"field": "prompt_cache_key", "reason": "string_type"}
+    ]
+    # Unknown keys themselves may contain private data: never reflect them or input values.
+    private = "private-field-name"
+    response = client.post(
+        "/v1/chat/completions",
+        headers=AUTH,
+        json=PAYLOAD | {f"{private}-{i}": "private-value" for i in range(20)},
+    )
+    assert response.status_code == 400
+    assert len(records(caplog)[-1]["invalid_fields"]) == 8
+    for secret in (private, "private-value", "private test prompt", TOKEN):
+        assert secret not in response.text + caplog.text
     assert calls == []
 
 

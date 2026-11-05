@@ -165,6 +165,20 @@ def test_provider_auth_payload_stream_and_actual_usage(multi, provider, streamin
     with TestClient(
         create_app(multi.settings(), runtime=multi, transport=httpx.MockTransport(upstream))
     ) as client:
+        if provider == "anthropic" and not streaming:
+            for options in (
+                {"store": True},
+                {"prompt_cache_key": "synthetic-session"},
+                {"prompt_cache_retention": "24h"},
+            ):
+                rejected = client.post(
+                    "/v1/chat/completions",
+                    headers=token(multi),
+                    json={"connection_id": "selected", "messages": messages, **options},
+                )
+                assert rejected.status_code == 400
+                assert rejected.json()["error"]["code"] == "unsupported_provider_option"
+            assert not calls
         response = client.post(
             "/v1/chat/completions",
             headers=token(multi),
@@ -631,7 +645,13 @@ def test_official_tool_roundtrip_preserves_calls_results_and_usage(multi, provid
         "parallel_tool_calls": True,
         "max_tokens": 256,
         "stream": streaming,
+        "store": False,  # DSH / pi-ai sends this even to a custom base URL.
     }
+    if provider != "anthropic":
+        request_body |= {
+            "prompt_cache_key": "synthetic-agent-session",  # Kimi Code sends a cache key.
+            "prompt_cache_retention": "in_memory",
+        }
     uncapped = provider == "deepseek" and not streaming
     if uncapped:
         request_body.pop("max_tokens")
@@ -698,6 +718,8 @@ def test_official_tool_roundtrip_preserves_calls_results_and_usage(multi, provid
             and data["tool_choice"] == "auto"
             and data["parallel_tool_calls"] is True
         )
+        for field in ("store", "prompt_cache_key", "prompt_cache_retention"):
+            assert data[field] == request_body[field]
         assert "thinking" not in data  # No forced mode on caller-owned agent requests.
         if uncapped:
             assert not {"max_tokens", "max_completion_tokens"} & data.keys()

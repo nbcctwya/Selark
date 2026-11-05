@@ -28,7 +28,7 @@ from selark.protocol import strict_json
 from selark.providers.factory import provider_for
 from selark.providers.mimo import reported_usage
 from selark.runtime import Runtime, capability_fingerprint, fingerprint
-from selark.schemas import REQUEST_MODELS, ChatRequest
+from selark.schemas import REQUEST_MODELS, ChatRequest, validation_fields
 from selark.storage import Store, request_status, utc_now
 from selark.usage import observe_usage
 
@@ -240,7 +240,16 @@ class RequestMiddleware:
                             if isinstance(raw, dict) and header in headers and field not in raw:
                                 raw[field] = headers[header].decode("ascii")
                         data = REQUEST_MODELS[path].model_validate(raw)
-                except (ValidationError, ValueError, UnicodeError):
+                except ValidationError as error:
+                    fields = validation_fields(error)
+                    state["invalid_fields"] = fields
+                    detail = "; ".join(f"{f['field']} ({f['reason']})" for f in fields)
+                    raise GatewayError(
+                        400,
+                        "invalid_request",
+                        f"请求参数无效：{detail}。请检查字段类型及支持范围。",
+                    ) from None
+                except (ValueError, UnicodeError):
                     raise GatewayError(
                         400,
                         "invalid_request",
@@ -424,6 +433,11 @@ class RequestMiddleware:
                         "usage_final": state["usage_final"],
                         "usage_regressed": state.get("usage_regressed", False),
                         "persistence": state.get("persistence", "not_recorded"),
+                        **(
+                            {"invalid_fields": state["invalid_fields"]}
+                            if "invalid_fields" in state
+                            else {}
+                        ),
                     },
                     ensure_ascii=False,
                 )

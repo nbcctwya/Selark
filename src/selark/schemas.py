@@ -75,6 +75,9 @@ class ChatRequest(StrictModel):
     thinking: dict | None = None
     stream_options: dict | None = None
     response_format: dict | None = None
+    store: bool | None = None
+    prompt_cache_key: str | None = None
+    prompt_cache_retention: Literal["in_memory", "24h"] | None = None
 
     @model_validator(mode="after")
     def check_options(self):
@@ -160,3 +163,21 @@ REQUEST_MODELS = {
     "/v1/responses": ResponsesRequest,
     "/v1/messages": MessagesRequest,
 }
+
+
+def validation_fields(error):
+    """Return bounded field diagnostics, never input values or arbitrary JSON keys."""
+    known = {"n", "seed", "metadata", "user", "service_tier", "verbosity", "logprobs"}
+    for schema in (*REQUEST_MODELS.values(), Message, TextPart):
+        known.update(schema.model_fields)
+    return [
+        {
+            "field": ".".join(
+                str(part) if isinstance(part, int) or part in known else "<extra>"
+                for part in issue["loc"]
+            )
+            or "<body>",
+            "reason": issue["type"],
+        }
+        for issue in error.errors(include_url=False, include_input=False, include_context=False)[:8]
+    ]
