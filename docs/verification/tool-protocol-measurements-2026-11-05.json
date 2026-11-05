@@ -1,0 +1,195 @@
+{
+  "date": "2026-11-05",
+  "baseline_commit": "514211f0959509a906afae25fa8a5ca98e187466",
+  "scope": "ordinary text path, sequential before/after; fake upstream only",
+  "full_regression": {
+    "passed": 874,
+    "warnings": 1,
+    "seconds": 90.08
+  },
+  "limits": [
+    "Single before/after run; no statistical no-regression claim.",
+    "Both p95 latency budgets missed in this batch.",
+    "No paid API or actual Agent end-to-end verification."
+  ],
+  "before": {
+    "raw_sha256": "d9affafc9ea61033efb34ba6202cbf95f69f80b3661a20f489d0bd33df12fce8",
+    "version": "0.10.0",
+    "python": "3.12.2",
+    "platform": "Linux",
+    "machine": "x86_64",
+    "concurrency": 1,
+    "samples_per_mode": 300,
+    "warmup_pairs_per_mode": 5,
+    "real_provider_requests": 0,
+    "loopback_proxy_bypassed": true,
+    "budgets": {
+      "idle_rss_mib": 72,
+      "idle_cpu_percent": 0.5,
+      "relay_p95_ms": 10
+    },
+    "nonstream": {
+      "direct_ms": {
+        "p50": 1.0012,
+        "p95": 2.1535,
+        "p99": 3.1559
+      },
+      "relay_ms": {
+        "p50": 13.1106,
+        "p95": 18.8833,
+        "p99": 22.6376
+      },
+      "overhead_ms": {
+        "p50": 12.0848,
+        "p95": 17.2334,
+        "p99": 21.7835
+      },
+      "negative_differences": 0
+    },
+    "stream_first_text": {
+      "direct_ms": {
+        "p50": 1.011,
+        "p95": 1.7251,
+        "p99": 3.549
+      },
+      "relay_ms": {
+        "p50": 8.3194,
+        "p95": 12.3164,
+        "p99": 15.3663
+      },
+      "overhead_ms": {
+        "p50": 7.2499,
+        "p95": 11.39,
+        "p99": 14.453
+      },
+      "negative_differences": 0
+    },
+    "stream_complete": {
+      "direct_ms": {
+        "p50": 1.0723,
+        "p95": 1.8635,
+        "p99": 3.6056
+      },
+      "relay_ms": {
+        "p50": 13.5619,
+        "p95": 18.5158,
+        "p99": 23.0109
+      },
+      "overhead_ms": {
+        "p50": 12.3582,
+        "p95": 17.367,
+        "p99": 21.4564
+      },
+      "negative_differences": 0
+    },
+    "idle": {
+      "seconds": 30.0001,
+      "cpu_seconds": 0.02999999999999936,
+      "cpu_percent": 0.09999960293830658,
+      "rss_bytes": 64307200,
+      "upstream_requests": 0
+    },
+    "fake_direct_generations": 610,
+    "fake_relay_generations": 610,
+    "extra_generations": 0,
+    "forwarded_payloads_unchanged": true,
+    "reported_relay_tokens": 8540,
+    "budget_checks": {
+      "idle_rss": true,
+      "idle_cpu": true,
+      "nonstream_p95": false,
+      "stream_first_text_p95": false
+    },
+    "reference_sample_size": true
+  },
+  "after": {
+    "raw_sha256": "18bbd0b0df84b991ce7d0679da0930cd35d15052c4a4b46eb1c200502d57c335",
+    "version": "0.10.0",
+    "python": "3.12.2",
+    "platform": "Linux",
+    "machine": "x86_64",
+    "concurrency": 1,
+    "samples_per_mode": 300,
+    "warmup_pairs_per_mode": 5,
+    "real_provider_requests": 0,
+    "loopback_proxy_bypassed": true,
+    "budgets": {
+      "idle_rss_mib": 72,
+      "idle_cpu_percent": 0.5,
+      "relay_p95_ms": 10
+    },
+    "nonstream": {
+      "direct_ms": {
+        "p50": 0.9612,
+        "p95": 1.6127,
+        "p99": 2.8733
+      },
+      "relay_ms": {
+        "p50": 13.4386,
+        "p95": 18.5532,
+        "p99": 21.1585
+      },
+      "overhead_ms": {
+        "p50": 12.4179,
+        "p95": 17.094,
+        "p99": 20.1079
+      },
+      "negative_differences": 0
+    },
+    "stream_first_text": {
+      "direct_ms": {
+        "p50": 0.9933,
+        "p95": 1.7688,
+        "p99": 3.2495
+      },
+      "relay_ms": {
+        "p50": 8.9306,
+        "p95": 13.5205,
+        "p99": 16.4329
+      },
+      "overhead_ms": {
+        "p50": 7.8349,
+        "p95": 12.0568,
+        "p99": 15.4098
+      },
+      "negative_differences": 0
+    },
+    "stream_complete": {
+      "direct_ms": {
+        "p50": 1.0529,
+        "p95": 1.9098,
+        "p99": 3.4007
+      },
+      "relay_ms": {
+        "p50": 14.3887,
+        "p95": 19.0132,
+        "p99": 22.9812
+      },
+      "overhead_ms": {
+        "p50": 13.3228,
+        "p95": 18.0356,
+        "p99": 22.0684
+      },
+      "negative_differences": 0
+    },
+    "idle": {
+      "seconds": 30.0001,
+      "cpu_seconds": 0.03000000000000025,
+      "cpu_percent": 0.09999969902762153,
+      "rss_bytes": 62525440,
+      "upstream_requests": 0
+    },
+    "fake_direct_generations": 610,
+    "fake_relay_generations": 610,
+    "extra_generations": 0,
+    "forwarded_payloads_unchanged": true,
+    "reported_relay_tokens": 8540,
+    "budget_checks": {
+      "idle_rss": true,
+      "idle_cpu": true,
+      "nonstream_p95": false,
+      "stream_first_text_p95": false
+    },
+    "reference_sample_size": true
+  }
+}

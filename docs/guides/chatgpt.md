@@ -65,7 +65,7 @@ selark --config-dir "$HOME/.config/selark/clients/chatgpt-personal" ask \
   --connection chatgpt-personal --stream --session personal-demo '给出 Python 平方函数，只写两行。'
 ```
 
-统一 HTTP 仍是 `POST /v1/chat/completions`，可用 `connection_id`、
+文本兼容入口是 `POST /v1/chat/completions`，原生工具入口是 `POST /v1/responses`；可用 `connection_id`、
 `chatgpt-personal::MODEL` 或管理员显式配置的别名。没有增加远程管理接口。
 调用方以 Selark 令牌鉴权；不可通过自报身份获得他人权限。
 
@@ -78,8 +78,11 @@ selark --config-dir "$HOME/.config/selark/clients/chatgpt-personal" ask \
 
 官方订阅推理要求 `store:false`、`stream:true`。Selark 普通请求会汇集该 SSE 返回普通 JSON；
 流式请求转换为 Chat Completions 文本片段。system 映射 developer，完整多轮 history 每次
-在 `input` 中发送；session_id 仅本地归组，不自动拼接历史。拒绝工具调用、多模态和其他供应商
-的 reasoning_content；目前不暴露 Responses 的完整参数或原生 API 路由。
+在 `input` 中发送；session_id 仅本地归组，不自动拼接历史。此文本转换入口拒绝工具调用、
+多模态和其他供应商的 reasoning_content；完整 Agent 请求使用原生 `/v1/responses`，保留
+官方 namespace/function/custom 工具、调用结果和加密思考内容，遵循当前 SIWC 的能力约束。
+原生入口只接受 `stream:true`、`store:false` 和 input 数组，不代造历史或工具定义。
+两种入口都沿用订阅授权、额度预留和持久落账。
 实际链路可能省略 SSE 的 Content-Type 响应头；缺失时仍用有界 Responses 解析器验证事件、
 身份和终态，只有 `response.completed` 才成功。明确返回其他内容类型时报告协议异常，
 其中可验证的最终 Responses 用量仍保留。不会因为 HTTP 200 或收到部分文本就判成功。
@@ -92,7 +95,7 @@ selark --config-dir "$HOME/.config/selark/clients/chatgpt-personal" ask \
 聚合文本。仍必须收到 `response.completed`；只有增量文本、缺失消息完成、矛盾文本或乱序
 不能被补成成功。恢复的尾部只发送一次，用量仍取最终响应。见 [修复验收](../verification/chatgpt-completion-fix-verification.md)。
 
-**官方订阅接口目前不支持 max_output_tokens。** Selark 对此连接拒绝 `--max-tokens`、
+**官方订阅接口目前不支持 max_output_tokens。** 既有 Chat 文本适配拒绝 `--max-tokens`、
 max_completion_tokens、temperature、top_p、stop、presence/frequency_penalty、reasoning_effort，
 不会静默丢弃限制。其他 API 连接省略输出限制仍默认 1024。
 

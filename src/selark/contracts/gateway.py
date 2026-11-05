@@ -63,6 +63,7 @@ class CompletionMessage(TypedDict):
     role: Literal["assistant"]
     content: str | None
     reasoning_content: NotRequired[str | None]
+    tool_calls: NotRequired[list[dict] | None]
 
 
 class CompletionChoice(TypedDict):

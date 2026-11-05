@@ -669,3 +669,84 @@ def test_malformed_type_fields_are_protocol_failures(resource, where):
         assert response.status_code == 502
     row = runtime.store.records({})[0]
     assert row["total_tokens"] == (15 if where == "part" else None)
+
+
+def test_native_responses_subscription_preserves_agent_tools_and_rejects_unsupported_caps(resource):
+    runtime, caller, _ = resource
+    seen = []
+    output = [
+        {"type": "reasoning", "id": "rs_1", "summary": [], "encrypted_content": "signed-state"},
+        {
+            "type": "function_call",
+            "id": "fc_1",
+            "call_id": "call_1",
+            "namespace": "functions",
+            "name": "read_file",
+            "arguments": '{"path":"main.py"}',
+            "status": "completed",
+        },
+    ]
+    tools = [
+        {
+            "type": "namespace",
+            "name": "functions",
+            "tools": [
+                {
+                    "type": "function",
+                    "name": "read_file",
+                    "parameters": {"type": "object", "properties": {"path": {"type": "string"}}},
+                }
+            ],
+        }
+    ]
+    body = {
+        "model": "gpt-test",
+        "input": [
+            {"role": "user", "content": "read main.py"},
+            *output,
+            {"type": "function_call_output", "call_id": "call_1", "output": "print(1)"},
+        ],
+        "tools": tools,
+        "stream": True,
+        "store": False,
+        "reasoning": {"effort": "low"},
+    }
+    final = result() | {"output": output}
+    frames = [
+        {
+            "type": "response.created",
+            "response": final | {"status": "in_progress", "usage": None, "output": []},
+        },
+        {"type": "response.output_item.done", "output_index": 1, "item": output[1]},
+        {"type": "response.completed", "response": final},
+    ]
+
+    def upstream(request):
+        seen.append(json.loads(request.content))
+        assert str(request.url) == "https://api.openai.com/v1/responses"
+        assert request.headers["Authorization"] == "Bearer fake-own-access"
+        return reply(frames)
+
+    with TestClient(app_for(runtime, upstream)) as client:
+        request_headers = headers(caller) | {"X-Selark-Connection": "personal"}
+        for patch in (
+            {"max_output_tokens": 64},
+            {"stream": False},
+            {"store": True},
+            {"previous_response_id": "resp_old"},
+        ):
+            denied = client.post("/v1/responses", headers=request_headers, json=body | patch)
+            assert denied.status_code == 400 and not seen
+        response = client.post("/v1/responses", headers=request_headers, json=body)
+        assert response.status_code == 200 and "event: error" not in response.text
+        assert [
+            json.loads(line[6:]) for line in response.text.splitlines() if line.startswith("data: ")
+        ] == frames
+    assert seen == [body]
+    row = next(row for row in runtime.store.records({}) if row["upstream_attempts"])
+    assert (
+        row["total_tokens"] == 15
+        and row["usage_final"]
+        and row["resource_type"] == "chatgpt_subscription"
+    )
+    assert row["reported_usage"]["completion_tokens_details"]["reasoning_tokens"] == 1

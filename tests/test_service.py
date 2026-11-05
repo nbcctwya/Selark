@@ -130,10 +130,10 @@ def test_text_parts_and_sampling_parameters(gateway):
         {"frequency_penalty": -3},
         {"model": "unknown"},
         {"model": ""},
-        {"tools": []},
+        {"tools": [None]},
         {"n": 2},
-        {"thinking": {"type": "enabled"}},
-        {"stream_options": {"include_usage": True}},
+        {"thinking": []},
+        {"stream_options": []},
     ],
 )
 def test_invalid_parameters_do_not_call_upstream(gateway, patch):
@@ -241,6 +241,7 @@ def test_streaming_split_bytes_usage_and_finish(gateway, caplog):
         (b"data: not-json\n\n", None),
         (sse({"error": {"message": UPSTREAM_KEY}}), None),
         (sse("[DONE]"), None),
+        (sse(event(None, "tool_calls"), "[DONE]"), None),
         (sse(event()), httpx.ReadTimeout),
         (sse(event()), httpx.RemoteProtocolError),
     ],

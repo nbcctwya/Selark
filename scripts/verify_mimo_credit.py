@@ -449,8 +449,8 @@ class Acceptance:
                 400,
             ),
             (
-                "tools_rejected",
-                {"messages": [{"role": "user", "content": "x"}], "tools": []},
+                "invalid_tools_rejected",
+                {"messages": [{"role": "user", "content": "x"}], "tools": [None]},
                 "primary",
                 400,
             ),

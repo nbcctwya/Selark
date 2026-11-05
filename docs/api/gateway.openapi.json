@@ -185,6 +185,18 @@
             "default": null,
             "title": "Model"
           },
+          "parallel_tool_calls": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Parallel Tool Calls"
+          },
           "presence_penalty": {
             "anyOf": [
               {
@@ -203,9 +215,14 @@
             "anyOf": [
               {
                 "enum": [
+                  "none",
+                  "minimal",
                   "low",
+                  "medium",
                   "high",
-                  "max"
+                  "xhigh",
+                  "max",
+                  "ultra"
                 ],
                 "type": "string"
               },
@@ -215,6 +232,19 @@
             ],
             "default": null,
             "title": "Reasoning Effort"
+          },
+          "response_format": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Response Format"
           },
           "session_id": {
             "anyOf": [
@@ -254,6 +284,19 @@
             "title": "Stream",
             "type": "boolean"
           },
+          "stream_options": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Stream Options"
+          },
           "temperature": {
             "anyOf": [
               {
@@ -267,6 +310,52 @@
             ],
             "default": null,
             "title": "Temperature"
+          },
+          "thinking": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Thinking"
+          },
+          "tool_choice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tool Choice"
+          },
+          "tools": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "maxItems": 128,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tools"
           },
           "top_p": {
             "anyOf": [
@@ -342,6 +431,21 @@
             "const": "assistant",
             "title": "Role",
             "type": "string"
+          },
+          "tool_calls": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Calls"
           }
         },
         "required": [
@@ -588,7 +692,7 @@
         "type": "object"
       },
       "Message": {
-        "additionalProperties": false,
+        "additionalProperties": true,
         "properties": {
           "content": {
             "anyOf": [
@@ -600,9 +704,25 @@
                   "$ref": "#/components/schemas/TextPart"
                 },
                 "type": "array"
+              },
+              {
+                "type": "null"
               }
             ],
+            "default": null,
             "title": "Content"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Name"
           },
           "reasoning_content": {
             "anyOf": [
@@ -621,17 +741,249 @@
               "system",
               "developer",
               "user",
-              "assistant"
+              "assistant",
+              "tool"
             ],
             "title": "Role",
             "type": "string"
+          },
+          "tool_call_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tool Call Id"
+          },
+          "tool_calls": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "maxItems": 128,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tool Calls"
           }
         },
         "required": [
-          "role",
-          "content"
+          "role"
         ],
         "title": "Message",
+        "type": "object"
+      },
+      "MessagesRequest": {
+        "additionalProperties": true,
+        "properties": {
+          "connection_id": {
+            "anyOf": [
+              {
+                "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Connection Id"
+          },
+          "interaction": {
+            "anyOf": [
+              {
+                "enum": [
+                  "personal_coding",
+                  "personal_interactive"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Interaction"
+          },
+          "max_tokens": {
+            "maximum": 131072,
+            "minimum": 1,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "messages": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 256,
+            "minItems": 1,
+            "title": "Messages",
+            "type": "array"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Model"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Session Id"
+          },
+          "stream": {
+            "default": false,
+            "title": "Stream",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "messages",
+          "max_tokens"
+        ],
+        "title": "MessagesRequest",
+        "type": "object"
+      },
+      "NativeResponse": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "ResponsesRequest": {
+        "additionalProperties": true,
+        "properties": {
+          "connection_id": {
+            "anyOf": [
+              {
+                "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Connection Id"
+          },
+          "input": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Input"
+          },
+          "instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Instructions"
+          },
+          "interaction": {
+            "anyOf": [
+              {
+                "enum": [
+                  "personal_coding",
+                  "personal_interactive"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Interaction"
+          },
+          "max_output_tokens": {
+            "anyOf": [
+              {
+                "maximum": 131072,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Output Tokens"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Model"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Session Id"
+          },
+          "stream": {
+            "default": false,
+            "title": "Stream",
+            "type": "boolean"
+          }
+        },
+        "title": "ResponsesRequest",
         "type": "object"
       },
       "StorageHealth": {
@@ -682,11 +1034,16 @@
       "ApplicationToken": {
         "scheme": "bearer",
         "type": "http"
+      },
+      "MessagesToken": {
+        "in": "header",
+        "name": "x-api-key",
+        "type": "apiKey"
       }
     }
   },
   "info": {
-    "title": "Selark Text Gateway API",
+    "title": "Selark Model Gateway API",
     "version": "2.0.0"
   },
   "openapi": "3.1.0",
@@ -755,8 +1112,29 @@
     },
     "/v1/chat/completions": {
       "post": {
-        "description": "仅支持文本 Chat Completions 子集。stream=true 返回 SSE，成功以 data: [DONE] 结束；流开始后的错误使用 event: error 和 GatewayError JSON，不发送成功结束标记。不自动重试生成。usage 可缺失，不能补零。max_tokens 与 max_completion_tokens 互斥；订阅有额外限制，见 HTTP API 指南。",
+        "description": "支持文本及 function 工具调用。stream=true 返回 SSE，成功以 data: [DONE] 结束；流开始后的错误使用 event: error 和 GatewayError JSON，不发送成功结束标记。不自动重试生成。usage 可缺失，不能补零。max_tokens 与 max_completion_tokens 互斥；订阅有额外限制，见 HTTP API 指南。",
         "operationId": "createChatCompletion",
+        "parameters": [
+          {
+            "description": "可选连接 ID；请求体 connection_id 优先。",
+            "in": "header",
+            "name": "X-Selark-Connection",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "套餐用途；请求体 interaction 优先。",
+            "in": "header",
+            "name": "X-Selark-Interaction",
+            "schema": {
+              "enum": [
+                "personal_coding",
+                "personal_interactive"
+              ]
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -935,7 +1313,215 @@
             "description": "结构化错误；见 HTTP API 的状态码说明。"
           }
         },
-        "summary": "文本生成：普通 JSON 或 SSE",
+        "summary": "文本与工具调用：普通 JSON 或 SSE",
+        "tags": [
+          "gateway"
+        ],
+        "x-automatic-retry": false,
+        "x-max-body-bytes": 1048576
+      }
+    },
+    "/v1/messages": {
+      "post": {
+        "description": "按供应商官方原生协议转发工具、思考和内容块，不执行工具或自动重试。保留事件 type 及 event 名称；Responses 以 response.completed/incomplete/failed，Messages 以 message_stop 结束，不追加 [DONE]。未知扩展字段原样交给上游。Responses 省略输出上限时遵循应用硬上限；无硬上限时只做本地估算预留，保留供应商默认输出行为。ChatGPT 订阅例外，只接受流式且不支持输出硬上限。见 HTTP API 指南的供应商协议矩阵。",
+        "operationId": "createMessage",
+        "parameters": [
+          {
+            "description": "可选连接 ID；请求体 connection_id 优先。",
+            "in": "header",
+            "name": "X-Selark-Connection",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "套餐用途；请求体 interaction 优先。",
+            "in": "header",
+            "name": "X-Selark-Interaction",
+            "schema": {
+              "enum": [
+                "personal_coding",
+                "personal_interactive"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessagesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NativeResponse"
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          }
+        },
+        "security": [
+          {
+            "ApplicationToken": []
+          },
+          {
+            "MessagesToken": []
+          }
+        ],
+        "summary": "原生 Anthropic Messages 与工具调用",
         "tags": [
           "gateway"
         ],
@@ -1112,6 +1698,206 @@
         "tags": [
           "gateway"
         ]
+      }
+    },
+    "/v1/responses": {
+      "post": {
+        "description": "按供应商官方原生协议转发工具、思考和内容块，不执行工具或自动重试。保留事件 type 及 event 名称；Responses 以 response.completed/incomplete/failed，Messages 以 message_stop 结束，不追加 [DONE]。未知扩展字段原样交给上游。Responses 省略输出上限时遵循应用硬上限；无硬上限时只做本地估算预留，保留供应商默认输出行为。ChatGPT 订阅例外，只接受流式且不支持输出硬上限。见 HTTP API 指南的供应商协议矩阵。",
+        "operationId": "createResponse",
+        "parameters": [
+          {
+            "description": "可选连接 ID；请求体 connection_id 优先。",
+            "in": "header",
+            "name": "X-Selark-Connection",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "套餐用途；请求体 interaction 优先。",
+            "in": "header",
+            "name": "X-Selark-Interaction",
+            "schema": {
+              "enum": [
+                "personal_coding",
+                "personal_interactive"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponsesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NativeResponse"
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "成功"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayError"
+                }
+              }
+            },
+            "description": "结构化错误；见 HTTP API 的状态码说明。"
+          }
+        },
+        "summary": "原生 Responses 与工具调用",
+        "tags": [
+          "gateway"
+        ],
+        "x-automatic-retry": false,
+        "x-max-body-bytes": 1048576
       }
     }
   },

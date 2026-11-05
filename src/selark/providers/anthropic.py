@@ -1,5 +1,6 @@
 """Translate Anthropic Messages text responses to the Selark Chat Completions subset."""
 
+import json
 import time
 
 import httpx
@@ -30,6 +31,8 @@ def finish_reason(reason):
         return "stop" if reason != "refusal" else "content_filter"
     if reason == "max_tokens":
         return "length"
+    if reason == "tool_use":
+        return "tool_calls"
     raise protocol_error("上游返回了当前文本子集不支持的结束原因。")
 
 
@@ -51,6 +54,8 @@ class AnthropicProvider(MiMoProvider):
         if any(m.reasoning_content is not None for m in request.messages):
             unsupported("Anthropic 思考块需要原生结构；当前文本接口不接收 reasoning_content。")
         data = request.upstream_payload(model)
+        if request.response_format is not None:
+            unsupported("Anthropic 结构化输出请使用原生 /v1/messages 的 output_config。")
         if self.config.anthropic_version == "2026-10-21" and any(
             key in data for key in ("temperature", "top_p")
         ):
@@ -62,8 +67,41 @@ class AnthropicProvider(MiMoProvider):
             unsupported("Anthropic temperature 需在 0–1，且不能同时设置 temperature 与 top_p。")
         system, messages = [], []
         for message in data["messages"]:
-            content = message["content"]
-            parts = [{"type": "text", "text": content}] if isinstance(content, str) else content
+            content = message.get("content")
+            parts = (
+                [{"type": "text", "text": content}] if isinstance(content, str) else (content or [])
+            )
+            if message["role"] == "tool":
+                part = {
+                    "type": "tool_result",
+                    "tool_use_id": message["tool_call_id"],
+                    "content": content,
+                }
+                if (
+                    messages
+                    and messages[-1]["role"] == "user"
+                    and all(p.get("type") == "tool_result" for p in messages[-1]["content"])
+                ):
+                    messages[-1]["content"].append(part)
+                else:
+                    messages.append({"role": "user", "content": [part]})
+                continue
+            parts = list(parts)
+            for call in message.get("tool_calls") or []:
+                try:
+                    arguments = strict_json(call["function"]["arguments"])
+                except ValueError:
+                    unsupported("Anthropic 工具参数必须是 JSON 对象。")
+                if not isinstance(arguments, dict):
+                    unsupported("Anthropic 工具参数必须是 JSON 对象。")
+                parts.append(
+                    {
+                        "type": "tool_use",
+                        "id": call["id"],
+                        "name": call["function"]["name"],
+                        "input": arguments,
+                    }
+                )
             if message["role"] in {"system", "developer"}:
                 if messages:
                     unsupported("当前 Anthropic 适配只支持对话开头的 system/developer 消息。")
@@ -76,7 +114,7 @@ class AnthropicProvider(MiMoProvider):
             "model": model,
             "messages": messages,
             "stream": data["stream"],
-            "max_tokens": data["max_completion_tokens"],
+            "max_tokens": data.get("max_completion_tokens", 1024),
         }
         if system:
             result["system"] = system
@@ -87,6 +125,49 @@ class AnthropicProvider(MiMoProvider):
             result["stop_sequences"] = (
                 [data["stop"]] if isinstance(data["stop"], str) else data["stop"]
             )
+        if request.tools is not None:
+            result["tools"] = []
+            for tool in request.tools:
+                function = tool.get("function")
+                if (
+                    tool.get("type") != "function"
+                    or not isinstance(function, dict)
+                    or not isinstance(function.get("name"), str)
+                ):
+                    unsupported(
+                        "Chat Completions 适配仅接收 function 工具；其他工具使用 /v1/messages。"
+                    )
+                if set(function) - {"name", "description", "parameters", "strict"}:
+                    unsupported("工具定义包含无法映射的字段，请使用 /v1/messages。")
+                result["tools"].append(
+                    {k: v for k, v in function.items() if k != "parameters"}
+                    | {
+                        "input_schema": function.get(
+                            "parameters", {"type": "object", "properties": {}}
+                        )
+                    }
+                )
+        choice = request.tool_choice
+        if isinstance(choice, str):
+            if choice not in {"auto", "none", "required"}:
+                unsupported("不支持的 tool_choice。")
+            result["tool_choice"] = {"type": "any" if choice == "required" else choice}
+        elif isinstance(choice, dict):
+            if (
+                choice.get("type") != "function"
+                or not isinstance(choice.get("function"), dict)
+                or not isinstance(choice["function"].get("name"), str)
+            ):
+                unsupported("不支持的 tool_choice。")
+            result["tool_choice"] = {"type": "tool", "name": choice["function"]["name"]}
+        if request.parallel_tool_calls is not None:
+            result.setdefault("tool_choice", {"type": "auto"})[
+                "disable_parallel_tool_use"
+            ] = not request.parallel_tool_calls
+        if request.thinking is not None and request.thinking != {"type": "disabled"}:
+            unsupported("需要签名思考块的 Anthropic 工具调用请使用原生 /v1/messages。")
+        if request.thinking is not None:
+            result["thinking"] = request.thinking
         return result
 
     def normalize(self, data, *, stream=False):
@@ -96,12 +177,25 @@ class AnthropicProvider(MiMoProvider):
             or not isinstance(data.get("content"), list)
         ):
             raise protocol_error()
-        text = []
+        text, calls = [], []
         for part in data["content"]:
             if not isinstance(part, dict):
                 raise protocol_error()
             if part.get("type") == "text" and isinstance(part.get("text"), str):
                 text.append(part["text"])
+            elif part.get("type") == "tool_use" and isinstance(part.get("input"), dict):
+                calls.append(
+                    {
+                        "id": part.get("id"),
+                        "type": "function",
+                        "function": {
+                            "name": part.get("name"),
+                            "arguments": json.dumps(
+                                part["input"], ensure_ascii=False, separators=(",", ":")
+                            ),
+                        },
+                    }
+                )
             elif part.get("type") not in {"thinking", "redacted_thinking"}:
                 raise protocol_error("上游返回了非文本内容。")
         return {
@@ -112,7 +206,11 @@ class AnthropicProvider(MiMoProvider):
             "choices": [
                 {
                     "index": 0,
-                    "message": {"role": "assistant", "content": "".join(text)},
+                    "message": {
+                        "role": "assistant",
+                        "content": "".join(text) if text or not calls else None,
+                        **({"tool_calls": calls} if calls else {}),
+                    },
                     "finish_reason": finish_reason(data.get("stop_reason")),
                 }
             ],
@@ -122,8 +220,9 @@ class AnthropicProvider(MiMoProvider):
     async def events(self, response):
         decoder, identity, model = SSEDecoder(), None, None
         counts, blocks, stopped, reason = {}, set(), False, None
+        tools = {}
 
-        def chunk(text=None, *, final=False):
+        def chunk(text=None, *, final=False, tool=None):
             return {
                 "id": identity,
                 "model": model,
@@ -132,7 +231,9 @@ class AnthropicProvider(MiMoProvider):
                 "choices": [
                     {
                         "index": 0,
-                        "delta": {} if text is None else {"content": text},
+                        "delta": {"tool_calls": [tool]}
+                        if tool is not None
+                        else ({} if text is None else {"content": text}),
                         "finish_reason": reason if final else None,
                     }
                 ],
@@ -173,6 +274,31 @@ class AnthropicProvider(MiMoProvider):
                             raise protocol_error()
                         if part["text"]:
                             yield chunk(part["text"])
+                    elif part.get("type") == "tool_use":
+                        index = data.get("index")
+                        if (
+                            type(index) is not int
+                            or index in blocks
+                            or not isinstance(part.get("id"), str)
+                            or not isinstance(part.get("name"), str)
+                            or not isinstance(part.get("input"), dict)
+                        ):
+                            raise protocol_error("Anthropic 工具调用无效。")
+                        blocks.add(index)
+                        tools[index] = len(tools)
+                        yield chunk(
+                            tool={
+                                "index": tools[index],
+                                "id": part["id"],
+                                "type": "function",
+                                "function": {
+                                    "name": part["name"],
+                                    "arguments": json.dumps(part["input"], ensure_ascii=False)
+                                    if part["input"]
+                                    else "",
+                                },
+                            }
+                        )
                     elif part.get("type") not in {"thinking", "redacted_thinking"}:
                         raise protocol_error("当前仅支持 Anthropic 文本内容。")
                 elif kind == "content_block_delta":
@@ -180,11 +306,27 @@ class AnthropicProvider(MiMoProvider):
                     if not isinstance(delta, dict):
                         raise protocol_error()
                     if delta.get("type") == "text_delta":
-                        if data.get("index") not in blocks or not isinstance(
-                            delta.get("text"), str
+                        if (
+                            data.get("index") not in blocks
+                            or data.get("index") in tools
+                            or not isinstance(delta.get("text"), str)
                         ):
                             raise protocol_error()
                         yield chunk(delta["text"])
+                    elif delta.get("type") == "input_json_delta":
+                        index = data.get("index")
+                        if (
+                            index not in blocks
+                            or index not in tools
+                            or not isinstance(delta.get("partial_json"), str)
+                        ):
+                            raise protocol_error("Anthropic 工具参数片段无效。")
+                        yield chunk(
+                            tool={
+                                "index": tools[index],
+                                "function": {"arguments": delta["partial_json"]},
+                            }
+                        )
                 elif kind == "content_block_stop":
                     blocks.discard(data.get("index"))
                 elif kind == "message_delta":

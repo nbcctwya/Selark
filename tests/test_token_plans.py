@@ -569,3 +569,107 @@ def test_official_plan_endpoint_cannot_bypass_policy_as_ordinary_api(runtime, pr
         runtime.add_connection(
             "misclassified", provider, "fake", base_url=url, allowed_models=[MODEL]
         )
+
+
+@pytest.mark.parametrize("wire", ["chat/completions", "messages", "responses"])
+def test_plan_official_tools_keep_intent_quota_and_real_identity(runtime, plan, wire):
+    from .support.protocol import function_tools, tool_calls
+    from .test_chatgpt import result as response_result
+    from .test_connections import native_reply
+
+    issued = caller(runtime)
+    calls = []
+    history = [
+        {"role": "user", "content": "读取文件"},
+        {
+            "role": "assistant",
+            "content": None,
+            "reasoning_content": "保留思考",
+            "tool_calls": tool_calls(),
+        },
+        *[
+            {"role": "tool", "tool_call_id": call["id"], "content": "文件内容"}
+            for call in tool_calls()
+        ],
+    ]
+    if wire == "chat/completions":
+        body = {"messages": history, "tools": function_tools(), "max_tokens": 128}
+        result = reply()
+        result["choices"][0]["message"] |= {"content": None, "tool_calls": tool_calls()}
+        result["choices"][0]["finish_reason"] = "tool_calls"
+    elif wire == "messages":
+        body = {
+            "messages": [{"role": "user", "content": "读取文件"}],
+            "tools": [
+                {"name": "read_file", "input_schema": function_tools()[0]["function"]["parameters"]}
+            ],
+            "max_tokens": 128,
+            "thinking": {"type": "enabled", "budget_tokens": 64},
+        }
+        result = native_reply() | {
+            "model": MODEL,
+            "stop_reason": "tool_use",
+            "content": [
+                {"type": "thinking", "thinking": "保留思考", "signature": "opaque"},
+                {
+                    "type": "tool_use",
+                    "id": "call_0",
+                    "name": "read_file",
+                    "input": {"path": "main.py"},
+                },
+            ],
+        }
+    else:
+        body = {
+            "input": [{"role": "user", "content": "读取文件"}],
+            "tools": [{"type": "function", **function_tools()[0]["function"]}],
+            "max_output_tokens": 128,
+            "reasoning": {"effort": "low"},
+        }
+        result = response_result() | {
+            "model": MODEL,
+            "output": [
+                {
+                    "type": "function_call",
+                    "id": "fc_0",
+                    "call_id": "call_0",
+                    "name": "read_file",
+                    "arguments": '{"path":"main.py"}',
+                }
+            ],
+        }
+    body |= {"model": MODEL, "stream": False}
+
+    def upstream(request):
+        calls.append(request)
+        assert request.headers["authorization"] == "Bearer fake-plan-key"
+        assert request.headers["user-agent"].startswith("Selark/")
+        if request.method == "GET":
+            assert request.url.path == "/coding/v1/usages"
+            return httpx.Response(200, json=quota())
+        assert request.url.path == "/coding/v1/" + wire
+        sent = json.loads(request.content)
+        if wire == "chat/completions":
+            assert sent["messages"] == history and sent["tools"] == function_tools()
+        else:
+            assert sent == body
+        return httpx.Response(200, json=result)
+
+    with TestClient(app_for(runtime, upstream)) as client:
+        request_headers = auth(issued) | {"X-Selark-Connection": PLAN}
+        denied = client.post("/v1/" + wire, headers=request_headers, json=body)
+        assert denied.status_code == 403 and not calls
+        response = client.post(
+            "/v1/" + wire,
+            headers=request_headers | {"X-Selark-Interaction": "personal_coding"},
+            json=body,
+        )
+        assert response.status_code == 200, response.text
+        assert response.json() == result
+    assert [request.method for request in calls] == ["GET", "POST"]
+    row = next(row for row in runtime.store.records({}) if row["upstream_attempts"])
+    assert (
+        row["purpose"] == "interactive_coding"
+        and row["resource_type"] == "token_plan"
+        and row["usage_final"]
+    )

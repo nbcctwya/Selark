@@ -9,7 +9,7 @@ from selark.contracts import dashboard as d
 from selark.contracts import gateway as g
 from selark.dashboard import ModelApproval as LegacyModelApproval
 from selark.dashboard_api import schemas as requests
-from selark.schemas import ChatRequest
+from selark.schemas import ChatRequest, MessagesRequest, ResponsesRequest
 
 CONTRACT_VERSION = "2.0.0"
 
@@ -469,6 +469,9 @@ def gateway_document():
     for name in ("Health", "GatewayError", "GatewayModels", "ChatCompletion"):
         register(schemas, name, getattr(g, name))
     register(schemas, "ChatRequest", ChatRequest)
+    register(schemas, "ResponsesRequest", ResponsesRequest)
+    register(schemas, "MessagesRequest", MessagesRequest)
+    schemas["NativeResponse"] = {"type": "object", "additionalProperties": True}
     for option in schemas["ChatRequest"]["properties"]["stop"]["anyOf"]:
         if option.get("type") == "array":
             option.update(minItems=1, maxItems=4)
@@ -485,8 +488,16 @@ def gateway_document():
             "post",
             "/v1/chat/completions",
             "createChatCompletion",
-            "文本生成：普通 JSON 或 SSE",
+            "文本与工具调用：普通 JSON 或 SSE",
             "ChatCompletion",
+        ),
+        ("post", "/v1/responses", "createResponse", "原生 Responses 与工具调用", "NativeResponse"),
+        (
+            "post",
+            "/v1/messages",
+            "createMessage",
+            "原生 Anthropic Messages 与工具调用",
+            "NativeResponse",
         ),
     ):
         operation = {
@@ -516,11 +527,17 @@ def gateway_document():
                 }
             ]
         if method == "post":
+            native = path != "/v1/chat/completions"
+            request_schema = {
+                "/v1/chat/completions": "ChatRequest",
+                "/v1/responses": "ResponsesRequest",
+                "/v1/messages": "MessagesRequest",
+            }[path]
             operation["requestBody"] = {
                 "required": True,
                 "content": {
                     "application/json": {
-                        "schema": ref("ChatRequest"),
+                        "schema": ref(request_schema),
                         "example": {
                             "messages": [{"role": "user", "content": "你好"}],
                             "max_completion_tokens": 64,
@@ -539,24 +556,55 @@ def gateway_document():
                 ),
             }
             operation["description"] = (
-                "仅支持文本 Chat Completions 子集。stream=true 返回 SSE，"
+                "支持文本及 function 工具调用。stream=true 返回 SSE，"
                 "成功以 data: [DONE] 结束；流开始后的错误使用 event: error 和 "
                 "GatewayError JSON，不发送成功结束标记。不自动重试生成。"
                 "usage 可缺失，不能补零。max_tokens 与 max_completion_tokens 互斥；"
                 "订阅有额外限制，见 HTTP API 指南。"
             )
+            if native:
+                operation["description"] = (
+                    "按供应商官方原生协议转发工具、思考和内容块，不执行工具或自动重试。"
+                    "保留事件 type 及 event 名称；Responses 以 "
+                    "response.completed/incomplete/failed，"
+                    "Messages 以 message_stop 结束，不追加 [DONE]。未知扩展字段原样交给上游。"
+                    "Responses 省略输出上限时遵循应用硬上限；无硬上限时只做本地估算预留，"
+                    "保留供应商默认输出行为。ChatGPT 订阅例外，"
+                    "只接受流式且不支持输出硬上限。见 HTTP API 指南的供应商协议矩阵。"
+                )
+                operation["requestBody"]["content"]["application/json"].pop("example")
+                operation["responses"]["200"]["content"]["text/event-stream"].pop("example")
+            operation["parameters"] = [
+                {
+                    "in": "header",
+                    "name": "X-Selark-Connection",
+                    "schema": {"type": "string"},
+                    "description": "可选连接 ID；请求体 connection_id 优先。",
+                },
+                {
+                    "in": "header",
+                    "name": "X-Selark-Interaction",
+                    "schema": {"enum": ["personal_coding", "personal_interactive"]},
+                    "description": "套餐用途；请求体 interaction 优先。",
+                },
+            ]
+            if path == "/v1/messages":
+                operation["security"] = [{"ApplicationToken": []}, {"MessagesToken": []}]
             operation["x-max-body-bytes"] = 1024 * 1024
             operation["x-automatic-retry"] = False
         paths[path] = {method: operation}
     return {
         "openapi": "3.1.0",
-        "info": {"title": "Selark Text Gateway API", "version": CONTRACT_VERSION},
+        "info": {"title": "Selark Model Gateway API", "version": CONTRACT_VERSION},
         "x-selark-version": __version__,
         "servers": [{"url": "http://127.0.0.1:8787"}],
         "security": [{"ApplicationToken": []}],
         "paths": paths,
         "components": {
-            "securitySchemes": {"ApplicationToken": {"type": "http", "scheme": "bearer"}},
+            "securitySchemes": {
+                "ApplicationToken": {"type": "http", "scheme": "bearer"},
+                "MessagesToken": {"type": "apiKey", "in": "header", "name": "x-api-key"},
+            },
             "schemas": schemas,
         },
     }

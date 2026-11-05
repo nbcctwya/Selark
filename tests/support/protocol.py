@@ -13,6 +13,36 @@ UPSTREAM_KEY = "unit-test-upstream-key"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 
 
+def function_tools():
+    return [
+        {
+            "type": "function",
+            "function": {
+                "name": "read_file",
+                "description": "读取调用方允许的文件；不由网关执行。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"path": {"type": "string"}},
+                    "required": ["path"],
+                    "additionalProperties": False,
+                },
+                "strict": True,
+            },
+        }
+    ]
+
+
+def tool_calls():
+    return [
+        {
+            "id": "call_" + str(i),
+            "type": "function",
+            "function": {"name": "read_file", "arguments": '{ "path": "测试 ' + str(i) + '.py" }'},
+        }
+        for i in range(2)
+    ]
+
+
 def completion(usage=True):
     data = {
         "id": "test-completion",

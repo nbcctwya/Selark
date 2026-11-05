@@ -130,7 +130,7 @@ def observed_token_floor(usage, provider):
     if not isinstance(usage, dict):
         return 0
     fields = ("prompt_tokens", "completion_tokens")
-    if provider == "anthropic":
+    if messages_counters(usage, provider):
         fields = (
             "input_tokens",
             "output_tokens",
@@ -149,6 +149,15 @@ def observed_token_floor(usage, provider):
     return min(MAX_COUNT, max(parts, total if valid_count(total) else 0))
 
 
+def messages_counters(usage, provider):
+    """Messages-compatible vendors report cache counts outside input_tokens too."""
+    return provider == "anthropic" or (
+        isinstance(usage, dict)
+        and "input_tokens" in usage
+        and any(key in usage for key in ("cache_read_input_tokens", "cache_creation_input_tokens"))
+    )
+
+
 def observe_usage(state, usage):
     """Cumulative stream counters may repeat, but must not move backwards."""
     peak = state.setdefault("usage_peak", {})
@@ -164,3 +173,26 @@ def observe_usage(state, usage):
 
     observe(peak, usage)
     state["usage"] = usage
+
+
+def response_usage(response):
+    raw = response.get("usage")
+    if not isinstance(raw, dict):
+        return None
+    normalized = {}
+    for source, target in (
+        ("input_tokens", "prompt_tokens"),
+        ("output_tokens", "completion_tokens"),
+        ("total_tokens", "total_tokens"),
+    ):
+        if source in raw:
+            normalized[target] = raw[source]
+    for source, target, fields in (
+        ("input_tokens_details", "prompt_tokens_details", ("cached_tokens",)),
+        ("output_tokens_details", "completion_tokens_details", ("reasoning_tokens",)),
+    ):
+        if isinstance(raw.get(source), dict):
+            normalized[target] = {k: raw[source][k] for k in fields if k in raw[source]}
+        elif source in raw:
+            normalized[target] = raw[source]
+    return sanitize_usage(normalized)

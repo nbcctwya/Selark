@@ -14,7 +14,7 @@ from selark.errors import GatewayError
 from selark.providers.discovery import discover
 from selark.runtime import Runtime, fingerprint
 
-from .support.protocol import completion, event, sse
+from .support.protocol import completion, event, function_tools, sse, tool_calls
 
 
 @pytest.fixture
@@ -577,3 +577,374 @@ def test_different_connections_share_bounded_execution_queue(multi):
         assert {r["connection_id"] for r in multi.store.records({})} == {"first", "second"}
 
     asyncio.run(scenario())
+
+
+@pytest.mark.parametrize(
+    "provider", ["mimo", "deepseek", "zhipu", "kimi", "openai", "openai-compatible", "anthropic"]
+)
+@pytest.mark.parametrize("streaming", [False, True])
+def test_official_tool_roundtrip_preserves_calls_results_and_usage(multi, provider, streaming):
+    multi.add_connection(
+        "tools",
+        provider,
+        "fake-tool-key",
+        base_url="https://upstream.test/v1",
+        allowed_models=["shared"],
+    )
+    tools, calls, captured = function_tools(), tool_calls(), []
+    request_body = {
+        "connection_id": "tools",
+        "messages": [{"role": "user", "content": "读取两个文件\n  保留空白"}],
+        "tools": tools,
+        "tool_choice": "auto",
+        "parallel_tool_calls": True,
+        "max_tokens": 256,
+        "stream": streaming,
+    }
+    uncapped = provider == "deepseek" and not streaming
+    if uncapped:
+        request_body.pop("max_tokens")
+    answer = completion() | {"model": "shared"}
+    answer["choices"][0]["message"] = {"role": "assistant", "content": None, "tool_calls": calls}
+    answer["choices"][0]["finish_reason"] = "tool_calls"
+
+    def upstream(request):
+        data = json.loads(request.content)
+        captured.append(data)
+        if provider == "anthropic":
+            assert data["tools"][0]["input_schema"] == tools[0]["function"]["parameters"]
+            assert data["tool_choice"] == {"type": "auto", "disable_parallel_tool_use": False}
+            result = native_reply() | {"model": "shared"}
+            if len(captured) == 1:
+                result["content"] = [
+                    {
+                        "type": "tool_use",
+                        "id": call["id"],
+                        "name": "read_file",
+                        "input": json.loads(call["function"]["arguments"]),
+                    }
+                    for call in calls
+                ]
+                result["stop_reason"] = "tool_use"
+            if data["stream"]:
+                frames = [
+                    {
+                        "type": "message_start",
+                        "message": result | {"content": [], "stop_reason": None},
+                    }
+                ]
+                for index, block in enumerate(result["content"]):
+                    frames += [
+                        {
+                            "type": "content_block_start",
+                            "index": index,
+                            "content_block": block | {"input": {}},
+                        },
+                        {
+                            "type": "content_block_delta",
+                            "index": index,
+                            "delta": {
+                                "type": "input_json_delta",
+                                "partial_json": json.dumps(block["input"], ensure_ascii=False),
+                            },
+                        },
+                        {"type": "content_block_stop", "index": index},
+                    ]
+                frames += [
+                    {
+                        "type": "message_delta",
+                        "delta": {"stop_reason": "tool_use"},
+                        "usage": {"output_tokens": 2},
+                    },
+                    {"type": "message_stop"},
+                ]
+                return httpx.Response(
+                    200, content=sse(*frames), headers={"content-type": "text/event-stream"}
+                )
+            return httpx.Response(200, json=result)
+        assert (
+            data["tools"] == tools
+            and data["tool_choice"] == "auto"
+            and data["parallel_tool_calls"] is True
+        )
+        assert "thinking" not in data  # No forced mode on caller-owned agent requests.
+        if uncapped:
+            assert not {"max_tokens", "max_completion_tokens"} & data.keys()
+        result = answer if len(captured) == 1 else completion() | {"model": "shared"}
+        if data["stream"]:
+            frames = []
+            for index, call in enumerate(calls):
+                for half, fragment in enumerate(
+                    (call["function"]["arguments"][:10], call["function"]["arguments"][10:])
+                ):
+                    delta = {"index": index, "function": {"arguments": fragment}}
+                    if half == 0:
+                        delta |= {"id": call["id"], "type": "function"}
+                        delta["function"]["name"] = "read_file"
+                    chunk = event(None) | {"model": "shared"}
+                    chunk["choices"][0]["delta"] = {"tool_calls": [delta]}
+                    frames.append(chunk)
+            frames.append(event(None, "tool_calls", result["usage"]) | {"model": "shared"})
+            return httpx.Response(
+                200, content=sse(*frames, "[DONE]"), headers={"content-type": "text/event-stream"}
+            )
+        return httpx.Response(200, json=result)
+
+    with TestClient(
+        create_app(multi.settings(), runtime=multi, transport=httpx.MockTransport(upstream))
+    ) as client:
+        first = client.post("/v1/chat/completions", headers=token(multi), json=request_body)
+        assert first.status_code == 200, first.text
+        if streaming:
+            assert "[DONE]" in first.text and "event: error" not in first.text
+            reconstructed = {}
+            for line in first.text.splitlines():
+                if line.startswith("data: {"):
+                    for choice in json.loads(line[6:])["choices"]:
+                        for call in choice["delta"].get("tool_calls", []):
+                            saved = reconstructed.setdefault(
+                                call["index"], {"function": {"arguments": ""}}
+                            )
+                            saved.update(
+                                {k: v for k, v in call.items() if k not in {"index", "function"}}
+                            )
+                            function = call.get("function", {})
+                            saved["function"].update(
+                                {k: v for k, v in function.items() if k != "arguments"}
+                            )
+                            saved["function"]["arguments"] += function.get("arguments", "")
+            returned = [reconstructed[index] for index in sorted(reconstructed)]
+        else:
+            assert first.json()["choices"][0]["finish_reason"] == "tool_calls"
+            returned = first.json()["choices"][0]["message"]["tool_calls"]
+        for expected, actual in zip(calls, returned, strict=True):
+            assert expected["id"] == actual["id"]
+            assert json.loads(expected["function"]["arguments"]) == json.loads(
+                actual["function"]["arguments"]
+            )
+            if provider != "anthropic":
+                assert actual == expected
+        history = (
+            request_body["messages"]
+            + [{"role": "assistant", "content": None, "tool_calls": returned, "refusal": None}]
+            + [
+                {"role": "tool", "tool_call_id": call["id"], "content": "  文件内容\n"}
+                for call in returned
+            ]
+        )
+        second = client.post(
+            "/v1/chat/completions",
+            headers=token(multi),
+            json=request_body | {"messages": history, "stream": False},
+        )
+        assert second.status_code == 200, second.text
+    assert len(captured) == 2
+    if provider == "anthropic":
+        assert [block["tool_use_id"] for block in captured[1]["messages"][-1]["content"]] == [
+            c["id"] for c in calls
+        ]
+        assert all(
+            block["content"] == "  文件内容\n" for block in captured[1]["messages"][-1]["content"]
+        )
+    else:
+        assert captured[1]["messages"] == history
+    rows = multi.store.records({"connection_id": "tools"})
+    assert len(rows) == 2 and all(
+        row["upstream_attempts"] == 1 and row["usage_final"] for row in rows
+    )
+    assert all(row["capability"].startswith("tool_") for row in rows)
+    if uncapped:
+        assert all(
+            row["resources"]["output_limit"] is None
+            and row["resources"]["estimated_output_reservation"] == 131072
+            for row in rows
+        )
+
+
+@pytest.mark.parametrize(
+    "provider,wire,path",
+    [
+        ("mimo", "messages", "/anthropic/v1/messages"),
+        ("deepseek", "messages", "/anthropic/v1/messages"),
+        ("kimi", "messages", "/anthropic/v1/messages"),
+        ("anthropic", "messages", "/v1/messages"),
+        ("openai-compatible", "messages", "/v1/messages"),
+        ("mimo", "responses", "/v1/responses"),
+        ("deepseek", "responses", "/responses"),
+        ("kimi", "responses", "/v1/responses"),
+        ("openai", "responses", "/v1/responses"),
+        ("openai-compatible", "responses", "/v1/responses"),
+    ],
+)
+@pytest.mark.parametrize("streaming", [False, True])
+def test_native_protocol_preserves_tools_thinking_headers_and_terminal(
+    multi, provider, wire, path, streaming
+):
+    from .test_chatgpt import result as responses_result
+
+    multi.add_connection(
+        "native-tools",
+        provider,
+        "fake-native-key",
+        base_url="https://upstream.test/v1",
+        allowed_models=["shared"],
+    )
+    calls = []
+    if wire == "responses":
+        output = [
+            {
+                "type": "reasoning",
+                "id": "rs_1",
+                "summary": [],
+                "encrypted_content": "opaque-signed-state",
+            },
+            {
+                "type": "function_call",
+                "id": "fc_1",
+                "call_id": "call_1",
+                "name": "read_file",
+                "arguments": '{ "path": "你好.py" }',
+                "status": "completed",
+            },
+            {
+                "type": "custom_tool_call",
+                "id": "ct_1",
+                "call_id": "call_2",
+                "name": "apply_patch",
+                "input": "opaque caller tool input",
+                "status": "completed",
+            },
+        ]
+        result = responses_result() | {"model": "shared", "output": output}
+        frames = [
+            {
+                "type": "response.created",
+                "response": result | {"status": "in_progress", "usage": None, "output": []},
+            },
+            {"type": "response.output_item.added", "output_index": 1, "item": output[1]},
+            {
+                "type": "response.function_call_arguments.delta",
+                "output_index": 1,
+                "item_id": "fc_1",
+                "delta": output[1]["arguments"],
+            },
+            {"type": "response.completed", "response": result},
+        ]
+        body = {
+            "input": [
+                {"role": "user", "content": "  原始请求\n"},
+                *output,
+                {"type": "function_call_output", "call_id": "call_1", "output": "文件内容"},
+                {"type": "custom_tool_call_output", "call_id": "call_2", "output": "done"},
+            ],
+            "tools": [
+                {"type": "function", **function_tools()[0]["function"]},
+                {"type": "custom", "name": "apply_patch", "format": {"type": "text"}},
+            ],
+            "max_output_tokens": 128,
+            "store": False,
+            "include": ["reasoning.encrypted_content"],
+        }
+    else:
+        output = [
+            {"type": "thinking", "thinking": "原始思考", "signature": "opaque-signature"},
+            {"type": "tool_use", "id": "call_1", "name": "read_file", "input": {"path": "你好.py"}},
+        ]
+        result = native_reply() | {"model": "shared", "content": output, "stop_reason": "tool_use"}
+        frames = [
+            {"type": "message_start", "message": result | {"content": [], "stop_reason": None}},
+            {
+                "type": "content_block_start",
+                "index": 0,
+                "content_block": {"type": "thinking", "thinking": ""},
+            },
+            {
+                "type": "content_block_delta",
+                "index": 0,
+                "delta": {"type": "signature_delta", "signature": "opaque-signature"},
+            },
+            {"type": "content_block_stop", "index": 0},
+            {"type": "content_block_start", "index": 1, "content_block": output[1] | {"input": {}}},
+            {
+                "type": "content_block_delta",
+                "index": 1,
+                "delta": {"type": "input_json_delta", "partial_json": '{"path":"你好.py"}'},
+            },
+            {"type": "content_block_stop", "index": 1},
+            {
+                "type": "message_delta",
+                "delta": {"stop_reason": "tool_use"},
+                "usage": {"output_tokens": 2},
+            },
+            {"type": "message_stop"},
+        ]
+        body = {
+            "system": [
+                {
+                    "type": "text",
+                    "text": "  调用方系统指令\n",
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ],
+            "messages": [
+                {"role": "user", "content": "读取文件"},
+                {"role": "assistant", "content": output},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "tool_result", "tool_use_id": "call_1", "content": "文件内容"}
+                    ],
+                },
+            ],
+            "tools": [
+                {"name": "read_file", "input_schema": function_tools()[0]["function"]["parameters"]}
+            ],
+            "thinking": {"type": "adaptive"},
+            "max_tokens": 128,
+        }
+    body |= {"model": "shared", "stream": streaming}
+
+    def upstream(request):
+        calls.append(request)
+        assert request.url.path == path
+        assert json.loads(request.content) == body
+        assert "local-native-token" not in str(request.headers)
+        if wire == "messages":
+            assert request.headers["anthropic-version"] == "2023-06-01"
+            assert request.headers["anthropic-beta"] == "test-feature"
+            assert request.url.params["beta"] == "true"
+        return (
+            httpx.Response(200, content=sse(*frames), headers={"content-type": "text/event-stream"})
+            if streaming
+            else httpx.Response(200, json=result)
+        )
+
+    headers = token(multi) | {
+        "X-Selark-Connection": "native-tools",
+        "anthropic-version": "2023-06-01",
+        "anthropic-beta": "test-feature",
+    }
+    if wire == "messages":
+        headers["x-api-key"] = headers.pop("Authorization").removeprefix("Bearer ")
+    with TestClient(
+        create_app(multi.settings(), runtime=multi, transport=httpx.MockTransport(upstream))
+    ) as client:
+        response = client.post(
+            "/v1/" + wire + ("?beta=true" if wire == "messages" else ""), headers=headers, json=body
+        )
+        assert response.status_code == 200, response.text
+        if streaming:
+            assert "[DONE]" not in response.text and "event: error" not in response.text
+            assert [
+                json.loads(line[6:])
+                for line in response.text.splitlines()
+                if line.startswith("data: ")
+            ] == frames
+        else:
+            assert response.json() == result
+    assert len(calls) == 1
+    row = multi.store.records({"connection_id": "native-tools"})[0]
+    assert (
+        row["upstream_result"] == "success" and row["usage_final"] and row["upstream_attempts"] == 1
+    )
+    assert row["protocol"] == wire and row["capability"].startswith(wire + "_")

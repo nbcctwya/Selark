@@ -14,7 +14,13 @@ from pydantic import Field, ValidationError, field_validator, model_validator
 from selark.config import ConfigError, StrictConfig
 from selark.connections import valid_model
 from selark.errors import GatewayError
-from selark.usage import MAX_COUNT, inconsistent_usage, observed_token_floor, valid_count
+from selark.usage import (
+    MAX_COUNT,
+    inconsistent_usage,
+    messages_counters,
+    observed_token_floor,
+    valid_count,
+)
 
 
 def decimal_text(value):
@@ -151,7 +157,16 @@ def input_estimate(payload):
     text = json.dumps(
         {
             key: payload[key]
-            for key in ("messages", "system", "input", "instructions")
+            for key in (
+                "messages",
+                "system",
+                "input",
+                "instructions",
+                "tools",
+                "tool_choice",
+                "response_format",
+                "text",
+            )
             if key in payload
         },
         ensure_ascii=False,
@@ -183,7 +198,7 @@ def measured_tokens(usage, provider):
         return None, "unknown"
     if valid_count(usage.get("total_tokens")):
         return usage["total_tokens"], "reported_total"
-    if provider == "anthropic":
+    if messages_counters(usage, provider):
         fields = (
             "input_tokens",
             "output_tokens",
@@ -200,7 +215,7 @@ def measured_tokens(usage, provider):
 def usage_cost(quote, usage, provider):
     if not quote or not isinstance(usage, dict) or inconsistent_usage(usage):
         return None
-    if provider == "anthropic":
+    if messages_counters(usage, provider):
         fields = (
             "input_tokens",
             "output_tokens",
@@ -298,6 +313,7 @@ def reserve(
     resource_type="api",
     plan=None,
     concurrent_requests=None,
+    output_reservation_only=False,
 ):
     if caller != "local-probe":
         identity = db.execute(
@@ -336,7 +352,9 @@ def reserve(
                 "chatgpt_reservation_required",
                 "请明确配置 chatgpt_output_reservation；这是本地估算预留，不是上游输出硬限制。",
             )
-    if policy.max_output_tokens is not None and output > policy.max_output_tokens:
+    if policy.max_output_tokens is not None and (
+        output_reservation_only or output > policy.max_output_tokens
+    ):
         raise GatewayError(403, "output_limit_exceeded", "请求输出上限超过此调用方允许值。")
     if (
         policy.max_estimated_input_tokens is not None
@@ -417,14 +435,16 @@ def reserve(
         "requested_model": model,
         "requested_alias": alias,
         "estimated_input_tokens": estimate,
-        "output_limit": None if resource_type == "chatgpt_subscription" else output,
+        "output_limit": None
+        if resource_type == "chatgpt_subscription" or output_reservation_only
+        else output,
         "reserved_tokens": total,
         "reserved_cost": reserve_cost,
         "price_snapshot": quote,
         "estimated_cost": None,
         "billed_cost": None,
     }
-    if resource_type == "chatgpt_subscription":
+    if resource_type == "chatgpt_subscription" or output_reservation_only:
         document["estimated_output_reservation"] = output
     db.execute(
         "INSERT INTO allocations VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",

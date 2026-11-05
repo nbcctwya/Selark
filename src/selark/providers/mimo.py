@@ -43,7 +43,7 @@ def response_identity(value):
 
 
 def text_choice(choice, *, stream=False):
-    """The supported subset is a single assistant text choice, at index zero."""
+    """Validate the envelope without rewriting text or native function calls."""
     if not isinstance(choice, dict) or type(choice.get("index")) is not int or choice["index"] != 0:
         raise protocol_error("上游返回了不支持的回复序号。")
     part = choice.get("delta" if stream else "message")
@@ -54,10 +54,39 @@ def text_choice(choice, *, stream=False):
     for key in ("content", "reasoning_content"):
         value = part.get(key)
         if (value is not None and not isinstance(value, str)) or (
-            key == "content" and not stream and value is None
+            key == "content" and not stream and value is None and not part.get("tool_calls")
         ):
             raise protocol_error("上游返回了非文本回复。")
+    if "tool_calls" in part and part["tool_calls"] is not None:
+        calls = part["tool_calls"]
+        if not isinstance(calls, list) or len(calls) > 128:
+            raise protocol_error("上游工具调用列表无效。")
+        for call in calls:
+            if not isinstance(call, dict):
+                raise protocol_error("上游工具调用无效。")
+            function = call.get("function")
+            if not stream and (
+                not response_identity(call.get("id"))
+                or call.get("type") != "function"
+                or not isinstance(function, dict)
+                or not isinstance(function.get("name"), str)
+                or not function["name"]
+                or not isinstance(function.get("arguments"), str)
+            ):
+                raise protocol_error("上游 function 工具调用无效。")
+            if stream and (type(call.get("index")) is not int or not 0 <= call["index"] < 128):
+                raise protocol_error("上游工具调用序号无效。")
+            if function is not None and (
+                not isinstance(function, dict)
+                or any(
+                    function.get(k) is not None and not isinstance(function[k], str)
+                    for k in ("name", "arguments")
+                )
+            ):
+                raise protocol_error("上游工具调用参数无效。")
     finish = choice.get("finish_reason")
+    if not stream and finish == "tool_calls" and not part.get("tool_calls"):
+        raise protocol_error("上游工具调用终态缺少 tool_calls。")
     if (finish is not None or not stream) and (not isinstance(finish, str) or not finish.strip()):
         raise protocol_error("上游返回了无效的结束原因。")
     return part, finish
@@ -86,12 +115,6 @@ class MiMoProvider:
         return {"api-key": self.config.api_key.get_secret_value()}
 
     def prepare(self, request, model):
-        if request.reasoning_effort is not None:
-            raise GatewayError(
-                400, "unsupported_provider_option", "当前连接不支持 reasoning_effort。"
-            )
-        if any(m.reasoning_content is not None for m in request.messages):
-            raise GatewayError(400, "unsupported_provider_option", "MiMo 文本模式不接收思考历史。")
         return request.upstream_payload(model)
 
     def normalize(self, data, *, stream=False):
@@ -101,7 +124,7 @@ class MiMoProvider:
         request = self.client.build_request(
             method,
             self.config.base_url + path,
-            headers=self.headers(),
+            headers=self.headers() | getattr(self, "forward_headers", {}),
             timeout=httpx.Timeout(
                 self.config.timeout_seconds,
                 connect=self.config.limits.connect_timeout_seconds,
@@ -220,6 +243,7 @@ class MiMoProvider:
         saw_choice = False
         finish_reason = None
         identities = {}
+        tools = {}
         try:
             async for line in async_sse_lines(response):
                 raw = decoder.feed(line)
@@ -253,9 +277,36 @@ class MiMoProvider:
                     if finish_reason is not None and (
                         part.get("content")
                         or part.get("reasoning_content")
+                        or part.get("tool_calls")
                         or (finish is not None and finish != finish_reason)
                     ):
                         raise protocol_error("上游在结束回复后继续输出或更改结束原因。")
+                    for call in part.get("tool_calls") or []:
+                        saved = tools.setdefault(call["index"], {})
+                        for key in ("id", "type"):
+                            value = call.get(key)
+                            if value is not None:
+                                if not isinstance(value, str) or (
+                                    key in saved and saved[key] != value
+                                ):
+                                    raise protocol_error("上游工具调用身份发生变化。")
+                                saved[key] = value
+                        function = call.get("function") or {}
+                        if function.get("name"):
+                            saved["name"] = True
+                        if isinstance(function.get("arguments"), str):
+                            saved["arguments"] = True
+                    if finish == "tool_calls" and (
+                        not tools
+                        or any(
+                            not item.get("id")
+                            or item.get("type") != "function"
+                            or not item.get("name")
+                            or not item.get("arguments")
+                            for item in tools.values()
+                        )
+                    ):
+                        raise protocol_error("上游工具调用终态缺少完整标识或参数。")
                     saw_choice = True
                     if finish is not None:
                         finish_reason = finish

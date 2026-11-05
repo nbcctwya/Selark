@@ -10,7 +10,7 @@ Selark 采用 Python `src/` 布局。可安装代码在 `src/selark/`，测试�
 | --- | --- |
 | `src/selark/` | 网关、本机管理、配置、存储与恢复 |
 | `src/selark/management/` | 管理命令的参数解析、执行、诊断、连接操作和订阅 CLI |
-| `src/selark/providers/` | 各供应商协议及文本响应适配 |
+| `src/selark/providers/` | 各供应商协议、文本/function 转换及原生 Responses/Messages 转发 |
 | `src/selark/dashboard_api/` | 日常管理的 HTTP 路由、请求结构和公开业务数据 |
 | `src/selark/contracts/` | 公开响应字段、接口目录及离线 OpenAPI 导出；不参与运行时响应过滤 |
 | `src/selark/dashboard_assets/` | 固定前端提交生成的 React 正式资源与校验清单 |
@@ -42,6 +42,7 @@ flowchart TD
 ```
 
 图表示主要职责关系，不枚举每一次函数调用。`Runtime` 协调本机资源与配置变更，HTTP 网关负责请求生命周期；`providers/` 处理上游协议差异。
+`providers/native.py` 仅在原生请求时加载，保留官方内容块和流事件；各入口共用同一鉴权、队列、配额与落账流程。工具执行和 Agent 循环留在调用方。
 `persistence.py` 的恢复记录与异步写入、`storage.py` 的 SQLite 操作、`storage_schema.py` 的结构迁移分别维护。
 
 资源与转发约束：无待恢复记录时恢复协程等待事件；写入失败后才按一秒间隔处理有界批次，落账和故障恢复不调用模型。JWT/密码学依赖只在 OAuth 身份验证时加载。供应商适配仅转换协议所需字段，不注入提示词、补写历史或自动重发生成；配额估算始终留在本机。扩展适配器须保留这些约束，见 [资源占用与转发开销](../guides/efficiency.md)。

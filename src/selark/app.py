@@ -24,10 +24,11 @@ from selark.errors import GatewayError
 from selark.governance import Policy, ResourcesConfig, enforce_access, input_estimate, permitted
 from selark.persistence import AsyncLedger, Journal
 from selark.plans import PLAN_PRESETS, empty_quota, enforce_quota, interaction_purpose, query_quota
+from selark.protocol import strict_json
 from selark.providers.factory import provider_for
 from selark.providers.mimo import reported_usage
 from selark.runtime import Runtime, capability_fingerprint, fingerprint
-from selark.schemas import ChatRequest
+from selark.schemas import REQUEST_MODELS, ChatRequest
 from selark.storage import Store, request_status, utc_now
 from selark.usage import observe_usage
 
@@ -73,7 +74,7 @@ class RequestMiddleware:
             queue_ms=0.0,
         )
         path = scope["path"]
-        chat = path == "/v1/chat/completions" and scope["method"] == "POST"
+        chat = path in REQUEST_MODELS and scope["method"] == "POST"
         status, sent, reserved, slot, metadata = 500, False, False, False, False
         checkpointed = False
         recordable = False
@@ -181,6 +182,10 @@ class RequestMiddleware:
         async def authenticate():
             if path.startswith("/v1/"):
                 values = [v for k, v in scope["headers"] if k == b"authorization"]
+                if path == "/v1/messages":
+                    keys = [v for k, v in scope["headers"] if k == b"x-api-key"]
+                    if keys:
+                        values += [b"Bearer " + key for key in keys]
                 maximum = max(
                     8, self.limits.max_concurrent_requests + self.limits.max_queued_requests
                 )
@@ -206,8 +211,36 @@ class RequestMiddleware:
             nonlocal slot, caller_reserved
             if chat:
                 try:
-                    data = ChatRequest.model_validate_json(body)
-                except ValidationError:
+                    headers = dict(scope["headers"])
+                    if path == "/v1/chat/completions" and not any(
+                        key in headers for key in (b"x-selark-connection", b"x-selark-interaction")
+                    ):
+                        data = ChatRequest.model_validate_json(body)
+                        if (
+                            any(
+                                value is not None
+                                for value in (
+                                    data.tools,
+                                    data.thinking,
+                                    data.stream_options,
+                                    data.response_format,
+                                )
+                            )
+                            or isinstance(data.tool_choice, dict)
+                            or any(m.tool_calls or m.model_extra for m in data.messages)
+                        ):
+                            strict_json(body)  # Bound opaque JSON Schema / SDK extensions too.
+                    else:
+                        raw = strict_json(body)
+                        for field in ("connection_id", "interaction"):
+                            header = {
+                                "connection_id": b"x-selark-connection",
+                                "interaction": b"x-selark-interaction",
+                            }[field]
+                            if isinstance(raw, dict) and header in headers and field not in raw:
+                                raw[field] = headers[header].decode("ascii")
+                        data = REQUEST_MODELS[path].model_validate(raw)
+                except (ValidationError, ValueError, UnicodeError):
                     raise GatewayError(
                         400,
                         "invalid_request",
@@ -610,6 +643,8 @@ def create_app(
         }
 
     @app.post("/v1/chat/completions")
+    @app.post("/v1/responses")
+    @app.post("/v1/messages")
     async def chat(request: Request):
         data = request.state.chat_input
         current, model, alias, settings = await route(data)
@@ -653,6 +688,13 @@ def create_app(
         request.state.model_fingerprint = capability_fingerprint(current)
         request.state.protocol = protocol(current)
         request.state.capability = "text_stream" if data.stream else "text_nonstream"
+        if data.wire_protocol != "chat":
+            request.state.protocol = data.wire_protocol
+            request.state.capability = data.wire_protocol + (
+                "_stream" if data.stream else "_nonstream"
+            )
+        elif data.tools or any(m.tool_calls or m.role == "tool" for m in data.messages):
+            request.state.capability = "tool_stream" if data.stream else "tool_nonstream"
         if (
             request.state.purpose == "connection_probe"
             and request.state.probe_fingerprint != request.state.fingerprint
@@ -668,14 +710,27 @@ def create_app(
             )
         else:
             provider = provider_for(current.model_copy(update={"limits": limits}), app.state.http)
+        native = data.wire_protocol != "chat"
+        if native:
+            from selark.providers.native import NativeProvider
+
+            provider = NativeProvider(
+                provider, data.wire_protocol, request.headers, request.query_params.multi_items()
+            )
+        output_field = "max_output_tokens" if data.wire_protocol == "responses" else "max_tokens"
         if (
-            data.max_tokens is None
-            and data.max_completion_tokens is None
+            getattr(data, output_field, None) is None
+            and getattr(data, "max_completion_tokens", None) is None
             and policy.max_output_tokens
             and current.provider != "chatgpt"
         ):
             data = data.model_copy(
-                update={"max_completion_tokens": min(1024, policy.max_output_tokens)}
+                update={
+                    output_field if native else "max_completion_tokens": min(
+                        policy.max_output_tokens if native or data.tools else 1024,
+                        policy.max_output_tokens,
+                    )
+                }
             )
         payload = provider.prepare(data, model)
         # Aliases/config may change while waiting for a global slot. Reconcile the
@@ -721,7 +776,12 @@ def create_app(
                     "套餐配置在额度查询期间发生变化；未生成，请重新确认当前设置。",
                 )
         estimate = input_estimate(payload)
-        output = payload.get("max_tokens", payload.get("max_completion_tokens"))
+        output = payload.get(
+            "max_output_tokens", payload.get("max_tokens", payload.get("max_completion_tokens"))
+        )
+        output_reservation_only = output is None
+        if output_reservation_only:
+            output = 131072  # Local conservative reservation; never sent as a model limit.
         if current.provider == "chatgpt":
             output = policy.chatgpt_output_reservation
             if policy.max_output_tokens is not None or output is None:
@@ -753,6 +813,7 @@ def create_app(
                 "provider": current.provider,
                 "estimate": estimate,
                 "output": output,
+                "output_reservation_only": output_reservation_only,
                 "price": price,
                 "alias": alias,
                 "resource_type": current.resource_type,
@@ -784,9 +845,12 @@ def create_app(
                 preserve_outcome()
             request.state.upstream_status = 200
             request.state.actual_model = result["model"]
-            request.state.usage = reported_usage(result)
+            request.state.usage = (
+                provider.measure_usage(result) if native else reported_usage(result)
+            )
             request.state.usage_final = True
-            request.state.upstream_result = "success"
+            if request.state.upstream_result != "failed":
+                request.state.upstream_result = "success"
             request.state.upstream_completed_at = utc_now()
             return JSONResponse(result)
         try:
@@ -801,7 +865,24 @@ def create_app(
             try:
                 async for event in events:
                     preserve_outcome()
-                    if event == "[DONE]":
+                    if native:
+                        usage = provider.outcome.get("usage")
+                        if usage is not None:
+                            observe_usage(request.scope["state"], usage)
+                        if provider.outcome.get("usage_final"):
+                            request.state.stream_status = (
+                                "completed"
+                                if request.state.upstream_result == "success"
+                                else "error"
+                            )
+                        yield (
+                            "event: "
+                            + event["type"]
+                            + "\ndata: "
+                            + json.dumps(event, ensure_ascii=False)
+                            + "\n\n"
+                        )
+                    elif event == "[DONE]":
                         request.state.stream_status = "completed"
                         request.state.usage_final = True
                         request.state.upstream_result = "success"

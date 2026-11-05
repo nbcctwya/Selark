@@ -15,33 +15,33 @@ class CompatibleProvider(MiMoProvider):
         return {"Authorization": "Bearer " + self.config.api_key.get_secret_value()}
 
     def prepare(self, request, model):
-        if request.reasoning_effort is not None:
-            unsupported("reasoning_effort 当前只由 Kimi Code 套餐适配器接收。")
         data = request.upstream_payload(model)
-        data.pop("thinking")
+        if request.thinking is None:
+            data.pop("thinking", None)
         provider = self.config.provider
         reasoning_history = any(m.reasoning_content is not None for m in request.messages)
-        if reasoning_history and provider != "kimi":
-            unsupported("此适配器不接收 reasoning_content；仅 Kimi 思考历史模式支持。")
         if provider not in {"openai", "openai-compatible"}:
             for message in data["messages"]:
                 if message["role"] == "developer":
                     message["role"] = "system"
-                if isinstance(message["content"], list):
+                if isinstance(message.get("content"), list):
                     message["content"] = "".join(p["text"] for p in message["content"])
-        if provider in {"deepseek", "zhipu"} or (
-            provider == "openai-compatible" and self.config.token_parameter == "max_tokens"
+        if "max_completion_tokens" in data and (
+            provider in {"deepseek", "zhipu"}
+            or (provider == "openai-compatible" and self.config.token_parameter == "max_tokens")
         ):
             data["max_tokens"] = data.pop("max_completion_tokens")
-        if provider == "deepseek":
-            data["thinking"] = {"type": "disabled"}
+        if provider == "deepseek" and not request.tools:
+            data.setdefault("thinking", {"type": "enabled" if reasoning_history else "disabled"})
         if provider == "zhipu":
             if data.get("temperature", 1) > 1:
                 unsupported("智谱 temperature 上限为 1。")
             if any(k in data for k in ("presence_penalty", "frequency_penalty")):
                 unsupported("当前智谱文本适配不支持 presence_penalty / frequency_penalty。")
-            if re.match(r"glm-(?:[5-9]|4\.[5-9])", model.lower()):
-                data["thinking"] = {"type": "disabled"}
+            if not request.tools and re.match(r"glm-(?:[5-9]|4\.[5-9])", model.lower()):
+                data.setdefault(
+                    "thinking", {"type": "enabled" if reasoning_history else "disabled"}
+                )
         if provider == "kimi":
             if model.startswith(("kimi-k3", "kimi-k2.7-code", "kimi-k2.6", "kimi-k2.5")):
                 fixed = {"top_p": 0.95, "presence_penalty": 0, "frequency_penalty": 0}
@@ -58,17 +58,21 @@ class CompatibleProvider(MiMoProvider):
                         "Selark 不自动补齐。"
                     )
                 if model.startswith("kimi-k3"):
-                    data["reasoning_effort"] = "low"
-            elif reasoning_history:
-                unsupported("Kimi 非思考模式不接收 reasoning_content。")
-            if model.startswith(("kimi-k2.5", "kimi-k2.6")):
-                data["thinking"] = {"type": "disabled"}
-                if "temperature" in data and data["temperature"] != 0.6:
+                    data.setdefault("reasoning_effort", "low")
+            if not request.tools and model.startswith(("kimi-k2.5", "kimi-k2.6")):
+                data.setdefault(
+                    "thinking", {"type": "enabled" if reasoning_history else "disabled"}
+                )
+                if (
+                    data["thinking"].get("type") == "disabled"
+                    and "temperature" in data
+                    and data["temperature"] != 0.6
+                ):
                     unsupported(
                         "Kimi K2.5/K2.6 非思考模式的 temperature 固定为 0.6，请省略或设为 0.6。"
                     )
         if data["stream"] and self.config.stream_usage and provider != "zhipu":
-            data["stream_options"] = {"include_usage": True}
+            data.setdefault("stream_options", {"include_usage": True})
         return data
 
     def normalize(self, data, *, stream=False):

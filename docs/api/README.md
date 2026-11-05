@@ -1,10 +1,10 @@
 # HTTP 接口文档
 
-Selark 维护两份 OpenAPI 3.1 规范，共覆盖当前 25 个 HTTP 操作。规范文件可以直接交给 Claude、接口调试工具和类型生成工具；字段含义、操作顺序和限制由下列指南补充。
+Selark 维护两份 OpenAPI 3.1 规范，共覆盖当前 27 个 HTTP 操作。规范文件可以直接交给 Claude、接口调试工具和类型生成工具；字段含义、操作顺序和限制由下列指南补充。
 
 | 接口 | 默认地址 | 认证 | 机器可读规范 | 使用说明 |
 | --- | --- | --- | --- | --- |
-| 模型调用网关，3 个操作 | `http://127.0.0.1:8787` | 应用 Bearer Token；`/health` 免认证 | [gateway.openapi.json](gateway.openapi.json) | [调用与 SSE](../guides/http-api.md) |
+| 模型调用网关，5 个操作 | `http://127.0.0.1:8787` | 应用 Bearer Token；Messages 也接受 x-api-key；`/health` 免认证 | [gateway.openapi.json](gateway.openapi.json) | [调用与 SSE](../guides/http-api.md) |
 | Dashboard，22 个操作 | `http://127.0.0.1:8790` | 独立管理会话及显式请求头 | [dashboard.openapi.json](dashboard.openapi.json) | [连接、模型与应用管理](../development/management-api.md) |
 
 实际地址以启动输出为准。管理会话和应用令牌不能混用；两个服务没有相互替代的接口。

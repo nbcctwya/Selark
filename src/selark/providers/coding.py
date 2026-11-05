@@ -32,9 +32,12 @@ class KimiCodeProvider(CompatibleProvider):
     def prepare(self, request, model):
         if model not in PLAN_PRESETS["kimi-code"]["models"]:
             unsupported("未知 Kimi Code 模型 ID；拒绝可能触发供应商隐式回退的拼写。")
+        if request.thinking is not None and request.thinking != {"type": "enabled"}:
+            unsupported("当前 Kimi Code 模型要求开启思考；不覆盖调用方设置。")
         data = request.upstream_payload(model)
         data["thinking"] = {"type": "enabled"}
-        data["max_tokens"] = data.pop("max_completion_tokens")
+        if "max_completion_tokens" in data:
+            data["max_tokens"] = data.pop("max_completion_tokens")
         if model == "kimi-for-coding-highspeed":
             if request.reasoning_effort is not None:
                 unsupported("该高速模型仅支持开启思考，不支持 reasoning_effort。")
@@ -46,14 +49,14 @@ class KimiCodeProvider(CompatibleProvider):
         for message in data["messages"]:
             if message["role"] == "developer":
                 message["role"] = "system"
-            if isinstance(message["content"], list):
+            if isinstance(message.get("content"), list):
                 message["content"] = "".join(part["text"] for part in message["content"])
             if message["role"] == "assistant" and "reasoning_content" not in message:
                 unsupported(
                     "Kimi Code 多轮需原样提供 assistant.reasoning_content；不会自动补造思考历史。"
                 )
         if data["stream"] and self.config.stream_usage:
-            data["stream_options"] = {"include_usage": True}
+            data.setdefault("stream_options", {"include_usage": True})
         return data
 
     def normalize(self, data, *, stream=False):
@@ -64,6 +67,7 @@ class KimiCodeProvider(CompatibleProvider):
                 if (
                     isinstance(message, dict)
                     and message.get("content") is None
+                    and not message.get("tool_calls")
                     and isinstance(message.get("reasoning_content"), str)
                 ):
                     message["content"] = ""

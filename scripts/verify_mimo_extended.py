@@ -1026,9 +1026,9 @@ async def run(args):
                     negative = []
                     for i, extra in enumerate(
                         (
-                            {"tools": [ADD_TOOL]},
-                            {"thinking": {"type": "enabled"}},
-                            {"response_format": {"type": "json_object"}},
+                            {"tools": [None]},
+                            {"thinking": []},
+                            {"response_format": []},
                             {"max_completion_tokens": 0},
                         )
                     ):
@@ -1037,7 +1037,7 @@ async def run(args):
                         )
                         c["payload"].update(extra)
                         negative.append(c)
-                    await runner.phase_cases("gateway-unsupported", 4, negative)
+                    await runner.phase_cases("gateway-invalid", 4, negative)
                     if suite == "focus" and not guard.stop_reason:
                         search = case(
                             "web-search-capability",

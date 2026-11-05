@@ -178,3 +178,159 @@ def test_sse_fragments_preserve_utf8_bom_and_all_newline_styles(size):
             if (value := decoder.feed(line)) is not None:
                 events.append(value)
     assert events == ["你好\n再见", "OK"]
+
+
+@pytest.mark.parametrize("wire", ["responses", "messages"])
+def test_native_entrypoints_enforce_auth_output_quota_and_bound_json(isolated, wire):
+    runtime, legacy = isolated
+    issued = runtime.store.create_token("restricted-native", policy={"max_output_tokens": 8})
+    auth = {"Authorization": "Bearer " + issued["token"]}
+    calls = []
+    body = (
+        {"input": "hello", "max_output_tokens": 16}
+        if wire == "responses"
+        else {"messages": [{"role": "user", "content": "hello"}], "max_tokens": 16}
+    )
+    with TestClient(
+        create_app(
+            runtime.settings(),
+            runtime=runtime,
+            transport=httpx.MockTransport(lambda request: calls.append(request)),
+        )
+    ) as client:
+        path = "/v1/" + wire
+        assert client.post(path, json=body).status_code == 401
+        assert client.post(path, headers=auth, json=body).status_code == 403
+        assert (
+            client.post(
+                path,
+                headers=legacy | {"Content-Type": "application/json"},
+                content=b'{"input":"hello","extra":NaN}',
+            ).status_code
+            == 400
+        )
+        if wire == "messages":
+            both = legacy | {"x-api-key": legacy["Authorization"].removeprefix("Bearer ")}
+            assert client.post(path, headers=both, json=body).status_code == 401
+        assert client.get("/health").json()["capacity"]["admitted"] == 0
+    assert not calls
+    # Function JSON Schemas use opaque dictionaries but still reject non-finite JSON.
+    with TestClient(
+        create_app(
+            runtime.settings(),
+            runtime=runtime,
+            transport=httpx.MockTransport(lambda request: calls.append(request)),
+        )
+    ) as client:
+        invalid = (
+            b'{"messages":[{"role":"user","content":"hello"}],'
+            b'"tools":[{"type":"function","function":{"name":"test",'
+            b'"parameters":{"default":NaN}}}]}'
+        )
+        assert (
+            client.post(
+                "/v1/chat/completions",
+                headers=legacy | {"Content-Type": "application/json"},
+                content=invalid,
+            ).status_code
+            == 400
+        )
+    assert not calls
+
+
+@pytest.mark.parametrize(
+    "wire,ending",
+    [
+        ("responses", "missing"),
+        ("responses", "failed"),
+        ("responses", "incomplete"),
+        ("responses", "identity"),
+        ("messages", "missing"),
+        ("messages", "open_block"),
+        ("messages", "error"),
+    ],
+)
+def test_native_stream_failure_keeps_usage_and_releases_capacity(isolated, wire, ending):
+    from .support.protocol import sse
+    from .test_chatgpt import result
+    from .test_connections import native_reply
+
+    runtime, auth = isolated
+    if wire == "responses":
+        initial = result("in_progress", None) | {"model": "mimo-test", "output": []}
+        terminal = result(ending if ending in {"failed", "incomplete"} else "completed") | {
+            "model": "mimo-test",
+            "output": [
+                {
+                    "type": "function_call",
+                    "id": "fc_1",
+                    "call_id": "call_1",
+                    "name": "read_file",
+                    "arguments": "{}",
+                }
+            ],
+        }
+        if ending == "identity":
+            terminal["id"] = "resp_changed"
+        if ending == "failed":
+            terminal["error"] = {"code": "bad", "message": "private-upstream-error"}
+        frames = [{"type": "response.created", "response": initial}]
+        if ending != "missing":
+            frames.append({"type": "response." + terminal["status"], "response": terminal})
+        body = {"input": "hello", "stream": True}
+    else:
+        frames = [
+            {
+                "type": "message_start",
+                "message": native_reply()
+                | {"model": "mimo-test", "content": [], "stop_reason": None},
+            }
+        ]
+        if ending == "open_block":
+            frames += [
+                {
+                    "type": "content_block_start",
+                    "index": 0,
+                    "content_block": {
+                        "type": "tool_use",
+                        "id": "call_1",
+                        "name": "read_file",
+                        "input": {},
+                    },
+                },
+                {"type": "message_stop"},
+            ]
+        elif ending == "error":
+            frames.append({"type": "error", "error": {"message": "private-upstream-error"}})
+        body = {
+            "messages": [{"role": "user", "content": "hello"}],
+            "max_tokens": 32,
+            "stream": True,
+        }
+    if wire == "messages" and ending == "missing":
+        frames[0]["message"]["usage"].update(
+            cache_read_input_tokens=20000, cache_creation_input_tokens=0
+        )
+    source = ByteStream([sse(*frames)])
+    calls = []
+
+    def upstream(request):
+        calls.append(request)
+        return httpx.Response(200, stream=source, headers={"content-type": "text/event-stream"})
+
+    with TestClient(
+        create_app(runtime.settings(), runtime=runtime, transport=httpx.MockTransport(upstream))
+    ) as client:
+        response = client.post("/v1/" + wire, headers=auth, json=body)
+        assert response.status_code == 200 and "[DONE]" not in response.text
+        assert "private-upstream-error" not in response.text
+        assert "event: error" in response.text or "event: response." + ending in response.text
+        assert client.get("/health").json()["capacity"]["admitted"] == 0
+    assert len(calls) == 1 and source.closed
+    row = runtime.store.records({})[0]
+    assert row["status"] == "failed" and row["upstream_result"] == "failed"
+    assert row["usage_final"] is (ending in {"failed", "incomplete"})
+    if ending in {"failed", "incomplete"}:
+        assert row["total_tokens"] == 15
+    if wire == "messages" and ending == "missing":
+        assert row["resources"]["quota_tokens"] >= 20014

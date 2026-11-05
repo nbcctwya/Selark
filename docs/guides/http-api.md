@@ -8,23 +8,68 @@
 | --- | --- | --- |
 | `GET /health` | 无 | 本进程存活，不访问 MiMo，不代表上游可用 |
 | `GET /v1/models` | `Authorization: Bearer <SELARK_TOKEN>` | 各连接本地允许列表及明确来源；不发起上游发现或生成 |
-| `POST /v1/chat/completions` | 同上 | `Content-Type: application/json`；普通 JSON 或 SSE |
+| `POST /v1/chat/completions` | 同上 | 文本与 function 工具；普通 JSON 或 SSE |
+| `POST /v1/responses` | 同上 | 官方 Responses 原生请求与响应 |
+| `POST /v1/messages` | Bearer 或 `x-api-key` 应用令牌 | 官方 Messages 原生请求与响应 |
 
-实现 OpenAI Chat Completions 的**文本子集**，不声称完整兼容：
+支持文本与官方工具调用格式；工具由调用方 harness 执行，Selark 不执行工具、不添加提示文本、不补写历史、不重试模型生成。
 
-- `messages` 支持 `system/developer/user/assistant`，字符串或仅含 `{"type":"text","text":"..."}` 的数组；多轮历史由调用方每次传入。
-- 可选 `session_id` 仅在 Selark 内按 `(鉴权调用方, session_id)` 归组，不传给 MiMo，也不修改 messages。
-- `connection_id` 或 `连接ID::模型ID` 明确选连接；裸模型名继续指向原 MiMo。model 省略或 null 使用所选连接默认模型，指定模型须在该连接允许列表中。
-- `stream` 默认为 false。流式 `data: <JSON>` 逐事件转发，以 `data: [DONE]` 结束；保持上游分片和实际 usage。
-- 普通 API 支持 `max_completion_tokens`，以及映射到它的别名 `max_tokens`（两者不可同时给出，范围 1–131072，省略默认 1024）；ChatGPT 订阅拒绝这些参数。
-- 支持 `temperature`（0–1.5）、`top_p`（0–1）、`stop`（字符串或 1–4 个字符串）、`presence_penalty/frequency_penalty`（-2–2）。
-- 这些参数由上游执行；MiMo 实测中存在已传入 `stop` 但仍输出停止序列的情况，见 [MiMo 实测报告](../verification/mimo-credit-live-verification.md)。
-  Selark 保留原始回答和用量；需要严格格式的调用方应检查结果，输出预算仍须设置 Token 上限。
-- MiMo/DeepSeek 及可关闭思考的 GLM/Kimi 模式关闭 thinking；Kimi K3 等保留调用方显式提供的 assistant reasoning_content，不自动管理历史。原生 Anthropic 转换为统一文本响应。
-- 普通响应保留上游 `id/model/choices/usage` 等字段。不会生成、估算或补零 usage；上游缺失时日志标记 null。
-- 上游回复只接受一条 `index=0` 的 assistant 文本 choice；结束原因必须是非空字符串。SSE 允许空 choices 的用量帧、重复累计用量和无新增文本的相同结束标记；结束后继续输出或改写结束原因视为协议错误。已经收到的有效部分用量保留，未完成的用量仍不作为最终消耗汇总。
-- 不支持工具调用、图片/音视频、原生 Responses HTTP 路由、对话正文存储、`n`、`stream_options`、`response_format`、用户可调 thinking；未知请求字段返回 400。ChatGPT 订阅服务端将官方 Responses SSE 转换为统一文本响应，具体参数限制见其接入说明。
-- 单请求体上限 1 MiB，最多 256 条消息；普通上游响应上限 8 MiB；SSE 单事件上限约 1 MiB。
+## 入口与供应商
+
+| 连接类型 | `/v1/chat/completions` | `/v1/responses` | `/v1/messages` |
+| --- | --- | --- | --- |
+| MiMo、DeepSeek、Kimi API | 文本与 function 工具 | 原生转发 | 官方 Anthropic 兼容接口 |
+| OpenAI API | 文本与 function 工具 | 原生转发 | 不支持 |
+| Anthropic | 文本与 function 工具的协议转换 | 不支持 | 原生转发，推荐 |
+| Kimi Code | 文本与 function 工具 | 官方原生接口 | 官方原生接口 |
+| ChatGPT 订阅 | 既有文本适配 | 官方原生接口，工具调用使用此入口 | 不支持 |
+| GLM / 智谱 API | 文本与 function 工具 | 未接入 | 未接入 |
+| OpenAI 兼容中转 | 文本与 function 工具 | 中转站须提供此接口 | 中转站须提供此接口 |
+| GLM Coding Plan | 保留模拟预设，真实生成仍禁用 | 未接入 | 未接入 |
+
+模型是否支持某种工具、思考模式或扩展参数仍以该供应商的模型能力为准。选错协议会明确失败，不会猜测、换端点或重发。中转连接以已配置的 base URL 拼接 `/responses` 或 `/messages`，不自动寻找其他地址。
+
+MiMo、DeepSeek、Kimi 的 Messages 地址按官方路径使用配置 origin 下的 `/anthropic/v1/messages`（配置的 `/v1` 后缀会先移除）；DeepSeek Responses 使用 `/responses`。其他 Responses 保留 `/v1/responses`，Kimi Code 保留套餐路径 `/coding/v1/...`。不自动切换域名、收费来源或凭据。
+
+所有生成入口共享 Bearer 应用令牌、请求体大小限制、权限复查、并发、排队、配额预留、取消和持久落账。Messages 也接受 `x-api-key: <SELARK_TOKEN>`；两种凭据只能选一种。上游 Key 始终来自选定连接，调用方令牌不会转发。
+
+## Chat Completions
+
+- `messages` 支持 `system/developer/user/assistant/tool`。文本为字符串或 text 块数组；assistant 工具调用可省略 content 或使用 null；tool 消息须提供 `tool_call_id` 和 content。
+- 支持 `tools`、`tool_choice`、`parallel_tool_calls`、assistant `tool_calls`、`reasoning_content`、tool 结果及 SDK 消息扩展字段。JSON Schema、工具参数字符串、调用 ID、结果、空白和顺序保留；工具调用请求不再强制关闭思考。
+- 支持调用方显式提供 `thinking`、`reasoning_effort`、`stream_options`、`response_format`；供应商执行并校验其支持范围。Kimi Code 的强制思考要求仍检查，未知模型不隐式回退。
+- 非流式工具回复允许 `content: null` 和 `finish_reason: "tool_calls"`；SSE 保留工具参数增量、并行 index 和终止原因，不把它们当正文拼接。成功以 `data: [DONE]` 结束。
+- 普通 API 的 `max_tokens` 与 `max_completion_tokens` 互斥，范围 1–131072。普通文本省略时保留既有默认 1024；带工具定义的同协议请求省略时保留供应商默认行为，应用硬上限优先。Anthropic 的 Chat 转换仍使用默认 1024，因为 Messages 要求显式 max_tokens。
+- 支持 `temperature`（0–1.5）、`top_p`（0.01–1）、`stop`（字符串或 1–4 个字符串）、`presence_penalty/frequency_penalty`（-2–2）。这些参数由上游执行；Selark 不修复或重新生成不满足要求的答案。
+- 不带工具的既有文本模式保留原有低成本默认。Anthropic Chat 适配会映射 function / tool_use、工具结果与结束原因；签名思考块、供应商原生工具等完整能力使用 `/v1/messages`。ChatGPT 工具调用使用 `/v1/responses`，不会通过文本 JSON 模拟。
+- 单 choice（index=0），最多 256 条消息、128 个工具。根级未知参数仍返回 400；不支持 Chat 多模态和 `n` 多候选。
+
+## 原生 Responses / Messages
+
+请求内容块、工具定义、调用结果、reasoning/encrypted_content、thinking/signature、缓存提示和供应商扩展字段按原生结构交给上游，不经过文本适配器。`anthropic-version`、`anthropic-beta`、`openai-beta` 按调用方请求传递；Anthropic 连接在未提供版本时使用连接配置。仅显式路由字段和本地用途字段被移除，model 解析为所选的上游模型。
+
+Responses 使用 `input`、`tools`、`tool_choice` 等原生字段；支持 function/custom 工具及完整历史回传。Messages 使用 `messages`、`system`、`tools`、`tool_use`、`tool_result`，并要求 `max_tokens`。扩展字段由上游校验；这不是对每个模型所有扩展能力的承诺。上传文件、WebSocket、后台任务轮询、工具执行和服务端会话管理不在本次 HTTP 转发范围内。
+
+流式响应保留原生 `event:` 名称和 JSON `type`：Responses 由 `response.completed`、`response.incomplete`、`response.failed` 终结，Messages 由 `message_stop` 终结；不追加 `[DONE]`。缺少终态、身份变化或非法事件返回脱敏错误并关闭上游；failed/incomplete 保留真实用量并记为失败。无需把工具回复改写为文本。
+
+Responses 未指定输出上限时，若应用配置了硬上限则传入该值；否则只在本地预留 131072 输出 Token，保留上游默认输出行为。这个数是入场估算，不是新增消耗或上游硬上限，账本分别记录 `output_limit` 和 `estimated_output_reservation`。工具定义也计入输入估算。预算较小的调用方可以显式设置输出上限，避免预留超过预算。派发前应用策略变化仍会被复查。
+
+ChatGPT 订阅遵循官方 SIWC 限制：`stream:true`、`store:false`、input 数组，无 `max_output_tokens` / `previous_response_id`；使用官方支持的 namespace / additional_tools 工具形式。保留原有订阅授权、专用输出估算预留与禁止按量回退策略，见 [ChatGPT 接入](chatgpt.md)。Kimi Code 保留真实 Selark 客户端身份、用途确认、套餐额度检查及官方路径。
+
+## 客户端接入
+
+`connection_id` 或 `连接ID::模型ID` 显式选择连接；也可通过 `X-Selark-Connection` 请求头选择。model 省略/null 使用连接默认值，显式 model 须在允许列表中。`session_id` 仅本地归组，所有历史由客户端提供。
+
+- **DSH / Kimi Code CLI**：选择对应 API protocol，base URL 为 `http://127.0.0.1:8787/v1`，Key 使用 Selark 应用令牌，model 使用 `连接ID::模型ID`。Anthropic SDK 风格配置的 base URL 使用不含 `/v1` 的网关地址。
+- **Codex**：配置自定义 provider，`base_url = "http://127.0.0.1:8787/v1"`、`wire_api = "responses"`，通过 `env_key` 读取 Selark 令牌。选择支持 Responses 的连接；可用 provider 的 `http_headers` 设置 `X-Selark-Connection`，保留原始模型名。
+- **Claude Code**：`ANTHROPIC_BASE_URL=http://127.0.0.1:8787`，`ANTHROPIC_AUTH_TOKEN` 为 Selark 令牌，模型选择已批准的 `连接ID::模型ID`；上游须提供 Messages。不会自动把 OpenAI Responses 转换为 Messages。
+- **套餐用途**：请求体 `interaction:"personal_coding"`，或 `X-Selark-Interaction: personal_coding`。客户端无法添加字段时可使用自定义请求头；Codex 可写入 provider 的 `http_headers`。该声明不替代应用的订阅访问权限。
+
+客户端还须保留供应商要求的模型能力配置。例如 MiMo 接入 Codex 的 custom 工具需要官方模型目录 / lite mode 配置，见 [MiMo 的 Codex 指南](https://mimo.mi.com/docs/en-US/tokenplan/integration/codex-configuration)。Selark 转发相应协议，不会替客户端生成模型目录或改变其工具声明。
+
+请求体字段优先于同名路由/用途请求头。所有入口单请求体上限 1 MiB、普通响应上限 8 MiB、SSE 单事件约 1 MiB；同样保留请求总时限和应用资源限制。
+
+官方协议依据（2026-11-05 核对）：[OpenAI 工具调用](https://developers.openai.com/api/docs/guides/function-calling)、[SIWC 约束](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)、[Anthropic 工具调用](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)、[DeepSeek 工具调用](https://api-docs.deepseek.com/guides/tool_calls/)、[DeepSeek Responses](https://api-docs.deepseek.com/guides/responses_api/)、[DeepSeek Messages](https://api-docs.deepseek.com/guides/anthropic_api/)、[MiMo Chat](https://mimo.mi.com/docs/en-US/api/chat/openai-api)、[MiMo Responses](https://mimo.mi.com/docs/en-US/api/chat/responses)、[MiMo Messages](https://mimo.mi.com/docs/en-US/api/chat/anthropic-api)、[Kimi 工具调用](https://platform.kimi.ai/docs/guide/use-kimi-api-to-complete-tool-calls)、[Kimi Responses](https://platform.kimi.ai/docs/guide/codex-kimi)、[Kimi Messages](https://platform.kimi.ai/docs/guide/claude-code-kimi)、[Kimi Code Responses](https://www.kimi.com/code/docs/en/third-party-tools/codex.html)、[Kimi Code Messages](https://www.kimi.com/code/docs/en/third-party-tools/claude-code.html)、[GLM 工具调用](https://docs.bigmodel.cn/cn/guide/capabilities/function-calling)。
 
 请求示例（令牌从你的客户端配置安全取得，下面只使用占位值）：
 
@@ -45,5 +90,5 @@ Content-Type: application/json
 连接、模型和应用的日常管理同时提供本机 CLI 与独立 Dashboard API；备份恢复、服务控制和 OAuth 操作仍通过 CLI 完成。
 执行与等待名额用尽返回 429，排队超时返回 503，请求体超时返回 408，请求总时限返回 504。
 本地过载和不可用响应附带 `Retry-After`；服务不会自行重试模型生成。
-流开始之后无法修改 HTTP 状态：发送 `event: error` 及同形 JSON，不发送成功 `[DONE]`；CLI 非零退出。
+流开始之后无法修改 HTTP 状态：发送 `event: error` 及同形 JSON，不发送成功终态（Chat Completions 不发送 `[DONE]`）；CLI 非零退出。
 断流或缺少结束标记不会被视作成功。已输出文本可能不完整；请求不会自动重试，避免重复计费。

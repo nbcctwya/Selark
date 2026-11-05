@@ -13,9 +13,10 @@ from selark.chatgpt_auth import RESOURCE
 from selark.connections import valid_model
 from selark.errors import GatewayError
 from selark.protocol import strict_json
-from selark.providers.mimo import MiMoProvider, close_response, protocol_error, reported_usage
+from selark.providers.mimo import MiMoProvider, close_response, protocol_error
 from selark.providers.responses_text import ResponseText
 from selark.sse import SSEDecoder, async_sse_lines
+from selark.usage import response_usage
 
 ERRORS = {
     "subscription_sharing_user_not_eligible": (403, "该账户不具备官方套餐共享资格。"),
@@ -55,29 +56,6 @@ def response_error(body, status):
     )
 
 
-def response_usage(response):
-    raw = response.get("usage")
-    if not isinstance(raw, dict):
-        return None
-    normalized = {}
-    for source, target in (
-        ("input_tokens", "prompt_tokens"),
-        ("output_tokens", "completion_tokens"),
-        ("total_tokens", "total_tokens"),
-    ):
-        if source in raw:
-            normalized[target] = raw[source]
-    for source, target, fields in (
-        ("input_tokens_details", "prompt_tokens_details", ("cached_tokens",)),
-        ("output_tokens_details", "completion_tokens_details", ("reasoning_tokens",)),
-    ):
-        if isinstance(raw.get(source), dict):
-            normalized[target] = {k: raw[source][k] for k in fields if k in raw[source]}
-        elif source in raw:
-            normalized[target] = raw[source]
-    return reported_usage({"usage": normalized})
-
-
 class ChatGPTProvider(MiMoProvider):
     endpoint = "/responses"
 
@@ -98,6 +76,22 @@ class ChatGPTProvider(MiMoProvider):
         )
 
     def prepare(self, request, model):
+        if any(
+            getattr(request, field) is not None
+            for field in (
+                "tools",
+                "tool_choice",
+                "parallel_tool_calls",
+                "thinking",
+                "response_format",
+            )
+        ) or any(m.tool_calls or m.role == "tool" for m in request.messages):
+            raise GatewayError(
+                400,
+                "unsupported_provider_option",
+                "ChatGPT 订阅的工具调用请使用原生 /v1/responses，"
+                "以保留 function/custom 工具和思考历史。",
+            )
         for name in (
             "max_tokens",
             "max_completion_tokens",
@@ -146,12 +140,14 @@ class ChatGPTProvider(MiMoProvider):
         current = await self.auth.token(
             self.config.connection_id, expected_generation=self.config.oauth_generation
         )
+        kwargs.setdefault("params", getattr(self, "forward_params", None))
         request = self.client.build_request(
             method,
             RESOURCE + path,
             headers={
                 "Authorization": "Bearer " + current.access_token.get_secret_value(),
                 "Accept": "text/event-stream" if path == "/responses" else "application/json",
+                **getattr(self, "forward_headers", {}),
             },
             timeout=httpx.Timeout(
                 self.config.timeout_seconds,
