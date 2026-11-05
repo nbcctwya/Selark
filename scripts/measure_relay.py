@@ -198,7 +198,7 @@ def save_report(path, report):
         path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
 
 
-def run(*, samples=300, idle_seconds=30, report=None):
+def run(*, samples=300, idle_seconds=30, report=None, profile_path=None):
     report = {} if report is None else report
     with (
         tempfile.TemporaryDirectory(prefix="selark-relay-measure-") as temporary,
@@ -216,6 +216,9 @@ def run(*, samples=300, idle_seconds=30, report=None):
             k: v for k, v in os.environ.items() if not k.startswith("SELARK_") and k != "PYTHONPATH"
         }
         env["SELARK_DATA_DIR"] = str(profile / "data")
+        # Shell NO_PROXY patterns such as "127.*" need not match in HTTPX. Both
+        # legs must use the same loopback route, never an environment proxy.
+        env["NO_PROXY"] = env["no_proxy"] = "127.0.0.1,localhost,::1"
         with (root / "gateway.log").open("w") as log:
             entry = [sys.executable, "-m", "selark"]
             if hasattr(signal, "SIGUSR1"):
@@ -226,6 +229,23 @@ def run(*, samples=300, idle_seconds=30, report=None):
                     "import faulthandler, signal; "
                     "faulthandler.register(signal.SIGUSR1, all_threads=True); "
                     "from selark.cli import main; raise SystemExit(main())",
+                ]
+            if profile_path is not None:
+                profile_path = profile_path.resolve()
+                profile_path.parent.mkdir(parents=True, exist_ok=True)
+                probe = Path(__file__).with_name("profile_relay.py").resolve()
+                entry = [
+                    sys.executable,
+                    "-c",
+                    f"import runpy; runpy.run_path({str(probe)!r})"
+                    f"['install']({str(profile_path)!r}); "
+                    + (
+                        "import faulthandler, signal; "
+                        "faulthandler.register(signal.SIGUSR1, all_threads=True); "
+                        if hasattr(signal, "SIGUSR1")
+                        else ""
+                    )
+                    + "from selark.cli import main; raise SystemExit(main())",
                 ]
             process = subprocess.Popen(
                 [*entry, "--config-dir", str(profile), "serve"],
@@ -267,6 +287,7 @@ def run(*, samples=300, idle_seconds=30, report=None):
                             "samples_per_mode": samples,
                             "warmup_pairs_per_mode": 5,
                             "real_provider_requests": 0,
+                            "loopback_proxy_bypassed": True,
                             "budgets": BUDGET,
                         }
                     )
@@ -364,6 +385,11 @@ def run(*, samples=300, idle_seconds=30, report=None):
         )
         report["budget_checks"] = budget_checks(report)
         report["reference_sample_size"] = samples >= 300 and idle_seconds >= 30
+        if profile_path is not None:
+            from scripts.profile_relay import summarize
+
+            report["profile"] = summarize(profile_path)
+            report["reference_sample_size"] = False
         report.pop("progress", None)
         report.pop("partial_pairs", None)
         return report
@@ -375,6 +401,9 @@ def main():
     parser.add_argument("--idle-seconds", type=float, default=30)
     parser.add_argument("--output", type=Path)
     parser.add_argument(
+        "--profile", type=Path, help="Write opt-in per-stage JSONL timings (new file)."
+    )
+    parser.add_argument(
         "--check-budget",
         action="store_true",
         help="Fail for any missed/unavailable budget; requires 300 pairs/mode and 30 s idle.",
@@ -384,9 +413,18 @@ def main():
         parser.error("samples must be in [1, 10000], idle-seconds in (0, 60]")
     if args.check_budget and (args.samples < 300 or args.idle_seconds < 30):
         parser.error("budget checks require at least 300 samples and 30 idle seconds")
+    if args.profile and (args.check_budget or args.profile.exists()):
+        parser.error("profiling requires a new trace file and cannot certify performance budgets")
+    if args.profile and args.output and args.profile.resolve() == args.output.resolve():
+        parser.error("profile and summary output must be different files")
     report = {}
     try:
-        report = run(samples=args.samples, idle_seconds=args.idle_seconds, report=report)
+        report = run(
+            samples=args.samples,
+            idle_seconds=args.idle_seconds,
+            report=report,
+            profile_path=args.profile,
+        )
     except Exception as error:
         report.update(failed=True, error_type=type(error).__name__)
         # Replace an earlier success at the same path; stale results must not hide a failure.

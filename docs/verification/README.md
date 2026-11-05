@@ -6,6 +6,7 @@
 
 | 报告 | 文件 |
 | --- | --- |
+| [全链路延迟验收 · 2026-11-05](latency-verification-2026-11-05.md) | `latency-verification-2026-11-05.md`、`latency-measurements-2026-11-05.json` |
 | [设计原则与性能预算验收 · 2026-11-04](design-budget-verification-2026-11-04.md) | `design-budget-verification-2026-11-04.md`、`design-budget-measurements-2026-11-04.json` |
 | [资源占用与转发边界验收 · 2026-11-04](efficiency-verification-2026-11-04.md) | `efficiency-verification-2026-11-04.md`、`efficiency-measurements-2026-11-04.json` |
 | [Selark 0.4.1：API 极端场景与并发追加验收](api-stress-verification.md) | `api-stress-verification.md` |

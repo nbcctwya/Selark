@@ -243,14 +243,6 @@ class RequestMiddleware:
                     slot = True
                 finally:
                     state["queue_ms"] = round((time.monotonic() - waiting) * 1000, 2)
-                await self.storage.call(
-                    "begin_request",
-                    state["request_id"],
-                    state["started_at"],
-                    state["caller_id"],
-                    state["connection_id"],
-                    state["purpose"],
-                )
 
             async def replay_body():
                 return {"type": "http.request", "body": body, "more_body": False}
@@ -451,8 +443,17 @@ def create_app(
     async def resources():
         return await asyncio.to_thread(runtime.resources) if runtime else ResourcesConfig()
 
+    def routing_snapshot():
+        # Read both fresh documents in one worker visit. The second route lookup
+        # after queueing and the locked admission check still read current state.
+        if runtime:
+            return runtime.resources(), runtime.connection_settings()
+        return ResourcesConfig(), [legacy_connection(config)]
+
     async def route(data):
-        settings = await resources()
+        settings, available = (
+            await asyncio.to_thread(routing_snapshot) if runtime else routing_snapshot()
+        )
         model, selected, alias = data.model, data.connection_id, None
         if model and model.startswith("@"):
             alias = model[1:]
@@ -462,7 +463,7 @@ def create_app(
             if selected is not None and selected != target.connection_id:
                 raise GatewayError(400, "conflicting_connection", "连接参数与别名目标不一致。")
             selected, model = target.connection_id, target.model
-        current, model = resolve_model(await connections(), selected, model)
+        current, model = resolve_model(available, selected, model)
         return current, model, alias, settings
 
     @asynccontextmanager
@@ -745,6 +746,7 @@ def create_app(
             data.session_id,
             current.connection_id,
             purpose=request.state.purpose,
+            started_at=request.state.started_at,
             admission_guard=runtime.model_admission(current, model) if runtime else None,
             resource={
                 "caller": request.state.caller_id,

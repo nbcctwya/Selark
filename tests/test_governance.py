@@ -97,6 +97,13 @@ def test_concurrent_quota_reservation_is_atomic(runtime, kind):
         async def upstream(_):
             nonlocal calls
             calls += 1
+            # The combined admission transaction must be durable before dispatch,
+            # visible to another process/connection together with its reservation.
+            with contextlib.closing(Store(runtime.store.path, readonly=True)) as observer:
+                row = observer.records({})[0]
+                assert row["status"] == "running" and row["upstream_attempts"] == 1
+                assert row["caller_id"] == caller["id"] and row["total_tokens"] is None
+                assert observer.quota(caller["id"])["requests"] == 1
             started.set()
             await release.wait()
             return httpx.Response(200, json=completion())

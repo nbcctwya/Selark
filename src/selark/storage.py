@@ -522,12 +522,16 @@ class Store:
         purpose: str,
     ):
         with self.transaction() as db:
-            db.execute(
-                "INSERT INTO requests(request_id,original_request_id,started_at,caller_id,"
-                "connection_id,"
-                "purpose,status,upstream_attempts,usage_final) VALUES(?,?,?,?,?,?,'running',0,0)",
-                (request_id, request_id, started_at, caller_id, connection_id, purpose),
-            )
+            self._begin_request(db, request_id, started_at, caller_id, connection_id, purpose)
+
+    @staticmethod
+    def _begin_request(db, request_id, started_at, caller_id, connection_id, purpose):
+        db.execute(
+            "INSERT INTO requests(request_id,original_request_id,started_at,caller_id,"
+            "connection_id,"
+            "purpose,status,upstream_attempts,usage_final) VALUES(?,?,?,?,?,?,'running',0,0)",
+            (request_id, request_id, started_at, caller_id, connection_id, purpose),
+        )
 
     def attempt(
         self,
@@ -538,10 +542,24 @@ class Store:
         resource=None,
         purpose=None,
         admission_guard=None,
+        started_at=None,
     ):
         with admission_guard or nullcontext(), self.transaction() as db:
             if resource is not None:
                 db.execute("BEGIN IMMEDIATE")
+            if started_at is not None:
+                # Registration, quota reservation and dispatch intent share one
+                # FULL-synchronous commit, completed before the upstream is called.
+                # Earlier rejections are still recorded by finish's insert path.
+                self._begin_request(
+                    db,
+                    request_id,
+                    started_at,
+                    (resource or {}).get("caller"),
+                    connection_id,
+                    purpose,
+                )
+            if resource is not None:
                 reserve(
                     db,
                     request_id,

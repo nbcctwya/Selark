@@ -264,48 +264,59 @@ class AsyncLedger:
 
     async def persist(self, state, http_status, duration_ms, *, settled):
         document = snapshot(state, http_status, duration_ms, settled=settled)
-        journal_ok = False
+        loop = asyncio.get_running_loop()
         async with self.receipt_lock:
-            if self.journal:
-                try:
-                    await self.io(self.journal.save, document)
-                    journal_ok = True
-                except (OSError, ValueError):
-                    self.degraded = True
+            # Keep the durable write order, but execute the contiguous blocking
+            # work in one visit to the receipt worker. Store.transaction's RLock
+            # serializes SQLite access with the database worker. Reads can still
+            # proceed while a receipt is syncing; blocking I/O stays off the event loop.
+            return await self.io(self._persist, document, loop)
+
+    def _persist(self, document, loop):
+        state = document["state"]
+        settled = document["settled"]
+        journal_ok = False
+        if self.journal:
             try:
-                await self.call(
-                    "finish",
-                    state["request_id"],
-                    state=document["state"],
-                    http_status=http_status,
-                    duration_ms=duration_ms,
+                self.journal.save(document)
+                journal_ok = True
+            except (OSError, ValueError):
+                self.degraded = True
+        try:
+            self.store.finish(
+                state["request_id"],
+                state=state,
+                http_status=document["http_status"],
+                duration_ms=document["duration_ms"],
+            )
+            result = "committed"
+            if settled and journal_ok:
+                self.journal.remove(state["request_id"])
+        except (sqlite3.Error, OSError, ConfigError):
+            result = "pending" if journal_ok else "failed"
+            if not journal_ok:
+                self.degraded = True
+            logger.error(
+                json.dumps(
+                    {
+                        "event": "record_write_failed",
+                        "request_id": state["request_id"],
+                        "persistence": result,
+                        "usage": state.get("usage"),
+                        "usage_final": state.get("usage_final", False),
+                    }
                 )
-                result = "committed"
-                if settled and journal_ok:
-                    await self.io(self.journal.remove, state["request_id"])
-            except (sqlite3.Error, OSError, ConfigError):
-                result = "pending" if journal_ok else "failed"
-                if not journal_ok:
-                    self.degraded = True
-                logger.error(
-                    json.dumps(
-                        {
-                            "event": "record_write_failed",
-                            "request_id": state["request_id"],
-                            "persistence": result,
-                            "usage": state.get("usage"),
-                            "usage_final": state.get("usage_final", False),
-                        }
-                    )
-                )
-            if self.journal:
-                try:
-                    self.pending = len(await self.io(self.journal.entries))
-                except OSError:
-                    self.degraded = True
-                if self.degraded or (settled and self.pending):
-                    self.recovery_needed.set()
-            return result
+            )
+        if self.journal:
+            try:
+                self.pending = len(self.journal.entries())
+            except OSError:
+                self.degraded = True
+            if self.degraded or (settled and self.pending):
+                # Event.set belongs to the event-loop thread, including when the
+                # caller was cancelled while this worker completed its write.
+                loop.call_soon_threadsafe(self.recovery_needed.set)
+        return result
 
     async def replay(self):
         if not self.journal:
