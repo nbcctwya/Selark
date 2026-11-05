@@ -1,0 +1,1641 @@
+{
+  "started_at": "2026-11-05T06:15:26.737945+00:00",
+  "finished_at": "2026-11-05T06:27:55.799013+00:00",
+  "source_commit": "e43a85e1d4aad3b48b68c86cfb77aa6f35b0e340",
+  "python": "3.12.2",
+  "rounds_planned": {
+    "mimo-default": 50,
+    "openai-personal": 10,
+    "relay-personal": 50
+  },
+  "serial_rounds": 20,
+  "maximum_dispatch_attempts": 440,
+  "output_caps": {
+    "mimo-default": 16,
+    "openai-personal": 64,
+    "relay-personal": 16
+  },
+  "external_network_uses_environment_proxies": true,
+  "local_client_ignores_environment_proxies": true,
+  "instrumented": true,
+  "concurrency": {
+    "serial": 1,
+    "parallel": 4
+  },
+  "peak_core_active": 4,
+  "retries": 0,
+  "attempts": {
+    "mimo-default": 200,
+    "openai-personal": 40,
+    "relay-personal": 200
+  },
+  "stopped_connections": {},
+  "ledger_rows": 220,
+  "pending_records": 0,
+  "completed": true,
+  "requests": 440,
+  "elapsed_seconds": 749.061,
+  "transport_protocol_failures": 0,
+  "total_reported_tokens": 18164,
+  "counted_as_local_budget_verification": false,
+  "by_connection": {
+    "mimo-default": {
+      "model": "mimo-v2.6-flash",
+      "requests": 200,
+      "protocol_failures": 0,
+      "nonempty": 200,
+      "empty": 0,
+      "exact_ok": 199,
+      "text_variants": {
+        "OK": 199,
+        "OK.": 1
+      },
+      "reported_tokens": 3201,
+      "usage_unknown_requests": 0,
+      "prompt_token_counts": {
+        "14": 200
+      },
+      "returned_models": {
+        "mimo-v2.6-flash": 200
+      }
+    },
+    "openai-personal": {
+      "model": "gpt-6-luna",
+      "requests": 40,
+      "protocol_failures": 0,
+      "nonempty": 40,
+      "empty": 0,
+      "exact_ok": 40,
+      "text_variants": {
+        "OK": 40
+      },
+      "reported_tokens": 821,
+      "usage_unknown_requests": 0,
+      "prompt_token_counts": {
+        "11": 40
+      },
+      "returned_models": {
+        "gpt-6-luna": 40
+      }
+    },
+    "relay-personal": {
+      "model": "claude-sonnet-4-6",
+      "requests": 200,
+      "protocol_failures": 0,
+      "nonempty": 194,
+      "empty": 6,
+      "exact_ok": 0,
+      "text_variants": {
+        "OK.": 194,
+        "": 6
+      },
+      "reported_tokens": 14142,
+      "usage_unknown_requests": 0,
+      "prompt_token_counts": {
+        "12": 189,
+        "2029": 1,
+        "1968": 3,
+        "15": 6,
+        "2901": 1
+      },
+      "returned_models": {
+        "claude-sonnet-4-6": 200
+      }
+    }
+  },
+  "latency_groups": [
+    {
+      "connection": "mimo-default",
+      "phase": "serial",
+      "stream": false,
+      "route": "direct",
+      "requests": 20,
+      "empty": 0,
+      "ready": {
+        "samples": 20,
+        "median_ms": 1083.5067,
+        "p95_ms": 2944.8706,
+        "min_ms": 632.1547,
+        "max_ms": 7277.7849
+      },
+      "complete": {
+        "samples": 20,
+        "median_ms": 1083.6037,
+        "p95_ms": 2944.8906,
+        "min_ms": 632.174,
+        "max_ms": 7277.8066
+      }
+    },
+    {
+      "connection": "mimo-default",
+      "phase": "serial",
+      "stream": false,
+      "route": "relay",
+      "requests": 20,
+      "empty": 0,
+      "ready": {
+        "samples": 20,
+        "median_ms": 1054.3512,
+        "p95_ms": 4969.0165,
+        "min_ms": 647.1135,
+        "max_ms": 26602.0706
+      },
+      "complete": {
+        "samples": 20,
+        "median_ms": 1054.3902,
+        "p95_ms": 4969.0602,
+        "min_ms": 647.1624,
+        "max_ms": 26602.1244
+      },
+      "provider_ready_to_client": {
+        "samples": 20,
+        "median_ms": 6.3724,
+        "p95_ms": 52.1479,
+        "min_ms": 5.6241,
+        "max_ms": 63.5447
+      },
+      "entry_to_upstream": {
+        "samples": 20,
+        "median_ms": 3.2102,
+        "p95_ms": 4.5224,
+        "min_ms": 2.7302,
+        "max_ms": 6.132
+      },
+      "checkpoint": {
+        "samples": 20,
+        "median_ms": 4.9628,
+        "p95_ms": 7.6366,
+        "min_ms": 4.3194,
+        "max_ms": 8.3702
+      },
+      "settlement": {
+        "samples": 20,
+        "median_ms": 13.5709,
+        "p95_ms": 22.1514,
+        "min_ms": 5.3439,
+        "max_ms": 27.7393
+      },
+      "queue": {
+        "samples": 20,
+        "median_ms": 0.0,
+        "p95_ms": 0.0,
+        "min_ms": 0.0,
+        "max_ms": 0.0
+      }
+    },
+    {
+      "connection": "mimo-default",
+      "phase": "serial",
+      "stream": true,
+      "route": "direct",
+      "requests": 20,
+      "empty": 0,
+      "ready": {
+        "samples": 20,
+        "median_ms": 799.466,
+        "p95_ms": 5049.7052,
+        "min_ms": 487.0861,
+        "max_ms": 23480.373
+      },
+      "complete": {
+        "samples": 20,
+        "median_ms": 986.4104,
+        "p95_ms": 5135.9136,
+        "min_ms": 659.4749,
+        "max_ms": 23616.1653
+      }
+    },
+    {
+      "connection": "mimo-default",
+      "phase": "serial",
+      "stream": true,
+      "route": "relay",
+      "requests": 20,
+      "empty": 0,
+      "ready": {
+        "samples": 20,
+        "median_ms": 624.5201,
+        "p95_ms": 4520.8382,
+        "min_ms": 389.2542,
+        "max_ms": 5020.8483
+      },
+      "complete": {
+        "samples": 20,
+        "median_ms": 1017.4266,
+        "p95_ms": 4690.8116,
+        "min_ms": 558.2336,
+        "max_ms": 5087.2172
+      },
+      "provider_ready_to_client": {
+        "samples": 20,
+        "median_ms": 0.5485,
+        "p95_ms": 50.1975,
+        "min_ms": 0.4068,
+        "max_ms": 54.0997
+      },
+      "entry_to_upstream": {
+        "samples": 20,
+        "median_ms": 3.4087,
+        "p95_ms": 4.5865,
+        "min_ms": 2.7255,
+        "max_ms": 7.6738
+      },
+      "checkpoint": {
+        "samples": 20,
+        "median_ms": 5.4781,
+        "p95_ms": 7.9192,
+        "min_ms": 4.3841,
+        "max_ms": 8.286
+      },
+      "settlement": {
+        "samples": 20,
+        "median_ms": 14.0687,
+        "p95_ms": 20.7625,
+        "min_ms": 7.2964,
+        "max_ms": 21.1683
+      },
+      "queue": {
+        "samples": 20,
+        "median_ms": 0.0,
+        "p95_ms": 0.0,
+        "min_ms": 0.0,
+        "max_ms": 0.0
+      }
+    },
+    {
+      "connection": "mimo-default",
+      "phase": "parallel",
+      "stream": false,
+      "route": "direct",
+      "requests": 30,
+      "empty": 0,
+      "ready": {
+        "samples": 30,
+        "median_ms": 1106.888,
+        "p95_ms": 14854.6072,
+        "min_ms": 611.2703,
+        "max_ms": 23327.145
+      },
+      "complete": {
+        "samples": 30,
+        "median_ms": 1106.9069,
+        "p95_ms": 14854.6259,
+        "min_ms": 611.29,
+        "max_ms": 23327.1628
+      }
+    },
+    {
+      "connection": "mimo-default",
+      "phase": "parallel",
+      "stream": false,
+      "route": "relay",
+      "requests": 30,
+      "empty": 0,
+      "ready": {
+        "samples": 30,
+        "median_ms": 1206.283,
+        "p95_ms": 6942.9686,
+        "min_ms": 699.5792,
+        "max_ms": 10889.6509
+      },
+      "complete": {
+        "samples": 30,
+        "median_ms": 1206.3228,
+        "p95_ms": 6943.0822,
+        "min_ms": 699.6152,
+        "max_ms": 10889.6931
+      },
+      "provider_ready_to_client": {
+        "samples": 30,
+        "median_ms": 5.8828,
+        "p95_ms": 13.2718,
+        "min_ms": 4.6997,
+        "max_ms": 38.202
+      },
+      "entry_to_upstream": {
+        "samples": 30,
+        "median_ms": 12.051,
+        "p95_ms": 16.0524,
+        "min_ms": 6.1455,
+        "max_ms": 22.4396
+      },
+      "checkpoint": {
+        "samples": 30,
+        "median_ms": 4.4438,
+        "p95_ms": 11.6171,
+        "min_ms": 3.4329,
+        "max_ms": 36.6435
+      },
+      "settlement": {
+        "samples": 30,
+        "median_ms": 31.0565,
+        "p95_ms": 66.3615,
+        "min_ms": 20.6896,
+        "max_ms": 68.0099
+      },
+      "queue": {
+        "samples": 30,
+        "median_ms": 0.0,
+        "p95_ms": 0.0,
+        "min_ms": 0.0,
+        "max_ms": 0.0
+      }
+    },
+    {
+      "connection": "mimo-default",
+      "phase": "parallel",
+      "stream": true,
+      "route": "direct",
+      "requests": 30,
+      "empty": 0,
+      "ready": {
+        "samples": 30,
+        "median_ms": 842.9515,
+        "p95_ms": 14643.1753,
+        "min_ms": 422.4136,
+        "max_ms": 23152.5655
+      },
+      "complete": {
+        "samples": 30,
+        "median_ms": 1043.7273,
+        "p95_ms": 14792.2595,
+        "min_ms": 640.75,
+        "max_ms": 23383.8685
+      }
+    },
+    {
+      "connection": "mimo-default",
+      "phase": "parallel",
+      "stream": true,
+      "route": "relay",
+      "requests": 30,
+      "empty": 0,
+      "ready": {
+        "samples": 30,
+        "median_ms": 1037.7026,
+        "p95_ms": 6750.9926,
+        "min_ms": 443.3608,
+        "max_ms": 10724.8128
+      },
+      "complete": {
+        "samples": 30,
+        "median_ms": 1318.2914,
+        "p95_ms": 7015.1899,
+        "min_ms": 651.4973,
+        "max_ms": 11048.526
+      },
+      "provider_ready_to_client": {
+        "samples": 30,
+        "median_ms": 0.5192,
+        "p95_ms": 0.8086,
+        "min_ms": 0.2596,
+        "max_ms": 0.8099
+      },
+      "entry_to_upstream": {
+        "samples": 30,
+        "median_ms": 11.7486,
+        "p95_ms": 17.8703,
+        "min_ms": 6.1026,
+        "max_ms": 22.0691
+      },
+      "checkpoint": {
+        "samples": 30,
+        "median_ms": 4.6773,
+        "p95_ms": 29.0171,
+        "min_ms": 3.783,
+        "max_ms": 33.0904
+      },
+      "settlement": {
+        "samples": 30,
+        "median_ms": 31.0836,
+        "p95_ms": 58.3352,
+        "min_ms": 21.9451,
+        "max_ms": 59.6569
+      },
+      "queue": {
+        "samples": 30,
+        "median_ms": 0.0,
+        "p95_ms": 0.0,
+        "min_ms": 0.0,
+        "max_ms": 0.0
+      }
+    },
+    {
+      "connection": "openai-personal",
+      "phase": "serial",
+      "stream": false,
+      "route": "direct",
+      "requests": 10,
+      "empty": 0,
+      "ready": {
+        "samples": 10,
+        "median_ms": 1444.7729,
+        "p95_ms": 4178.6628,
+        "min_ms": 991.7549,
+        "max_ms": 4178.6628
+      },
+      "complete": {
+        "samples": 10,
+        "median_ms": 1444.7927,
+        "p95_ms": 4178.6823,
+        "min_ms": 991.7737,
+        "max_ms": 4178.6823
+      }
+    },
+    {
+      "connection": "openai-personal",
+      "phase": "serial",
+      "stream": false,
+      "route": "relay",
+      "requests": 10,
+      "empty": 0,
+      "ready": {
+        "samples": 10,
+        "median_ms": 1424.8003,
+        "p95_ms": 7151.1015,
+        "min_ms": 930.2448,
+        "max_ms": 7151.1015
+      },
+      "complete": {
+        "samples": 10,
+        "median_ms": 1424.8658,
+        "p95_ms": 7151.1607,
+        "min_ms": 930.29,
+        "max_ms": 7151.1607
+      },
+      "provider_ready_to_client": {
+        "samples": 10,
+        "median_ms": 28.3409,
+        "p95_ms": 63.2329,
+        "min_ms": 6.3365,
+        "max_ms": 63.2329
+      },
+      "entry_to_upstream": {
+        "samples": 10,
+        "median_ms": 3.3584,
+        "p95_ms": 4.35,
+        "min_ms": 2.823,
+        "max_ms": 4.35
+      },
+      "checkpoint": {
+        "samples": 10,
+        "median_ms": 5.0381,
+        "p95_ms": 5.6127,
+        "min_ms": 4.524,
+        "max_ms": 5.6127
+      },
+      "settlement": {
+        "samples": 10,
+        "median_ms": 7.3909,
+        "p95_ms": 13.5413,
+        "min_ms": 5.2372,
+        "max_ms": 13.5413
+      },
+      "queue": {
+        "samples": 10,
+        "median_ms": 0.0,
+        "p95_ms": 0.0,
+        "min_ms": 0.0,
+        "max_ms": 0.0
+      }
+    },
+    {
+      "connection": "openai-personal",
+      "phase": "serial",
+      "stream": true,
+      "route": "direct",
+      "requests": 10,
+      "empty": 0,
+      "ready": {
+        "samples": 10,
+        "median_ms": 1360.7806,
+        "p95_ms": 6644.2551,
+        "min_ms": 950.1999,
+        "max_ms": 6644.2551
+      },
+      "complete": {
+        "samples": 10,
+        "median_ms": 1365.5617,
+        "p95_ms": 6649.2188,
+        "min_ms": 952.055,
+        "max_ms": 6649.2188
+      }
+    },
+    {
+      "connection": "openai-personal",
+      "phase": "serial",
+      "stream": true,
+      "route": "relay",
+      "requests": 10,
+      "empty": 0,
+      "ready": {
+        "samples": 10,
+        "median_ms": 1153.0259,
+        "p95_ms": 5095.2346,
+        "min_ms": 888.6168,
+        "max_ms": 5095.2346
+      },
+      "complete": {
+        "samples": 10,
+        "median_ms": 1159.0541,
+        "p95_ms": 5102.3388,
+        "min_ms": 930.4972,
+        "max_ms": 5102.3388
+      },
+      "provider_ready_to_client": {
+        "samples": 10,
+        "median_ms": 0.6488,
+        "p95_ms": 8.073,
+        "min_ms": 0.3869,
+        "max_ms": 8.073
+      },
+      "entry_to_upstream": {
+        "samples": 10,
+        "median_ms": 3.3762,
+        "p95_ms": 4.1699,
+        "min_ms": 2.4827,
+        "max_ms": 4.1699
+      },
+      "checkpoint": {
+        "samples": 10,
+        "median_ms": 5.1774,
+        "p95_ms": 5.9751,
+        "min_ms": 4.7348,
+        "max_ms": 5.9751
+      },
+      "settlement": {
+        "samples": 10,
+        "median_ms": 9.6738,
+        "p95_ms": 16.131,
+        "min_ms": 5.642,
+        "max_ms": 16.131
+      },
+      "queue": {
+        "samples": 10,
+        "median_ms": 0.0,
+        "p95_ms": 0.0,
+        "min_ms": 0.0,
+        "max_ms": 0.0
+      }
+    },
+    {
+      "connection": "relay-personal",
+      "phase": "serial",
+      "stream": false,
+      "route": "direct",
+      "requests": 20,
+      "empty": 0,
+      "ready": {
+        "samples": 20,
+        "median_ms": 1974.3183,
+        "p95_ms": 5038.9149,
+        "min_ms": 1178.7105,
+        "max_ms": 5533.6035
+      },
+      "complete": {
+        "samples": 20,
+        "median_ms": 1974.336,
+        "p95_ms": 5038.9329,
+        "min_ms": 1178.7272,
+        "max_ms": 5533.6232
+      }
+    },
+    {
+      "connection": "relay-personal",
+      "phase": "serial",
+      "stream": false,
+      "route": "relay",
+      "requests": 20,
+      "empty": 0,
+      "ready": {
+        "samples": 20,
+        "median_ms": 1819.9248,
+        "p95_ms": 2755.7081,
+        "min_ms": 1375.6314,
+        "max_ms": 2911.7972
+      },
+      "complete": {
+        "samples": 20,
+        "median_ms": 1819.9681,
+        "p95_ms": 2755.7483,
+        "min_ms": 1375.668,
+        "max_ms": 2911.841
+      },
+      "provider_ready_to_client": {
+        "samples": 20,
+        "median_ms": 6.3902,
+        "p95_ms": 50.8387,
+        "min_ms": 5.2631,
+        "max_ms": 62.4064
+      },
+      "entry_to_upstream": {
+        "samples": 20,
+        "median_ms": 3.1829,
+        "p95_ms": 3.8685,
+        "min_ms": 2.7334,
+        "max_ms": 8.4521
+      },
+      "checkpoint": {
+        "samples": 20,
+        "median_ms": 4.7835,
+        "p95_ms": 5.922,
+        "min_ms": 4.0227,
+        "max_ms": 7.949
+      },
+      "settlement": {
+        "samples": 20,
+        "median_ms": 12.4894,
+        "p95_ms": 19.8992,
+        "min_ms": 5.0358,
+        "max_ms": 22.8854
+      },
+      "queue": {
+        "samples": 20,
+        "median_ms": 0.0,
+        "p95_ms": 0.0,
+        "min_ms": 0.0,
+        "max_ms": 0.0
+      }
+    },
+    {
+      "connection": "relay-personal",
+      "phase": "serial",
+      "stream": true,
+      "route": "direct",
+      "requests": 20,
+      "empty": 0,
+      "ready": {
+        "samples": 20,
+        "median_ms": 2444.5413,
+        "p95_ms": 3786.6824,
+        "min_ms": 1803.3058,
+        "max_ms": 4479.5898
+      },
+      "complete": {
+        "samples": 20,
+        "median_ms": 2480.7551,
+        "p95_ms": 3893.667,
+        "min_ms": 1817.0147,
+        "max_ms": 5048.3281
+      }
+    },
+    {
+      "connection": "relay-personal",
+      "phase": "serial",
+      "stream": true,
+      "route": "relay",
+      "requests": 20,
+      "empty": 0,
+      "ready": {
+        "samples": 20,
+        "median_ms": 1861.1343,
+        "p95_ms": 2271.0851,
+        "min_ms": 1167.9396,
+        "max_ms": 2759.7979
+      },
+      "complete": {
+        "samples": 20,
+        "median_ms": 1907.2724,
+        "p95_ms": 2423.977,
+        "min_ms": 1206.0013,
+        "max_ms": 2760.3607
+      },
+      "provider_ready_to_client": {
+        "samples": 20,
+        "median_ms": 0.5044,
+        "p95_ms": 41.3527,
+        "min_ms": 0.2706,
+        "max_ms": 49.0667
+      },
+      "entry_to_upstream": {
+        "samples": 20,
+        "median_ms": 3.3373,
+        "p95_ms": 4.0601,
+        "min_ms": 2.196,
+        "max_ms": 4.0739
+      },
+      "checkpoint": {
+        "samples": 20,
+        "median_ms": 5.3882,
+        "p95_ms": 6.4535,
+        "min_ms": 4.2314,
+        "max_ms": 7.2196
+      },
+      "settlement": {
+        "samples": 20,
+        "median_ms": 12.9357,
+        "p95_ms": 20.5302,
+        "min_ms": 5.2353,
+        "max_ms": 24.1002
+      },
+      "queue": {
+        "samples": 20,
+        "median_ms": 0.0,
+        "p95_ms": 0.0,
+        "min_ms": 0.0,
+        "max_ms": 0.01
+      }
+    },
+    {
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": false,
+      "route": "direct",
+      "requests": 30,
+      "empty": 0,
+      "ready": {
+        "samples": 30,
+        "median_ms": 2072.447,
+        "p95_ms": 5503.7954,
+        "min_ms": 1255.2154,
+        "max_ms": 7220.2726
+      },
+      "complete": {
+        "samples": 30,
+        "median_ms": 2072.4638,
+        "p95_ms": 5503.8118,
+        "min_ms": 1255.2339,
+        "max_ms": 7220.2912
+      }
+    },
+    {
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": false,
+      "route": "relay",
+      "requests": 30,
+      "empty": 0,
+      "ready": {
+        "samples": 30,
+        "median_ms": 2102.8173,
+        "p95_ms": 3622.9167,
+        "min_ms": 1330.9456,
+        "max_ms": 7342.9357
+      },
+      "complete": {
+        "samples": 30,
+        "median_ms": 2102.8871,
+        "p95_ms": 3622.9529,
+        "min_ms": 1330.9899,
+        "max_ms": 7343.0093
+      },
+      "provider_ready_to_client": {
+        "samples": 30,
+        "median_ms": 6.1725,
+        "p95_ms": 9.2616,
+        "min_ms": 4.5942,
+        "max_ms": 21.8383
+      },
+      "entry_to_upstream": {
+        "samples": 30,
+        "median_ms": 12.2074,
+        "p95_ms": 19.2495,
+        "min_ms": 5.5369,
+        "max_ms": 19.6476
+      },
+      "checkpoint": {
+        "samples": 30,
+        "median_ms": 4.5381,
+        "p95_ms": 7.9451,
+        "min_ms": 3.5629,
+        "max_ms": 19.9865
+      },
+      "settlement": {
+        "samples": 30,
+        "median_ms": 30.8736,
+        "p95_ms": 44.699,
+        "min_ms": 20.3694,
+        "max_ms": 49.2812
+      },
+      "queue": {
+        "samples": 30,
+        "median_ms": 0.0,
+        "p95_ms": 0.0,
+        "min_ms": 0.0,
+        "max_ms": 0.0
+      }
+    },
+    {
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": true,
+      "route": "direct",
+      "requests": 30,
+      "empty": 2,
+      "ready": {
+        "samples": 28,
+        "median_ms": 1888.2101,
+        "p95_ms": 5402.5147,
+        "min_ms": 1182.1469,
+        "max_ms": 8049.987
+      },
+      "complete": {
+        "samples": 30,
+        "median_ms": 1955.3337,
+        "p95_ms": 5556.039,
+        "min_ms": 1038.5208,
+        "max_ms": 8050.7496
+      }
+    },
+    {
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": true,
+      "route": "relay",
+      "requests": 30,
+      "empty": 4,
+      "ready": {
+        "samples": 26,
+        "median_ms": 1842.6905,
+        "p95_ms": 3525.1503,
+        "min_ms": 1203.2666,
+        "max_ms": 7352.0424
+      },
+      "complete": {
+        "samples": 30,
+        "median_ms": 1744.3754,
+        "p95_ms": 3558.457,
+        "min_ms": 793.2672,
+        "max_ms": 7363.3726
+      },
+      "provider_ready_to_client": {
+        "samples": 26,
+        "median_ms": 0.5075,
+        "p95_ms": 0.8643,
+        "min_ms": 0.3294,
+        "max_ms": 1.2967
+      },
+      "entry_to_upstream": {
+        "samples": 30,
+        "median_ms": 12.4438,
+        "p95_ms": 18.0228,
+        "min_ms": 6.2163,
+        "max_ms": 21.1208
+      },
+      "checkpoint": {
+        "samples": 30,
+        "median_ms": 4.951,
+        "p95_ms": 9.5953,
+        "min_ms": 3.7503,
+        "max_ms": 17.8939
+      },
+      "settlement": {
+        "samples": 30,
+        "median_ms": 30.4466,
+        "p95_ms": 38.5964,
+        "min_ms": 22.1558,
+        "max_ms": 40.9592
+      },
+      "queue": {
+        "samples": 30,
+        "median_ms": 0.0,
+        "p95_ms": 0.0,
+        "min_ms": 0.0,
+        "max_ms": 0.0
+      }
+    }
+  ],
+  "payload_sha256": {
+    "mimo-default:False": "1df9f1f2c71c745183e0d5b5085ee59342ce6aa36f54ad466ce2b066ccbf1c34",
+    "mimo-default:True": "65a401dbf4b2b0d2fd1fce707f304b310bddd7fb89c1ff5818aed6be043ee9f4",
+    "openai-personal:False": "206236a458c60550543be739132dbc3d4c85545b73db286bed9c2a5b16d4e2db",
+    "openai-personal:True": "30d553b85f8b27ffe16fa19faae3680e97829f6fd642617f8527aaa87cf01a73",
+    "relay-personal:False": "187f0a5968bf4f29ed98b8be75251966268f8ac9a1b65ba76e21c34938d28944",
+    "relay-personal:True": "6d4eb64f90c1387276a0b0608712e349a96e7ab3eace7335a7f36d71a752bd7c"
+  },
+  "empty_responses": [
+    {
+      "case_id": "r21.relay-personal.1.relay",
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": true,
+      "route": "relay",
+      "finish_reason": "stop",
+      "ready_ms": null,
+      "complete_ms": 1313.941449,
+      "usage": {
+        "prompt_tokens": 15,
+        "completion_tokens": 0,
+        "total_tokens": 15,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "text_preview": ""
+    },
+    {
+      "case_id": "r21.relay-personal.1.direct",
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": true,
+      "route": "direct",
+      "finish_reason": "stop",
+      "ready_ms": null,
+      "complete_ms": 2978.93985,
+      "usage": {
+        "prompt_tokens": 15,
+        "completion_tokens": 0,
+        "total_tokens": 15,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "text_preview": ""
+    },
+    {
+      "case_id": "r31.relay-personal.1.relay",
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": true,
+      "route": "relay",
+      "finish_reason": "stop",
+      "ready_ms": null,
+      "complete_ms": 1596.191854,
+      "usage": {
+        "prompt_tokens": 15,
+        "completion_tokens": 0,
+        "total_tokens": 15,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "text_preview": ""
+    },
+    {
+      "case_id": "r32.relay-personal.1.direct",
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": true,
+      "route": "direct",
+      "finish_reason": "stop",
+      "ready_ms": null,
+      "complete_ms": 1038.5208,
+      "usage": {
+        "prompt_tokens": 15,
+        "completion_tokens": 0,
+        "total_tokens": 15,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "text_preview": ""
+    },
+    {
+      "case_id": "r39.relay-personal.1.relay",
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": true,
+      "route": "relay",
+      "finish_reason": "stop",
+      "ready_ms": null,
+      "complete_ms": 793.267197,
+      "usage": {
+        "prompt_tokens": 15,
+        "completion_tokens": 0,
+        "total_tokens": 15,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "text_preview": ""
+    },
+    {
+      "case_id": "r48.relay-personal.1.relay",
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": true,
+      "route": "relay",
+      "finish_reason": "stop",
+      "ready_ms": null,
+      "complete_ms": 837.16261,
+      "usage": {
+        "prompt_tokens": 15,
+        "completion_tokens": 0,
+        "total_tokens": 15,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "text_preview": ""
+    }
+  ],
+  "unusually_high_reported_input": [
+    {
+      "case_id": "r19.relay-personal.0.direct",
+      "connection": "relay-personal",
+      "phase": "serial",
+      "stream": false,
+      "route": "direct",
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 2029,
+        "completion_tokens": 1,
+        "total_tokens": 2030,
+        "input_tokens": 2029,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 1476,
+          "cache_write_tokens": 553,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "text_preview": "OK.",
+      "wire_sha256": "187f0a5968bf4f29ed98b8be75251966268f8ac9a1b65ba76e21c34938d28944"
+    },
+    {
+      "case_id": "r21.relay-personal.0.relay",
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": false,
+      "route": "relay",
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 1968,
+        "completion_tokens": 1,
+        "total_tokens": 1969,
+        "input_tokens": 1968,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 1968,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "text_preview": "OK.",
+      "wire_sha256": "187f0a5968bf4f29ed98b8be75251966268f8ac9a1b65ba76e21c34938d28944"
+    },
+    {
+      "case_id": "r22.relay-personal.0.relay",
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": false,
+      "route": "relay",
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 1968,
+        "completion_tokens": 1,
+        "total_tokens": 1969,
+        "input_tokens": 1968,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 1968,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "text_preview": "OK.",
+      "wire_sha256": "187f0a5968bf4f29ed98b8be75251966268f8ac9a1b65ba76e21c34938d28944"
+    },
+    {
+      "case_id": "r22.relay-personal.0.direct",
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": false,
+      "route": "direct",
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 1968,
+        "completion_tokens": 1,
+        "total_tokens": 1969,
+        "input_tokens": 1968,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 1968,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "text_preview": "OK.",
+      "wire_sha256": "187f0a5968bf4f29ed98b8be75251966268f8ac9a1b65ba76e21c34938d28944"
+    },
+    {
+      "case_id": "r39.relay-personal.0.relay",
+      "connection": "relay-personal",
+      "phase": "parallel",
+      "stream": false,
+      "route": "relay",
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 2901,
+        "completion_tokens": 1,
+        "total_tokens": 2902,
+        "input_tokens": 2901,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 2152,
+          "cache_write_tokens": 749,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "text_preview": "OK.",
+      "wire_sha256": "187f0a5968bf4f29ed98b8be75251966268f8ac9a1b65ba76e21c34938d28944"
+    }
+  ],
+  "nonstream_handoff_above_30ms": [
+    {
+      "case_id": "r2.openai-personal.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 49.354929,
+      "local_marks_ms": {
+        "authenticated": 0.356875,
+        "admitted": 3.456229,
+        "upstream_start": 3.463559,
+        "upstream_headers": 7099.898053,
+        "response_headers": 7105.261115,
+        "first_body": 7105.371606,
+        "last_body": 7105.372706,
+        "settled": 7111.106475
+      },
+      "checkpoint_ms": 4.641623,
+      "settlement_ms": 5.555782
+    },
+    {
+      "case_id": "r2.relay-personal.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 48.254215,
+      "local_marks_ms": {
+        "authenticated": 0.356613,
+        "admitted": 3.204435,
+        "upstream_start": 3.21259,
+        "upstream_headers": 2078.877447,
+        "response_headers": 2084.704426,
+        "first_body": 2084.815476,
+        "last_body": 2084.816591,
+        "settled": 2090.49631
+      },
+      "checkpoint_ms": 5.294605,
+      "settlement_ms": 5.515358
+    },
+    {
+      "case_id": "r2.mimo-default.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 63.544738,
+      "local_marks_ms": {
+        "authenticated": 0.295347,
+        "admitted": 2.885338,
+        "upstream_start": 2.891856,
+        "upstream_headers": 1688.33593,
+        "response_headers": 1693.466907,
+        "first_body": 1693.553735,
+        "last_body": 1693.554774,
+        "settled": 1699.644758
+      },
+      "checkpoint_ms": 4.537513,
+      "settlement_ms": 5.942685
+    },
+    {
+      "case_id": "r4.mimo-default.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 48.264491,
+      "local_marks_ms": {
+        "authenticated": 0.291939,
+        "admitted": 2.723246,
+        "upstream_start": 2.730237,
+        "upstream_headers": 1127.216316,
+        "response_headers": 1133.204815,
+        "first_body": 1133.305809,
+        "last_body": 1133.306909,
+        "settled": 1140.59611
+      },
+      "checkpoint_ms": 5.378454,
+      "settlement_ms": 7.136242
+    },
+    {
+      "case_id": "r4.openai-personal.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 63.232939,
+      "local_marks_ms": {
+        "authenticated": 0.386551,
+        "admitted": 3.541292,
+        "upstream_start": 3.548704,
+        "upstream_headers": 1071.255033,
+        "response_headers": 1077.069053,
+        "first_body": 1077.156221,
+        "last_body": 1077.157145,
+        "settled": 1083.35983
+      },
+      "checkpoint_ms": 5.186,
+      "settlement_ms": 6.05059
+    },
+    {
+      "case_id": "r4.relay-personal.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 50.838719,
+      "local_marks_ms": {
+        "authenticated": 0.264541,
+        "admitted": 3.540864,
+        "upstream_start": 3.548356,
+        "upstream_headers": 1842.275133,
+        "response_headers": 1847.652341,
+        "first_body": 1847.746956,
+        "last_body": 1847.747942,
+        "settled": 1853.71452
+      },
+      "checkpoint_ms": 4.830919,
+      "settlement_ms": 5.813602
+    },
+    {
+      "case_id": "r6.relay-personal.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 50.677011,
+      "local_marks_ms": {
+        "authenticated": 0.275336,
+        "admitted": 2.950463,
+        "upstream_start": 2.957411,
+        "upstream_headers": 1920.043186,
+        "response_headers": 1925.698312,
+        "first_body": 1925.782818,
+        "last_body": 1925.783723,
+        "settled": 1933.589508
+      },
+      "checkpoint_ms": 5.122124,
+      "settlement_ms": 7.655754
+    },
+    {
+      "case_id": "r6.mimo-default.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 50.640009,
+      "local_marks_ms": {
+        "authenticated": 0.317169,
+        "admitted": 3.104432,
+        "upstream_start": 3.112576,
+        "upstream_headers": 1098.837531,
+        "response_headers": 1104.853773,
+        "first_body": 1104.949383,
+        "last_body": 1104.950321,
+        "settled": 1111.646017
+      },
+      "checkpoint_ms": 5.395955,
+      "settlement_ms": 6.545601
+    },
+    {
+      "case_id": "r6.openai-personal.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 52.642276,
+      "local_marks_ms": {
+        "authenticated": 0.319147,
+        "admitted": 3.231595,
+        "upstream_start": 3.239906,
+        "upstream_headers": 1779.592992,
+        "response_headers": 1785.087922,
+        "first_body": 1785.175039,
+        "last_body": 1785.176366,
+        "settled": 1791.848491
+      },
+      "checkpoint_ms": 4.89019,
+      "settlement_ms": 6.505802
+    },
+    {
+      "case_id": "r8.openai-personal.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 53.559956,
+      "local_marks_ms": {
+        "authenticated": 0.271551,
+        "admitted": 2.815439,
+        "upstream_start": 2.823012,
+        "upstream_headers": 1407.704428,
+        "response_headers": 1413.620731,
+        "first_body": 1413.71818,
+        "last_body": 1413.719211,
+        "settled": 1419.299555
+      },
+      "checkpoint_ms": 5.264139,
+      "settlement_ms": 5.43357
+    },
+    {
+      "case_id": "r8.relay-personal.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 47.87532,
+      "local_marks_ms": {
+        "authenticated": 0.312323,
+        "admitted": 3.03503,
+        "upstream_start": 3.042221,
+        "upstream_headers": 2183.917647,
+        "response_headers": 2190.392979,
+        "first_body": 2190.485492,
+        "last_body": 2190.486516,
+        "settled": 2195.93641
+      },
+      "checkpoint_ms": 5.921999,
+      "settlement_ms": 5.308766
+    },
+    {
+      "case_id": "r8.mimo-default.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 52.147921,
+      "local_marks_ms": {
+        "authenticated": 0.352304,
+        "admitted": 3.930534,
+        "upstream_start": 3.938048,
+        "upstream_headers": 8159.281258,
+        "response_headers": 26553.929894,
+        "first_body": 26554.038682,
+        "last_body": 26554.039926,
+        "settled": 26559.552728
+      },
+      "checkpoint_ms": 5.107897,
+      "settlement_ms": 5.343881
+    },
+    {
+      "case_id": "r10.openai-personal.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 51.913863,
+      "local_marks_ms": {
+        "authenticated": 0.304996,
+        "admitted": 2.880628,
+        "upstream_start": 2.886119,
+        "upstream_headers": 1252.847812,
+        "response_headers": 1258.061815,
+        "first_body": 1258.166142,
+        "last_body": 1258.167221,
+        "settled": 1263.565509
+      },
+      "checkpoint_ms": 4.523969,
+      "settlement_ms": 5.23722
+    },
+    {
+      "case_id": "r10.relay-personal.0.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 62.406396,
+      "local_marks_ms": {
+        "authenticated": 0.376032,
+        "admitted": 2.727974,
+        "upstream_start": 2.733405,
+        "upstream_headers": 2101.597591,
+        "response_headers": 2106.510865,
+        "first_body": 2106.601528,
+        "last_body": 2106.602621,
+        "settled": 2111.785894
+      },
+      "checkpoint_ms": 4.403172,
+      "settlement_ms": 5.035769
+    },
+    {
+      "case_id": "r46.mimo-default.0.relay",
+      "phase": "parallel",
+      "provider_to_client_ms": 38.201998,
+      "local_marks_ms": {
+        "authenticated": 1.08164,
+        "admitted": 12.110774,
+        "upstream_start": 12.117125,
+        "upstream_headers": 959.280755,
+        "response_headers": 996.482781,
+        "first_body": 996.588028,
+        "last_body": 996.588997,
+        "settled": 1063.209883
+      },
+      "checkpoint_ms": 36.643549,
+      "settlement_ms": 66.361486
+    }
+  ],
+  "stream_handoff_above_30ms": [
+    {
+      "case_id": "r1.mimo-default.1.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 49.937414,
+      "local_marks_ms": {
+        "authenticated": 0.337241,
+        "admitted": 3.499937,
+        "upstream_start": 3.512928,
+        "upstream_headers": 565.619847,
+        "response_headers": 565.689684,
+        "first_body": 565.986377,
+        "last_body": 674.460733,
+        "settled": 682.113049
+      },
+      "checkpoint_ms": 5.792067,
+      "settlement_ms": 7.296363
+    },
+    {
+      "case_id": "r1.relay-personal.1.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 41.055819,
+      "local_marks_ms": {
+        "authenticated": 0.3509,
+        "admitted": 3.40971,
+        "upstream_start": 3.417916,
+        "upstream_headers": 2717.059088,
+        "response_headers": 2717.113367,
+        "first_body": 2717.390488,
+        "last_body": 2723.084588,
+        "settled": 2728.507309
+      },
+      "checkpoint_ms": 4.721205,
+      "settlement_ms": 5.235327
+    },
+    {
+      "case_id": "r3.relay-personal.1.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 41.352722,
+      "local_marks_ms": {
+        "authenticated": 0.316534,
+        "admitted": 3.284556,
+        "upstream_start": 3.291593,
+        "upstream_headers": 1322.252929,
+        "response_headers": 1322.31249,
+        "first_body": 1322.532789,
+        "last_body": 1350.238907,
+        "settled": 1356.033091
+      },
+      "checkpoint_ms": 4.231434,
+      "settlement_ms": 5.546277
+    },
+    {
+      "case_id": "r3.mimo-default.1.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 46.339976,
+      "local_marks_ms": {
+        "authenticated": 0.31504,
+        "admitted": 2.780172,
+        "upstream_start": 2.786403,
+        "upstream_headers": 4973.059207,
+        "response_headers": 4973.122283,
+        "first_body": 4973.405572,
+        "last_body": 5085.240923,
+        "settled": 5093.131372
+      },
+      "checkpoint_ms": 5.915597,
+      "settlement_ms": 7.597568
+    },
+    {
+      "case_id": "r5.relay-personal.1.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 36.440834,
+      "local_marks_ms": {
+        "authenticated": 0.338812,
+        "admitted": 3.182733,
+        "upstream_start": 3.18997,
+        "upstream_headers": 1234.468714,
+        "response_headers": 1234.522874,
+        "first_body": 1234.752286,
+        "last_body": 1288.337267,
+        "settled": 1298.607745
+      },
+      "checkpoint_ms": 5.826358,
+      "settlement_ms": 9.918721
+    },
+    {
+      "case_id": "r5.mimo-default.1.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 54.099694,
+      "local_marks_ms": {
+        "authenticated": 0.361553,
+        "admitted": 3.617423,
+        "upstream_start": 3.624785,
+        "upstream_headers": 440.882556,
+        "response_headers": 440.95336,
+        "first_body": 441.250588,
+        "last_body": 619.10873,
+        "settled": 628.655182
+      },
+      "checkpoint_ms": 5.404197,
+      "settlement_ms": 9.361648
+    },
+    {
+      "case_id": "r7.mimo-default.1.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 43.562751,
+      "local_marks_ms": {
+        "authenticated": 0.312899,
+        "admitted": 3.007605,
+        "upstream_start": 3.015379,
+        "upstream_headers": 586.571277,
+        "response_headers": 586.62747,
+        "first_body": 586.919489,
+        "last_body": 714.353196,
+        "settled": 726.634678
+      },
+      "checkpoint_ms": 5.436722,
+      "settlement_ms": 12.039401
+    },
+    {
+      "case_id": "r9.relay-personal.1.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 49.066748,
+      "local_marks_ms": {
+        "authenticated": 0.343025,
+        "admitted": 3.617113,
+        "upstream_start": 3.62291,
+        "upstream_headers": 1658.707087,
+        "response_headers": 1658.761313,
+        "first_body": 1659.004543,
+        "last_body": 1664.512254,
+        "settled": 1670.963376
+      },
+      "checkpoint_ms": 4.726791,
+      "settlement_ms": 6.280232
+    },
+    {
+      "case_id": "r9.mimo-default.1.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 40.898856,
+      "local_marks_ms": {
+        "authenticated": 0.315707,
+        "admitted": 3.585045,
+        "upstream_start": 3.591211,
+        "upstream_headers": 439.857766,
+        "response_headers": 439.913377,
+        "first_body": 440.216674,
+        "last_body": 660.48113,
+        "settled": 672.581522
+      },
+      "checkpoint_ms": 5.120212,
+      "settlement_ms": 11.923583
+    },
+    {
+      "case_id": "r11.mimo-default.1.relay",
+      "phase": "serial",
+      "provider_to_client_ms": 50.197505,
+      "local_marks_ms": {
+        "authenticated": 0.297767,
+        "admitted": 2.9864,
+        "upstream_start": 2.991067,
+        "upstream_headers": 390.822717,
+        "response_headers": 390.882443,
+        "first_body": 391.245064,
+        "last_body": 555.655294,
+        "settled": 570.719694
+      },
+      "checkpoint_ms": 5.206457,
+      "settlement_ms": 14.88953
+    }
+  ],
+  "raw_sha256": {
+    "verify.py": "9e6004cabea82d9b68067a7aabb11b3ca3688c22b0dc5260c777c14647b1b620",
+    "progress.log": "55d8bc6af771bffc9b95d910129a493415dd22d61d665ae218a547069b8fb168",
+    "run/results.json": "72e675701222a824d9bbf2b85efb2db1967ebe742cf3c7edd5849d90fd160a75",
+    "run/trace.jsonl": "f9a2557fc1f3f4bd0df3ea8a0d23eb5fed3a015ce492a7d817510cb78a6e5555",
+    "run/budget.json": "fe8bafebe955f5b752c5d865b9ec5def4b70bcabe4edd1042ca2d6a90e308af4"
+  },
+  "payload_hash_method": "SHA-256 of parsed JSON serialized with sort_keys=True; checks field values and message text, not HTTP wire byte order"
+}
