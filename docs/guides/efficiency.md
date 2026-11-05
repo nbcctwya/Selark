@@ -64,6 +64,7 @@ python -m scripts.measure_relay --samples 80 --idle-seconds 1 \
 
 最新前后对比及真实 API 小样本见 [全链路延迟验收](../verification/latency-verification-2026-11-05.md)。
 追加的 440 次真实 API 顺序/并发观察、空回复和供应商计数差异见 [多轮验收](../verification/live-latency-rounds-2026-11-05.md)；真实上游时间与本机预算分别解释。
+进一步的文案、代码、长上下文、24 轮记忆、26 步 Agent 及最高 16 并发/64 请求突发见 [真实场景与压力验收](../verification/live-scenarios-stress-2026-11-05.md)：568 个客户端请求、475 次上游尝试，完整保留连接池超时、空回复与内容格式问题；新核心资源测量与测试器观测开销分别说明。
 
 参考预算暂设参考批次后的空闲核心 RSS 72 MiB、单核空闲 CPU 0.5%、普通与流式首段的 p95 额外延迟 10 ms。预算用于跟踪回归；未达标会直接出现在 `budget_checks` 中，不能将报告生成成功视作性能达标。共享 CI 采用较短样本产出报告，并执行确定性的调用次数、消息保真、落账与空闲扫描约束，不用共享机器的时延决定合并。
 

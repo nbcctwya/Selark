@@ -1,0 +1,2537 @@
+{
+  "started_at": "2026-11-05T07:43:13.650401+00:00",
+  "finished_at": "2026-11-05T08:29:20.140249+00:00",
+  "wall_seconds_including_between_run_analysis": 2766.489848,
+  "active_harness_seconds": 2455.1729001220083,
+  "source_commit": "4f7a50e2205bdbad98248e9dbefe3eac8a5a4498",
+  "python": "3.12.2",
+  "runtime_unchanged": true,
+  "models_requested": {
+    "mimo-default": "mimo-v2.6-flash",
+    "relay-personal": "claude-sonnet-4-6"
+  },
+  "limits": {
+    "maximum_egress_attempts": 600,
+    "maximum_output_token_reservation": 1500000,
+    "actual_output_token_reservation": 1220608,
+    "max_active": 16,
+    "burst_clients": 64
+  },
+  "totals": {
+    "client_requests": 568,
+    "direct": 28,
+    "selark_requests": 540,
+    "egress_attempt_reservations": 475,
+    "upstream_http_200": 465,
+    "protocol_complete": 455,
+    "nonempty_complete": 450,
+    "empty": 5,
+    "intentional_cancels": 8,
+    "durable_admitted_records": 464,
+    "early_overload_without_ledger": 76,
+    "ledger_dispatch_attempts": 437,
+    "pending_records": 0,
+    "reported_known_total_tokens": 1205635,
+    "unknown_usage_after_possible_dispatch": 10,
+    "not_started_connection_pool_or_connect_failures": 10,
+    "reported_cap_violations": 0
+  },
+  "providers": [
+    {
+      "connection": "mimo-default",
+      "client_requests": 283,
+      "reserved_egress_attempts": 238,
+      "protocol_complete": 228,
+      "nonempty_complete": 228,
+      "empty": 0,
+      "intentional_cancel": 4,
+      "known_reported_total_tokens": 563842,
+      "missing_usage_among_reserved_egress": 10,
+      "output_cap_violations": 0
+    },
+    {
+      "connection": "relay-personal",
+      "client_requests": 285,
+      "reserved_egress_attempts": 237,
+      "protocol_complete": 227,
+      "nonempty_complete": 222,
+      "empty": 5,
+      "intentional_cancel": 4,
+      "known_reported_total_tokens": 641793,
+      "missing_usage_among_reserved_egress": 10,
+      "output_cap_violations": 0
+    }
+  ],
+  "phases": [
+    {
+      "name": "common-conversations",
+      "seconds": 259.93751240501297,
+      "call_count": 72,
+      "cpu_one_core_percent": 2.0581869659751444,
+      "peak_rss_mib": 63.3359375,
+      "final_rss_mib": 63.3359375,
+      "protocol_complete": 72,
+      "empty": 0,
+      "intentional_cancel": 0,
+      "max_observed_active": 4,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 515,
+        "p50": 3.1186580017674714,
+        "p95": 6.180212018080056,
+        "max": 26.97625002474524
+      },
+      "errors": {}
+    },
+    {
+      "name": "direct-controls",
+      "seconds": 356.20551798999077,
+      "call_count": 24,
+      "cpu_one_core_percent": 0.6176209769051973,
+      "peak_rss_mib": 63.4765625,
+      "final_rss_mib": 63.4765625,
+      "protocol_complete": 22,
+      "empty": 0,
+      "intentional_cancel": 0,
+      "max_observed_active": 1,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 706,
+        "p50": 3.1212440080707893,
+        "p95": 5.711508012609556,
+        "max": 27.69086099578999
+      },
+      "errors": {
+        "upstream_connect_timeout": 1,
+        "sse_error": 1
+      }
+    },
+    {
+      "name": "long-context",
+      "seconds": 44.71421944399481,
+      "call_count": 16,
+      "cpu_one_core_percent": 0.8722057655249492,
+      "peak_rss_mib": 67.5546875,
+      "final_rss_mib": 67.5546875,
+      "protocol_complete": 16,
+      "empty": 0,
+      "intentional_cancel": 0,
+      "max_observed_active": 1,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 88,
+        "p50": 3.225028995075263,
+        "p95": 5.852033995324746,
+        "max": 24.026611004956067
+      },
+      "errors": {}
+    },
+    {
+      "name": "long-output",
+      "seconds": 392.75167190202046,
+      "call_count": 16,
+      "cpu_one_core_percent": 0.9853554489681322,
+      "peak_rss_mib": 67.5546875,
+      "final_rss_mib": 65.859375,
+      "protocol_complete": 15,
+      "empty": 0,
+      "intentional_cancel": 0,
+      "max_observed_active": 3,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 778,
+        "p50": 3.1188800057861954,
+        "p95": 5.903267010580748,
+        "max": 24.831194983562455
+      },
+      "errors": {
+        "request_deadline_exceeded": 1
+      }
+    },
+    {
+      "name": "long-agent-state",
+      "seconds": 138.16091652199975,
+      "call_count": 48,
+      "cpu_one_core_percent": 1.0205491071532389,
+      "peak_rss_mib": 65.859375,
+      "final_rss_mib": 63.921875,
+      "protocol_complete": 48,
+      "empty": 0,
+      "intentional_cancel": 0,
+      "max_observed_active": 2,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 272,
+        "p50": 3.139141495921649,
+        "p95": 5.503894994035363,
+        "max": 163.90308100380935
+      },
+      "errors": {}
+    },
+    {
+      "name": "long-agent-local-tools",
+      "seconds": 177.97205824797857,
+      "call_count": 27,
+      "cpu_one_core_percent": 0.6630254274835877,
+      "peak_rss_mib": 64.015625,
+      "final_rss_mib": 64.015625,
+      "protocol_complete": 27,
+      "empty": 0,
+      "intentional_cancel": 0,
+      "max_observed_active": 2,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 352,
+        "p50": 3.1645415001548827,
+        "p95": 6.2754779937677085,
+        "max": 125.78657301492058
+      },
+      "errors": {}
+    },
+    {
+      "name": "native-tool-boundary",
+      "seconds": 0.5062558919889852,
+      "call_count": 2,
+      "cpu_one_core_percent": 1.9752856526195965,
+      "peak_rss_mib": 64.015625,
+      "final_rss_mib": 64.015625,
+      "protocol_complete": 0,
+      "empty": 0,
+      "intentional_cancel": 0,
+      "max_observed_active": 0,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 1,
+        "p50": 3.017735987668857,
+        "p95": 3.017735987668857,
+        "max": 3.017735987668857
+      },
+      "errors": {
+        "invalid_request": 2
+      }
+    },
+    {
+      "name": "default-overload-64",
+      "seconds": 21.01514351798687,
+      "call_count": 64,
+      "cpu_one_core_percent": 1.2372030663386497,
+      "peak_rss_mib": 66.8359375,
+      "final_rss_mib": 66.8359375,
+      "protocol_complete": 3,
+      "empty": 0,
+      "intentional_cancel": 0,
+      "max_observed_active": 4,
+      "max_observed_queued": 15,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 26,
+        "p50": 3.189808499882929,
+        "p95": 1884.9907880066894,
+        "max": 2247.43789297645
+      },
+      "errors": {
+        "upstream_pool_timeout": 2,
+        "queue_timeout": 15,
+        "server_overloaded": 44
+      }
+    },
+    {
+      "name": "default-recovery",
+      "seconds": 68.24469256098382,
+      "call_count": 8,
+      "cpu_one_core_percent": 0.9084955572859589,
+      "peak_rss_mib": 66.8359375,
+      "final_rss_mib": 66.8359375,
+      "protocol_complete": 8,
+      "empty": 1,
+      "intentional_cancel": 0,
+      "max_observed_active": 2,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 135,
+        "p50": 3.0144890188239515,
+        "p95": 5.003753991331905,
+        "max": 11.164850002387539
+      },
+      "errors": {}
+    },
+    {
+      "name": "sustained-4",
+      "seconds": 208.65672311600065,
+      "call_count": 48,
+      "cpu_one_core_percent": 2.2620886255248833,
+      "peak_rss_mib": 75.70703125,
+      "final_rss_mib": 75.70703125,
+      "protocol_complete": 48,
+      "empty": 1,
+      "intentional_cancel": 0,
+      "max_observed_active": 4,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 411,
+        "p50": 3.2475810148753226,
+        "p95": 5.512547999387607,
+        "max": 36.44209500635043
+      },
+      "errors": {}
+    },
+    {
+      "name": "sustained-8",
+      "seconds": 107.76733309202245,
+      "call_count": 48,
+      "cpu_one_core_percent": 3.238458167114417,
+      "peak_rss_mib": 77.78515625,
+      "final_rss_mib": 77.78515625,
+      "protocol_complete": 47,
+      "empty": 2,
+      "intentional_cancel": 0,
+      "max_observed_active": 8,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 210,
+        "p50": 3.2019899954320863,
+        "p95": 5.509004986379296,
+        "max": 197.8885020071175
+      },
+      "errors": {
+        "upstream_unavailable": 1
+      }
+    },
+    {
+      "name": "sustained-16",
+      "seconds": 70.89963900699513,
+      "call_count": 48,
+      "cpu_one_core_percent": 5.246853230991736,
+      "peak_rss_mib": 80.0078125,
+      "final_rss_mib": 80.0078125,
+      "protocol_complete": 46,
+      "empty": 0,
+      "intentional_cancel": 0,
+      "max_observed_active": 16,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 135,
+        "p50": 3.2599660044070333,
+        "p95": 6.026245973771438,
+        "max": 397.7181389927864
+      },
+      "errors": {
+        "upstream_pool_timeout": 1,
+        "upstream_connect_timeout": 1
+      }
+    },
+    {
+      "name": "high-overload-64",
+      "seconds": 47.183039277995704,
+      "call_count": 64,
+      "cpu_one_core_percent": 4.662692428603242,
+      "peak_rss_mib": 80.109375,
+      "final_rss_mib": 80.109375,
+      "protocol_complete": 29,
+      "empty": 1,
+      "intentional_cancel": 0,
+      "max_observed_active": 16,
+      "max_observed_queued": 14,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 73,
+        "p50": 3.299614996649325,
+        "p95": 238.84198101586662,
+        "max": 6448.090410995064
+      },
+      "errors": {
+        "upstream_pool_timeout": 3,
+        "server_overloaded": 32
+      }
+    },
+    {
+      "name": "slow-reader-and-cancel",
+      "seconds": 144.19515514498926,
+      "call_count": 16,
+      "cpu_one_core_percent": 3.0722252738281,
+      "peak_rss_mib": 82.13671875,
+      "final_rss_mib": 82.13671875,
+      "protocol_complete": 8,
+      "empty": 0,
+      "intentional_cancel": 8,
+      "max_observed_active": 8,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 285,
+        "p50": 3.17619601264596,
+        "p95": 5.66933598020114,
+        "max": 35.85981298238039
+      },
+      "errors": {}
+    },
+    {
+      "name": "high-recovery",
+      "seconds": 77.0572774070024,
+      "call_count": 8,
+      "cpu_one_core_percent": 1.1679623655094473,
+      "peak_rss_mib": 82.16796875,
+      "final_rss_mib": 82.16796875,
+      "protocol_complete": 8,
+      "empty": 0,
+      "intentional_cancel": 0,
+      "max_observed_active": 2,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 152,
+        "p50": 3.124480994301848,
+        "p95": 5.720484012272209,
+        "max": 8.539564994862303
+      },
+      "errors": {}
+    },
+    {
+      "name": "balanced-sustained-16",
+      "seconds": 78.10728962899884,
+      "call_count": 32,
+      "cpu_one_core_percent": 2.9702733394280463,
+      "peak_rss_mib": 66.88671875,
+      "final_rss_mib": 66.88671875,
+      "protocol_complete": 31,
+      "empty": 0,
+      "intentional_cancel": 0,
+      "max_observed_active": 16,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 152,
+        "p50": 3.183575507136993,
+        "p95": 6.192518980242312,
+        "max": 64.40818301052786
+      },
+      "errors": {
+        "upstream_unavailable": 1
+      }
+    },
+    {
+      "name": "agent-client-json-compatibility",
+      "seconds": 2.527019715984352,
+      "call_count": 1,
+      "cpu_one_core_percent": 1.5828922800635452,
+      "peak_rss_mib": 66.88671875,
+      "final_rss_mib": 66.88671875,
+      "protocol_complete": 1,
+      "empty": 0,
+      "intentional_cancel": 0,
+      "max_observed_active": 1,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 5,
+        "p50": 2.9536210058722645,
+        "p95": 5.342630989616737,
+        "max": 5.342630989616737
+      },
+      "errors": {}
+    },
+    {
+      "name": "agent-client-single-object",
+      "seconds": 73.09120217501186,
+      "call_count": 26,
+      "cpu_one_core_percent": 0.9713891396942056,
+      "peak_rss_mib": 60.453125,
+      "final_rss_mib": 60.453125,
+      "protocol_complete": 26,
+      "empty": 0,
+      "intentional_cancel": 0,
+      "max_observed_active": 1,
+      "max_observed_queued": 0,
+      "health_errors": 0,
+      "observed_health_ms": {
+        "n": 142,
+        "p50": 3.16821999149397,
+        "p95": 5.956189997959882,
+        "max": 9.672913001850247
+      },
+      "errors": {}
+    }
+  ],
+  "timing_groups": [
+    {
+      "phase": "agent-client-json-compatibility",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 1,
+      "protocol_ok": 1,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 1,
+        "p50": 2029.651441,
+        "p95": 2029.651441,
+        "max": 2029.651441
+      },
+      "full_ms": {
+        "n": 1,
+        "p50": 2177.260143,
+        "p95": 2177.260143,
+        "max": 2177.260143
+      },
+      "reported_total_tokens": 297,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "agent-client-single-object",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 26,
+      "protocol_ok": 26,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 13,
+        "p50": 1692.86688,
+        "p95": 3564.450959,
+        "max": 3564.450959
+      },
+      "full_ms": {
+        "n": 26,
+        "p50": 2272.568534,
+        "p95": 4120.1367,
+        "max": 7239.298861
+      },
+      "reported_total_tokens": 29004,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "balanced-sustained-16",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 16,
+      "protocol_ok": 16,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 8,
+        "p50": 1130.6252880000002,
+        "p95": 5093.163484,
+        "max": 5093.163484
+      },
+      "full_ms": {
+        "n": 16,
+        "p50": 19944.5538665,
+        "p95": 59447.474713,
+        "max": 59447.474713
+      },
+      "reported_total_tokens": 17126,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "balanced-sustained-16",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 16,
+      "protocol_ok": 15,
+      "empty": 0,
+      "errors": {
+        "upstream_unavailable": 1
+      },
+      "first_text_ms": {
+        "n": 8,
+        "p50": 2623.5116065,
+        "p95": 5628.113223,
+        "max": 5628.113223
+      },
+      "full_ms": {
+        "n": 15,
+        "p50": 10637.149596,
+        "p95": 22803.860673,
+        "max": 22803.860673
+      },
+      "reported_total_tokens": 24036,
+      "missing_total_usage": 1
+    },
+    {
+      "phase": "common-conversations",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 36,
+      "protocol_ok": 36,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 24,
+        "p50": 1471.0972265,
+        "p95": 7198.422569,
+        "max": 19187.376235
+      },
+      "full_ms": {
+        "n": 36,
+        "p50": 13510.89873,
+        "p95": 37861.15286,
+        "max": 43904.642392
+      },
+      "reported_total_tokens": 53400,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "common-conversations",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 36,
+      "protocol_ok": 36,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 24,
+        "p50": 2243.048882,
+        "p95": 3618.399155,
+        "max": 7468.482397
+      },
+      "full_ms": {
+        "n": 36,
+        "p50": 8474.6815555,
+        "p95": 26236.901212,
+        "max": 26242.560262
+      },
+      "reported_total_tokens": 90184,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "default-overload-64",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 32,
+      "protocol_ok": 1,
+      "empty": 0,
+      "errors": {
+        "upstream_pool_timeout": 2,
+        "queue_timeout": 7,
+        "server_overloaded": 22
+      },
+      "first_text_ms": {
+        "n": 0
+      },
+      "full_ms": {
+        "n": 1,
+        "p50": 16799.070299,
+        "p95": 16799.070299,
+        "max": 16799.070299
+      },
+      "reported_total_tokens": 1021,
+      "missing_total_usage": 31
+    },
+    {
+      "phase": "default-overload-64",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 32,
+      "protocol_ok": 2,
+      "empty": 0,
+      "errors": {
+        "queue_timeout": 8,
+        "server_overloaded": 22
+      },
+      "first_text_ms": {
+        "n": 1,
+        "p50": 6148.62193,
+        "p95": 6148.62193,
+        "max": 6148.62193
+      },
+      "full_ms": {
+        "n": 2,
+        "p50": 16561.4856835,
+        "p95": 20525.183144,
+        "max": 20525.183144
+      },
+      "reported_total_tokens": 3345,
+      "missing_total_usage": 30
+    },
+    {
+      "phase": "default-recovery",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 4,
+      "protocol_ok": 4,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 2,
+        "p50": 1220.014431,
+        "p95": 1291.070208,
+        "max": 1291.070208
+      },
+      "full_ms": {
+        "n": 4,
+        "p50": 16688.5806265,
+        "p95": 45378.34649,
+        "max": 45378.34649
+      },
+      "reported_total_tokens": 4123,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "default-recovery",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 4,
+      "protocol_ok": 4,
+      "empty": 1,
+      "errors": {},
+      "first_text_ms": {
+        "n": 2,
+        "p50": 1835.0495005,
+        "p95": 1908.508071,
+        "max": 1908.508071
+      },
+      "full_ms": {
+        "n": 4,
+        "p50": 8301.619773,
+        "p95": 22197.049225,
+        "max": 22197.049225
+      },
+      "reported_total_tokens": 4848,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "direct-controls",
+      "connection": "mimo-default",
+      "route": "direct",
+      "n": 6,
+      "protocol_ok": 6,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 3,
+        "p50": 5334.673723,
+        "p95": 14374.000225,
+        "max": 14374.000225
+      },
+      "full_ms": {
+        "n": 6,
+        "p50": 13847.916905500002,
+        "p95": 63835.183507,
+        "max": 63835.183507
+      },
+      "reported_total_tokens": 5250,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "direct-controls",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 6,
+      "protocol_ok": 6,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 3,
+        "p50": 995.153007,
+        "p95": 1148.356553,
+        "max": 1148.356553
+      },
+      "full_ms": {
+        "n": 6,
+        "p50": 10439.363720500001,
+        "p95": 57586.929585,
+        "max": 57586.929585
+      },
+      "reported_total_tokens": 5440,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "direct-controls",
+      "connection": "relay-personal",
+      "route": "direct",
+      "n": 6,
+      "protocol_ok": 5,
+      "empty": 0,
+      "errors": {
+        "sse_error": 1
+      },
+      "first_text_ms": {
+        "n": 3,
+        "p50": 3157.215856,
+        "p95": 3793.699295,
+        "max": 3793.699295
+      },
+      "full_ms": {
+        "n": 5,
+        "p50": 6844.190893,
+        "p95": 13360.94647,
+        "max": 13360.94647
+      },
+      "reported_total_tokens": 5661,
+      "missing_total_usage": 1
+    },
+    {
+      "phase": "direct-controls",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 6,
+      "protocol_ok": 5,
+      "empty": 0,
+      "errors": {
+        "upstream_connect_timeout": 1
+      },
+      "first_text_ms": {
+        "n": 3,
+        "p50": 2489.189654,
+        "p95": 3004.315517,
+        "max": 3004.315517
+      },
+      "full_ms": {
+        "n": 5,
+        "p50": 7911.342693,
+        "p95": 21751.504521,
+        "max": 21751.504521
+      },
+      "reported_total_tokens": 6945,
+      "missing_total_usage": 1
+    },
+    {
+      "phase": "high-overload-64",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 32,
+      "protocol_ok": 15,
+      "empty": 0,
+      "errors": {
+        "upstream_pool_timeout": 2,
+        "server_overloaded": 15
+      },
+      "first_text_ms": {
+        "n": 10,
+        "p50": 14508.167463,
+        "p95": 28630.237376,
+        "max": 28630.237376
+      },
+      "full_ms": {
+        "n": 15,
+        "p50": 26945.98073,
+        "p95": 45379.572538,
+        "max": 45379.572538
+      },
+      "reported_total_tokens": 14790,
+      "missing_total_usage": 17
+    },
+    {
+      "phase": "high-overload-64",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 32,
+      "protocol_ok": 14,
+      "empty": 1,
+      "errors": {
+        "upstream_pool_timeout": 1,
+        "server_overloaded": 17
+      },
+      "first_text_ms": {
+        "n": 8,
+        "p50": 12363.842396,
+        "p95": 30911.555547,
+        "max": 30911.555547
+      },
+      "full_ms": {
+        "n": 14,
+        "p50": 26877.060454,
+        "p95": 46617.119042,
+        "max": 46617.119042
+      },
+      "reported_total_tokens": 20918,
+      "missing_total_usage": 18
+    },
+    {
+      "phase": "high-recovery",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 4,
+      "protocol_ok": 4,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 2,
+        "p50": 619.7334995000001,
+        "p95": 660.717919,
+        "max": 660.717919
+      },
+      "full_ms": {
+        "n": 4,
+        "p50": 15261.864309499999,
+        "p95": 21423.130937,
+        "max": 21423.130937
+      },
+      "reported_total_tokens": 3922,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "high-recovery",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 4,
+      "protocol_ok": 4,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 3,
+        "p50": 3276.394367,
+        "p95": 5191.60733,
+        "max": 5191.60733
+      },
+      "full_ms": {
+        "n": 4,
+        "p50": 17279.091896500002,
+        "p95": 24803.609161,
+        "max": 24803.609161
+      },
+      "reported_total_tokens": 6850,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "long-agent-local-tools",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 26,
+      "protocol_ok": 26,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 13,
+        "p50": 1069.180367,
+        "p95": 12626.227159,
+        "max": 12626.227159
+      },
+      "full_ms": {
+        "n": 26,
+        "p50": 1569.8528689999998,
+        "p95": 12928.124576,
+        "max": 120494.730982
+      },
+      "reported_total_tokens": 28170,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "long-agent-local-tools",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 1,
+      "protocol_ok": 1,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 1,
+        "p50": 1865.899466,
+        "p95": 1865.899466,
+        "max": 1865.899466
+      },
+      "full_ms": {
+        "n": 1,
+        "p50": 1918.753548,
+        "p95": 1918.753548,
+        "max": 1918.753548
+      },
+      "reported_total_tokens": 297,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "long-agent-state",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 24,
+      "protocol_ok": 24,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 12,
+        "p50": 2613.902901,
+        "p95": 28641.372136,
+        "max": 28641.372136
+      },
+      "full_ms": {
+        "n": 24,
+        "p50": 3832.7576245,
+        "p95": 13200.272159,
+        "max": 30051.013253
+      },
+      "reported_total_tokens": 47002,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "long-agent-state",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 24,
+      "protocol_ok": 24,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 12,
+        "p50": 1946.7268435,
+        "p95": 2445.897102,
+        "max": 2445.897102
+      },
+      "full_ms": {
+        "n": 24,
+        "p50": 2292.191542,
+        "p95": 3811.03414,
+        "max": 3982.562692
+      },
+      "reported_total_tokens": 51464,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "long-context",
+      "connection": "mimo-default",
+      "route": "direct",
+      "n": 4,
+      "protocol_ok": 4,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 3,
+        "p50": 6440.265845,
+        "p95": 6868.846136,
+        "max": 6868.846136
+      },
+      "full_ms": {
+        "n": 4,
+        "p50": 5440.7062435,
+        "p95": 8973.390091,
+        "max": 8973.390091
+      },
+      "reported_total_tokens": 136363,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "long-context",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 4,
+      "protocol_ok": 4,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 3,
+        "p50": 2779.990471,
+        "p95": 6269.681794,
+        "max": 6269.681794
+      },
+      "full_ms": {
+        "n": 4,
+        "p50": 4077.1596844999995,
+        "p95": 7180.448033,
+        "max": 7180.448033
+      },
+      "reported_total_tokens": 136353,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "long-context",
+      "connection": "relay-personal",
+      "route": "direct",
+      "n": 4,
+      "protocol_ok": 4,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 3,
+        "p50": 5117.234307,
+        "p95": 5287.269168,
+        "max": 5287.269168
+      },
+      "full_ms": {
+        "n": 4,
+        "p50": 4221.6586640000005,
+        "p95": 5547.740948,
+        "max": 5547.740948
+      },
+      "reported_total_tokens": 111811,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "long-context",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 4,
+      "protocol_ok": 4,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 3,
+        "p50": 5557.78851,
+        "p95": 5601.017689,
+        "max": 5601.017689
+      },
+      "full_ms": {
+        "n": 4,
+        "p50": 5411.8788525,
+        "p95": 5860.501289,
+        "max": 5860.501289
+      },
+      "reported_total_tokens": 111811,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "long-output",
+      "connection": "mimo-default",
+      "route": "direct",
+      "n": 4,
+      "protocol_ok": 4,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 2,
+        "p50": 984.5667814999999,
+        "p95": 1148.437717,
+        "max": 1148.437717
+      },
+      "full_ms": {
+        "n": 4,
+        "p50": 138542.622268,
+        "p95": 142691.328918,
+        "max": 142691.328918
+      },
+      "reported_total_tokens": 16690,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "long-output",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 4,
+      "protocol_ok": 3,
+      "empty": 0,
+      "errors": {
+        "request_deadline_exceeded": 1
+      },
+      "first_text_ms": {
+        "n": 2,
+        "p50": 2433.1092625,
+        "p95": 3913.015007,
+        "max": 3913.015007
+      },
+      "full_ms": {
+        "n": 3,
+        "p50": 119673.118145,
+        "p95": 143069.493684,
+        "max": 143069.493684
+      },
+      "reported_total_tokens": 9190,
+      "missing_total_usage": 1
+    },
+    {
+      "phase": "long-output",
+      "connection": "relay-personal",
+      "route": "direct",
+      "n": 4,
+      "protocol_ok": 4,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 2,
+        "p50": 2421.220062,
+        "p95": 2616.677879,
+        "max": 2616.677879
+      },
+      "full_ms": {
+        "n": 4,
+        "p50": 56366.0875465,
+        "p95": 75125.076803,
+        "max": 75125.076803
+      },
+      "reported_total_tokens": 23046,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "long-output",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 4,
+      "protocol_ok": 4,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 2,
+        "p50": 2085.1238005,
+        "p95": 2116.693764,
+        "max": 2116.693764
+      },
+      "full_ms": {
+        "n": 4,
+        "p50": 56754.301080499994,
+        "p95": 71192.619886,
+        "max": 71192.619886
+      },
+      "reported_total_tokens": 22613,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "native-tool-boundary",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 1,
+      "protocol_ok": 0,
+      "empty": 0,
+      "errors": {
+        "invalid_request": 1
+      },
+      "first_text_ms": {
+        "n": 0
+      },
+      "full_ms": {
+        "n": 0
+      },
+      "reported_total_tokens": 0,
+      "missing_total_usage": 1
+    },
+    {
+      "phase": "native-tool-boundary",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 1,
+      "protocol_ok": 0,
+      "empty": 0,
+      "errors": {
+        "invalid_request": 1
+      },
+      "first_text_ms": {
+        "n": 0
+      },
+      "full_ms": {
+        "n": 0
+      },
+      "reported_total_tokens": 0,
+      "missing_total_usage": 1
+    },
+    {
+      "phase": "slow-reader-and-cancel",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 8,
+      "protocol_ok": 4,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 8,
+        "p50": 1668.455266,
+        "p95": 9481.263213,
+        "max": 9481.263213
+      },
+      "full_ms": {
+        "n": 4,
+        "p50": 127829.0090205,
+        "p95": 143902.169735,
+        "max": 143902.169735
+      },
+      "reported_total_tokens": 14207,
+      "missing_total_usage": 4
+    },
+    {
+      "phase": "slow-reader-and-cancel",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 8,
+      "protocol_ok": 4,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 8,
+        "p50": 2649.1321215,
+        "p95": 4740.188442,
+        "max": 4740.188442
+      },
+      "full_ms": {
+        "n": 4,
+        "p50": 40401.9844865,
+        "p95": 43757.787127,
+        "max": 43757.787127
+      },
+      "reported_total_tokens": 17136,
+      "missing_total_usage": 4
+    },
+    {
+      "phase": "sustained-16",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 24,
+      "protocol_ok": 23,
+      "empty": 0,
+      "errors": {
+        "upstream_pool_timeout": 1
+      },
+      "first_text_ms": {
+        "n": 15,
+        "p50": 2939.610829,
+        "p95": 15025.036847,
+        "max": 15025.036847
+      },
+      "full_ms": {
+        "n": 23,
+        "p50": 17589.316902,
+        "p95": 34441.470867,
+        "max": 35847.255715
+      },
+      "reported_total_tokens": 23149,
+      "missing_total_usage": 1
+    },
+    {
+      "phase": "sustained-16",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 24,
+      "protocol_ok": 23,
+      "empty": 0,
+      "errors": {
+        "upstream_connect_timeout": 1
+      },
+      "first_text_ms": {
+        "n": 15,
+        "p50": 3498.291385,
+        "p95": 9710.507026,
+        "max": 9710.507026
+      },
+      "full_ms": {
+        "n": 23,
+        "p50": 16838.521026,
+        "p95": 27537.607863,
+        "max": 27934.43896
+      },
+      "reported_total_tokens": 37941,
+      "missing_total_usage": 1
+    },
+    {
+      "phase": "sustained-4",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 24,
+      "protocol_ok": 24,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 16,
+        "p50": 1391.7781300000001,
+        "p95": 10876.885585,
+        "max": 10876.885585
+      },
+      "full_ms": {
+        "n": 24,
+        "p50": 15528.8566005,
+        "p95": 31508.431609,
+        "max": 43631.406834
+      },
+      "reported_total_tokens": 24329,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "sustained-4",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 24,
+      "protocol_ok": 24,
+      "empty": 1,
+      "errors": {},
+      "first_text_ms": {
+        "n": 15,
+        "p50": 2555.401359,
+        "p95": 4907.283192,
+        "max": 4907.283192
+      },
+      "full_ms": {
+        "n": 24,
+        "p50": 14821.359498499998,
+        "p95": 25083.643294,
+        "max": 29249.028843
+      },
+      "reported_total_tokens": 39069,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "sustained-8",
+      "connection": "mimo-default",
+      "route": "relay",
+      "n": 24,
+      "protocol_ok": 24,
+      "empty": 0,
+      "errors": {},
+      "first_text_ms": {
+        "n": 16,
+        "p50": 2073.6280095,
+        "p95": 38571.432194,
+        "max": 38571.432194
+      },
+      "full_ms": {
+        "n": 24,
+        "p50": 16461.830467,
+        "p95": 32126.377133,
+        "max": 56164.189083
+      },
+      "reported_total_tokens": 23317,
+      "missing_total_usage": 0
+    },
+    {
+      "phase": "sustained-8",
+      "connection": "relay-personal",
+      "route": "relay",
+      "n": 24,
+      "protocol_ok": 23,
+      "empty": 2,
+      "errors": {
+        "upstream_unavailable": 1
+      },
+      "first_text_ms": {
+        "n": 14,
+        "p50": 2765.2679425,
+        "p95": 7999.176053,
+        "max": 7999.176053
+      },
+      "full_ms": {
+        "n": 23,
+        "p50": 12075.782251,
+        "p95": 23203.995808,
+        "max": 23959.242417
+      },
+      "reported_total_tokens": 34517,
+      "missing_total_usage": 1
+    }
+  ],
+  "idle": [
+    {
+      "label": "default-cold",
+      "seconds": 30.030179583001882,
+      "rss_mib": 56.71875,
+      "cpu_one_core_percent": 0.19979900497818556
+    },
+    {
+      "label": "default-after-load",
+      "seconds": 30.020892586006084,
+      "rss_mib": 66.8359375,
+      "cpu_one_core_percent": 0.16655067752151936
+    },
+    {
+      "label": "high-cold",
+      "seconds": 30.03015743099968,
+      "rss_mib": 74.3984375,
+      "cpu_one_core_percent": 0.19979915236162868
+    },
+    {
+      "label": "high-after-load",
+      "seconds": 30.024279881006805,
+      "rss_mib": 82.16796875,
+      "cpu_one_core_percent": 0.1665318875195634
+    },
+    {
+      "label": "spawn-cold",
+      "seconds": 30.0301524969982,
+      "rss_mib": 57.85546875,
+      "cpu_one_core_percent": 0.13319945679262987
+    },
+    {
+      "label": "spawn-after-load",
+      "seconds": 30.011468986980617,
+      "rss_mib": 66.88671875,
+      "cpu_one_core_percent": 0.16660297442184835
+    }
+  ],
+  "cores": [
+    {
+      "label": "default",
+      "pid": 160790,
+      "limits": {
+        "max_concurrent_requests": 4,
+        "max_queued_requests": 16,
+        "queue_timeout_seconds": 10.0,
+        "request_timeout_seconds": 180.0,
+        "body_timeout_seconds": 10.0,
+        "connect_timeout_seconds": 10.0,
+        "pool_timeout_seconds": 5.0,
+        "write_timeout_seconds": 10.0,
+        "send_timeout_seconds": 30.0,
+        "shutdown_grace_seconds": 15.0,
+        "storage_busy_timeout_seconds": 0.1,
+        "max_pending_records": 256
+      }
+    },
+    {
+      "label": "high",
+      "pid": 162087,
+      "limits": {
+        "max_concurrent_requests": 16,
+        "max_queued_requests": 16,
+        "queue_timeout_seconds": 60.0,
+        "request_timeout_seconds": 180.0,
+        "body_timeout_seconds": 10.0,
+        "connect_timeout_seconds": 10.0,
+        "pool_timeout_seconds": 5.0,
+        "write_timeout_seconds": 10.0,
+        "send_timeout_seconds": 30.0,
+        "shutdown_grace_seconds": 15.0,
+        "storage_busy_timeout_seconds": 0.1,
+        "max_pending_records": 256
+      }
+    },
+    {
+      "label": "balanced-spawn",
+      "pid": 163082,
+      "limits": {
+        "max_concurrent_requests": 16,
+        "max_queued_requests": 16,
+        "queue_timeout_seconds": 60.0,
+        "request_timeout_seconds": 180.0,
+        "body_timeout_seconds": 10.0,
+        "connect_timeout_seconds": 10.0,
+        "pool_timeout_seconds": 5.0,
+        "write_timeout_seconds": 10.0,
+        "send_timeout_seconds": 30.0,
+        "shutdown_grace_seconds": 15.0,
+        "storage_busy_timeout_seconds": 0.1,
+        "max_pending_records": 256
+      },
+      "start_method": "spawn; no inherited driver report heap"
+    },
+    {
+      "label": "agent-single-object-spawn",
+      "pid": 163353,
+      "limits": {
+        "max_concurrent_requests": 4,
+        "max_queued_requests": 16,
+        "queue_timeout_seconds": 10.0,
+        "request_timeout_seconds": 180.0,
+        "body_timeout_seconds": 10.0,
+        "connect_timeout_seconds": 10.0,
+        "pool_timeout_seconds": 5.0,
+        "write_timeout_seconds": 10.0,
+        "send_timeout_seconds": 30.0,
+        "shutdown_grace_seconds": 15.0,
+        "storage_busy_timeout_seconds": 0.1,
+        "max_pending_records": 256
+      },
+      "start_method": "spawn; no inherited driver report heap"
+    }
+  ],
+  "common_quality": [
+    {
+      "connection": "mimo-default",
+      "scenario": "article",
+      "n": 6,
+      "strict_pass": 5,
+      "after_fence_removal_pass": 5
+    },
+    {
+      "connection": "mimo-default",
+      "scenario": "coding",
+      "n": 6,
+      "strict_pass": 6,
+      "after_fence_removal_pass": 6,
+      "executed_correct": 5,
+      "functional_failures": [
+        {
+          "id": "s0005.mimo-default.relay",
+          "checks": 465,
+          "failures": 39
+        }
+      ]
+    },
+    {
+      "connection": "mimo-default",
+      "scenario": "sentiment",
+      "n": 6,
+      "strict_pass": 0,
+      "after_fence_removal_pass": 0,
+      "parsed_labels": 72,
+      "correct_labels": 69,
+      "unparsed_replies": 0
+    },
+    {
+      "connection": "mimo-default",
+      "scenario": "translation",
+      "n": 6,
+      "strict_pass": 6,
+      "after_fence_removal_pass": 6
+    },
+    {
+      "connection": "mimo-default",
+      "scenario": "chat",
+      "n": 6,
+      "strict_pass": 6,
+      "after_fence_removal_pass": 6
+    },
+    {
+      "connection": "mimo-default",
+      "scenario": "design",
+      "n": 6,
+      "strict_pass": 3,
+      "after_fence_removal_pass": 6
+    },
+    {
+      "connection": "relay-personal",
+      "scenario": "article",
+      "n": 6,
+      "strict_pass": 1,
+      "after_fence_removal_pass": 1
+    },
+    {
+      "connection": "relay-personal",
+      "scenario": "coding",
+      "n": 6,
+      "strict_pass": 6,
+      "after_fence_removal_pass": 6,
+      "executed_correct": 6,
+      "functional_failures": []
+    },
+    {
+      "connection": "relay-personal",
+      "scenario": "sentiment",
+      "n": 6,
+      "strict_pass": 0,
+      "after_fence_removal_pass": 5,
+      "parsed_labels": 60,
+      "correct_labels": 60,
+      "unparsed_replies": 1
+    },
+    {
+      "connection": "relay-personal",
+      "scenario": "translation",
+      "n": 6,
+      "strict_pass": 0,
+      "after_fence_removal_pass": 3
+    },
+    {
+      "connection": "relay-personal",
+      "scenario": "chat",
+      "n": 6,
+      "strict_pass": 0,
+      "after_fence_removal_pass": 4
+    },
+    {
+      "connection": "relay-personal",
+      "scenario": "design",
+      "n": 6,
+      "strict_pass": 0,
+      "after_fence_removal_pass": 6
+    }
+  ],
+  "agents": [
+    {
+      "connection": "relay-personal",
+      "kind": "requirements",
+      "calls": [
+        "s0129.relay-personal.relay",
+        "s0130.relay-personal.relay",
+        "s0131.relay-personal.relay",
+        "s0132.relay-personal.relay",
+        "s0133.relay-personal.relay",
+        "s0134.relay-personal.relay",
+        "s0135.relay-personal.relay",
+        "s0136.relay-personal.relay",
+        "s0137.relay-personal.relay",
+        "s0138.relay-personal.relay",
+        "s0139.relay-personal.relay",
+        "s0140.relay-personal.relay",
+        "s0142.relay-personal.relay",
+        "s0143.relay-personal.relay",
+        "s0144.relay-personal.relay",
+        "s0145.relay-personal.relay",
+        "s0147.relay-personal.relay",
+        "s0149.relay-personal.relay",
+        "s0151.relay-personal.relay",
+        "s0152.relay-personal.relay",
+        "s0154.relay-personal.relay",
+        "s0156.relay-personal.relay",
+        "s0157.relay-personal.relay",
+        "s0159.relay-personal.relay"
+      ],
+      "planned_turns": 24,
+      "all_states_correct": false
+    },
+    {
+      "connection": "mimo-default",
+      "kind": "requirements",
+      "calls": [
+        "s0128.mimo-default.relay",
+        "s0141.mimo-default.relay",
+        "s0146.mimo-default.relay",
+        "s0148.mimo-default.relay",
+        "s0150.mimo-default.relay",
+        "s0153.mimo-default.relay",
+        "s0155.mimo-default.relay",
+        "s0158.mimo-default.relay",
+        "s0160.mimo-default.relay",
+        "s0161.mimo-default.relay",
+        "s0162.mimo-default.relay",
+        "s0163.mimo-default.relay",
+        "s0164.mimo-default.relay",
+        "s0165.mimo-default.relay",
+        "s0166.mimo-default.relay",
+        "s0167.mimo-default.relay",
+        "s0168.mimo-default.relay",
+        "s0169.mimo-default.relay",
+        "s0170.mimo-default.relay",
+        "s0171.mimo-default.relay",
+        "s0172.mimo-default.relay",
+        "s0173.mimo-default.relay",
+        "s0174.mimo-default.relay",
+        "s0175.mimo-default.relay"
+      ],
+      "planned_turns": 24,
+      "all_states_correct": true
+    },
+    {
+      "connection": "relay-personal",
+      "kind": "local_tools",
+      "calls": [
+        "s0177.relay-personal.relay"
+      ],
+      "maximum_turns": 30,
+      "progress": {},
+      "errors": [
+        {
+          "turn": 1,
+          "error": "invalid_action_json"
+        }
+      ],
+      "final": null,
+      "passed": false
+    },
+    {
+      "connection": "mimo-default",
+      "kind": "local_tools",
+      "calls": [
+        "s0176.mimo-default.relay",
+        "s0178.mimo-default.relay",
+        "s0179.mimo-default.relay",
+        "s0180.mimo-default.relay",
+        "s0181.mimo-default.relay",
+        "s0182.mimo-default.relay",
+        "s0183.mimo-default.relay",
+        "s0184.mimo-default.relay",
+        "s0185.mimo-default.relay",
+        "s0186.mimo-default.relay",
+        "s0187.mimo-default.relay",
+        "s0188.mimo-default.relay",
+        "s0189.mimo-default.relay",
+        "s0190.mimo-default.relay",
+        "s0191.mimo-default.relay",
+        "s0192.mimo-default.relay",
+        "s0193.mimo-default.relay",
+        "s0194.mimo-default.relay",
+        "s0195.mimo-default.relay",
+        "s0196.mimo-default.relay",
+        "s0197.mimo-default.relay",
+        "s0198.mimo-default.relay",
+        "s0199.mimo-default.relay",
+        "s0200.mimo-default.relay",
+        "s0201.mimo-default.relay",
+        "s0202.mimo-default.relay"
+      ],
+      "maximum_turns": 30,
+      "progress": {
+        "listed": true,
+        "read": [
+          "SKU-01",
+          "SKU-02",
+          "SKU-03",
+          "SKU-04",
+          "SKU-05",
+          "SKU-06",
+          "SKU-07",
+          "SKU-08"
+        ],
+        "calculated": [
+          "SKU-01",
+          "SKU-02",
+          "SKU-03",
+          "SKU-04",
+          "SKU-05",
+          "SKU-06",
+          "SKU-07",
+          "SKU-08"
+        ],
+        "saved": {
+          "SKU-01": 15,
+          "SKU-02": 20,
+          "SKU-03": 15,
+          "SKU-04": 4,
+          "SKU-05": 10,
+          "SKU-06": 4,
+          "SKU-07": 10,
+          "SKU-08": 0
+        }
+      },
+      "errors": [],
+      "final": {
+        "SKU-01": 15,
+        "SKU-02": 20,
+        "SKU-03": 15,
+        "SKU-04": 4,
+        "SKU-05": 10,
+        "SKU-06": 4,
+        "SKU-07": 10,
+        "SKU-08": 0
+      },
+      "passed": true
+    },
+    {
+      "connection": "relay-personal",
+      "kind": "local_tools_tolerant_client",
+      "calls": [
+        "s0541.relay-personal.relay"
+      ],
+      "maximum_turns": 30,
+      "progress": {},
+      "errors": [
+        {
+          "turn": 1,
+          "error": "invalid_action_json"
+        }
+      ],
+      "final": null,
+      "fenced_actions": 0,
+      "passed": false
+    },
+    {
+      "connection": "relay-personal",
+      "kind": "local_tools_single_object_client",
+      "calls": [
+        "s0542.relay-personal.relay",
+        "s0543.relay-personal.relay",
+        "s0544.relay-personal.relay",
+        "s0545.relay-personal.relay",
+        "s0546.relay-personal.relay",
+        "s0547.relay-personal.relay",
+        "s0548.relay-personal.relay",
+        "s0549.relay-personal.relay",
+        "s0550.relay-personal.relay",
+        "s0551.relay-personal.relay",
+        "s0552.relay-personal.relay",
+        "s0553.relay-personal.relay",
+        "s0554.relay-personal.relay",
+        "s0555.relay-personal.relay",
+        "s0556.relay-personal.relay",
+        "s0557.relay-personal.relay",
+        "s0558.relay-personal.relay",
+        "s0559.relay-personal.relay",
+        "s0560.relay-personal.relay",
+        "s0561.relay-personal.relay",
+        "s0562.relay-personal.relay",
+        "s0563.relay-personal.relay",
+        "s0564.relay-personal.relay",
+        "s0565.relay-personal.relay",
+        "s0566.relay-personal.relay",
+        "s0567.relay-personal.relay"
+      ],
+      "maximum_turns": 30,
+      "progress": {
+        "listed": true,
+        "read": [
+          "SKU-01",
+          "SKU-02",
+          "SKU-03",
+          "SKU-04",
+          "SKU-05",
+          "SKU-06",
+          "SKU-07",
+          "SKU-08"
+        ],
+        "calculated": [
+          "SKU-01",
+          "SKU-02",
+          "SKU-03",
+          "SKU-04",
+          "SKU-05",
+          "SKU-06",
+          "SKU-07",
+          "SKU-08"
+        ],
+        "saved": {
+          "SKU-01": 15,
+          "SKU-02": 20,
+          "SKU-03": 15,
+          "SKU-04": 4,
+          "SKU-05": 10,
+          "SKU-06": 4,
+          "SKU-07": 10,
+          "SKU-08": 0
+        }
+      },
+      "errors": [],
+      "final": {
+        "SKU-01": 15,
+        "SKU-02": 20,
+        "SKU-03": 15,
+        "SKU-04": 4,
+        "SKU-05": 10,
+        "SKU-06": 4,
+        "SKU-07": 10,
+        "SKU-08": 0
+      },
+      "passed": true,
+      "extracted_actions": 26,
+      "parser": "Exactly one JSON object with action keys; surrounding prose is ignored by caller only. Original replies/history remain unchanged."
+    }
+  ],
+  "long_outputs": [
+    {
+      "id": "s0112.mimo-default.direct",
+      "kind": "writing",
+      "protocol_complete": true,
+      "hanzi": 3971,
+      "english_words_including_code": 178,
+      "complete_ms": 142691.328918,
+      "ready_ms": 142691.316919,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0113.mimo-default.relay",
+      "kind": "writing",
+      "protocol_complete": true,
+      "hanzi": 3476,
+      "english_words_including_code": 39,
+      "complete_ms": 119673.118145,
+      "ready_ms": 119673.104572,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0114.mimo-default.direct",
+      "kind": "writing",
+      "protocol_complete": true,
+      "hanzi": 3471,
+      "english_words_including_code": 83,
+      "complete_ms": 118195.205941,
+      "ready_ms": 820.695846,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0115.mimo-default.relay",
+      "kind": "writing",
+      "protocol_complete": true,
+      "hanzi": 2150,
+      "english_words_including_code": 15,
+      "complete_ms": 62922.973579,
+      "ready_ms": 953.203518,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0116.mimo-default.direct",
+      "kind": "design",
+      "protocol_complete": true,
+      "hanzi": 0,
+      "english_words_including_code": 3124,
+      "complete_ms": 140848.233221,
+      "ready_ms": 140848.221407,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0117.mimo-default.relay",
+      "kind": "design",
+      "protocol_complete": true,
+      "hanzi": 0,
+      "english_words_including_code": 2589,
+      "complete_ms": 143069.493684,
+      "ready_ms": 143069.4801,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0118.mimo-default.direct",
+      "kind": "design",
+      "protocol_complete": true,
+      "hanzi": 0,
+      "english_words_including_code": 2688,
+      "complete_ms": 136237.011315,
+      "ready_ms": 1148.437717,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0119.mimo-default.relay",
+      "kind": "design",
+      "protocol_complete": false,
+      "hanzi": 0,
+      "english_words_including_code": 3185,
+      "complete_ms": 180003.839987,
+      "ready_ms": 3913.015007,
+      "finish_reason": null
+    },
+    {
+      "id": "s0120.relay-personal.direct",
+      "kind": "writing",
+      "protocol_complete": true,
+      "hanzi": 4712,
+      "english_words_including_code": 187,
+      "complete_ms": 75125.076803,
+      "ready_ms": 75125.064878,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0121.relay-personal.relay",
+      "kind": "writing",
+      "protocol_complete": true,
+      "hanzi": 4479,
+      "english_words_including_code": 202,
+      "complete_ms": 71192.619886,
+      "ready_ms": 71192.608974,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0122.relay-personal.direct",
+      "kind": "writing",
+      "protocol_complete": true,
+      "hanzi": 4358,
+      "english_words_including_code": 148,
+      "complete_ms": 62856.594941,
+      "ready_ms": 2616.677879,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0123.relay-personal.relay",
+      "kind": "writing",
+      "protocol_complete": true,
+      "hanzi": 4386,
+      "english_words_including_code": 191,
+      "complete_ms": 67606.555742,
+      "ready_ms": 2116.693764,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0124.relay-personal.direct",
+      "kind": "design",
+      "protocol_complete": true,
+      "hanzi": 0,
+      "english_words_including_code": 2395,
+      "complete_ms": 49875.580152,
+      "ready_ms": 49875.567062,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0125.relay-personal.relay",
+      "kind": "design",
+      "protocol_complete": true,
+      "hanzi": 0,
+      "english_words_including_code": 2337,
+      "complete_ms": 45902.046419,
+      "ready_ms": 45902.034,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0126.relay-personal.direct",
+      "kind": "design",
+      "protocol_complete": true,
+      "hanzi": 0,
+      "english_words_including_code": 2627,
+      "complete_ms": 49852.225247,
+      "ready_ms": 2225.762245,
+      "finish_reason": "stop"
+    },
+    {
+      "id": "s0127.relay-personal.relay",
+      "kind": "design",
+      "protocol_complete": true,
+      "hanzi": 0,
+      "english_words_including_code": 2344,
+      "complete_ms": 45558.929743,
+      "ready_ms": 2053.553837,
+      "finish_reason": "stop"
+    }
+  ],
+  "exceptions": [
+    {
+      "id": "s0090.relay-personal.relay",
+      "phase": "direct-controls",
+      "connection": "relay-personal",
+      "route": "relay",
+      "stream": false,
+      "http_status": 504,
+      "error_code": "upstream_connect_timeout",
+      "error_type": null,
+      "empty": false,
+      "finish_reason": null,
+      "complete_ms": 10012.77581,
+      "ready_ms": null,
+      "usage": null
+    },
+    {
+      "id": "s0094.relay-personal.direct",
+      "phase": "direct-controls",
+      "connection": "relay-personal",
+      "route": "direct",
+      "stream": true,
+      "http_status": 200,
+      "error_code": "sse_error",
+      "error_type": null,
+      "empty": false,
+      "finish_reason": null,
+      "complete_ms": 21373.394032,
+      "ready_ms": 2660.563018,
+      "usage": null
+    },
+    {
+      "id": "s0119.mimo-default.relay",
+      "phase": "long-output",
+      "connection": "mimo-default",
+      "route": "relay",
+      "stream": true,
+      "http_status": 200,
+      "error_code": "request_deadline_exceeded",
+      "error_type": null,
+      "empty": false,
+      "finish_reason": null,
+      "complete_ms": 180003.839987,
+      "ready_ms": 3913.015007,
+      "usage": null
+    },
+    {
+      "id": "s0207.mimo-default.relay",
+      "phase": "default-overload-64",
+      "connection": "mimo-default",
+      "route": "relay",
+      "stream": true,
+      "http_status": 504,
+      "error_code": "upstream_pool_timeout",
+      "error_type": null,
+      "empty": false,
+      "finish_reason": null,
+      "complete_ms": 6148.766579,
+      "ready_ms": null,
+      "usage": null
+    },
+    {
+      "id": "s0209.mimo-default.relay",
+      "phase": "default-overload-64",
+      "connection": "mimo-default",
+      "route": "relay",
+      "stream": true,
+      "http_status": 504,
+      "error_code": "upstream_pool_timeout",
+      "error_type": null,
+      "empty": false,
+      "finish_reason": null,
+      "complete_ms": 11487.958859,
+      "ready_ms": null,
+      "usage": null
+    },
+    {
+      "id": "s0276.relay-personal.relay",
+      "phase": "default-recovery",
+      "connection": "relay-personal",
+      "route": "relay",
+      "stream": true,
+      "http_status": 200,
+      "error_code": null,
+      "error_type": null,
+      "empty": true,
+      "finish_reason": "stop",
+      "complete_ms": 3444.081688,
+      "ready_ms": null,
+      "usage": {
+        "prompt_tokens": 619,
+        "completion_tokens": 0,
+        "total_tokens": 619,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "s0306.relay-personal.relay",
+      "phase": "sustained-4",
+      "connection": "relay-personal",
+      "route": "relay",
+      "stream": true,
+      "http_status": 200,
+      "error_code": null,
+      "error_type": null,
+      "empty": true,
+      "finish_reason": "stop",
+      "complete_ms": 3105.676422,
+      "ready_ms": null,
+      "usage": {
+        "prompt_tokens": 257,
+        "completion_tokens": 0,
+        "total_tokens": 257,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "s0330.relay-personal.relay",
+      "phase": "sustained-8",
+      "connection": "relay-personal",
+      "route": "relay",
+      "stream": true,
+      "http_status": 200,
+      "error_code": null,
+      "error_type": null,
+      "empty": true,
+      "finish_reason": "stop",
+      "complete_ms": 1311.189329,
+      "ready_ms": null,
+      "usage": {
+        "prompt_tokens": 257,
+        "completion_tokens": 0,
+        "total_tokens": 257,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "s0340.relay-personal.relay",
+      "phase": "sustained-8",
+      "connection": "relay-personal",
+      "route": "relay",
+      "stream": false,
+      "http_status": 502,
+      "error_code": "upstream_unavailable",
+      "error_type": null,
+      "empty": false,
+      "finish_reason": null,
+      "complete_ms": 5020.598773,
+      "ready_ms": null,
+      "usage": null
+    },
+    {
+      "id": "s0368.relay-personal.relay",
+      "phase": "sustained-8",
+      "connection": "relay-personal",
+      "route": "relay",
+      "stream": true,
+      "http_status": 200,
+      "error_code": null,
+      "error_type": null,
+      "empty": true,
+      "finish_reason": "stop",
+      "complete_ms": 1376.008615,
+      "ready_ms": null,
+      "usage": {
+        "prompt_tokens": 597,
+        "completion_tokens": 0,
+        "total_tokens": 597,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "s0387.mimo-default.relay",
+      "phase": "sustained-16",
+      "connection": "mimo-default",
+      "route": "relay",
+      "stream": true,
+      "http_status": 504,
+      "error_code": "upstream_pool_timeout",
+      "error_type": null,
+      "empty": false,
+      "finish_reason": null,
+      "complete_ms": 5168.08035,
+      "ready_ms": null,
+      "usage": null
+    },
+    {
+      "id": "s0396.relay-personal.relay",
+      "phase": "sustained-16",
+      "connection": "relay-personal",
+      "route": "relay",
+      "stream": true,
+      "http_status": 504,
+      "error_code": "upstream_connect_timeout",
+      "error_type": null,
+      "empty": false,
+      "finish_reason": null,
+      "complete_ms": 11930.392584,
+      "ready_ms": null,
+      "usage": null
+    },
+    {
+      "id": "s0423.mimo-default.relay",
+      "phase": "high-overload-64",
+      "connection": "mimo-default",
+      "route": "relay",
+      "stream": true,
+      "http_status": 504,
+      "error_code": "upstream_pool_timeout",
+      "error_type": null,
+      "empty": false,
+      "finish_reason": null,
+      "complete_ms": 7281.58453,
+      "ready_ms": null,
+      "usage": null
+    },
+    {
+      "id": "s0432.relay-personal.relay",
+      "phase": "high-overload-64",
+      "connection": "relay-personal",
+      "route": "relay",
+      "stream": true,
+      "http_status": 504,
+      "error_code": "upstream_pool_timeout",
+      "error_type": null,
+      "empty": false,
+      "finish_reason": null,
+      "complete_ms": 7054.226625,
+      "ready_ms": null,
+      "usage": null
+    },
+    {
+      "id": "s0438.relay-personal.relay",
+      "phase": "high-overload-64",
+      "connection": "relay-personal",
+      "route": "relay",
+      "stream": true,
+      "http_status": 200,
+      "error_code": null,
+      "error_type": null,
+      "empty": true,
+      "finish_reason": "stop",
+      "complete_ms": 16034.220147,
+      "ready_ms": null,
+      "usage": {
+        "prompt_tokens": 292,
+        "completion_tokens": 0,
+        "total_tokens": 292,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "s0445.mimo-default.relay",
+      "phase": "high-overload-64",
+      "connection": "mimo-default",
+      "route": "relay",
+      "stream": false,
+      "http_status": 504,
+      "error_code": "upstream_pool_timeout",
+      "error_type": null,
+      "empty": false,
+      "finish_reason": null,
+      "complete_ms": 21366.118319,
+      "ready_ms": null,
+      "usage": null
+    },
+    {
+      "id": "s0534.relay-personal.relay",
+      "phase": "balanced-sustained-16",
+      "connection": "relay-personal",
+      "route": "relay",
+      "stream": false,
+      "http_status": 502,
+      "error_code": "upstream_unavailable",
+      "error_type": null,
+      "empty": false,
+      "finish_reason": null,
+      "complete_ms": 5021.851423,
+      "ready_ms": null,
+      "usage": null
+    }
+  ],
+  "identical_payload_usage_variations": [
+    {
+      "connection": "relay-personal",
+      "payload_sha256": "ba74e333df9b1939a284f312364e1e849c9c6395cd65e35e9e45209dae1685f8",
+      "input_counts": {
+        "209": 6,
+        "257": 1
+      },
+      "case_ids": [
+        "s0043.relay-personal.relay",
+        "s0298.relay-personal.relay",
+        "s0322.relay-personal.relay",
+        "s0346.relay-personal.relay",
+        "s0370.relay-personal.relay",
+        "s0394.relay-personal.relay",
+        "s0418.relay-personal.relay"
+      ]
+    },
+    {
+      "connection": "relay-personal",
+      "payload_sha256": "83af54f3b7e9c9c54dd57cc15788784854ed4cbc18aa2b194ec00d18f1793489",
+      "input_counts": {
+        "209": 12,
+        "257": 2
+      },
+      "case_ids": [
+        "s0078.relay-personal.direct",
+        "s0079.relay-personal.relay",
+        "s0282.relay-personal.relay",
+        "s0290.relay-personal.relay",
+        "s0306.relay-personal.relay",
+        "s0314.relay-personal.relay",
+        "s0330.relay-personal.relay",
+        "s0338.relay-personal.relay",
+        "s0354.relay-personal.relay",
+        "s0362.relay-personal.relay",
+        "s0378.relay-personal.relay",
+        "s0386.relay-personal.relay",
+        "s0402.relay-personal.relay",
+        "s0410.relay-personal.relay"
+      ]
+    },
+    {
+      "connection": "relay-personal",
+      "payload_sha256": "731f617d80b92ff7ebcb8a0667a491774145d6bd0cba1522ddc5d164f047b79f",
+      "input_counts": {
+        "240": 6,
+        "292": 1
+      },
+      "case_ids": [
+        "s0206.relay-personal.relay",
+        "s0270.relay-personal.relay",
+        "s0422.relay-personal.relay",
+        "s0438.relay-personal.relay",
+        "s0446.relay-personal.relay",
+        "s0502.relay-personal.relay",
+        "s0520.relay-personal.relay"
+      ]
+    },
+    {
+      "connection": "relay-personal",
+      "payload_sha256": "2df4e297d8b800c1d96d79ac3fc06721aea945be8243de3e27522b73a12ff51e",
+      "input_counts": {
+        "558": 4,
+        "0": 1
+      },
+      "case_ids": [
+        "s0208.relay-personal.relay",
+        "s0272.relay-personal.relay",
+        "s0424.relay-personal.relay",
+        "s0448.relay-personal.relay",
+        "s0504.relay-personal.relay"
+      ]
+    },
+    {
+      "connection": "relay-personal",
+      "payload_sha256": "34c6805dfcdd18fed031c83edcfbf6bf2dfc4e8ce0a8d5521932e3b739c140a9",
+      "input_counts": {
+        "619": 1,
+        "577": 4
+      },
+      "case_ids": [
+        "s0276.relay-personal.relay",
+        "s0428.relay-personal.relay",
+        "s0444.relay-personal.relay",
+        "s0508.relay-personal.relay",
+        "s0540.relay-personal.relay"
+      ]
+    },
+    {
+      "connection": "relay-personal",
+      "payload_sha256": "251fe4f1ff160ddf88e76e173740e76e8a6cf03c79474d1993f136effa2d542a",
+      "input_counts": {
+        "558": 11,
+        "597": 1
+      },
+      "case_ids": [
+        "s0288.relay-personal.relay",
+        "s0296.relay-personal.relay",
+        "s0312.relay-personal.relay",
+        "s0320.relay-personal.relay",
+        "s0336.relay-personal.relay",
+        "s0344.relay-personal.relay",
+        "s0360.relay-personal.relay",
+        "s0368.relay-personal.relay",
+        "s0384.relay-personal.relay",
+        "s0392.relay-personal.relay",
+        "s0408.relay-personal.relay",
+        "s0416.relay-personal.relay"
+      ]
+    }
+  ],
+  "audit": {
+    "unique_egress_reservations": true,
+    "each_admitted_request_has_one_record": true,
+    "no_automatic_retries": true,
+    "all_egress_json_matches_expected": true,
+    "caller_messages_preserved": true,
+    "known_usage_matches_records": true,
+    "native_tools_rejected_without_dispatch": true,
+    "source_config_unchanged": true,
+    "all_test_cores_settled": true
+  },
+  "method_notes": [
+    "Real APIs, synthetic data, fixed caller prompts; no LLM-based grading.",
+    "Main default/high cores use fork; high core inherits driver report heap. Do not compare its RSS directly with a clean spawn core.",
+    "Supplement uses spawn, separate driver/core, throttled driver report saves and pool observations.",
+    "Guard, trace fsync and health polling add overhead; this is not a 10 ms local-overhead budget certification.",
+    "Initial sustained load assigns article/sentiment to MiMo and coding/design to relay; only balanced supplement uses the same mix for both.",
+    "Direct/relay generation and output lengths differ; end-to-end differences are not local forwarding overhead.",
+    "Direct HTTP client timeout is 180 seconds with a 200-second outer deadline. Gateway uses connect=10s, pool=5s, upstream read=150s and total=180s.",
+    "Unknown usage is null. Provider-reported zero input is preserved, not inferred to mean free usage.",
+    "Original raw scores used the old Chinese numeric-boundary checker; reviewed scores apply the corrected offline checker. Raw replies are unchanged.",
+    "Strict JSON, removal of one enclosing JSON fence, and extraction of a unique action JSON are distinct caller-side scenarios, not gateway rewriting."
+  ],
+  "raw_evidence_directory": "reports/live-scenarios-2026-11-05/",
+  "raw_sha256": {
+    "live/agent-single-object-spawn-ledger.json": "4b1408b20a36c1a58d5152e251b805cacbeeb4675874a93bc792e8dcd712d2f8",
+    "live/agent-single-object-spawn-marks.jsonl": "68be0cdd12142b2475e989c127f4331143b991df1c3430bfaa2ed727ab54d386",
+    "live/analysis.json": "2f450abd1dda7e63821ce4268beb685f196342dd61789d50822767ba15f7e3ed",
+    "live/balanced-spawn-ledger.json": "3eba8d3bc5a666e2dc7c31f077551336955334ed620a9682cae73f9ad76c7a4c",
+    "live/balanced-spawn-marks.jsonl": "7d2715f10ea5482a68ed426f8ab6aaeb88648d9d0bb034844a31604d36d12447",
+    "live/budget.json": "c5f472824d1bc40311ad585681633736f5611dfc89986939ad612ad25bca35af",
+    "live/code-checks.json": "e5e5c7cfd0296817ba21bdad1104a1adf250d1edf40d919c47d9e6337f95d53b",
+    "live/default-ledger.json": "32a996f5242795e0187b891200beb0f938d31809110ed361fb7f1919eac07439",
+    "live/default-marks.jsonl": "d4b94222385ab7bce24cab636da92da2c308ff9d0bdfd24df13d2442f81b79aa",
+    "live/egress.jsonl": "41c0dcd019ae1f21bee3838022c7e7693982f4bfcb8a1ce7749e4a38b25eee7f",
+    "live/headers.jsonl": "0c3e326852acb8cb852b2d27334923e59bf7114b22e734304eb6f5b14c49f3b0",
+    "live/high-ledger.json": "ddcba9f0d9c37c2980ea1d06639a0250bfbfe662dae144b0657a5c3db473bda3",
+    "live/high-marks.jsonl": "d75c56fc826e1fdac85fe47823c035e13d39ede0d23a62ec74dbfaf253e1aa3e",
+    "live/pool-observations.jsonl": "5025b9d6d904ad220e59e9a3c7b9ecc8928f8d0fae9526e868d9d00d65e0c648",
+    "live/results-before-extract.json": "d2aae2ca6a44aac4d043b7759b5a46134ef190a663af62f9ca60f065b89c1fc1",
+    "live/results-main.json": "cb7171b9fcc9ab79954907485d60a9cf2df15686beef37d9136bce1f877d8f7d",
+    "live/results.json": "48b382099ae39eacde95e89ab31cddeba2b39e437b9f7c2863569d78a4a714a9",
+    "analyze.py": "81a616c133c9430ff7263c2efb2c8e590919e55840652e72d1adfc0d54f4664c",
+    "build_review.py": "dcc253fe632579a18baac18bb2c0eb67e38038640ce743d40a6c77226667df71",
+    "check_spawn.py": "bc1135e6ff4edc2d4f1b440d4a7374ad6f7cdf2ba8ba771a53cc0a5c18dc8185",
+    "compat.py": "2d4b02831c5021c83dee4d453b0e1b24d1a74d1e7e2418b262c77d6316fe4bef",
+    "followup.py": "49bff1267b717f93ff6f2920b13fdc36c0d26e24250c8d590f0bc40d344b04c2",
+    "run.py": "9b2c08355f909dfbc1f8fd3774658d90c3b81251b84af2feb4908993a4dffb52",
+    "scenarios.py": "9496af1ea0a816a5dabc82675e79f565a00fd7213d07445fe75c94d65ed665ee",
+    "live/requests/sorted-sha256-manifest": "d1fb438a0b371088763ee47690b6a7fa869131d12d55898c1e793940fe191205",
+    "live/answers/sorted-sha256-manifest": "3ca76f7c3121eb0fc2f6442d675e77e2b0a5a9c94e931514e47b708431bfb003"
+  }
+}

@@ -358,7 +358,8 @@ def evaluate(text, case):
                     "correct_retention",
                     bool(
                         re.search(
-                            r"\b" + str(expect["days"]) + r"\s*(?:天|days?)", obj["retention"]
+                            r"(?<!\d)" + str(expect["days"]) + r"\s*(?:天|days?)",
+                            obj["retention"],
                         )
                     ),
                 )

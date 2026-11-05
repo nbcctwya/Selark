@@ -6,6 +6,7 @@
 
 | 报告 | 文件 |
 | --- | --- |
+| [MiMo / 中转站真实场景与压力验收 · 2026-11-05](live-scenarios-stress-2026-11-05.md) | `live-scenarios-stress-2026-11-05.md`、`live-scenarios-stress-2026-11-05.json` |
 | [真实 API 多轮与并发验收 · 2026-11-05](live-latency-rounds-2026-11-05.md) | `live-latency-rounds-2026-11-05.md`、`live-latency-rounds-2026-11-05.json` |
 | [全链路延迟验收 · 2026-11-05](latency-verification-2026-11-05.md) | `latency-verification-2026-11-05.md`、`latency-measurements-2026-11-05.json` |
 | [设计原则与性能预算验收 · 2026-11-04](design-budget-verification-2026-11-04.md) | `design-budget-verification-2026-11-04.md`、`design-budget-measurements-2026-11-04.json` |
