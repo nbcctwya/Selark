@@ -58,7 +58,8 @@ Key 可来自厂商环境变量：`MIMO_API_KEY`、`DEEPSEEK_API_KEY`、`ZHIPU_A
 
 ## 路由与模型来源
 
-`GET /v1/models` 返回各连接已启用且当前应用获权的模型，不访问上游，也不返回仅发现的模型。
+`GET /v1/models` 汇总已启用连接中已启用且当前应用获权的模型，不访问上游，也不返回仅发现的模型。
+停用连接的模型及别名会从列表移除。DSH / Kimi Code 桌面版使用一个 Base URL 和各自的应用令牌，即可获取跨连接模型；见 [桌面端接入](http-api.md#桌面端获取多来源模型)。
 每项包含 `connection_id`、`connection_name`、`upstream_model`、`qualified_id` 和启停状态。
 原 MiMo 项目的 `id` 保留原模型名；其他连接使用 `连接ID::模型ID`，同名模型可共存。
 原 MiMo 也有对应的 `mimo-default::模型ID` 标识。

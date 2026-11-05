@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 完善桌面端的多来源模型发现：一个 Base URL 和应用令牌通过 `/v1/models` 获取跨连接授权列表，使用返回的模型 ID 路由到 MiMo、OpenAI API 或中转连接。停用连接的模型、别名和默认项不再展示；扩展既有回归验证两个桌面应用的权限隔离及三个来源的路由，获取列表零上游调用。补充 [DSH / Kimi Code 桌面接入步骤](docs/guides/http-api.md#桌面端获取多来源模型)。
+
 - 补齐官方工具调用：Chat Completions 保留工具定义、调用 ID、参数增量、多轮结果和思考历史，接受纯工具回复；Anthropic function 工具按官方 Messages 格式适配。新增原生 `/v1/responses` 与 `/v1/messages`，覆盖各已接入供应商提供的对应协议及 ChatGPT/Kimi Code 订阅入口。共用鉴权、配额、取消和持久落账，不执行工具、不增加模型调用或提示文本；工具定义纳入输入预留，未知输出上限与估算预留分开记录。接入矩阵见 [HTTP API](docs/guides/http-api.md)，874 项离线回归及性能限制见 [验收](docs/verification/tool-protocols-2026-11-05.md)。
 
 - 修正真实场景验收评分器对中文紧邻数字（如“保留14天”）的误判；使用数字边界核验保留天数，继续拒绝错误数值。此改动只影响离线评分，不修改网关回复或运行时行为。

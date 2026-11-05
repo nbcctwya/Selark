@@ -68,6 +68,7 @@ def test_alias_permissions_and_legacy_defaults(runtime):
         assert row["caller_id"] == caller["id"] and row["requested_alias"] == "fast"
         assert row["connection_id"] == "second" and row["resources"]["requested_alias"] == "fast"
         runtime.change_connection({"enabled": False}, "second")
+        assert client.get("/v1/models", headers=auth(caller)).json()["data"] == []
         assert (
             client.post(
                 "/v1/chat/completions", headers=auth(caller), json=PAYLOAD | {"model": "@fast"}

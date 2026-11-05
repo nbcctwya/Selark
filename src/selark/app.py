@@ -593,6 +593,7 @@ def create_app(
                 else None,
             }
             for c in available
+            if c.enabled
             for m in c.allowed_models
             if permitted(policy, c.connection_id, m, c.resource_type)
         ]
@@ -602,6 +603,7 @@ def create_app(
             c = by_id.get(target.connection_id)
             if (
                 c
+                and c.enabled
                 and target.model in c.allowed_models
                 and permitted(policy, c.connection_id, target.model, c.resource_type)
             ):
@@ -623,23 +625,15 @@ def create_app(
                         else None,
                     }
                 )
+        default_allowed = current.enabled and permitted(
+            policy, current.connection_id, current.default_model, current.resource_type
+        )
         return {
             "object": "list",
             "data": entries,
-            "default_model": current.default_model
-            if permitted(
-                policy, current.connection_id, current.default_model, current.resource_type
-            )
-            else None,
-            "connection_enabled": current.enabled
-            and permitted(
-                policy, current.connection_id, current.default_model, current.resource_type
-            ),
-            "default_connection": current.connection_id
-            if permitted(
-                policy, current.connection_id, current.default_model, current.resource_type
-            )
-            else None,
+            "default_model": current.default_model if default_allowed else None,
+            "connection_enabled": default_allowed,
+            "default_connection": current.connection_id if default_allowed else None,
         }
 
     @app.post("/v1/chat/completions")

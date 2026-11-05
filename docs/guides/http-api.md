@@ -7,7 +7,7 @@
 | 接口 | 认证 | 行为 |
 | --- | --- | --- |
 | `GET /health` | 无 | 本进程存活，不访问 MiMo，不代表上游可用 |
-| `GET /v1/models` | `Authorization: Bearer <SELARK_TOKEN>` | 各连接本地允许列表及明确来源；不发起上游发现或生成 |
+| `GET /v1/models` | `Authorization: Bearer <SELARK_TOKEN>` | 汇总已启用连接中该令牌获权的模型；不发起上游发现或生成 |
 | `POST /v1/chat/completions` | 同上 | 文本与 function 工具；普通 JSON 或 SSE |
 | `POST /v1/responses` | 同上 | 官方 Responses 原生请求与响应 |
 | `POST /v1/messages` | Bearer 或 `x-api-key` 应用令牌 | 官方 Messages 原生请求与响应 |
@@ -60,7 +60,7 @@ ChatGPT 订阅遵循官方 SIWC 限制：`stream:true`、`store:false`、input �
 
 `connection_id` 或 `连接ID::模型ID` 显式选择连接；也可通过 `X-Selark-Connection` 请求头选择。model 省略/null 使用连接默认值，显式 model 须在允许列表中。`session_id` 仅本地归组，所有历史由客户端提供。
 
-- **DSH / Kimi Code CLI**：选择对应 API protocol，base URL 为 `http://127.0.0.1:8787/v1`，Key 使用 Selark 应用令牌，model 使用 `连接ID::模型ID`。Anthropic SDK 风格配置的 base URL 使用不含 `/v1` 的网关地址。
+- **DSH / Kimi Code 桌面版**：添加一个自定义 OpenAI Chat Completions 提供商，填下方统一地址与应用令牌，点击获取可用模型；同一提供商内可选择不同来源的已授权模型，具体步骤见下节。
 - **Codex**：配置自定义 provider，`base_url = "http://127.0.0.1:8787/v1"`、`wire_api = "responses"`，通过 `env_key` 读取 Selark 令牌。选择支持 Responses 的连接；可用 provider 的 `http_headers` 设置 `X-Selark-Connection`，保留原始模型名。
 - **Claude Code**：`ANTHROPIC_BASE_URL=http://127.0.0.1:8787`，`ANTHROPIC_AUTH_TOKEN` 为 Selark 令牌，模型选择已批准的 `连接ID::模型ID`；上游须提供 Messages。不会自动把 OpenAI Responses 转换为 Messages。
 - **套餐用途**：请求体 `interaction:"personal_coding"`，或 `X-Selark-Interaction: personal_coding`。客户端无法添加字段时可使用自定义请求头；Codex 可写入 provider 的 `http_headers`。该声明不替代应用的订阅访问权限。
@@ -68,6 +68,33 @@ ChatGPT 订阅遵循官方 SIWC 限制：`stream:true`、`store:false`、input �
 客户端还须保留供应商要求的模型能力配置。例如 MiMo 接入 Codex 的 custom 工具需要官方模型目录 / lite mode 配置，见 [MiMo 的 Codex 指南](https://mimo.mi.com/docs/en-US/tokenplan/integration/codex-configuration)。Selark 转发相应协议，不会替客户端生成模型目录或改变其工具声明。
 
 请求体字段优先于同名路由/用途请求头。所有入口单请求体上限 1 MiB、普通响应上限 8 MiB、SSE 单事件约 1 MiB；同样保留请求总时限和应用资源限制。
+
+## 桌面端获取多来源模型
+
+DSH 和 Kimi Code 桌面版各配置一个名为 `Selark` 的自定义模型提供商即可。MiMo、OpenAI API 及提供 Chat Completions 的 Claude 中转连接共用以下入口：
+
+| 桌面端字段 | 内容 |
+| --- | --- |
+| API 协议 / 类型 | OpenAI Chat Completions / OpenAI Compatible；Kimi 配置类型为 `openai` |
+| Base URL | `http://127.0.0.1:8787/v1` |
+| API Key | Selark 为当前桌面应用创建的应用令牌 |
+| 模型 | 点击获取可用模型，选择并保存返回的模型 |
+
+在 Selark Dashboard 的应用设置中，为 DSH 和 Kimi Code 分别选择允许的连接和模型。服务收到桌面端的 `GET /v1/models` 时，计算“连接已启用 ∩ 模型已启用 ∩ 令牌允许的连接 ∩ 令牌允许的模型”，返回标准 `{"object":"list","data":[...]}`。不返回仅被发现、未启用或无权使用的模型，也不返回停用连接的模型及别名。两个令牌可以看到不同的集合；策略更改后再次获取列表即生效。
+
+例如，授权了相应模型后，同一列表可以包含：
+
+```text
+mimo-v2.6-flash
+relay-personal::claude-sonnet-4-6
+openai-personal::gpt-6-luna
+```
+
+桌面端使用列表返回的 `id` 原值发起请求，Selark 根据 ID 选择连接，并把实际模型名交给上游。同名模型通过连接前缀区分；原 MiMo 的裸 ID 保留兼容行为。**多来源配置不要固定 `X-Selark-Connection` 请求头，也不要在列表请求里指定单个 `connection_id`；不要去掉返回 ID 中的连接前缀。** 若曾使用单连接示例，移除固定连接配置后重新获取模型即可。
+
+获取列表只读本机配置和权限，不调用供应商目录、不发起生成、不消耗模型 Token。页面缓存的旧模型即使尚未消失，实际调用仍复查当前权限、模型启停及令牌撤销状态。列表表示本地获权范围，不承诺上游账户实时可用或每种协议都受支持；模型工具能力与上下文参数须符合真实上游。
+
+DSH 在“设置 → 模型 → 添加提供商 → 自定义模型 API”中获取并保存模型；Kimi Code 桌面版在“设置 → Model Providers”中添加自定义提供商。页面按钮名称以安装版本为准，参见 [DSH 官方配置](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/guide/providers.md) 和 [Kimi Code 桌面版接入](https://www.kimi.com/code/docs/en/kimi-code-desktop/getting-started.html)。Selark 在 WSL、客户端在 Windows 时，先确认 Windows 能访问网关的 `/health`，再使用对应的本机地址；修改网关端口后同时修改 Base URL。
 
 官方协议依据（2026-11-05 核对）：[OpenAI 工具调用](https://developers.openai.com/api/docs/guides/function-calling)、[SIWC 约束](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)、[Anthropic 工具调用](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)、[DeepSeek 工具调用](https://api-docs.deepseek.com/guides/tool_calls/)、[DeepSeek Responses](https://api-docs.deepseek.com/guides/responses_api/)、[DeepSeek Messages](https://api-docs.deepseek.com/guides/anthropic_api/)、[MiMo Chat](https://mimo.mi.com/docs/en-US/api/chat/openai-api)、[MiMo Responses](https://mimo.mi.com/docs/en-US/api/chat/responses)、[MiMo Messages](https://mimo.mi.com/docs/en-US/api/chat/anthropic-api)、[Kimi 工具调用](https://platform.kimi.ai/docs/guide/use-kimi-api-to-complete-tool-calls)、[Kimi Responses](https://platform.kimi.ai/docs/guide/codex-kimi)、[Kimi Messages](https://platform.kimi.ai/docs/guide/claude-code-kimi)、[Kimi Code Responses](https://www.kimi.com/code/docs/en/third-party-tools/codex.html)、[Kimi Code Messages](https://www.kimi.com/code/docs/en/third-party-tools/claude-code.html)、[GLM 工具调用](https://docs.bigmodel.cn/cn/guide/capabilities/function-calling)。
 

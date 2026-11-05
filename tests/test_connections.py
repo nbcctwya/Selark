@@ -199,13 +199,26 @@ def test_connections_with_same_model_keep_routing_records_and_usage_separate(mul
     for identity in ("one", "two"):
         multi.add_connection(
             identity,
-            "openai-compatible",
+            "openai" if identity == "one" else "openai-compatible",
             "fake-" + identity,
             base_url="https://upstream.test/v1",
             allowed_models=["shared"],
             name="App " + identity,
         )
     assert (multi.directory / "server.json").read_bytes() == original
+    desktop_headers = {}
+    for name, selected in (
+        ("dsh", ["mimo-default", "one", "two"]),
+        ("kimi-code", ["mimo-default", "two"]),
+    ):
+        caller = multi.store.create_token(
+            name,
+            policy={
+                "allowed_connections": ["mimo-default", "one", "two"],
+                "allowed_models": [f"{identity}::shared" for identity in selected],
+            },
+        )
+        desktop_headers[name] = {"Authorization": "Bearer " + caller["token"]}
     messages = [
         {"role": "user", "content": "Remember 7"},
         {"role": "assistant", "content": "7"},
@@ -225,19 +238,28 @@ def test_connections_with_same_model_keep_routing_records_and_usage_separate(mul
     with TestClient(
         create_app(multi.settings(), runtime=multi, transport=httpx.MockTransport(upstream))
     ) as client:
-        listing = client.get("/v1/models", headers=token(multi)).json()["data"]
+        listing = client.get("/v1/models", headers=desktop_headers["dsh"]).json()["data"]
         assert {m["id"] for m in listing} == {"shared", "one::shared", "two::shared"}
         assert all(m["connection_name"] and m["qualified_id"] for m in listing)
-        for selection in (
-            {"model": "shared"},
-            {"model": "one::shared"},
-            {"connection_id": "two", "model": "shared"},
-        ):
+        assert {m["owned_by"] for m in listing} == {"mimo", "openai", "openai-compatible"}
+        kimi_listing = client.get("/v1/models", headers=desktop_headers["kimi-code"]).json()
+        assert {m["id"] for m in kimi_listing["data"]} == {"shared", "two::shared"}
+        assert calls == []  # Both desktop fetch buttons read the local catalog only.
+        assert (
+            client.post(
+                "/v1/chat/completions",
+                headers=desktop_headers["kimi-code"],
+                json={"model": "one::shared", "messages": messages},
+            ).status_code
+            == 403
+        )
+        # One base URL and one application token; use each returned model ID verbatim.
+        for entry in listing:
             assert (
                 client.post(
                     "/v1/chat/completions",
-                    headers=token(multi),
-                    json={"messages": messages, "session_id": "same", **selection},
+                    headers=desktop_headers["dsh"],
+                    json={"messages": messages, "session_id": "same", "model": entry["id"]},
                 ).status_code
                 == 200
             )
@@ -255,6 +277,15 @@ def test_connections_with_same_model_keep_routing_records_and_usage_separate(mul
                 == 400
             )
         multi.change_connection({"enabled": False}, "one")
+        assert {
+            m["id"] for m in client.get("/v1/models", headers=desktop_headers["dsh"]).json()["data"]
+        } == {"shared", "two::shared"}
+        disabled = client.get(
+            "/v1/models", params={"connection_id": "one"}, headers=desktop_headers["dsh"]
+        ).json()
+        assert disabled["data"] == []
+        assert disabled["default_model"] is None and disabled["default_connection"] is None
+        assert disabled["connection_enabled"] is False
         assert (
             client.post(
                 "/v1/chat/completions",

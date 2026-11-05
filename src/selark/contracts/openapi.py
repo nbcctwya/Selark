@@ -518,6 +518,12 @@ def gateway_document():
         if path == "/health":
             operation["security"] = []
         if path == "/v1/models":
+            operation["description"] = (
+                "按当前应用令牌汇总各已启用连接中已启用且获权的模型及别名；"
+                "返回的 id 可原样用于生成请求，自动路由到对应连接。"
+                "无参数时跨连接列出，停用或未授权的模型不返回。"
+                "只读本机配置与权限，不调用供应商目录或模型。"
+            )
             operation["parameters"] = [
                 {
                     "in": "query",
