@@ -92,7 +92,7 @@ def browser_management(page, directory):
             nav.get_by_role("button", name="连接与模型", exact=True).click()
             page.get_by_role("button", name="新建连接").click()
             create = page.get_by_role("dialog", name="新建连接")
-            create.get_by_role("radio", name="OpenAI 兼容中转", exact=False).click()
+            create.get_by_role("radio", name="通用 API（OpenAI 兼容）", exact=False).click()
             create.get_by_label("连接 ID").fill("ui-relay")
             create.get_by_label("显示名称").fill("UI Relay")
             create.get_by_label("接口地址").fill(f"http://127.0.0.1:{server.server_port}/v1")

@@ -14,6 +14,7 @@
 | 服务、备份、日志与历史查询 | `verify_operations.py` |
 | 空闲 CPU、内存与模拟转发对比 | `measure_runtime.py` |
 | 本机直连/中转逐对 p95 与核心预算 | `measure_relay.py`（以 `python -m scripts.measure_relay` 运行） |
+| 大账本配额准入与 Dashboard 缩放 | `measure_accounting.py`（以 `python -m scripts.measure_accounting` 运行，仅合成账本） |
 | 临时进程的全链路分段测量 | `measure_relay.py --profile /tmp/new-trace.jsonl`（由 `profile_relay.py` 安装开发探针） |
 | 显式真实调用验收 | `verify_live.py`、`verify_multiconnection_live.py`、`verify_api_live_stress.py`、`verify_four_api_live.py` |
 | 特定供应商的显式验收 | `verify_mimo_credit.py`、`verify_mimo_credit_extra.py`、`verify_relay_stress.py`、`verify_openai_luna.py`、`verify_mimo_extended.py` |

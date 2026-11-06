@@ -12,8 +12,8 @@ import httpx
 from selark.chatgpt_auth import RESOURCE
 from selark.connections import valid_model
 from selark.errors import GatewayError
-from selark.protocol import strict_json
-from selark.providers.mimo import MiMoProvider, close_response, protocol_error
+from selark.protocol import close_response, strict_json
+from selark.providers.mimo import MiMoProvider, protocol_error
 from selark.providers.responses_text import ResponseText
 from selark.sse import SSEDecoder, async_sse_lines
 from selark.usage import response_usage

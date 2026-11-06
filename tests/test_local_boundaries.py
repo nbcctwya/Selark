@@ -7,9 +7,9 @@ import pytest
 
 from selark.app import create_app
 
+from .support.asgi import Wire, limited, wait_until
 from .support.protocol import completion
-from .test_resilience import Wire, limited, wait_until
-from .test_resilience import runtime as runtime
+from .support.resources import runtime as runtime
 
 
 @pytest.mark.parametrize("kind", ["missing", "wrong", "duplicate", "revoked", "scheme"])

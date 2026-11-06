@@ -3,6 +3,7 @@
 import asyncio
 import contextlib
 import json
+import sqlite3
 from datetime import UTC, datetime, timedelta
 
 import httpx
@@ -12,16 +13,24 @@ from fastapi.testclient import TestClient
 from selark.app import create_app
 from selark.cli import main
 from selark.config import ConfigError, initialize
+from selark.errors import GatewayError
 from selark.governance import input_estimate, usage_cost
 from selark.persistence import Journal, snapshot
 from selark.runtime import Runtime, fingerprint
 from selark.schemas import ChatRequest
-from selark.storage import Store
+from selark.storage import Store, utc_now
 
 from .support.governance import PAYLOAD, allocation, app_for, auth, finished, price
 from .support.governance import runtime as runtime
-from .support.protocol import PNG_DATA_URL, UPSTREAM_KEY, completion, event, sse
-from .test_connections import native_events, native_reply
+from .support.protocol import (
+    PNG_DATA_URL,
+    UPSTREAM_KEY,
+    completion,
+    event,
+    native_events,
+    native_reply,
+    sse,
+)
 
 
 def test_alias_permissions_and_legacy_defaults(runtime):
@@ -138,6 +147,147 @@ def test_concurrent_quota_reservation_is_atomic(runtime, kind):
         assert q["estimated_cost_or_reservation"] == {"USD": "0.000016000"}
 
     asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("external", [False, True])
+@pytest.mark.parametrize("kind", ["tokens", "budget"])
+def test_quota_totals_follow_settlement_release_and_external_usage_edits(
+    runtime, monkeypatch, external, kind
+):
+    import selark.quota_cache as cache
+
+    policy = {"daily_token_limit": 500} if kind == "tokens" else {"daily_budget": "0.000500000"}
+    caller = runtime.store.create_token("cached-quota", policy=policy)
+    quote = price(runtime, output_per_million="1")
+    scans = []
+    original = cache.allocation_rows
+
+    def counted(*args):
+        scans.append(args[1:])
+        return original(*args)
+
+    monkeypatch.setattr(cache, "allocation_rows", counted)
+
+    def admit(identity, tokens):
+        runtime.store.attempt(
+            identity,
+            "mimo-test",
+            None,
+            "mimo-default",
+            purpose="chat",
+            started_at=utc_now(),
+            resource={
+                "caller": caller["id"],
+                "provider": "mimo",
+                "estimate": tokens - 16,
+                "output": 16,
+                "price": quote,
+                "alias": None,
+            },
+        )
+
+    admit("first", 400)
+    for _ in range(2):  # A replayed receipt cannot charge the same usage twice.
+        runtime.store.finish(
+            "first", state=finished(caller, "first"), http_status=200, duration_ms=1
+        )
+    admit("second", 486)
+    with pytest.raises(GatewayError) as error:
+        admit("rejected", 16)
+    assert error.value.code == ("caller_token_quota" if kind == "tokens" else "caller_budget_quota")
+    assert not runtime.store.records({"request_id": "rejected"})
+    for identity in ("second", "third"):
+        if identity == "third":
+            admit(identity, 486)
+        runtime.store.finish(
+            identity,
+            state=finished(
+                caller,
+                identity,
+                upstream_attempts=0,
+                upstream_result="not_started",
+                usage=None,
+                usage_final=False,
+            ),
+            http_status=499,
+            duration_ms=1,
+        )
+    assert len(scans) == 1, "Ordinary admissions and receipts must not rescan settled history"
+    assert runtime.store.quota(caller["id"])["charged_or_reserved_tokens"] == 14
+
+    # Simulate old/corrected history edited through a different connection, or a
+    # non-admission write on this one. Neither may leave a stale permissive total.
+    with contextlib.ExitStack() as stack:
+        writer = (
+            stack.enter_context(contextlib.closing(Store(runtime.store.path)))
+            if external
+            else runtime.store
+        )
+        with writer.transaction() as db:
+            db.execute(
+                "UPDATE requests SET usage_json=? WHERE request_id='first'",
+                (json.dumps({"prompt_tokens": 12, "completion_tokens": 2, "total_tokens": 1}),),
+            )
+    with pytest.raises(GatewayError) as error:
+        admit("after-edit", 16)
+    assert error.value.code == (
+        "quota_usage_unknown" if kind == "tokens" else "budget_cost_unknown"
+    )
+    assert len(scans) == 2
+    assert runtime.store.quota(caller["id"])["charged_or_reserved_tokens"] == 400
+
+
+def test_quota_cache_eviction_and_failed_settlement_cannot_release_reservations(
+    runtime, monkeypatch
+):
+    import selark.storage as storage
+
+    monkeypatch.setattr(type(runtime.store.quota_cache), "MAX_ENTRIES", 2)
+    callers = [
+        runtime.store.create_token(str(i), policy={"daily_token_limit": 500}) for i in range(3)
+    ]
+
+    def admit(caller, identity, tokens):
+        runtime.store.attempt(
+            identity,
+            "mimo-test",
+            None,
+            "mimo-default",
+            started_at=utc_now(),
+            purpose="chat",
+            resource={
+                "caller": caller["id"],
+                "provider": "mimo",
+                "estimate": tokens - 16,
+                "output": 16,
+                "price": None,
+                "alias": None,
+            },
+        )
+
+    for i, caller in enumerate(callers):
+        admit(caller, f"reserved-{i}", 400)
+    assert len(runtime.store.quota_cache.entries) == 2
+    with pytest.raises(GatewayError, match="配额不足"):
+        admit(callers[0], "after-eviction", 116)
+    original = storage.settle
+
+    def failed_settle(*args):
+        original(*args)
+        raise sqlite3.OperationalError("synthetic transaction failure")
+
+    with monkeypatch.context() as context:
+        context.setattr(storage, "settle", failed_settle)
+        with pytest.raises(sqlite3.OperationalError):
+            runtime.store.finish(
+                "reserved-0",
+                state=finished(callers[0], "reserved-0"),
+                http_status=200,
+                duration_ms=1,
+            )
+    with pytest.raises(GatewayError, match="配额不足"):
+        admit(callers[0], "after-rollback", 116)
+    assert runtime.store.quota(callers[0]["id"])["charged_or_reserved_tokens"] == 400
 
 
 def test_caller_concurrency_and_cancellation_do_not_block_other_app(runtime):
@@ -560,7 +710,7 @@ def test_output_input_limits_and_refusal_usage(runtime):
 
 
 def test_queued_alias_change_rechecks_access_before_dispatch(runtime):
-    from .test_resilience import Wire, limited, wait_until
+    from .support.asgi import Wire, limited, wait_until
 
     runtime.add_connection("second", "deepseek", "fake", allowed_models=["mimo-test"])
     runtime.edit_resource("alias", "fast", {"connection_id": "mimo-default", "model": "mimo-test"})
@@ -609,7 +759,7 @@ def test_queued_alias_change_rechecks_access_before_dispatch(runtime):
 
 @pytest.mark.parametrize("streaming", [False, True])
 def test_client_disconnect_retains_reservation_and_fails_closed(runtime, streaming):
-    from .test_resilience import Wire
+    from .support.asgi import Wire
 
     caller = runtime.store.create_token(
         "disconnect", policy={"daily_token_limit": 10000, "max_concurrent_requests": 1}

@@ -1,7 +1,12 @@
-"""Bounded-depth, finite-number JSON for data received from upstreams."""
+"""Bounded upstream JSON validation and cancellation-safe response cleanup."""
 
+import asyncio
+import contextlib
 import json
 import math
+
+import anyio
+import httpx
 
 
 def strict_json(data):
@@ -28,3 +33,9 @@ def strict_json(data):
         elif isinstance(value, list):
             pending.extend((child, depth + 1) for child in value)
     return result
+
+
+async def close_response(response):
+    with anyio.CancelScope(shield=True):
+        with contextlib.suppress(TimeoutError, httpx.HTTPError):
+            await asyncio.wait_for(response.aclose(), timeout=2)

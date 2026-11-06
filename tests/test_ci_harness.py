@@ -9,7 +9,7 @@ import pytest
 from scripts.verify_resource_matrix import mixed_burst
 
 from .four_resources import FourUpstreams, app_for, auth, caller, payload
-from .test_resource_matrix import resources as resources
+from .support.resources import resources as resources
 
 
 def test_latency_report_uses_paired_signed_differences_and_nearest_rank():

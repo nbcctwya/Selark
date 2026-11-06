@@ -27,7 +27,7 @@ from .four_resources import (
 from .support.governance import allocation, finished, price
 from .support.governance import runtime as runtime
 from .support.protocol import ByteStream, completion, event, sse
-from .test_resource_matrix import resources as resources
+from .support.resources import resources as resources
 
 
 @pytest.mark.parametrize("ending", ["deadline", "task_cancel", "shutdown"])

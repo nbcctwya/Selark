@@ -8,65 +8,24 @@ from fastapi.testclient import TestClient
 
 from selark.app import create_app
 from selark.cli import main
-from selark.config import ConfigError, initialize
+from selark.config import ConfigError
 from selark.connections import require_connection
 from selark.errors import GatewayError
 from selark.providers.discovery import discover
 from selark.runtime import Runtime, fingerprint
 
-from .support.protocol import PNG_DATA_URL, completion, event, function_tools, sse, tool_calls
-
-
-@pytest.fixture
-def multi(tmp_path, monkeypatch):
-    monkeypatch.delenv("SELARK_DATA_DIR", raising=False)
-    initialize(tmp_path, "fake-mimo-key", models=["shared"], default_model="shared")
-    with Runtime(tmp_path) as runtime:
-        yield runtime
-
-
-def token(runtime):
-    value = json.loads((runtime.directory / "client.json").read_text())["access_token"]
-    return {"Authorization": "Bearer " + value}
-
-
-def native_reply():
-    return {
-        "id": "msg-test",
-        "type": "message",
-        "role": "assistant",
-        "model": "claude-test",
-        "content": [{"type": "text", "text": "OK"}],
-        "stop_reason": "end_turn",
-        "usage": {"input_tokens": 12, "output_tokens": 2, "cache_read_input_tokens": 0},
-    }
-
-
-def native_events(*, complete=True):
-    messages = [
-        {
-            "type": "message_start",
-            "message": {
-                "id": "msg-test",
-                "model": "claude-test",
-                "type": "message",
-                "usage": {"input_tokens": 12, "output_tokens": 1, "cache_read_input_tokens": 0},
-            },
-        },
-        {"type": "ping"},
-        {"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}},
-        {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": "OK"}},
-        {"type": "content_block_stop", "index": 0},
-        {"type": "message_delta", "delta": {}, "usage": {"output_tokens": 2}},
-        {
-            "type": "message_delta",
-            "delta": {"stop_reason": "end_turn"},
-            "usage": {"output_tokens": 2},
-        },
-    ]
-    if complete:
-        messages.append({"type": "message_stop"})
-    return sse(*messages)
+from .support.protocol import (
+    PNG_DATA_URL,
+    completion,
+    event,
+    function_tools,
+    native_events,
+    native_reply,
+    sse,
+    tool_calls,
+)
+from .support.resources import multi as multi
+from .support.resources import token
 
 
 @pytest.mark.parametrize(
@@ -894,7 +853,7 @@ def test_official_tool_roundtrip_preserves_calls_results_and_usage(multi, provid
 def test_native_protocol_preserves_tools_thinking_headers_and_terminal(
     multi, provider, wire, path, streaming
 ):
-    from .test_chatgpt import result as responses_result
+    from .support.protocol import responses_result as responses_result
 
     multi.add_connection(
         "native-tools",

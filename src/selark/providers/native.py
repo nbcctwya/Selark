@@ -5,10 +5,10 @@ import re
 import httpx
 
 from selark.errors import GatewayError
-from selark.protocol import strict_json
+from selark.protocol import close_response, strict_json
 from selark.providers.anthropic import usage as messages_usage
 from selark.providers.compatible import unsupported
-from selark.providers.mimo import close_response, protocol_error, response_identity
+from selark.providers.mimo import protocol_error, response_identity
 from selark.sse import SSEDecoder, async_sse_lines
 from selark.usage import response_usage, sanitize_usage
 
@@ -20,7 +20,7 @@ NATIVE_PROTOCOLS = {
     "chatgpt": {"responses"},
     "anthropic": {"messages"},
     "kimi-code": {"responses", "messages"},
-    # A relay is explicitly configured by its owner; unsupported routes fail once upstream.
+    # Custom API endpoints are owner-configured; unsupported routes fail once upstream.
     "openai-compatible": {"responses", "messages"},
 }
 

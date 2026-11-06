@@ -100,3 +100,100 @@ def sse(*items):
         "data: " + (x if isinstance(x, str) else json.dumps(x, ensure_ascii=False)) + "\n\n"
         for x in items
     ).encode()
+
+
+def native_reply():
+    return {
+        "id": "msg-test",
+        "type": "message",
+        "role": "assistant",
+        "model": "claude-test",
+        "content": [{"type": "text", "text": "OK"}],
+        "stop_reason": "end_turn",
+        "usage": {"input_tokens": 12, "output_tokens": 2, "cache_read_input_tokens": 0},
+    }
+
+
+def native_events(*, complete=True):
+    messages = [
+        {
+            "type": "message_start",
+            "message": {
+                "id": "msg-test",
+                "model": "claude-test",
+                "type": "message",
+                "usage": {"input_tokens": 12, "output_tokens": 1, "cache_read_input_tokens": 0},
+            },
+        },
+        {"type": "ping"},
+        {"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}},
+        {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": "OK"}},
+        {"type": "content_block_stop", "index": 0},
+        {"type": "message_delta", "delta": {}, "usage": {"output_tokens": 2}},
+        {
+            "type": "message_delta",
+            "delta": {"stop_reason": "end_turn"},
+            "usage": {"output_tokens": 2},
+        },
+    ]
+    if complete:
+        messages.append({"type": "message_stop"})
+    return sse(*messages)
+
+
+RESPONSES_USAGE = {
+    "input_tokens": 12,
+    "output_tokens": 3,
+    "total_tokens": 15,
+    "input_tokens_details": {"cached_tokens": 0},
+    "output_tokens_details": {"reasoning_tokens": 1},
+}
+
+
+def responses_result(status="completed", usage=RESPONSES_USAGE, text="Hello"):
+    return {
+        "id": "resp_test",
+        "object": "response",
+        "status": status,
+        "model": "gpt-test",
+        "created_at": 1,
+        "output": [
+            {
+                "id": "msg_test",
+                "type": "message",
+                "role": "assistant",
+                "content": [{"type": "output_text", "text": text}],
+            }
+        ],
+        "usage": usage,
+    }
+
+
+def responses_events(status="completed", usage=RESPONSES_USAGE, *, terminal=True):
+    values = [
+        {"type": "response.created", "response": responses_result("in_progress", None)},
+        {
+            "type": "response.output_text.delta",
+            "item_id": "msg_test",
+            "output_index": 0,
+            "content_index": 0,
+            "delta": "Hello",
+        },
+    ]
+    if terminal:
+        final = responses_result(status, usage)
+        if status == "failed":
+            final["error"] = {
+                "code": "subscription_sharing_usage_limit_exceeded",
+                "message": "secret-must-not-echo",
+            }
+        values.append({"type": "response." + status, "response": final})
+    return values
+
+
+def responses_reply(values=None):
+    return httpx.Response(
+        200,
+        content=sse(*(values if values is not None else responses_events())),
+        headers={"Content-Type": "text/event-stream"},
+    )

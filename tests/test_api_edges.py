@@ -181,7 +181,8 @@ def test_sse_fragments_preserve_utf8_bom_and_all_newline_styles(size):
 
 
 @pytest.mark.parametrize("wire", ["responses", "messages"])
-def test_native_entrypoints_enforce_auth_output_quota_and_bound_json(isolated, wire):
+def test_native_entrypoints_enforce_auth_output_quota_and_bound_json(isolated, wire, caplog):
+    caplog.set_level("INFO", logger="selark.requests")
     runtime, legacy = isolated
     issued = runtime.store.create_token("restricted-native", policy={"max_output_tokens": 8})
     auth = {"Authorization": "Bearer " + issued["token"]}
@@ -214,6 +215,10 @@ def test_native_entrypoints_enforce_auth_output_quota_and_bound_json(isolated, w
             assert client.post(path, headers=both, json=body).status_code == 401
         assert client.get("/health").json()["capacity"]["admitted"] == 0
     assert not calls
+    events = [
+        json.loads(record.message) for record in caplog.records if record.name == "selark.requests"
+    ]
+    assert {401, 403, 400}.issubset({event["status"] for event in events if event["path"] == path})
     # Function JSON Schemas use opaque dictionaries but still reject non-finite JSON.
     with TestClient(
         create_app(
@@ -239,6 +244,47 @@ def test_native_entrypoints_enforce_auth_output_quota_and_bound_json(isolated, w
 
 
 @pytest.mark.parametrize(
+    "body",
+    [
+        {"input": "  " + "x" * 1000 + "\n"},
+        {"input": [{"role": "user", "content": "  " + "x" * 1000 + "\n"}]},
+        {"input": None, "instructions": "x" * 1000},
+        {"instructions": "x" * 1000},
+        {"previous_response_id": "resp_previous"},
+    ],
+)
+def test_responses_input_shapes_enforce_input_policy_without_rewriting(isolated, body):
+    from .support.protocol import responses_result as result
+
+    runtime, _ = isolated
+    issued = runtime.store.create_token(
+        "input-limited", policy={"max_estimated_input_tokens": 2000}
+    )
+    auth = {"Authorization": "Bearer " + issued["token"]}
+    calls = []
+
+    def upstream(request):
+        calls.append(json.loads(request.content))
+        return httpx.Response(200, json=result())
+
+    with TestClient(
+        create_app(runtime.settings(), runtime=runtime, transport=httpx.MockTransport(upstream))
+    ) as client:
+        response = client.post("/v1/responses", headers=auth, json=body | {"max_output_tokens": 16})
+        assert response.status_code == 200
+        assert calls == [body | {"max_output_tokens": 16, "model": "mimo-test", "stream": False}]
+        rejected = client.post(
+            "/v1/responses",
+            headers=auth,
+            json=body | {"instructions": "x" * 3000, "max_output_tokens": 16},
+        )
+        assert rejected.status_code == 403
+        assert rejected.json()["error"]["code"] == "input_estimate_exceeded"
+        assert len(calls) == 1
+        assert client.get("/health").json()["capacity"]["admitted"] == 0
+
+
+@pytest.mark.parametrize(
     "wire,ending",
     [
         ("responses", "missing"),
@@ -251,9 +297,8 @@ def test_native_entrypoints_enforce_auth_output_quota_and_bound_json(isolated, w
     ],
 )
 def test_native_stream_failure_keeps_usage_and_releases_capacity(isolated, wire, ending):
-    from .support.protocol import sse
-    from .test_chatgpt import result
-    from .test_connections import native_reply
+    from .support.protocol import native_reply, sse
+    from .support.protocol import responses_result as result
 
     runtime, auth = isolated
     if wire == "responses":

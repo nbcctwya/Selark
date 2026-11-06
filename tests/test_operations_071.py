@@ -1,6 +1,5 @@
 """Offline overview, recovery isolation, log retention and service control safety."""
 
-import hashlib
 import json
 import logging
 import os
@@ -29,14 +28,7 @@ from selark.service import (
 
 from .support.governance import allocation, finished
 from .support.governance import runtime as runtime
-
-
-def contents(directory):
-    return {
-        str(p.relative_to(directory)): hashlib.sha256(p.read_bytes()).hexdigest()
-        for p in directory.rglob("*")
-        if p.is_file() and not p.name.endswith(("-wal", "-shm"))
-    }
+from .support.resources import contents
 
 
 def test_status_is_read_only_and_separates_evidence(runtime, monkeypatch, capsys):

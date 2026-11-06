@@ -15,30 +15,13 @@ from selark.cli import main
 from selark.config import ConfigError, _write_private, initialize, server_document
 from selark.dashboard import ASSETS, Session, create_dashboard
 from selark.runtime import fingerprint
-from selark.storage import utc_now
+from selark.storage import Store, utc_now
 
+from .support.dashboard import BOOTSTRAP, HEADERS, ORIGIN, dashboard, login
 from .support.governance import allocation, finished, price
 from .support.governance import runtime as runtime
 from .support.protocol import UPSTREAM_KEY
-from .test_operations_071 import contents
-
-ORIGIN = "http://127.0.0.1:8790"
-BOOTSTRAP = "test-dashboard-bootstrap-not-a-caller-token"
-HEADERS = {"X-Selark-Dashboard": "1"}
-
-
-def dashboard(directory, **options):
-    return TestClient(
-        create_dashboard(directory, port=8790, bootstrap=BOOTSTRAP, **options),
-        base_url=ORIGIN,
-    )
-
-
-def login(client):
-    result = client.post("/api/session", json={"token": BOOTSTRAP}, headers={"Origin": ORIGIN})
-    assert result.status_code == 200
-    client.headers["X-Selark-Session"] = result.json()["session_token"]
-    return result
+from .support.resources import contents
 
 
 @pytest.mark.parametrize("path", ["snapshot", "records", "logs", "backups"])
@@ -254,7 +237,7 @@ def test_full_read_only_snapshot_redacts_secrets_and_preserves_unknowns(runtime,
     assert before == contents(runtime.directory)
 
 
-def test_accounting_filtering_pagination_and_trend_consistency(runtime):
+def test_accounting_filtering_pagination_and_trend_consistency(runtime, monkeypatch):
     caller = runtime.store.create_token("editor")
     second = runtime.store.create_token("other")
     quote = price(runtime)
@@ -278,10 +261,28 @@ def test_accounting_filtering_pagination_and_trend_consistency(runtime):
         )
     runtime.store.begin_request("pending", utc_now(), caller["id"], "mimo-default", "chat")
     runtime.store.begin_request("unknown-time", None, caller["id"], "mimo-default", "chat")
+    runtime.store.finish(
+        "old-history",
+        state=finished(
+            caller, "old-history", started_at=(datetime.now(UTC) - timedelta(days=90)).isoformat()
+        ),
+        http_status=200,
+        duration_ms=1,
+    )
     filters = data.query_filters(
         {"caller_id": caller["id"], "model": "mimo-test", "connection_id": "mimo-default"}
     )
-    result = data.snapshot(runtime.directory, filters, offline=True)["usage"]
+    original = Store.summary
+
+    def filtered_summary(store, selected, **options):
+        assert selected.get("since") and selected.get("until"), (
+            "Dashboard must not aggregate lifetime history"
+        )
+        return original(store, selected, **options)
+
+    with monkeypatch.context() as context:
+        context.setattr(Store, "summary", filtered_summary)
+        result = data.snapshot(runtime.directory, filters, offline=True)["usage"]
     cli = runtime.store.summary(filters)["summary"]
     assert result["summary"]["known_tokens"] == cli["known_tokens"]
     assert result["summary"]["estimated_cost_by_currency"] == cli["estimated_cost_by_currency"]
@@ -362,7 +363,8 @@ def test_filter_boundaries_timezone_sql_injection_and_zero_usage(runtime):
     assert data.records(runtime.directory, filters | {"model": "' OR 1=1 --"})["total"] == 0
 
 
-def test_logs_are_projected_and_backups_never_claim_integrity(runtime):
+@pytest.mark.parametrize("request_path", ["/v1/chat/completions", "/v1/messages", "/v1/responses"])
+def test_logs_are_projected_and_backups_never_claim_integrity(runtime, request_path):
     root = runtime.data_dir / "logs"
     root.mkdir(mode=0o700)
     path = root / "selark.log"
@@ -371,7 +373,7 @@ def test_logs_are_projected_and_backups_never_claim_integrity(runtime):
         + json.dumps(
             {
                 "timestamp": utc_now(),
-                "path": "/v1/chat/completions",
+                "path": request_path,
                 "status": 500,
                 "duration_ms": 123,
                 "api_key": UPSTREAM_KEY,
@@ -385,6 +387,7 @@ def test_logs_are_projected_and_backups_never_claim_integrity(runtime):
     result = data.log_events(runtime.directory)
     assert result["omitted"] == 1
     assert result["items"][0]["status"] == 500
+    assert result["items"][0]["path"] == request_path
     assert "sensitive" not in json.dumps(result) and UPSTREAM_KEY not in json.dumps(result)
     runtime.backup("private reason not sent to browser")
     before = contents(runtime.directory)

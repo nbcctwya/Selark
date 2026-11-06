@@ -2,120 +2,29 @@
 
 import asyncio
 import json
-import time
 
 import httpx
 import pytest
 from fastapi.testclient import TestClient
-from pydantic import SecretStr, ValidationError
+from pydantic import ValidationError
 
-from selark.app import create_app
-from selark.chatgpt_auth import ISSUER, SCOPES, ChatGPTAuth, Profile, cleared
+from selark.chatgpt_auth import cleared
 from selark.cli import main
-from selark.config import ConfigError, initialize
+from selark.config import ConfigError
 from selark.connections import ConnectionConfig, require_connection
 from selark.providers.discovery import discover
 from selark.runtime import Runtime, discovery_fingerprint, fingerprint
 
+from .support.chatgpt import PAYLOAD, POLICY
+from .support.chatgpt import resource as resource
+from .support.governance import app_for
+from .support.governance import auth as headers
 from .support.protocol import PNG_DATA_URL, sse
-from .test_connections import token as legacy_headers
-
-PAYLOAD = {"connection_id": "personal", "messages": [{"role": "user", "content": "hello"}]}
-USAGE = {
-    "input_tokens": 12,
-    "output_tokens": 3,
-    "total_tokens": 15,
-    "input_tokens_details": {"cached_tokens": 0},
-    "output_tokens_details": {"reasoning_tokens": 1},
-}
-POLICY = {
-    "allow_chatgpt_subscriptions": True,
-    "allowed_connections": ["personal"],
-    "chatgpt_output_reservation": 128,
-    "daily_token_limit": 10000,
-}
-
-
-def result(status="completed", usage=USAGE, text="Hello"):
-    return {
-        "id": "resp_test",
-        "object": "response",
-        "status": status,
-        "model": "gpt-test",
-        "created_at": 1,
-        "output": [
-            {
-                "id": "msg_test",
-                "type": "message",
-                "role": "assistant",
-                "content": [{"type": "output_text", "text": text}],
-            }
-        ],
-        "usage": usage,
-    }
-
-
-def events(status="completed", usage=USAGE, *, terminal=True):
-    values = [
-        {"type": "response.created", "response": result("in_progress", None)},
-        {
-            "type": "response.output_text.delta",
-            "item_id": "msg_test",
-            "output_index": 0,
-            "content_index": 0,
-            "delta": "Hello",
-        },
-    ]
-    if terminal:
-        final = result(status, usage)
-        if status == "failed":
-            final["error"] = {
-                "code": "subscription_sharing_usage_limit_exceeded",
-                "message": "secret-must-not-echo",
-            }
-        values.append({"type": "response." + status, "response": final})
-    return values
-
-
-def reply(values=None):
-    return httpx.Response(
-        200,
-        content=sse(*(values if values is not None else events())),
-        headers={"Content-Type": "text/event-stream"},
-    )
-
-
-@pytest.fixture
-def resource(tmp_path, monkeypatch):
-    monkeypatch.delenv("SELARK_DATA_DIR", raising=False)
-    initialize(tmp_path, "fake-existing-key", models=["mimo-test"], default_model="mimo-test")
-    with Runtime(tmp_path) as runtime:
-        runtime.add_connection("personal", "chatgpt", None, allowed_models=["gpt-test"])
-        auth = ChatGPTAuth(tmp_path)
-        auth.write(
-            Profile(
-                connection_id="personal",
-                client_id="fake-issued-client",
-                issuer=ISSUER,
-                subject="fake-subject",
-                generation=1,
-                state="connected",
-                scopes=SCOPES.split(),
-                access_token=SecretStr("fake-own-access"),
-                refresh_token=SecretStr("fake-own-refresh"),
-                expires_at=time.time() + 3600,
-            )
-        )
-        caller = runtime.store.create_token("personal client", policy=POLICY)
-        yield runtime, caller, auth
-
-
-def headers(caller):
-    return {"Authorization": "Bearer " + caller["token"]}
-
-
-def app_for(runtime, handler):
-    return create_app(runtime.settings(), runtime=runtime, transport=httpx.MockTransport(handler))
+from .support.protocol import RESPONSES_USAGE as USAGE
+from .support.protocol import responses_events as events
+from .support.protocol import responses_reply as reply
+from .support.protocol import responses_result as result
+from .support.resources import token as legacy_headers
 
 
 @pytest.mark.parametrize("streaming", [False, True])
@@ -395,7 +304,7 @@ def test_cli_offline_status_and_usage(resource, monkeypatch, capsys):
 
 @pytest.mark.parametrize("streaming", [False, True])
 def test_actual_usage_survives_delivery_failure(resource, streaming):
-    from .test_resilience import Wire
+    from .support.asgi import Wire
 
     runtime, caller, _ = resource
 
@@ -425,7 +334,7 @@ def test_actual_usage_survives_delivery_failure(resource, streaming):
 @pytest.mark.parametrize("streaming", [False, True])
 @pytest.mark.parametrize("stage", ["headers", "body"])
 def test_disconnect_closes_and_keeps_unknown_reservation(resource, streaming, stage):
-    from .test_resilience import Wire
+    from .support.asgi import Wire
 
     runtime, caller, _ = resource
 

@@ -151,10 +151,10 @@ POST `/api/connections` 示例：
 
 ```json
 {
-  "id": "my-relay",
+  "id": "custom-api",
   "provider": "openai-compatible",
-  "name": "我的中转",
-  "base_url": "https://relay.example/v1",
+  "name": "自定义 API",
+  "base_url": "https://api.example.com/v1",
   "api_key": "YOUR_PROVIDER_API_KEY"
 }
 ```

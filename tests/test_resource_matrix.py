@@ -15,17 +15,10 @@ from .four_resources import (
     app_for,
     auth,
     caller,
-    configure,
     payload,
     until,
 )
-
-
-@pytest.fixture
-def resources(tmp_path, monkeypatch):
-    monkeypatch.delenv("SELARK_DATA_DIR", raising=False)
-    with configure(tmp_path / "config") as runtime:
-        yield runtime
+from .support.resources import resources as resources
 
 
 # Routing is resolved before the adapter is selected. Each resource keeps every

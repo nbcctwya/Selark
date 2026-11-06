@@ -21,65 +21,9 @@ from selark.storage import Store, utc_now
 
 from .support.governance import app_for, auth, finished
 from .support.governance import runtime as runtime
-from .support.protocol import PNG_DATA_URL, completion, event, sse
-
-MODEL = "kimi-for-coding"
-PLAN = "personal-code"
-PAYLOAD = {
-    "connection_id": PLAN,
-    "messages": [{"role": "user", "content": "Fix this Python: return 1 + 1"}],
-    "max_tokens": 32,
-    "interaction": "personal_coding",
-}
-
-
-def quota():
-    return {
-        "usages": {
-            "limit_5h": {"used_ratio": 0, "reset_time": "2026-10-28T15:00:00Z"},
-            "limit_7d": {"used_ratio": 0.413, "reset_time": "2026-10-30T00:00:00Z"},
-        },
-        "booster_wallet": {"status": "STATUS_DISABLED", "private_user_id": "must-not-save"},
-        "usage": {
-            "limit": "100",
-            "used": "41",
-            "remaining": "59",
-            "resetTime": "2026-10-30T00:00:00.100Z",
-        },
-    }
-
-
-def reply(usage=True):
-    data = completion(usage) | {"model": MODEL}
-    data["choices"][0]["message"]["reasoning_content"] = "Check the addition."
-    return data
-
-
-@pytest.fixture
-def plan(runtime):
-    runtime.add_connection(PLAN, "kimi-code", "fake-plan-key", allowed_models=[MODEL])
-    return runtime.connection_settings()[-1]
-
-
-def caller(runtime, **patch):
-    return runtime.store.create_token(
-        "personal", policy={"allow_token_plans": True, "allowed_connections": [PLAN], **patch}
-    )
-
-
-def handler(calls, *, quota_data=None, response=None):
-    def upstream(request):
-        calls.append(request)
-        assert request.headers["authorization"] == "Bearer fake-plan-key"
-        assert request.headers["user-agent"].startswith("Selark/")
-        assert "Claude" not in request.headers["user-agent"]
-        if request.method == "GET":
-            assert request.url.path == "/coding/v1/usages"
-            return httpx.Response(200, json=quota_data if quota_data is not None else quota())
-        assert request.url.path == "/coding/v1/chat/completions"
-        return response if response is not None else httpx.Response(200, json=reply())
-
-    return upstream
+from .support.protocol import PNG_DATA_URL, event, sse
+from .support.token_plans import MODEL, PAYLOAD, PLAN, caller, handler, quota, reply
+from .support.token_plans import plan as plan
 
 
 def test_old_tokens_deny_plans_and_explicit_connection_and_intent_required(runtime, plan):
@@ -573,9 +517,8 @@ def test_official_plan_endpoint_cannot_bypass_policy_as_ordinary_api(runtime, pr
 
 @pytest.mark.parametrize("wire", ["chat/completions", "messages", "responses"])
 def test_plan_official_tools_keep_intent_quota_and_real_identity(runtime, plan, wire):
-    from .support.protocol import function_tools, tool_calls
-    from .test_chatgpt import result as response_result
-    from .test_connections import native_reply
+    from .support.protocol import function_tools, native_reply, tool_calls
+    from .support.protocol import responses_result as response_result
 
     issued = caller(runtime)
     calls = []

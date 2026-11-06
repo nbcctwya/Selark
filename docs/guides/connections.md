@@ -25,9 +25,9 @@ selark connection discover deepseek-work  # 之后可显式刷新列表；不生
 selark model enable deepseek-work deepseek-flash
 selark model default deepseek-work deepseek-flash
 
-selark connection add relay-work --provider openai-compatible \
-  --base-url https://relay.example/v1 --name 'Relay Work'
-selark connection set relay-work --models YOUR_TEXT_MODEL --default-model YOUR_TEXT_MODEL
+selark connection add custom-api --provider openai-compatible \
+  --base-url https://api.example.com/v1 --name 'Custom API'
+selark connection set custom-api --models YOUR_TEXT_MODEL --default-model YOUR_TEXT_MODEL
 
 selark connection disable deepseek-work
 selark connection enable deepseek-work
@@ -56,6 +56,30 @@ Key 可来自厂商环境变量：`MIMO_API_KEY`、`DEEPSEEK_API_KEY`、`ZHIPU_A
 `init` 仍用于首次初始化原 MiMo 服务；当前已有配置，不应重新初始化。
 所有管理和客户端命令仍按原用户目录规则找配置，不依赖当前目录或源码文件。
 
+## 通用 API 接入
+
+Dashboard 新建连接时选择 **通用 API（OpenAI 兼容）**，填写连接 ID、服务商给出的 Base URL 和 API Key，
+保存后手动发现并启用模型。底层配置标识仍为 `openai-compatible`，现有兼容连接可以继续使用。
+它适用于提供兼容协议的云端服务、企业网关及本机模型服务，地址与模型均由你指定。
+
+Base URL 是接口前缀，例如 `https://api.example.com/v1` 或 `http://127.0.0.1:8000/v1`，
+不要填入 `/chat/completions` 等具体操作路径。自定义前缀会保留；非本机地址要求 HTTPS。
+若服务不提供模型目录，可直接使用它公布的模型 ID：
+
+```bash
+selark connection add custom-api --provider openai-compatible \
+  --base-url https://api.example.com/v1 --name 'Custom API' \
+  --models YOUR_MODEL_ID --default-model YOUR_MODEL_ID
+```
+
+命令会隐藏询问 Key；脚本可用 `--api-key-env VARIABLE_NAME` 读取环境变量。
+手动填写模型不会访问上游目录；只保存连接可加 `--no-discover`。不会自动发起生成测试。
+
+默认使用 Bearer 鉴权和 Chat Completions。调用 Selark 的 `/v1/responses` 或 `/v1/messages`
+时，同协议请求会转发至该 Base URL 下的对应路径，前提是上游提供该接口并接受连接的鉴权方式。
+需要 Anthropic `x-api-key` 鉴权的服务应选择 `anthropic` 并设置相应 Base URL。
+“通用”表示兼容现有协议，不会自动识别任意 API、猜测端点或在失败后换协议重试。
+
 ## 路由与模型来源
 
 `GET /v1/models` 汇总已启用连接中已启用且当前应用获权的模型，不访问上游，也不返回仅发现的模型。
@@ -70,7 +94,7 @@ selark models --connection deepseek-personal --json
 selark ask '只回复 OK' --connection deepseek-personal --max-tokens 16
 selark ask '只回复 OK' --model 'deepseek-personal::deepseek-flash' --max-tokens 16
 selark ask --messages /absolute/path/messages.json \
-  --connection relay-personal --model claude-sonnet-4-6 --stream --max-tokens 32
+  --connection custom-api --model YOUR_MODEL_ID --stream --max-tokens 32
 ```
 
 HTTP 两种写法等效：
@@ -95,7 +119,7 @@ CLI 的 stderr 元数据也包含连接 ID。客户端配置可选 `connection_i
 selark records list --connection deepseek-personal --json
 selark usage --group-by connection --json
 selark usage --group-by model --json
-selark usage --connection relay-personal --today --tz Asia/Shanghai --json
+selark usage --connection custom-api --today --tz Asia/Shanghai --json
 ```
 
 `--group-by model` 按 `(connection_id, 实际 model)` 分组，同名模型不合并。
@@ -145,7 +169,7 @@ API 模型与账户权限会变化，示例模型名和发现结果不能代替�
 | kimi | `https://api.moonshot.ai/v1` | Bearer、Chat Completions；K2.5/K2.6 非思考；K3 保留显式思考历史。仅模拟验证，可覆盖为账户对应官方区域地址。 |
 | openai | `https://api.openai.com/v1` | Bearer、文本 Chat Completions、`max_completion_tokens`、流式 include_usage。2026-10-30 真实验证 `gpt-4o-mini` 及 GPT-6 Astra、6.1 Sol、6 Luna、6.1 Terra 普通/SSE；见[脱敏测试摘要](../verification/openai-verification.md)。未实现 Responses-only 模型接口。 |
 | anthropic | `https://api.anthropic.com/v1` | 原生 Messages、`x-api-key`、版本 `2026-10-21`，原生 SSE 转统一文本流。仅模拟验证。 |
-| openai-compatible | 必须指定 | Bearer 与常见 Chat Completions；真实验证用户指定中转站的 `claude-sonnet-4-6`。不能据此声称已实测 Anthropic 官方原生接口。 |
+| openai-compatible | 必须指定 | 通用 API：自定义地址、Key 与模型，Bearer 鉴权；Chat Completions 及上游提供的 Responses / Messages。具体服务兼容范围须单独验证。 |
 
 2026-10-30 的 OpenAI 实测使用当前 0.7.2 源码、临时本地 HTTP 服务和内存中的连接密钥。
 官方模型列表返回 130 个模型；`gpt-4o-mini` 两次生成均为 HTTP 200，普通回复、SSE
@@ -190,8 +214,8 @@ Anthropic 按 [鉴权与版本](https://platform.claude.com/docs/en/api/overview
 拒绝未支持的惩罚参数和对话中途的 system 消息。非工作区专属 Key 可用 `--workspace-id` 配置所需工作区。
 `message_start` 与后续 `message_delta` 用量按字段覆盖；只有 `message_stop` 才转换为成功 `[DONE]`。
 
-对兼容中转可设置 `connection set ID --token-parameter max_completion_tokens`；默认使用 `max_tokens`。
-不接受 `stream_options` 的中转可设 `--no-stream-usage`，届时若上游不报告用量就保持未知。
+对通用 API 可设置 `connection set ID --token-parameter max_completion_tokens`；默认使用 `max_tokens`。
+不接受 `stream_options` 的服务可设 `--no-stream-usage`，届时若上游不报告用量就保持未知。
 没有自动协议猜测、自动更换模型或失败后重复生成。
 
 ## 用量口径

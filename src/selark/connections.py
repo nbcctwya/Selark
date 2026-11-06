@@ -22,7 +22,7 @@ PRESETS = {
     "openai": ("OpenAI", "https://api.openai.com/v1"),
     "chatgpt": ("ChatGPT 个人订阅", "https://api.openai.com/v1"),
     "anthropic": ("Anthropic", "https://api.anthropic.com/v1"),
-    "openai-compatible": ("OpenAI 兼容中转", None),
+    "openai-compatible": ("通用 API（OpenAI 兼容）", None),
 }
 PRESETS.update({key: (value["name"], value["base_urls"][0]) for key, value in PLAN_PRESETS.items()})
 ProviderName = Literal[

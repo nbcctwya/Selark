@@ -177,6 +177,7 @@ REQUEST_MODELS = {
     "/v1/responses": ResponsesRequest,
     "/v1/messages": MessagesRequest,
 }
+REQUEST_LOG_PATHS = frozenset({"/health", "/v1/models", *REQUEST_MODELS})
 
 
 def validation_fields(error):

@@ -6,9 +6,9 @@ import time
 import httpx
 
 from selark.errors import GatewayError
-from selark.protocol import strict_json
+from selark.protocol import close_response, strict_json
 from selark.providers.compatible import unsupported
-from selark.providers.mimo import MiMoProvider, close_response, protocol_error, reported_usage
+from selark.providers.mimo import MiMoProvider, protocol_error, reported_usage
 from selark.sse import SSEDecoder, async_sse_lines
 
 

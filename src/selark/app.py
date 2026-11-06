@@ -24,11 +24,11 @@ from selark.errors import GatewayError
 from selark.governance import Policy, ResourcesConfig, enforce_access, input_estimate, permitted
 from selark.persistence import AsyncLedger, Journal
 from selark.plans import PLAN_PRESETS, empty_quota, enforce_quota, interaction_purpose, query_quota
-from selark.protocol import strict_json
+from selark.protocol import close_response, strict_json
 from selark.providers.factory import provider_for
 from selark.providers.mimo import reported_usage
 from selark.runtime import Runtime, capability_fingerprint, fingerprint
-from selark.schemas import REQUEST_MODELS, ChatRequest, validation_fields
+from selark.schemas import REQUEST_LOG_PATHS, REQUEST_MODELS, ChatRequest, validation_fields
 from selark.storage import Store, request_status, utc_now
 from selark.usage import observe_usage
 
@@ -38,12 +38,6 @@ MAX_BODY_BYTES = 1024 * 1024
 
 class DeliveryFailure(Exception):
     pass
-
-
-async def close_upstream(response):
-    with anyio.CancelScope(shield=True):
-        with contextlib.suppress(TimeoutError, httpx.HTTPError):
-            await asyncio.wait_for(response.aclose(), timeout=2)
 
 
 class RequestMiddleware:
@@ -258,10 +252,7 @@ class RequestMiddleware:
                 state["chat_input"] = data
                 state["session_id"] = data.session_id
                 state["model"] = data.model
-                policy = Policy.model_validate(
-                    await self.storage.call("policy", state["caller_id"])
-                )
-                selected, model, alias, _ = await self.route(data)
+                selected, model, alias, _, policy = await self.route(data, state["caller_id"])
                 state["connection_id"] = selected.connection_id
                 state["resource_type"] = selected.resource_type
                 state["plan_id"] = (
@@ -406,9 +397,7 @@ class RequestMiddleware:
                     {
                         "timestamp": state["started_at"],
                         "request_id": state["request_id"],
-                        "path": path
-                        if path in {"/health", "/v1/models", "/v1/chat/completions"}
-                        else "unknown",
+                        "path": path if path in REQUEST_LOG_PATHS else "unknown",
                         "caller_id": state.get("caller_id"),
                         "connection_id": state["connection_id"],
                         "resource_type": state.get("resource_type"),
@@ -460,7 +449,7 @@ class ManagedStream(StreamingResponse):
         finally:
             with anyio.CancelScope(shield=True):
                 await self.body_iterator.aclose()
-                await close_upstream(self.upstream)
+                await close_response(self.upstream)
 
 
 def create_app(
@@ -490,17 +479,18 @@ def create_app(
     async def resources():
         return await asyncio.to_thread(runtime.resources) if runtime else ResourcesConfig()
 
-    def routing_snapshot():
-        # Read both fresh documents in one worker visit. The second route lookup
-        # after queueing and the locked admission check still read current state.
+    def routing_snapshot(caller):
+        # Read fresh configuration and policy in one worker visit. Store's lock
+        # serializes the policy read with writes. Queue exit and dispatch still
+        # recheck current state; no authorization result is cached.
         if runtime:
-            return runtime.resources(), runtime.connection_settings()
-        return ResourcesConfig(), [legacy_connection(config)]
+            settings, available = runtime.resources(), runtime.connection_settings()
+        else:
+            settings, available = ResourcesConfig(), [legacy_connection(config)]
+        return settings, available, Policy.model_validate(ledger.policy(caller))
 
-    async def route(data):
-        settings, available = (
-            await asyncio.to_thread(routing_snapshot) if runtime else routing_snapshot()
-        )
+    async def route(data, caller):
+        settings, available, policy = await asyncio.to_thread(routing_snapshot, caller)
         model, selected, alias = data.model, data.connection_id, None
         if model and model.startswith("@"):
             alias = model[1:]
@@ -511,7 +501,7 @@ def create_app(
                 raise GatewayError(400, "conflicting_connection", "连接参数与别名目标不一致。")
             selected, model = target.connection_id, target.model
         current, model = resolve_model(available, selected, model)
-        return current, model, alias, settings
+        return current, model, alias, settings, policy
 
     @asynccontextmanager
     async def lifespan(app):
@@ -655,8 +645,7 @@ def create_app(
     @app.post("/v1/messages")
     async def chat(request: Request):
         data = request.state.chat_input
-        current, model, alias, settings = await route(data)
-        policy = Policy.model_validate(await storage.call("policy", request.state.caller_id))
+        current, model, alias, settings, policy = await route(data, request.state.caller_id)
         enforce_access(policy, current.connection_id, model, current.resource_type)
         request.state.requested_alias = alias
         request.state.connection_id = current.connection_id
@@ -915,7 +904,7 @@ def create_app(
                 preserve_outcome()
                 with anyio.CancelScope(shield=True):
                     await events.aclose()
-                    await close_upstream(response)
+                    await close_response(response)
 
         return ManagedStream(stream(), response)
 

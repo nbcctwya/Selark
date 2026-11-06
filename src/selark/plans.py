@@ -201,8 +201,8 @@ def parse_quota(data):
 
 
 async def query_quota(config, *, client=None, transport=None):
+    from selark.protocol import close_response
     from selark.providers.factory import provider_for
-    from selark.providers.mimo import close_response
 
     preset = PLAN_PRESETS[config.provider]
     if preset["quota_path"] is None:

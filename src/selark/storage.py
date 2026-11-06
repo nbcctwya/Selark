@@ -24,6 +24,7 @@ from selark.governance import (
     reserve,
     settle,
 )
+from selark.quota_cache import QuotaCache
 from selark.storage_schema import validate_schema
 from selark.usage import inconsistent_usage
 
@@ -152,6 +153,7 @@ class Store:
             if path.stat().st_mode & 0o077:
                 raise ConfigError("记录数据库权限过宽，请设置为 0600。")
         self.lock = threading.RLock()
+        self.quota_cache = QuotaCache()
         existing = readonly or not initialize
         if existing and path is None:
             raise ConfigError("必须提供已有记录库的路径。")
@@ -263,6 +265,11 @@ class Store:
     def transaction(self):
         with self.lock, self.db:
             yield self.db
+
+    @contextmanager
+    def allocation_transaction(self, identity):
+        with self.lock, self.quota_cache.transaction(self.db, identity) as db:
+            yield db
 
     def close(self):
         with self.lock:
@@ -544,9 +551,7 @@ class Store:
         admission_guard=None,
         started_at=None,
     ):
-        with admission_guard or nullcontext(), self.transaction() as db:
-            if resource is not None:
-                db.execute("BEGIN IMMEDIATE")
+        with admission_guard or nullcontext(), self.allocation_transaction(request_id) as db:
             if started_at is not None:
                 # Registration, quota reservation and dispatch intent share one
                 # FULL-synchronous commit, completed before the upstream is called.
@@ -566,6 +571,7 @@ class Store:
                     connection=connection_id,
                     model=requested_model,
                     now=utc_now(),
+                    quota_totals=self.quota_cache.get,
                     **resource,
                 )
             db.execute(
@@ -594,7 +600,7 @@ class Store:
         final = bool(state.get("usage_final"))
         usage = state.get("usage")
         values = usage_values(usage, final and not state.get("usage_regressed"))
-        with self.transaction() as db:
+        with self.allocation_transaction(request_id) as db:
             if state.get("started_at"):
                 db.execute(
                     "INSERT OR IGNORE INTO requests(request_id,original_request_id,started_at,"

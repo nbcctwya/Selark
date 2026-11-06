@@ -12,12 +12,14 @@ from selark.providers.chatgpt import response_usage
 from selark.runtime import Runtime, capability_fingerprint, fingerprint
 from selark.usage import MAX_COUNT, inconsistent_usage, observed_token_floor
 
+from .support.chatgpt import PAYLOAD as SUBSCRIPTION_PAYLOAD
+from .support.chatgpt import resource as resource
 from .support.governance import PAYLOAD, allocation, app_for, auth, finished, price
 from .support.governance import runtime as runtime
 from .support.protocol import completion, event, sse
-from .test_chatgpt import PAYLOAD as SUBSCRIPTION_PAYLOAD
-from .test_chatgpt import events, reply, result
-from .test_chatgpt import resource as resource
+from .support.protocol import responses_events as events
+from .support.protocol import responses_reply as reply
+from .support.protocol import responses_result as result
 
 
 @pytest.mark.parametrize("streaming", [False, True])

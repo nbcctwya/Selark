@@ -57,7 +57,7 @@ def age_seconds(value):
         return None
 
 
-def overview(directory, *, offline=False):
+def overview(directory, *, offline=False, include_usage=True):
     result = {
         "version": __version__,
         "checked_at": utc_now(),
@@ -120,9 +120,11 @@ def overview(directory, *, offline=False):
             # One ledger snapshot keeps overview usage and per-caller quotas consistent.
             with store.transaction() as db:
                 db.execute("BEGIN")
-                usage = store.summary({}, group_by="connection")
-                result["usage"] = usage["summary"]
-                by_connection = {g["connection_id"]: g for g in usage["groups"]}
+                # Dashboard supplies its own filtered statistics and does not expose
+                # these CLI-only lifetime totals. Avoid scanning unused history.
+                usage = store.summary({}, group_by="connection") if include_usage else None
+                result["usage"] = usage["summary"] if usage else None
+                by_connection = {g["connection_id"]: g for g in usage["groups"]} if usage else {}
                 for caller in store.tokens():
                     result["callers"].append(caller | {"quota": store.quota(caller["id"])})
                 registry = runtime.registry()

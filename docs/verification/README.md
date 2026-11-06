@@ -6,6 +6,7 @@
 
 | 报告 | 文件 |
 | --- | --- |
+| [大账本与转发复测 · 2026-11-06](../guides/efficiency.md#2026-11-06-大账本与转发复测) | `accounting-performance-2026-11-06.json` |
 | [官方工具协议验收 · 2026-11-05](tool-protocols-2026-11-05.md) | `tool-protocols-2026-11-05.md`、`tool-protocol-measurements-2026-11-05.json` |
 | [MiMo / 中转站真实场景与压力验收 · 2026-11-05](live-scenarios-stress-2026-11-05.md) | `live-scenarios-stress-2026-11-05.md`、`live-scenarios-stress-2026-11-05.json` |
 | [真实 API 多轮与并发验收 · 2026-11-05](live-latency-rounds-2026-11-05.md) | `live-latency-rounds-2026-11-05.md`、`live-latency-rounds-2026-11-05.json` |

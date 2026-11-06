@@ -16,11 +16,11 @@ from selark.runtime import Runtime, connection_revision
 from selark.storage import Store
 
 from .support.contracts import dashboard_response
+from .support.dashboard import HEADERS, ORIGIN, dashboard, login
 from .support.governance import PAYLOAD, app_for, auth
 from .support.governance import runtime as runtime
 from .support.protocol import UPSTREAM_KEY, completion
-from .test_dashboard import HEADERS, ORIGIN, dashboard, login
-from .test_operations_071 import contents
+from .support.resources import contents
 
 ROOT = "/api/connections/mimo-default"
 WRITES = [
@@ -286,6 +286,9 @@ def test_subscription_types_keep_their_core_constraints(runtime, client):
     )
     providers = client.get("/api/providers").json()["items"]
     assert next(p for p in providers if p["id"] == "chatgpt")["can_create"] is False
+    custom_api = next(p for p in providers if p["id"] == "openai-compatible")
+    assert custom_api["name"] == "通用 API（OpenAI 兼容）"
+    assert custom_api["base_url"] is None and custom_api["can_create"] is True
     runtime.add_connection("subscription", "chatgpt", None)
     current = client.get("/api/connections/subscription").json()
     assert (

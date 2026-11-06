@@ -12,6 +12,7 @@ from selark.governance import Policy, permitted
 from selark.logs import read_logs
 from selark.overview import health_status, overview
 from selark.runtime import Runtime
+from selark.schemas import REQUEST_LOG_PATHS
 from selark.storage import utc_now
 
 
@@ -231,11 +232,7 @@ def log_events(directory):
     for line in source["lines"]:
         try:
             entry = json.loads(line)
-            if not isinstance(entry, dict) or entry.get("path") not in {
-                "/health",
-                "/v1/models",
-                "/v1/chat/completions",
-            }:
+            if not isinstance(entry, dict) or entry.get("path") not in REQUEST_LOG_PATHS:
                 raise ValueError
             timestamp(entry.get("timestamp"))
         except (ValueError, TypeError):
@@ -289,7 +286,7 @@ def backup_inventory(directory):
 
 
 def snapshot(directory: Path, filters, *, offline=False):
-    raw = overview(directory, offline=True)
+    raw = overview(directory, offline=True, include_usage=False)
     result = {
         "checked_at": utc_now(),
         "version": raw["version"],

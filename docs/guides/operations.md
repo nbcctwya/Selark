@@ -68,7 +68,7 @@ SSE 中途更换回复 ID/模型、空或含控制字符的回复身份都视为
 
 ```bash
 selark connection add deepseek-personal --interactive
-selark connection add relay-personal --provider openai-compatible --interactive
+selark connection add custom-api --provider openai-compatible --interactive
 ```
 
 向导选择已有平台、名称、API 地址、模型及默认模型；Key 继续从环境变量或隐藏输入读取，

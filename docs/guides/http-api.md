@@ -24,10 +24,10 @@
 | Kimi Code | 文本与 function 工具 | 官方原生接口 | 官方原生接口 |
 | ChatGPT 订阅 | 既有文本适配 | 官方原生接口，工具调用使用此入口 | 不支持 |
 | GLM / 智谱 API | 文本与 function 工具 | 未接入 | 未接入 |
-| OpenAI 兼容中转 | 文本与 function 工具 | 中转站须提供此接口 | 中转站须提供此接口 |
+| 通用 API（OpenAI 兼容） | 文本与 function 工具 | 上游须提供此接口 | 上游须提供此接口 |
 | GLM Coding Plan | 保留模拟预设，真实生成仍禁用 | 未接入 | 未接入 |
 
-模型是否支持某种工具、思考模式或扩展参数仍以该供应商的模型能力为准。选错协议会明确失败，不会猜测、换端点或重发。中转连接以已配置的 base URL 拼接 `/responses` 或 `/messages`，不自动寻找其他地址。
+模型是否支持某种工具、思考模式或扩展参数仍以该供应商的模型能力为准。选错协议会明确失败，不会猜测、换端点或重发。通用 API 连接以已配置的 Base URL 拼接 `/responses` 或 `/messages`，不自动寻找其他地址。
 
 MiMo、DeepSeek、Kimi 的 Messages 地址按官方路径使用配置 origin 下的 `/anthropic/v1/messages`（配置的 `/v1` 后缀会先移除）；DeepSeek Responses 使用 `/responses`。其他 Responses 保留 `/v1/responses`，Kimi Code 保留套餐路径 `/coding/v1/...`。不自动切换域名、收费来源或凭据。
 
@@ -78,7 +78,7 @@ ChatGPT 订阅遵循官方 SIWC 限制：`stream:true`、`store:false`、input �
 
 ## 桌面端获取多来源模型
 
-DSH 和 Kimi Code 桌面版各配置一个名为 `Selark` 的自定义模型提供商即可。MiMo、OpenAI API 及提供 Chat Completions 的 Claude 中转连接共用以下入口：
+DSH 和 Kimi Code 桌面版各配置一个名为 `Selark` 的自定义模型提供商即可。MiMo、OpenAI API 及提供 Chat Completions 的通用 API 连接共用以下入口：
 
 | 桌面端字段 | 内容 |
 | --- | --- |
@@ -93,7 +93,7 @@ DSH 和 Kimi Code 桌面版各配置一个名为 `Selark` 的自定义模型提�
 
 ```text
 mimo-v2.6-flash
-relay-personal::claude-sonnet-4-6
+custom-api::YOUR_MODEL_ID
 openai-personal::gpt-6-luna
 ```
 

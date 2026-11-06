@@ -14,8 +14,8 @@ Selark 本机自用修复验收，2026-11-01
 | 浏览器限制存储 | 回退为页面内存会话 | 禁用 sessionStorage 后仍能登录和修改模型，过期后正常清理；此模式刷新需新的管理链接 |
 | 构建依赖 | setuptools 84.2.1，构建范围 `>=84.1,<85` | wheel、sdist、全新环境安装及 pip check 通过；32 个锁定依赖的 OSV 查询无匹配公告 |
 
-核心改动位于 [app.py](../../src/selark/app.py)、[dashboard.py](../../src/selark/dashboard.py)
-和 [app.js](../../src/selark/dashboard_assets/app.js)。请求总时限、正文大小上限、调用方配额、
+当时的核心改动位于 [app.py](../../src/selark/app.py)、[dashboard.py](../../src/selark/dashboard.py)
+和旧版 `dashboard_assets/app.js`。页面现已迁移到 React，当前请求实现在 [http.ts](../../frontend/src/api/http.ts)。请求总时限、正文大小上限、调用方配额、
 派发前撤销检查、Dashboard 同源限制、CSP 和写入前会话复查均保留。
 页面使用凭据省略和同源请求模式，并拒绝重定向；管理凭据不会作为环境 Cookie 自动发送。
 

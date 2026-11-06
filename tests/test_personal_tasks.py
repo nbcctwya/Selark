@@ -13,8 +13,8 @@ from selark.storage import utc_now
 from .support.governance import app_for, auth
 from .support.governance import runtime as runtime
 from .support.protocol import event, sse
-from .test_token_plans import MODEL, PAYLOAD, PLAN, caller, handler, quota, reply
-from .test_token_plans import plan as plan
+from .support.token_plans import MODEL, PAYLOAD, PLAN, caller, handler, quota, reply
+from .support.token_plans import plan as plan
 
 
 def allow_tasks(runtime, plan):

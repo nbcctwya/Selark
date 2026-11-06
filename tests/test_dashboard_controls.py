@@ -10,10 +10,10 @@ from selark.connections import require_connection
 from selark.errors import GatewayError
 from selark.runtime import Runtime
 
+from .support.dashboard import HEADERS, ORIGIN, dashboard, login
 from .support.governance import PAYLOAD, app_for, auth
 from .support.governance import runtime as runtime
-from .test_dashboard import HEADERS, ORIGIN, dashboard, login
-from .test_operations_071 import contents
+from .support.resources import contents
 
 ENDPOINT = "/api/model-approval"
 WRITE_HEADERS = HEADERS | {"Origin": ORIGIN}

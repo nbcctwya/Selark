@@ -1,18 +1,15 @@
 """MiMo adapter and shared bounded HTTP/Chat Completions response handling."""
 
-import asyncio
-import contextlib
 import math
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
-import anyio
 import httpx
 
 from selark.config import ServerConfig
 from selark.errors import GatewayError
-from selark.protocol import strict_json
+from selark.protocol import close_response, strict_json
 from selark.sse import SSEDecoder, async_sse_lines
 from selark.usage import sanitize_usage
 
@@ -90,12 +87,6 @@ def text_choice(choice, *, stream=False):
     if (finish is not None or not stream) and (not isinstance(finish, str) or not finish.strip()):
         raise protocol_error("上游返回了无效的结束原因。")
     return part, finish
-
-
-async def close_response(response):
-    with anyio.CancelScope(shield=True):
-        with contextlib.suppress(TimeoutError, httpx.HTTPError):
-            await asyncio.wait_for(response.aclose(), timeout=2)
 
 
 def reported_usage(data: dict) -> dict | None:

@@ -11,8 +11,8 @@ from fastapi.testclient import TestClient
 from selark.app import create_app
 
 from .support.protocol import ByteStream, completion, event, sse
-from .test_connections import multi as multi
-from .test_connections import token
+from .support.resources import multi as multi
+from .support.resources import token
 
 
 @pytest.mark.parametrize(

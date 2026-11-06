@@ -6,9 +6,8 @@ import httpx
 
 from selark.connections import valid_model
 from selark.errors import GatewayError
-from selark.protocol import strict_json
+from selark.protocol import close_response, strict_json
 from selark.providers.factory import provider_for
-from selark.providers.mimo import close_response
 
 
 async def discover(config, *, transport=None, auth=None):

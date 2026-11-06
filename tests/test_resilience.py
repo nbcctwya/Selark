@@ -13,18 +13,9 @@ from selark.app import create_app
 from selark.config import initialize
 from selark.runtime import Runtime, fingerprint
 
+from .support.asgi import PAYLOAD, Wire, limited, wait_until
 from .support.protocol import UPSTREAM_KEY, completion, event, sse
-
-PAYLOAD = {"messages": [{"role": "user", "content": "test"}]}
-
-
-@pytest.fixture
-def runtime(tmp_path, monkeypatch):
-    monkeypatch.delenv("SELARK_DATA_DIR", raising=False)
-    directory = tmp_path / "config"
-    initialize(directory, UPSTREAM_KEY, models=["mimo-test"], default_model="mimo-test")
-    with Runtime(directory) as runtime:
-        yield runtime
+from .support.resources import runtime as runtime
 
 
 def headers(token):
@@ -193,54 +184,6 @@ def test_old_inflight_probe_cannot_replace_new_verified_configuration(runtime):
             assert verification["request_id"] == answer.headers["x-request-id"]
 
     asyncio.run(scenario())
-
-
-def limited(runtime, **updates):
-    config = runtime.settings()
-    return config.model_copy(update={"limits": config.limits.model_copy(update=updates)})
-
-
-async def wait_until(predicate):
-    async with asyncio.timeout(2):
-        while not predicate():
-            await asyncio.sleep(0.005)
-
-
-class Wire:
-    def __init__(self, token, payload=None, send_hook=None):
-        self.incoming = asyncio.Queue()
-        self.incoming.put_nowait(
-            {"type": "http.request", "body": json.dumps(payload or PAYLOAD).encode()}
-        )
-        self.messages = []
-        self.send_hook = send_hook
-        self.scope = {
-            "type": "http",
-            "asgi": {"version": "3.0", "spec_version": "2.4"},
-            "http_version": "1.1",
-            "method": "POST",
-            "scheme": "http",
-            "path": "/v1/chat/completions",
-            "raw_path": b"/v1/chat/completions",
-            "query_string": b"",
-            "server": ("localhost", 8787),
-            "client": ("localhost", 10000),
-            "headers": [
-                (b"authorization", ("Bearer " + token).encode()),
-                (b"content-type", b"application/json"),
-            ],
-        }
-
-    async def send(self, message):
-        if self.send_hook:
-            await self.send_hook(message)
-        self.messages.append(message)
-
-    async def run(self, app):
-        await app(self.scope, self.incoming.get, self.send)
-
-    def disconnect(self):
-        self.incoming.put_nowait({"type": "http.disconnect"})
 
 
 @pytest.mark.parametrize("cancel_queued", [False, True])
@@ -576,7 +519,8 @@ def test_stale_receipt_never_overwrites_settled_delivery(runtime):
     assert row["total_tokens"] == 14 and journal.entries() == []
 
 
-def test_restart_recovers_known_upstream_usage_with_unknown_delivery(runtime):
+@pytest.mark.parametrize("channel", ["journal", "database"])
+def test_restart_recovers_known_upstream_usage_with_unknown_delivery(runtime, channel):
     from selark.persistence import Journal, snapshot
     from selark.storage import utc_now
 
@@ -594,11 +538,33 @@ def test_restart_recovers_known_upstream_usage_with_unknown_delivery(runtime):
         "record_status": "running",
         "actual_model": "mimo-test",
     }
-    Journal(runtime.data_dir / "pending").save(snapshot(state, 200, 10, settled=False))
+    runtime.store.attempt(
+        "checkpoint",
+        "mimo-test",
+        None,
+        "mimo-default",
+        started_at=state["started_at"],
+        purpose="chat",
+        resource={
+            "caller": "legacy",
+            "provider": "mimo",
+            "estimate": 300,
+            "output": 16,
+            "price": None,
+            "alias": None,
+        },
+    )
+    document = snapshot(state, 200, 10, settled=False)
+    if channel == "journal":
+        Journal(runtime.data_dir / "pending").save(document)
+    else:
+        runtime.store.finish("checkpoint", state=document["state"], http_status=200, duration_ms=10)
     with Runtime(runtime.directory) as restarted, restarted.service():
         row = restarted.store.records({})[0]
         assert row["status"] == "interrupted" and row["delivery_status"] == "unknown"
         assert row["upstream_result"] == "success" and row["total_tokens"] == 14
+        assert restarted.store.quota("legacy")["charged_or_reserved_tokens"] == 14
+        assert restarted.store.quota("legacy")["unknown_token_requests"] == 0
     with Runtime(runtime.directory) as again, again.service():
         assert again.store.summary({})["summary"]["known_tokens"]["total_tokens"] == 14
         assert len(again.store.records({})) == 1
@@ -739,7 +705,8 @@ def test_storage_writer_competition_does_not_pause_stream_chunks(runtime):
     asyncio.run(scenario())
 
 
-def test_deadline_during_checkpoint_cannot_leave_settled_row_running(runtime, monkeypatch):
+@pytest.mark.parametrize("channel", ["journal", "database"])
+def test_deadline_during_checkpoint_cannot_leave_settled_row_running(runtime, monkeypatch, channel):
     async def scenario():
         caller = runtime.store.create_token("deadline-checkpoint")
         original = runtime.store.finish
@@ -749,12 +716,22 @@ def test_deadline_during_checkpoint_cannot_leave_settled_row_running(runtime, mo
                 time.sleep(0.1)
             return original(*args, **kwargs)
 
-        monkeypatch.setattr(runtime.store, "finish", slow_finish)
         app = create_app(
             limited(runtime, request_timeout_seconds=0.05),
             runtime=runtime,
             transport=httpx.MockTransport(lambda _: httpx.Response(200, json=completion())),
         )
+        save = app.state.storage.journal.save
+
+        def slow_save(document):
+            if not document["settled"]:
+                time.sleep(0.1)
+            return save(document)
+
+        if channel == "database":
+            monkeypatch.setattr(runtime.store, "finish", slow_finish)
+        else:
+            monkeypatch.setattr(app.state.storage.journal, "save", slow_save)
         async with (
             app.router.lifespan_context(app),
             httpx.AsyncClient(

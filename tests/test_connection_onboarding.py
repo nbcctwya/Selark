@@ -74,7 +74,7 @@ def test_new_api_without_models_discovers_all_without_generating(
     calls = upstream(monkeypatch)
     args = add_args(runtime, provider)
     if provider == "openai-compatible":
-        args += ["--base-url", "https://fixture.test/v1"]
+        args += ["--base-url", "https://fixture.test/custom-api/v1"]
     originals = {
         name: (runtime.directory / name).read_bytes() for name in ("server.json", "client.json")
     }
@@ -88,6 +88,10 @@ def test_new_api_without_models_discovers_all_without_generating(
     assert result["discovery"]["state"] == "success"
     assert result["verification"]["state"] == "never"
     assert len(calls) == 1 and not runtime.store.records({})
+    if provider == "openai-compatible":
+        assert str(calls[0].url) == "https://fixture.test/custom-api/v1/models"
+        assert calls[0].headers["authorization"] == "Bearer " + KEY
+        assert result["name"] == "通用 API（OpenAI 兼容）"
     assert callers == runtime.store.tokens()
     assert originals == {name: (runtime.directory / name).read_bytes() for name in originals}
     assert stat.S_IMODE((runtime.directory / "connections.json").stat().st_mode) == 0o600

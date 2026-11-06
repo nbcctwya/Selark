@@ -171,11 +171,11 @@ def input_estimate(payload):
         },
         ensure_ascii=False,
     )
-    return (
-        len(text.encode("utf-8"))
-        + 256
-        + 32 * len(payload.get("messages", payload.get("input", [])))
-    )
+    items = payload.get("messages", payload.get("input"))
+    # A Responses string is one input item, not one message per character.
+    # Explicit null and instructions/previous_response_id-only requests have no items.
+    count = len(items) if isinstance(items, list) else int(items is not None)
+    return len(text.encode("utf-8")) + 256 + 32 * count
 
 
 def estimate_cost(price, input_count, output_count, cached=0, writes=0):
@@ -256,17 +256,19 @@ def policy_for(db, caller):
 
 
 def allocations(db, caller, day):
+    return list(allocation_rows(db, caller, day))
+
+
+def allocation_rows(db, caller, day):
     rows = db.execute(
         "SELECT a.*,r.usage_json AS request_usage_json FROM allocations a "
         "LEFT JOIN requests r ON r.request_id=a.request_id WHERE a.caller_id=? AND a.day=?",
         (caller, day),
-    ).fetchall()
-    return [
-        checked_allocation(
+    )
+    for row in rows:
+        yield checked_allocation(
             row, json.loads(row["request_usage_json"]) if row["request_usage_json"] else None
         )
-        for row in rows
-    ]
 
 
 def checked_allocation(row, usage):
@@ -314,6 +316,7 @@ def reserve(
     plan=None,
     concurrent_requests=None,
     output_reservation_only=False,
+    quota_totals=None,
 ):
     if caller != "local-probe":
         identity = db.execute(
@@ -371,11 +374,10 @@ def reserve(
         if count >= policy.requests_per_minute:
             raise GatewayError(429, "caller_rate_limit", "此调用方最近 60 秒的请求次数已达上限。")
     day = now[:10]
-    rows = (
-        allocations(db, caller, day)
-        if policy.daily_token_limit is not None or policy.daily_budget is not None
-        else []
-    )
+    if policy.daily_token_limit is not None or policy.daily_budget is not None:
+        from selark.quota_cache import AllocationTotals
+
+        totals = (quota_totals or AllocationTotals.read)(db, caller, day)
     total = estimate + output
     quote = price.model_dump(mode="json") if price else None
     reserve_cost = None
@@ -395,13 +397,13 @@ def reserve(
         )
         reserve_cost = estimate_cost(upper, estimate, output)
     if policy.daily_token_limit is not None:
-        if any(row["token_basis"] == "unknown_hold" for row in rows):
+        if totals.unknown_tokens:
             raise GatewayError(
                 429,
                 "quota_usage_unknown",
                 "今日有用量未知的已发送请求，保留预留并暂停此调用方的新生成。",
             )
-        if sum(row["quota_tokens"] for row in rows) + total > policy.daily_token_limit:
+        if totals.tokens + total > policy.daily_token_limit:
             raise GatewayError(
                 429, "caller_token_quota", "此调用方今日 Token 配额不足，包含在途预留。"
             )
@@ -410,20 +412,13 @@ def reserve(
             raise GatewayError(
                 403, "budget_price_unavailable", "预算限制要求配置同币种的模型价格。"
             )
-        if any(
-            row["quota_cost"] is None
-            or row["currency"] != policy.budget_currency
-            or row["cost_status"] == "unknown"
-            for row in rows
-        ):
+        if totals.unknown_costs or any(c != policy.budget_currency for c in totals.currencies):
             raise GatewayError(
                 429,
                 "budget_cost_unknown",
                 "今日存在费用未知或其他币种的调用，暂停此调用方的新生成。",
             )
-        if Decimal(money_sum([*(row["quota_cost"] for row in rows), reserve_cost])) > Decimal(
-            policy.daily_budget
-        ):
+        if Decimal(money_sum([str(totals.cost), reserve_cost])) > Decimal(policy.daily_budget):
             raise GatewayError(
                 429, "caller_budget_quota", "此调用方今日估算预算不足，包含在途预留。"
             )

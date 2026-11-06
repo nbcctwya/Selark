@@ -10,8 +10,11 @@ from fastapi.testclient import TestClient
 
 from selark.sse import SSEDecoder
 
-from .test_chatgpt import PAYLOAD, app_for, headers, result
-from .test_chatgpt import resource as resource
+from .support.chatgpt import PAYLOAD
+from .support.chatgpt import resource as resource
+from .support.governance import app_for
+from .support.governance import auth as headers
+from .support.protocol import responses_result as result
 
 
 def completed_stream(*, aggregate=False, texts=("你好 🐍\n", "42"), reasoning=True):
