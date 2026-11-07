@@ -10,7 +10,7 @@
 | `support/resources.py` | 多连接与恢复场景的 Runtime fixture、配置文件摘要 |
 | `support/asgi.py` | 可控断连、发送钩子、等待条件与请求限制 |
 | `support/dashboard.py` | 本机 Dashboard 客户端、引导令牌与管理会话 |
-| `support/chatgpt.py`、`support/token_plans.py` | 合成订阅授权、套餐配额与领域 fixture |
+| `support/token_plans.py` | 合成套餐配额与领域 fixture |
 | `four_resources.py` | 多来源模拟资源，供测试与本机验收脚本复用 |
 | `test_service.py`、`test_api_edges.py`、`test_resilience.py` | 请求、协议边界和生命周期 |
 | `test_management.py`、`test_config_cli.py`、`test_model_layers.py` | 本机管理、配置与模型治理 |

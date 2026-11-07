@@ -799,7 +799,7 @@ def test_disk_and_database_final_failure_blocks_further_generation(runtime, monk
 
 def test_version_one_database_migration_preserves_unknowns_and_backup(tmp_path, monkeypatch):
     from selark.config import ServerConfig, load_config
-    from selark.storage import SCHEMA, token_digest, utc_now
+    from selark.storage import SCHEMA, SCHEMA_VERSION, token_digest, utc_now
 
     monkeypatch.delenv("SELARK_DATA_DIR", raising=False)
     directory = tmp_path / "old-config"
@@ -831,7 +831,7 @@ def test_version_one_database_migration_preserves_unknowns_and_backup(tmp_path, 
         db.execute("PRAGMA user_version=1")
         db.commit()
     with Runtime(directory) as migrated:
-        assert migrated.store.db.execute("PRAGMA user_version").fetchone()[0] == 5
+        assert migrated.store.db.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
         backup = migrated.migration_backup
         with contextlib.closing(sqlite3.connect(backup / "records.sqlite3")) as old:
             assert old.execute("PRAGMA user_version").fetchone()[0] == 1
@@ -910,7 +910,7 @@ def test_delivered_done_is_not_followed_by_timeout_during_cleanup(runtime):
 
 
 def test_schema_migration_rolls_back_all_ddl_on_failure(tmp_path, monkeypatch):
-    from selark.storage import SCHEMA, Store
+    from selark.storage import SCHEMA, SCHEMA_VERSION, Store
 
     path = tmp_path / "old.sqlite3"
     path.touch(mode=0o600)
@@ -939,7 +939,7 @@ def test_schema_migration_rolls_back_all_ddl_on_failure(tmp_path, monkeypatch):
         assert "order_key" not in {r[1] for r in db.execute("PRAGMA table_info(verifications)")}
     monkeypatch.setattr(sqlite3, "connect", connect)
     store = Store(path)
-    assert store.db.execute("PRAGMA user_version").fetchone()[0] == 5
+    assert store.db.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
     store.close()
 
 

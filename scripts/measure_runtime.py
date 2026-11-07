@@ -161,7 +161,9 @@ def main():
     print(document)
     if args.check_invariants:
         assert result["idle_journal_scans"] == 0, "Healthy idle recovery polled the filesystem."
-        assert not result["jwt_loaded"], "Ordinary API relay loaded OAuth crypto dependencies."
+        assert not result["jwt_loaded"], (
+            "Ordinary API relay loaded unnecessary crypto dependencies."
+        )
 
 
 if __name__ == "__main__":

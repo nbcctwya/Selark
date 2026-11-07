@@ -1,12 +1,12 @@
 # 官方工具协议验收 · 2026-11-05
 
-本轮补齐 Chat Completions function 工具转发，并增加原生 Responses / Messages 入口。普通 API、ChatGPT 订阅与 Kimi Code 按各自官方协议、认证及用途约束接入；支持矩阵和客户端配置见 [HTTP API](../guides/http-api.md)。工具由客户端 Agent 执行，网关不执行工具、不生成提示文本、不补历史、不重试或调用模型修复结果。
+本轮补齐 Chat Completions function 工具转发，并增加原生 Responses / Messages 入口。普通 API 与 Kimi Code 按各自官方协议、认证及用途约束接入；支持矩阵和客户端配置见 [HTTP API](../guides/http-api.md)。工具由客户端 Agent 执行，网关不执行工具、不生成提示文本、不补历史、不重试或调用模型修复结果。
 
 ## 功能验证
 
 - 最终完整回归 **874 通过**，耗时 90.08 秒。保留一条既有 Starlette/httpx 弃用警告，未为消除警告变更运行时依赖。
 - 在现有测试文件中扩展供应商矩阵：Chat 的普通 / SSE 工具回复、并行工具、参数分段、工具结果及思考历史回传；原生接口保留工具、签名思考块、加密 reasoning 和扩展字段。每个接纳请求只派发一次模拟生成。
-- ChatGPT 使用独立官方 OAuth 与无状态流式 Responses，Kimi Code 保留套餐身份、用途、权限及额度复查；GLM Coding Plan 的真实生成门禁保持有效。上游不支持的协议不会自动回退。
+- Kimi Code 保留套餐身份、用途、权限及额度复查；GLM Coding Plan 的真实生成门禁保持有效。上游不支持的协议不会自动回退。
 - 三个入口复用鉴权、排队、输出硬上限、保守预留和持久落账。验证断流、失败 / incomplete 终态、身份变化、非法工具结束、缓存用量及未知用量预留；本机应用令牌不转发。
 - 核对 Claude 风格 `/v1/messages?beta=true`、版本 / beta 请求头，以及 Messages 的本地 x-api-key 认证。工具定义计入输入估算，省略输出硬上限时单独记录本地预留；这不是额外生成或实际消耗。
 - Ruff、格式、仓库敏感信息检查、OpenAPI 与前端契约一致性检查通过。无新增运行时依赖、常驻任务、轮询或数据库迁移；原生适配器按需加载，不收集完整工具参数流。
@@ -57,7 +57,7 @@
 
 ## 截图工具结果修复验收
 
-后续实际会话在工具返回截图后出现 `messages.22.content` 校验错误。仅检查会话结构，确认结果包含 `text / image_url / text` 混合块；旧 Chat 请求结构只接受 text。新增图片块的结构校验，同协议保持图片字符串、detail、块顺序和工具关联 ID；修正兼容适配器及 Kimi Code 套餐适配器将全部内容当作文本拼接的问题。Anthropic 按官方 `image.source` 转换普通消息及工具结果；不能无损映射的选项明确拒绝，ChatGPT 订阅的图片仍使用原生 Responses。
+后续实际会话在工具返回截图后出现 `messages.22.content` 校验错误。仅检查会话结构，确认结果包含 `text / image_url / text` 混合块；旧 Chat 请求结构只接受 text。新增图片块的结构校验，同协议保持图片字符串、detail、块顺序和工具关联 ID；修正兼容适配器及 Kimi Code 套餐适配器将全部内容当作文本拼接的问题。Anthropic 按官方 `image.source` 转换普通消息及工具结果；不能无损映射的选项明确拒绝。
 
 - 扩展既有普通/流式工具循环矩阵：图片 URL、Base64 图片、图片独立输入、图片工具结果、权限/配额及图片不进入日志。完整回归 **878 通过，95.66 秒**；Ruff、格式、仓库敏感信息及 API 契约检查通过。
 - 隔离 Kimi CLI 使用 `ReadMediaFile` 读取合成 PNG，客户端将图片放入后续 user 消息；Selark 原样转发后完成模拟回复。DSH 桌面自带 pi-ai 1.3.0 SDK 的图片输入也通过网关完成流式回复，图片数据逐值一致。最终客户端联测共 3 次模拟派发；未操作用户的桌面会话。

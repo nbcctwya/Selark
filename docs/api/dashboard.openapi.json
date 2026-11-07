@@ -240,50 +240,12 @@
       "Authorization": {
         "additionalProperties": false,
         "properties": {
-          "access_expired": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Access Expired"
-          },
           "credential_configured": {
             "title": "Credential Configured",
             "type": "boolean"
           },
-          "expires_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expires At"
-          },
           "kind": {
             "title": "Kind",
-            "type": "string"
-          },
-          "plan_permission": {
-            "title": "Plan Permission",
-            "type": "boolean"
-          },
-          "ready": {
-            "title": "Ready",
-            "type": "boolean"
-          },
-          "refresh_available": {
-            "title": "Refresh Available",
-            "type": "boolean"
-          },
-          "refresh_state": {
-            "title": "Refresh State",
             "type": "string"
           },
           "remote_validity": {
@@ -591,8 +553,7 @@
           "resource_type": {
             "enum": [
               "api",
-              "token_plan",
-              "chatgpt_subscription"
+              "token_plan"
             ],
             "title": "Resource Type",
             "type": "string"
@@ -1101,8 +1062,7 @@
           "resource_type": {
             "enum": [
               "api",
-              "token_plan",
-              "chatgpt_subscription"
+              "token_plan"
             ],
             "title": "Resource Type",
             "type": "string"
@@ -1482,8 +1442,7 @@
           "resource_type": {
             "enum": [
               "api",
-              "token_plan",
-              "chatgpt_subscription"
+              "token_plan"
             ],
             "title": "Resource Type",
             "type": "string"
@@ -2129,11 +2088,6 @@
       "Policy": {
         "additionalProperties": false,
         "properties": {
-          "allow_chatgpt_subscriptions": {
-            "default": false,
-            "title": "Allow Chatgpt Subscriptions",
-            "type": "boolean"
-          },
           "allow_token_plans": {
             "default": false,
             "title": "Allow Token Plans",
@@ -2178,20 +2132,6 @@
             "pattern": "^[A-Z]{3}$",
             "title": "Budget Currency",
             "type": "string"
-          },
-          "chatgpt_output_reservation": {
-            "anyOf": [
-              {
-                "maximum": 131072,
-                "minimum": 1,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Chatgpt Output Reservation"
           },
           "daily_budget": {
             "anyOf": [
@@ -2285,11 +2225,6 @@
         "additionalProperties": false,
         "minProperties": 1,
         "properties": {
-          "allow_chatgpt_subscriptions": {
-            "default": false,
-            "title": "Allow Chatgpt Subscriptions",
-            "type": "boolean"
-          },
           "allow_token_plans": {
             "default": false,
             "title": "Allow Token Plans",
@@ -2334,20 +2269,6 @@
             "pattern": "^[A-Z]{3}$",
             "title": "Budget Currency",
             "type": "string"
-          },
-          "chatgpt_output_reservation": {
-            "anyOf": [
-              {
-                "maximum": 131072,
-                "minimum": 1,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Chatgpt Output Reservation"
           },
           "daily_budget": {
             "anyOf": [
@@ -2440,10 +2361,6 @@
       "PolicyView": {
         "additionalProperties": false,
         "properties": {
-          "allow_chatgpt_subscriptions": {
-            "title": "Allow Chatgpt Subscriptions",
-            "type": "boolean"
-          },
           "allow_token_plans": {
             "title": "Allow Token Plans",
             "type": "boolean"
@@ -2479,17 +2396,6 @@
           "budget_currency": {
             "title": "Budget Currency",
             "type": "string"
-          },
-          "chatgpt_output_reservation": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Chatgpt Output Reservation"
           },
           "daily_budget": {
             "anyOf": [
@@ -2560,8 +2466,6 @@
         },
         "required": [
           "allow_token_plans",
-          "allow_chatgpt_subscriptions",
-          "chatgpt_output_reservation",
           "allowed_connections",
           "allowed_models",
           "requests_per_minute",
@@ -2732,10 +2636,7 @@
             "type": "boolean"
           },
           "credential_type": {
-            "enum": [
-              "api_key",
-              "oauth"
-            ],
+            "const": "api_key",
             "title": "Credential Type",
             "type": "string"
           },
@@ -2750,8 +2651,7 @@
           "resource_type": {
             "enum": [
               "api",
-              "token_plan",
-              "chatgpt_subscription"
+              "token_plan"
             ],
             "title": "Resource Type",
             "type": "string"
@@ -3312,8 +3212,7 @@
               {
                 "enum": [
                   "api",
-                  "token_plan",
-                  "chatgpt_subscription"
+                  "token_plan"
                 ],
                 "type": "string"
               },
@@ -5112,7 +5011,7 @@
         "x-reject-query-parameters": true
       },
       "post": {
-        "description": "Key 只写入，不在任何响应中返回。连接 ID 不可重复或使用 mimo-default；最多 32 个连接。ChatGPT 授权需先通过 CLI。返回 enabled=true、空 allowed_models、default_model=null。",
+        "description": "Key 只写入，不在任何响应中返回。连接 ID 不可重复或使用 mimo-default；最多 32 个连接。返回 enabled=true、空 allowed_models、default_model=null。",
         "operationId": "createConnection",
         "parameters": [
           {

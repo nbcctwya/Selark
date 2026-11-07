@@ -25,8 +25,7 @@ selark records show REQUEST_ID --json
 | models / client_allowed_models | 本地允许模型 / 当前客户端令牌策略允许的模型，不代表供应商已授权 |
 | discovery | 过去显式发现的结果，附时间；不是实时模型可用性 |
 | verification | 当前连接配置对应的历史调用结果，或 stale；附时间、模型和请求 ID，不代表其他模型也验证过 |
-| authorization | API Key 已配置或 OAuth 本地状态；远端是否撤销仍未知 |
-| OAuth access_expired / refresh_available | 当前访问凭据是否过期 / 是否有刷新材料，分别展示；本命令不刷新 |
+| authorization | API Key 已配置；远端是否撤销仍未知 |
 | availability | 有明确本地阻碍时 blocked_locally，否则 unknown；从不凭历史验证输出“实时可用” |
 | provider_quota | Token Plan 的历史官方快照、时间与年龄；未提供的 Token 余量保持 null |
 | callers[].quota | 每个本地应用的 UTC 当天策略、用量、预留、未知消耗及预算；与官方套餐额度分开 |
@@ -62,7 +61,6 @@ Token Plan 额度预检查失败明确标注“未生成”，保留错误码和
 不切换来源。额外检查官方计数中 remaining > limit 和非法重置时间。
 SSE 中途更换回复 ID/模型、空或含控制字符的回复身份都视为协议错误；
 已输出内容可能不完整，终止为错误，不伪造成功 `[DONE]`。
-这些检查不改变 ChatGPT OAuth 流程。
 
 ## 交互式配置
 
@@ -73,7 +71,6 @@ selark connection add custom-api --provider openai-compatible --interactive
 
 向导选择已有平台、名称、API 地址、模型及默认模型；Key 继续从环境变量或隐藏输入读取，
 从不要求在命令行放入明文 Key。非终端脚本使用显式参数。向导只写本地配置，不发现模型、
-不生成、不发起 OAuth。ChatGPT 继续使用原有命令。
 以上是 0.7.1 行为；0.8.1 起普通 API 的模型留空会自动发现，可用 `--no-discover` 保留离线配置流程。
 `init --models first second` 未指定默认模型时选第一个，避免常见的默认模型不匹配错误。
 交互 `ask` 从标准输入读取时会提示 Ctrl+D 发送、Ctrl+C 取消。
@@ -121,7 +118,7 @@ process 后端没有崩溃自动重启或开机自启动；systemd enable 针对
 服务将元数据写入数据目录 `logs/selark.log`，默认单文件 5 MiB 轮转，保留 3 份历史文件。
 原配置没有 `logging` 时使用默认值；可在 server.json 中设置
 `"logging": {"max_bytes": 5242880, "backup_count": 3}`，重启生效。
-目录 0700、文件 0600，拒绝符号链接和过宽权限；不记录提示词、回答、API Key 或 OAuth 凭据。
+目录 0700、文件 0600，拒绝符号链接和过宽权限；不记录提示词、回答、API Key。
 前台模式继续输出 stderr；后台模式使用持久日志。`logs --lines N` 查看当前文件最近 N 行，
 最多 1000 行/1 MiB。日志轮转不删除数据库记录，日志本身不进入恢复备份。
 
@@ -138,7 +135,6 @@ selark backup prune --keep 10 --apply   # 显式清理；至少保留一份
 新备份保持原有配置 + SQLite 快照 + pending 一致性，并写入包含文件长度与 SHA-256 的 manifest。
 校验检查缺失/额外文件、私有权限、链接、配置结构、SQLite 完整性与落账格式。
 清单用于检测意外损坏，不是签名或加密；备份含 API Key 与客户端令牌，不能公开或提交。
-ChatGPT 仍只备份注册身份，不备份任何 OAuth Token；恢复不会复活已退出或撤销的凭据。
 
 `restore` 只接受**不存在的新目标目录**（父目录须存在），完整校验后在同文件系统暂存目录复制，
 用明确隔离的数据目录迁移、幂等重放和检查，全部成功才发布为新实例。不会覆盖已有实例、

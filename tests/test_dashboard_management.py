@@ -13,7 +13,7 @@ from selark.connections import require_connection
 from selark.dashboard_api.routes import MAX_BODY
 from selark.errors import GatewayError
 from selark.runtime import Runtime, connection_revision
-from selark.storage import Store
+from selark.storage import SCHEMA_VERSION, Store
 
 from .support.contracts import dashboard_response
 from .support.dashboard import HEADERS, ORIGIN, dashboard, login
@@ -277,44 +277,18 @@ def test_subscription_types_keep_their_core_constraints(runtime, client):
             "POST",
             "/api/connections",
             {
-                "id": "oauth",
+                "id": "removed-provider",
                 "provider": "chatgpt",
-                "api_key": "fake-not-an-oauth-token",
+                "api_key": "fake-api-key",
             },
         ).status_code
         == 400
     )
     providers = client.get("/api/providers").json()["items"]
-    assert next(p for p in providers if p["id"] == "chatgpt")["can_create"] is False
+    assert not any(p["id"] == "chatgpt" for p in providers)
     custom_api = next(p for p in providers if p["id"] == "openai-compatible")
     assert custom_api["name"] == "通用 API（OpenAI 兼容）"
     assert custom_api["base_url"] is None and custom_api["can_create"] is True
-    runtime.add_connection("subscription", "chatgpt", None)
-    current = client.get("/api/connections/subscription").json()
-    assert (
-        write(
-            client,
-            "PATCH",
-            "/api/connections/subscription",
-            {
-                "revision": current["revision"],
-                "api_key": "fake-not-an-oauth-token",
-            },
-        ).status_code
-        == 400
-    )
-    assert (
-        write(
-            client,
-            "PATCH",
-            "/api/connections/subscription",
-            {
-                "revision": current["revision"],
-                "enabled": False,
-            },
-        ).status_code
-        == 200
-    )
 
 
 def test_batch_approval_default_and_gateway_visibility(runtime, client, monkeypatch):
@@ -706,7 +680,7 @@ def test_unknown_resources_and_internal_probe_tokens_are_not_mutable(runtime, cl
     assert contents(runtime.directory) == before
 
 
-@pytest.mark.parametrize("version", [0, 4, 6])
+@pytest.mark.parametrize("version", [0, 4, 5, SCHEMA_VERSION + 1])
 def test_token_management_never_migrates_or_repairs_database(runtime, client, version):
     runtime.store.db.execute(f"PRAGMA user_version={version}")
     before = contents(runtime.directory)

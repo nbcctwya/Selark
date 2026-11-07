@@ -2,7 +2,7 @@
   "version": "0.10.0",
   "started_at": "2026-10-31T14:34:02.413346+00:00",
   "finished_at": "2026-10-31T14:36:48.791903+00:00",
-  "scope": "enabled models; live temporary localhost gateway; native MiMo audio supplement",
+  "scope": "Historical API and Token Plan excerpt; retired integration evidence removed on 2026-11-07.",
   "generation_retries": 0,
   "ledger": "isolated; original dashboard/history not updated",
   "inventory": [
@@ -62,22 +62,6 @@
       "default_model": "kimi-for-coding"
     },
     {
-      "connection_id": "chatgpt-personal",
-      "provider": "chatgpt",
-      "resource_type": "chatgpt_subscription",
-      "models": [
-        "gpt-6.1-sol",
-        "gpt-6-astra",
-        "gpt-6.1-terra",
-        "gpt-6-sol",
-        "gpt-6-luna",
-        "gpt-5.6-sol",
-        "gpt-5.6-terra",
-        "gpt-5.6-luna"
-      ],
-      "default_model": "gpt-6-luna"
-    },
-    {
       "connection_id": "openai-personal",
       "provider": "openai",
       "resource_type": "api",
@@ -92,9 +76,9 @@
     }
   ],
   "configuration_unchanged": true,
-  "generation_sends": 81,
-  "call_count": 81,
-  "passed_calls": 80,
+  "generation_sends": 63,
+  "call_count": 63,
+  "passed_calls": 62,
   "calls": [
     {
       "case": "arithmetic",
@@ -191,60 +175,6 @@
           "completion_tokens": 3,
           "total_tokens": 32,
           "prompt_tokens_details": null,
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-6.1-sol",
-      "mode": "nonstream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:34:04.074705+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": null,
-      "http_status": 200,
-      "actual_model": "gpt-6.1-sol",
-      "finish_reason": "stop",
-      "elapsed_ms": 8660.64,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
           "completion_tokens_details": {
             "reasoning_tokens": 0
           }
@@ -570,60 +500,6 @@
     },
     {
       "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-6.1-sol",
-      "mode": "stream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:34:16.008013+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": 3467.06,
-      "http_status": 200,
-      "actual_model": "gpt-6.1-sol",
-      "finish_reason": "stop",
-      "elapsed_ms": 3635.26,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
       "connection_id": "deepseek-personal",
       "model": "deepseek-v4-pro",
       "mode": "nonstream",
@@ -940,60 +816,6 @@
     },
     {
       "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-6-astra",
-      "mode": "nonstream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:34:22.682345+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": null,
-      "http_status": 200,
-      "actual_model": "gpt-6-astra",
-      "finish_reason": "stop",
-      "elapsed_ms": 2933.84,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
       "connection_id": "openai-personal",
       "model": "gpt-6.1-sol",
       "mode": "stream",
@@ -1220,60 +1042,6 @@
         "reported_usage": {
           "prompt_tokens": 29,
           "completion_tokens": 2,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-6-astra",
-      "mode": "stream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:34:27.996546+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": 2986.91,
-      "http_status": 200,
-      "actual_model": "gpt-6-astra",
-      "finish_reason": "stop",
-      "elapsed_ms": 3032.93,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
           "total_tokens": 31,
           "prompt_tokens_details": {
             "cached_tokens": 0
@@ -1622,60 +1390,6 @@
           "total_tokens": 69,
           "completion_tokens_details": {
             "reasoning_tokens": 39
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-6.1-terra",
-      "mode": "nonstream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:34:32.079698+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": null,
-      "http_status": 200,
-      "actual_model": "gpt-6.1-terra",
-      "finish_reason": "stop",
-      "elapsed_ms": 2844.37,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
           }
         },
         "actual_model": null
@@ -2094,60 +1808,6 @@
     },
     {
       "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-6.1-terra",
-      "mode": "stream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:34:36.351813+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": 4190.5,
-      "http_status": 200,
-      "actual_model": "gpt-6.1-terra",
-      "finish_reason": "stop",
-      "elapsed_ms": 4223.0,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
       "connection_id": "kimi-code-personal",
       "model": "k3",
       "mode": "stream",
@@ -2355,60 +2015,6 @@
           },
           "completion_tokens_details": {
             "reasoning_tokens": 2
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-6-sol",
-      "mode": "nonstream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:34:41.560838+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": null,
-      "http_status": 200,
-      "actual_model": "gpt-6-sol",
-      "finish_reason": "stop",
-      "elapsed_ms": 3039.75,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
           }
         },
         "actual_model": null
@@ -2665,60 +2271,6 @@
     },
     {
       "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-6-sol",
-      "mode": "stream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:34:45.390555+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": 4066.63,
-      "http_status": 200,
-      "actual_model": "gpt-6-sol",
-      "finish_reason": "stop",
-      "elapsed_ms": 4230.33,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
       "connection_id": "openai-personal",
       "model": "gpt-6-astra",
       "mode": "stream",
@@ -2933,60 +2485,6 @@
           "completion_tokens_details": {
             "reasoning_tokens": 11,
             "audio_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-6-luna",
-      "mode": "nonstream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:34:49.666541+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": null,
-      "http_status": 200,
-      "actual_model": "gpt-6-luna",
-      "finish_reason": "stop",
-      "elapsed_ms": 3237.83,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
           }
         },
         "actual_model": null
@@ -3237,60 +2735,6 @@
           "prompt_tokens": 5361,
           "completion_tokens": 1,
           "total_tokens": 5362
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-6-luna",
-      "mode": "stream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:34:53.338458+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": 4215.07,
-      "http_status": 200,
-      "actual_model": "gpt-6-luna",
-      "finish_reason": "stop",
-      "elapsed_ms": 4346.02,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
         },
         "actual_model": null
       }
@@ -3564,60 +3008,6 @@
     },
     {
       "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-5.6-sol",
-      "mode": "nonstream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:34:57.711796+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": null,
-      "http_status": 200,
-      "actual_model": "gpt-5.6-sol",
-      "finish_reason": "stop",
-      "elapsed_ms": 8758.23,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
       "connection_id": "relay-personal",
       "model": "claude-sonnet-5-5",
       "mode": "stream",
@@ -3707,168 +3097,6 @@
       }
     },
     {
-      "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-5.6-sol",
-      "mode": "stream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:35:06.498482+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": 3946.78,
-      "http_status": 200,
-      "actual_model": "gpt-5.6-sol",
-      "finish_reason": "stop",
-      "elapsed_ms": 4222.6,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-5.6-terra",
-      "mode": "nonstream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:35:10.748247+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": null,
-      "http_status": 200,
-      "actual_model": "gpt-5.6-terra",
-      "finish_reason": "stop",
-      "elapsed_ms": 3126.13,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-5.6-terra",
-      "mode": "stream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:35:13.905545+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": 3993.38,
-      "http_status": 200,
-      "actual_model": "gpt-5.6-terra",
-      "finish_reason": "stop",
-      "elapsed_ms": 4350.49,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
       "case": "json_fixture",
       "connection_id": "relay-personal",
       "model": "claude-sonnet-4-6",
@@ -3917,168 +3145,6 @@
       }
     },
     {
-      "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-5.6-luna",
-      "mode": "nonstream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:35:18.285708+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": null,
-      "http_status": 200,
-      "actual_model": "gpt-5.6-luna",
-      "finish_reason": "stop",
-      "elapsed_ms": 3520.98,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "arithmetic",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-5.6-luna",
-      "mode": "stream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:35:21.835350+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 26,
-        "completion_tokens": 5,
-        "total_tokens": 31,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": 2748.86,
-      "http_status": 200,
-      "actual_model": "gpt-5.6-luna",
-      "finish_reason": "stop",
-      "elapsed_ms": 2860.53,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 26,
-          "completion_tokens": 5,
-          "total_tokens": 31,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "json_fixture",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-6-luna",
-      "mode": "nonstream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:35:24.725115+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 30,
-        "completion_tokens": 13,
-        "total_tokens": 43,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0
-        }
-      },
-      "first_text_ms": null,
-      "http_status": 200,
-      "actual_model": "gpt-6-luna",
-      "finish_reason": "stop",
-      "elapsed_ms": 3015.03,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 30,
-          "completion_tokens": 13,
-          "total_tokens": 43,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
       "case": "code_function",
       "connection_id": "relay-personal",
       "model": "claude-sonnet-4-6",
@@ -4121,60 +3187,6 @@
           "total_tokens": 1163,
           "prompt_tokens_details": {
             "cached_tokens": 832
-          }
-        },
-        "actual_model": null
-      }
-    },
-    {
-      "case": "code_function",
-      "connection_id": "chatgpt-personal",
-      "model": "gpt-6-luna",
-      "mode": "stream",
-      "route": "selark_text",
-      "output_cap": null,
-      "started_at": "2026-10-31T14:35:27.768496+00:00",
-      "done": true,
-      "usage": {
-        "prompt_tokens": 30,
-        "completion_tokens": 29,
-        "total_tokens": 59,
-        "prompt_tokens_details": {
-          "cached_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 12
-        }
-      },
-      "first_text_ms": 2655.73,
-      "http_status": 200,
-      "actual_model": "gpt-6-luna",
-      "finish_reason": "stop",
-      "elapsed_ms": 2718.81,
-      "transport_ok": true,
-      "content_ok": true,
-      "passed": true,
-      "output_cap_respected": null,
-      "record": {
-        "status": "success",
-        "http_status": 200,
-        "upstream_status": 200,
-        "upstream_attempts": 1,
-        "upstream_result": "success",
-        "stream_status": null,
-        "usage_known": true,
-        "usage_final": true,
-        "delivery_status": "sent",
-        "error_code": null,
-        "reported_usage": {
-          "prompt_tokens": 30,
-          "completion_tokens": 29,
-          "total_tokens": 59,
-          "prompt_tokens_details": {
-            "cached_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 12
           }
         },
         "actual_model": null
@@ -4386,20 +3398,6 @@
       "generation_sent": false
     }
   ],
-  "verification": {
-    "new_test_cases": 90,
-    "new_suite_successful_runs": 3,
-    "full_suite_passed": 839,
-    "full_suite_seconds": 93.79,
-    "focused_suite_passed": 173,
-    "focused_suite_seconds": 18.57,
-    "repeat_suite_seconds": [
-      13.3,
-      13.51
-    ],
-    "installed_from_local_wheel": true,
-    "wheel_sha256": "cef1febd6736889c1e3db2a3c451d6ade237cb10ea287e4f10102e700b7aebba"
-  },
   "known_findings": [
     {
       "connection_id": "mimo-default",

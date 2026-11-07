@@ -2,7 +2,7 @@
 
 基于 `5139f68516c07431f6d023e5a2f3e9e98a97c3f1`，在 `feature/windows-native-backend` 分支实现。共用业务核心，通过 `platforms/` 提供 Windows 文件安全、锁、进程身份、正常退出和用户登录启动能力。前端子模块与静态资源内容未修改；`.gitattributes` 防止 Windows checkout 改变静态资源字节和清单哈希。
 
-本次没有调用真实模型、登录 OAuth、设置实际登录启动项或修改日常 WSL 服务。原始结果在 `reports/`；可复查的脱敏数据和完整延迟样本见 [JSON](windows-native-2026-11-06.json)。
+本次没有调用真实模型、设置实际登录启动项或修改日常 WSL 服务。原始结果在 `reports/`；可复查的脱敏数据和完整延迟样本见 [JSON](windows-native-2026-11-06.json)。
 
 ## 环境与功能验证
 
@@ -77,7 +77,7 @@ $env:PYTHONUTF8 = '1'
 ## 尚未包含的范围
 
 - 托盘常驻；当前关闭窗口会退出桌面，后台核心是否保留由上述选项控制。
-- 上述两个默认模型之外的真实模型与复杂工具场景、交互式 OAuth、真实登录自启动、Windows Service、macOS 和非 NTFS 文件系统验收。
+- 上述两个默认模型之外的真实模型与复杂工具场景、真实登录自启动、Windows Service、macOS 和非 NTFS 文件系统验收。
 - 两个系统同时使用一份 SQLite 数据，以及一键跨系统数据迁移；两边运行数据须各自存放。
 
 现有共用数据格式不变；具体 Windows 使用边界见 [指南](../guides/windows.md)。

@@ -1,11 +1,9 @@
 """Offline overview, recovery isolation, log retention and service control safety."""
 
-import json
 import logging
 import os
 import signal
 import subprocess
-import time
 from pathlib import Path
 
 import pytest
@@ -34,21 +32,7 @@ from .support.resources import contents
 
 
 def test_status_is_read_only_and_separates_evidence(runtime, monkeypatch, capsys):
-    from selark.chatgpt_auth import PLAN_SCOPES, ChatGPTAuth, Profile
-
     runtime.add_connection("coding", "kimi-code", "fake")
-    runtime.add_connection("subscription", "chatgpt", None)
-    authorization = ChatGPTAuth(runtime.directory)
-    authorization.write(
-        Profile(
-            connection_id="subscription",
-            state="connected",
-            access_token="fake-access",
-            refresh_token="fake-refresh",
-            expires_at=time.time() - 60,
-            scopes=list(PLAN_SCOPES),
-        )
-    )
     original = runtime.connection_settings()[0]
     caller = runtime.store.create_token("history")
     allocation(runtime, caller, "known")
@@ -62,23 +46,18 @@ def test_status_is_read_only_and_separates_evidence(runtime, monkeypatch, capsys
     before = contents(runtime.directory)
 
     def forbidden(*args, **kwargs):
-        pytest.fail("status must not access upstream or mutate OAuth")
+        pytest.fail("status must not access upstream")
 
     monkeypatch.setattr("httpx.Client", forbidden)
-    monkeypatch.setattr(ChatGPTAuth, "write", forbidden)
     result = overview(runtime.directory, offline=True)
     assert result["ok"] and result["service"]["state"] == "not_checked"
-    api, plan, subscription = result["connections"]
+    api, plan = result["connections"]
     assert api["configured"] and api["verification"]["state"] == "success"
     assert api["availability"]["state"] == "blocked_locally"
     assert api["authorization"]["remote_validity"] == "unknown"
     assert plan["client_allowed_models"] == []
     assert plan["provider_quota"]["historical_snapshot"]
-    assert subscription["authorization"]["access_expired"]
-    assert "access_expired_refresh_required" in subscription["availability"]["blockers"]
     assert contents(runtime.directory) == before
-    encoded = json.dumps(result)
-    assert "fake-access" not in encoded and "fake-refresh" not in encoded
     assert main(["--config-dir", str(runtime.directory), "status", "--offline"]) == 0
     assert "当前客户端获准模型" in capsys.readouterr().out
 
@@ -94,17 +73,6 @@ def test_status_does_not_migrate_or_initialize(tmp_path, monkeypatch):
     empty = tmp_path / "empty"
     assert overview(empty, offline=True)["scope"] == "unconfigured"
     assert not empty.exists()
-
-
-def test_status_corrupt_subscription_does_not_hide_api_resources(runtime):
-    runtime.add_connection("subscription", "chatgpt", None)
-    folder = runtime.directory / "chatgpt-auth" / "profiles"
-    folder.mkdir(parents=True, mode=0o700)
-    _write_private(folder / "subscription.json", {"broken": "not-a-profile"})
-    result = overview(runtime.directory, offline=True)
-    assert not result["ok"] and len(result["connections"]) == 2
-    assert result["connections"][0]["provider"] == "mimo"
-    assert result["connections"][1]["authorization"]["state"] == "unreadable"
 
 
 def test_status_client_only_does_not_open_server(runtime):

@@ -1,8 +1,7 @@
 # 0.7.1 稳定性与易用性验收
 
 日期：2026-10-30（Asia/Shanghai）。从 0.7.0 提交 `83728d9` 开发。
-**真实模型请求、真实供应商额度查询、真实 OAuth 操作均为 0**。
-OAuth 三个实现文件 `chatgpt_auth.py`、`chatgpt_cli.py`、`providers/chatgpt.py` 没有改动。
+**真实模型请求、真实供应商额度查询均为 0**。
 机器结果见 [stability-071-verification.json](stability-071-verification.json)。
 
 ## 回归与故障注入
@@ -22,7 +21,7 @@ OAuth 三个实现文件 `chatgpt_auth.py`、`chatgpt_cli.py`、`providers/chatg
 重复恢复、零与未知、限流退避、套餐预检查、SSE 身份变化、CLI 请求追踪、只读状态、
 过期/损坏订阅状态、凭据脱敏、备份损坏/链接/权限/旧格式、撤销状态恢复、保留预览、
 日志轮转、PID 复用防护、systemd 单元参数转义和启动失败处理。
-原有 OAuth、订阅、Token Plan、权限、并发预留、超时、交付和恢复测试全部保留。
+原有 订阅、Token Plan、权限、并发预留、超时、交付和恢复测试全部保留。
 
 压力脚本输出的 `record_write_failed` 是主动注入 SQLite 写锁时的预期诊断，
 随后从 pending 恢复成功、第二次恢复为零；不代表实际用户数据库故障。

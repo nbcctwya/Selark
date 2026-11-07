@@ -45,8 +45,6 @@ def fingerprint(config: ServerConfig) -> str:
         data = connection_document(config)
         for field in ("name", "enabled", "discovery", "limits"):
             data.pop(field, None)
-        if config.provider == "chatgpt":
-            data["oauth_generation"] = config.oauth_generation
         if config.resource_type == "api":
             data.pop("resource_type", None)
             data.pop("plan", None)
@@ -83,8 +81,6 @@ def discovery_fingerprint(config):
         key: document[key]
         for key in ("connection_id", "provider", "base_url", "api_key", "workspace_id")
     }
-    if config.provider == "chatgpt":
-        data["oauth_generation"] = config.oauth_generation
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
 
@@ -100,8 +96,6 @@ def capability_fingerprint(config):
         "config_revision",
     ):
         data.pop(key, None)
-    if config.provider == "chatgpt":
-        data["oauth_generation"] = config.oauth_generation
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
 
@@ -183,23 +177,7 @@ class Runtime:
         server, registry = self.settings(), self.registry()
         connections = [legacy_connection(server, registry)] if server.api_key is not None else []
         for config in registry.connections:
-            generation, unreadable = 0, False
-            if config.provider == "chatgpt":
-                from selark.chatgpt_auth import ChatGPTAuth
-
-                try:
-                    generation = ChatGPTAuth(self.directory).read(config.connection_id).generation
-                except (ConfigError, OSError):
-                    unreadable = True
-            connections.append(
-                config.model_copy(
-                    update={
-                        "limits": server.limits,
-                        "oauth_generation": generation,
-                        "authorization_unreadable": unreadable,
-                    }
-                )
-            )
+            connections.append(config.model_copy(update={"limits": server.limits}))
         return connections
 
     def resources(self):
@@ -237,7 +215,7 @@ class Runtime:
                             document | {"connection_id": connection_id, "model": model}
                         )
                         connection = require_connection(self.connection_settings(), connection_id)
-                        if connection.resource_type in {"token_plan", "chatgpt_subscription"}:
+                        if connection.resource_type == "token_plan":
                             raise ConfigError(
                                 "Token Plan 不使用按量单价；套餐剩余额度与 Token 用量分别记录。"
                             )
@@ -263,8 +241,6 @@ class Runtime:
         if provider not in PRESETS:
             raise ConfigError("不支持的供应商类型，请查看 connection providers。")
         name, url = PRESETS[provider]
-        if provider == "chatgpt":
-            options = {"resource_type": "chatgpt_subscription", **options}
         if provider in PLAN_PRESETS:
             options = {
                 "resource_type": "token_plan",
@@ -355,16 +331,12 @@ class Runtime:
                     output.write(content)
                     output.flush()
                     os.fsync(output.fileno())
-        from selark.chatgpt_auth import ChatGPTAuth
-
-        ChatGPTAuth(self.directory).backup_registrations(target / "chatgpt-registration")
         _write_private(
             target / "manifest.json",
             {
                 "reason": reason,
                 "created_at": utc_now(),
                 "recovery_consistent": True,
-                "chatgpt_credentials": "registration_only_reauthorize_after_restore",
             },
         )
         from selark.backups import seal_backup
@@ -421,31 +393,13 @@ class Runtime:
         )
         result = config.model_dump(mode="json", exclude={"api_key"})
         result.update(configured=True, api_key="[REDACTED]")
-        if config.provider == "chatgpt":
-            from selark.chatgpt_auth import ChatGPTAuth
-
-            result.pop("api_key")
-            result["authentication"] = "oauth"
-            result["authorization"] = (
-                {"state": "unreadable", "ready": False}
-                if config.authorization_unreadable
-                else ChatGPTAuth(self.directory).status(identity)
-            )
-        result["verification"] = (
-            {"state": "unknown", "verified_at": None}
-            if config.authorization_unreadable
-            else self.store.verification(config.connection_id, fingerprint(config))
-        )
+        result["verification"] = self.store.verification(config.connection_id, fingerprint(config))
         from selark.model_state import catalog
 
         result["discovery"] = catalog(config)
         result["models_configured"] = bool(config.allowed_models)
         result["protocol"] = (
-            "responses"
-            if config.provider == "chatgpt"
-            else "anthropic-messages"
-            if config.provider == "anthropic"
-            else "chat-completions"
+            "anthropic-messages" if config.provider == "anthropic" else "chat-completions"
         )
         if config.resource_type == "token_plan":
             result["plan_status"] = self.store.plan_status(

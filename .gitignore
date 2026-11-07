@@ -55,8 +55,8 @@ connections.json
 connections.json.*
 resources.json
 resources.json.*
-# OAuth registrations and rotating credentials belong only in user configuration.
-chatgpt-auth/
+# Private authentication files belong only in user configuration.
+*-auth/
 # Local recovery receipts and protected configuration/database backups.
 pending/
 backups/

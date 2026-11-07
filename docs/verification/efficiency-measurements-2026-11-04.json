@@ -167,7 +167,6 @@
   },
   "source_sha256": {
     "persistence.py": "2bf78b999aeeef42b4f1ea18c7458f1ab1344205818a4fbc892b02e9b829e59b",
-    "chatgpt_auth.py": "cff59f85bddc1e5b08a100b6bcd4d1d46d649d71821c9ee3b83866f4928a18c2",
     "runtime.py": "d735f43c96f5ec63fc515287191b33e7b4d0ae4025e6c286c66d982961f2f640",
     "discovery.py": "f0cdec96edb619dec593ed62e16339f1863faf89049f8889c819b79155b07b05",
     "management/diagnostics.py": "df8f86e9a297361f6d44b93497efd4203ee421a445df03be7c951d9c6703eecb"

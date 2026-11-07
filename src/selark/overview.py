@@ -131,13 +131,6 @@ def overview(directory, *, offline=False, include_usage=True):
                 configs = configured_connections(runtime.settings(), registry)
                 for config in configs:
                     try:
-                        if config.provider == "chatgpt":
-                            from selark.chatgpt_auth import ChatGPTAuth
-
-                            generation = (
-                                ChatGPTAuth(directory).read(config.connection_id).generation
-                            )
-                            config = config.model_copy(update={"oauth_generation": generation})
                         entry = runtime.connection(config.connection_id, config=config)
                     except ConfigError:
                         result["ok"] = False
@@ -186,28 +179,6 @@ def overview(directory, *, offline=False, include_usage=True):
                         blockers.append("connection_disabled")
                     if not config.allowed_models:
                         blockers.append("models_not_configured")
-                    if config.provider == "chatgpt":
-                        auth = entry["authorization"]
-                        authorization = {
-                            "kind": "oauth",
-                            **{
-                                key: auth[key]
-                                for key in (
-                                    "state",
-                                    "access_expired",
-                                    "expires_at",
-                                    "refresh_available",
-                                    "refresh_state",
-                                    "plan_permission",
-                                    "ready",
-                                )
-                            },
-                            "remote_validity": "unknown",
-                        }
-                        if not auth["ready"]:
-                            blockers.append("authorization_not_ready")
-                        elif auth["access_expired"]:
-                            blockers.append("access_expired_refresh_required")
                     if entry.get("generation_support") == "preset_only":
                         blockers.append("plan_preset_only")
                     allowed = [

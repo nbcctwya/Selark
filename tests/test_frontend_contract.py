@@ -86,7 +86,13 @@ def test_frontend_fixture_tracks_current_backend_without_personal_data_or_networ
     assert contract_shapes(fresh) == contract_shapes(committed)
     assert fresh["fixture_only"] is True
     assert len(fresh["records"]) == 65
-    assert len(fresh["snapshot"]["connections"]) == 6
+    assert {c["provider"] for c in fresh["snapshot"]["connections"]} == {
+        "mimo",
+        "deepseek",
+        "kimi-code",
+        "anthropic",
+        "openai",
+    }
     serialized = json.dumps(fresh)
     for field in ("api_key", "access_token", "refresh_token", "token_hash", "error_message"):
         assert f'"{field}":' not in serialized

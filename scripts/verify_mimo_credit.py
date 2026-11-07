@@ -182,7 +182,6 @@ class Acceptance:
             "no_paid_balance_authorized": True,
             "automatic_generation_retries": 0,
             "original_service_modified": False,
-            "oauth_operations": 0,
             "calls": [],
             "checks": [],
             "phases": [],

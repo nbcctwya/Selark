@@ -145,7 +145,6 @@ def run(command, *, history_rows=20000):
             "passed": True,
             "checks": checks,
             "real_provider_requests": 0,
-            "oauth_operations": 0,
             "fake_generations": 2,
             "known_tokens": 28,
             "history_rows": history_rows,

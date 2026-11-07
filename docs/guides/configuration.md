@@ -26,7 +26,7 @@ python3 /absolute/path/to/Selark/examples/summarize.py \
 
 该示例仅依赖 Python 标准库，可以复制到其他目录、脱离 Selark 安装运行。
 `examples/` 是单独的小程序示例，不是已安装 `selark` 命令的运行依赖。
-只向外部调用方提供客户端配置；模型权限受该令牌策略约束，旧令牌默认无 Token Plan 或 ChatGPT 订阅权限。
+只向外部调用方提供客户端配置；模型权限受该令牌策略约束，旧令牌默认无 Token Plan 权限。
 
 初始化时可选择端口、地址和允许模型：
 

@@ -1033,7 +1033,7 @@
           "installed_assets_outside_repository",
           "unauthenticated_rebinding_and_mutation_rejected",
           "browser_desktop_mobile_theme_filters_details_and_session",
-          "configuration_ledger_oauth_and_backup_content_unchanged",
+          "configuration_ledger_and_backup_content_unchanged",
           "clean_shutdown"
         ]
       },
@@ -9411,7 +9411,6 @@
   },
   "not_covered": [
     "native Windows execution on this WSL host",
-    "interactive OAuth",
     "actual Windows login startup",
     "desktop installer interactions",
     "cross-system shared SQLite",
@@ -10376,7 +10375,6 @@
             "offline history overview is consistent on every repeated read"
           ],
           "real_provider_requests": 0,
-          "oauth_operations": 0,
           "fake_generations": 2,
           "known_tokens": 28,
           "history_rows": 20000,
@@ -10406,7 +10404,6 @@
             "offline history overview is consistent on every repeated read"
           ],
           "real_provider_requests": 0,
-          "oauth_operations": 0,
           "fake_generations": 2,
           "known_tokens": 28,
           "history_rows": 20000,
@@ -10436,7 +10433,6 @@
             "offline history overview is consistent on every repeated read"
           ],
           "real_provider_requests": 0,
-          "oauth_operations": 0,
           "fake_generations": 2,
           "known_tokens": 28,
           "history_rows": 20000,

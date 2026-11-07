@@ -12,10 +12,9 @@ from selark.config import ConfigError, _write_private, data_directory
 from selark.history import import_history
 from selark.overview import overview
 from selark.platforms import native
-from selark.providers.chatgpt import response_usage
 from selark.runtime import Runtime
 from selark.storage import Store
-from selark.usage import inconsistent_usage, sanitize_usage
+from selark.usage import inconsistent_usage, response_usage, sanitize_usage
 
 from .support.governance import PAYLOAD, allocation, app_for, auth, finished, price
 from .support.governance import runtime as runtime
@@ -56,50 +55,6 @@ def test_backup_requires_verification_primary_key(runtime):
     backup = runtime.backup("missing-primary-key")
     with pytest.raises(ConfigError, match="主键"):
         verify_backup(backup)
-
-
-@pytest.mark.parametrize("enabled", [False, True])
-def test_broken_subscription_cannot_block_independent_api(runtime, enabled):
-    runtime.add_connection(
-        "broken",
-        "chatgpt",
-        None,
-        enabled=enabled,
-        allowed_models=["subscription-model"],
-        default_model="subscription-model",
-    )
-    caller = runtime.store.create_token(
-        "isolated",
-        policy={
-            "allow_chatgpt_subscriptions": True,
-            "allowed_connections": ["mimo-default", "broken"],
-        },
-    )
-    folder = runtime.directory / "chatgpt-auth" / "profiles"
-    folder.mkdir(parents=True, mode=0o700)
-    _write_private(folder / "broken.json", {"broken": True})
-    calls = []
-
-    def upstream(request):
-        calls.append(request)
-        return httpx.Response(200, json=completion())
-
-    with TestClient(app_for(runtime, upstream)) as client:
-        assert client.get("/v1/models", headers=auth(caller)).status_code == 200
-        assert (
-            client.post("/v1/chat/completions", headers=auth(caller), json=PAYLOAD).status_code
-            == 200
-        )
-        failed = client.post(
-            "/v1/chat/completions", headers=auth(caller), json=PAYLOAD | {"connection_id": "broken"}
-        )
-        assert failed.status_code == 503
-        assert failed.json()["error"]["code"] == (
-            "connection_authorization_unreadable" if enabled else "connection_disabled"
-        )
-    assert len(calls) == 1
-    assert runtime.connection("mimo-default")["configured"]
-    assert runtime.connection("broken")["authorization"]["state"] == "unreadable"
 
 
 @pytest.mark.parametrize(
@@ -328,7 +283,7 @@ def test_status_reports_invalid_client_as_failure_without_hiding_resources(runti
 
 
 @pytest.mark.parametrize("invalid", [-1, "private-invalid-count"])
-def test_subscription_usage_keeps_invalid_evidence_through_normalization(invalid):
+def test_responses_usage_keeps_invalid_evidence_through_normalization(invalid):
     usage = response_usage(
         {"usage": {"input_tokens": invalid, "output_tokens": 0, "total_tokens": 0}}
     )

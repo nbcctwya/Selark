@@ -18,7 +18,7 @@ from selark.governance import input_estimate, usage_cost
 from selark.persistence import Journal, snapshot
 from selark.runtime import Runtime, fingerprint
 from selark.schemas import ChatRequest
-from selark.storage import Store, utc_now
+from selark.storage import SCHEMA_VERSION, Store, utc_now
 
 from .support.governance import PAYLOAD, allocation, app_for, auth, finished, price
 from .support.governance import runtime as runtime
@@ -876,7 +876,7 @@ def test_schema_two_migration_is_atomic_backed_up_and_repeatable(tmp_path, monke
         ] == tokens
         assert upgraded.store.authenticate(auth(token)["Authorization"].encode(), chat=True) is None
         assert upgraded.store.policy("legacy")["daily_token_limit"] is None
-        assert upgraded.store.db.execute("PRAGMA user_version").fetchone()[0] == 5
+        assert upgraded.store.db.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
     with Runtime(directory) as repeated:
         assert repeated.migration_backup is None
     assert (directory / "client.json").read_bytes() == client_bytes

@@ -4,7 +4,6 @@
   "scope": "six independent tokens and HTTP pools; loopback TCP; fake upstream only",
   "real_generation_requests": 0,
   "real_provider_metadata_requests": 0,
-  "oauth_operations": 0,
   "checks": [
     {
       "check": "six_apps_same_session_isolated",

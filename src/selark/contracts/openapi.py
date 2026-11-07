@@ -166,7 +166,7 @@ DESCRIPTIONS = {
     ),
     "createConnection": (
         "Key 只写入，不在任何响应中返回。连接 ID 不可重复或使用 mimo-default；"
-        "最多 32 个连接。ChatGPT 授权需先通过 CLI。返回 enabled=true、"
+        "最多 32 个连接。返回 enabled=true、"
         "空 allowed_models、default_model=null。"
     ),
     "updateConnection": (
@@ -287,7 +287,6 @@ def dashboard_schemas():
         },
     ]
     schemas["SessionRequest"]["properties"]["token"]["maxLength"] = 128
-    schemas["ConnectionCreate"]["properties"]["provider"]["enum"].remove("chatgpt")
     model_pattern = r"^(?!.*::)[A-Za-z0-9][A-Za-z0-9_.:/@+-]{0,199}$"
     schemas["ModelApproval"]["properties"]["models"]["items"]["pattern"] = model_pattern
     schemas["LegacyModelApproval"]["properties"]["model"]["pattern"] = model_pattern
@@ -575,8 +574,7 @@ def gateway_document():
                     "response.completed/incomplete/failed，"
                     "Messages 以 message_stop 结束，不追加 [DONE]。未知扩展字段原样交给上游。"
                     "Responses 省略输出上限时遵循应用硬上限；无硬上限时只做本地估算预留，"
-                    "保留供应商默认输出行为。ChatGPT 订阅例外，"
-                    "只接受流式且不支持输出硬上限。见 HTTP API 指南的供应商协议矩阵。"
+                    "保留供应商默认输出行为。见 HTTP API 指南的供应商协议矩阵。"
                 )
                 operation["requestBody"]["content"]["application/json"].pop("example")
                 operation["responses"]["200"]["content"]["text/event-stream"].pop("example")

@@ -31,7 +31,7 @@ from selark.storage_schema import validate_schema
 from selark.usage import inconsistent_usage
 
 USAGE_FIELDS = ("prompt_tokens", "completion_tokens", "total_tokens")
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 ALLOCATION_FIELDS = (
     "state",
     "quota_tokens",
@@ -186,7 +186,7 @@ class Store:
 
     def _initialize_schema(self, path):
         version = self.db.execute("PRAGMA user_version").fetchone()[0]
-        if version not in {0, 1, 2, 3, 4, 5}:
+        if version not in {0, 1, 2, 3, 4, 5, 6}:
             raise ConfigError("数据库版本高于当前程序支持范围，请使用匹配的 Selark 版本。")
         if path:
             self.db.execute("PRAGMA journal_mode=WAL")
@@ -260,6 +260,30 @@ class Store:
                     "ON requests(connection_id,requested_model,started_at)"
                 )
                 self.db.execute("PRAGMA user_version=5")
+        if version < 6:
+            with self.db:
+                self.db.execute("BEGIN IMMEDIATE")
+                # Old releases serialized these fields for every application.
+                # Remove only retired fields, preserving all access and quota limits.
+                for row in self.db.execute("SELECT id,policy_json FROM tokens").fetchall():
+                    try:
+                        policy = json.loads(row["policy_json"])
+                        if not isinstance(policy, dict):
+                            raise ValueError
+                        retired = {"allow_chatgpt_subscriptions", "chatgpt_output_reservation"}
+                        if not retired.intersection(policy):
+                            continue
+                        policy = {key: value for key, value in policy.items() if key not in retired}
+                        Policy.model_validate(policy)
+                    except (ValueError, TypeError):
+                        raise ConfigError(
+                            "调用方策略损坏，迁移已回滚；请检查记录库和备份。"
+                        ) from None
+                    self.db.execute(
+                        "UPDATE tokens SET policy_json=? WHERE id=?",
+                        (json.dumps(policy), row["id"]),
+                    )
+                self.db.execute("PRAGMA user_version=6")
 
     @contextmanager
     def transaction(self):
@@ -586,8 +610,7 @@ class Store:
                     connection_id,
                     (resource or {}).get("resource_type", "api") if resource else None,
                     connection_id
-                    if (resource or {}).get("resource_type")
-                    in {"token_plan", "chatgpt_subscription"}
+                    if (resource or {}).get("resource_type") == "token_plan"
                     else None,
                     (resource or {}).get("resource_type"),
                     purpose or "interactive_coding",

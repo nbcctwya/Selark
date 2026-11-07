@@ -29,11 +29,9 @@ def providers():
                 "id": identity,
                 "name": name,
                 "base_url": url,
-                "resource_type": "token_plan"
-                if identity in PLAN_PRESETS
-                else ("chatgpt_subscription" if identity == "chatgpt" else "api"),
-                "can_create": identity != "chatgpt",
-                "credential_type": "oauth" if identity == "chatgpt" else "api_key",
+                "resource_type": "token_plan" if identity in PLAN_PRESETS else "api",
+                "can_create": True,
+                "credential_type": "api_key",
             }
             for identity, (name, url) in PRESETS.items()
         ]
@@ -50,8 +48,6 @@ def connection_config(runtime, identity):
 def editable_fields(config):
     if config.connection_id == "mimo-default":
         return ["name", "enabled", "base_url", "api_key", "timeout_seconds"]
-    if config.provider == "chatgpt":
-        return ["name", "enabled", "timeout_seconds"]
     fields = list(CONNECTION_FIELDS)
     if config.resource_type != "token_plan":
         fields.remove("plan")

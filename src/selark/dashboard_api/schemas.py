@@ -32,12 +32,6 @@ class ConnectionCreate(StrictConfig):
     anthropic_version: Literal["2023-06-01", "2026-10-21"] = "2026-10-21"
     plan: PlanSettings | None = None
 
-    @model_validator(mode="after")
-    def key_provider(self):
-        if self.provider == "chatgpt":
-            raise ValueError("ChatGPT 授权连接请使用 CLI 创建")
-        return self
-
 
 class ConnectionPatch(StrictConfig):
     revision: Revision

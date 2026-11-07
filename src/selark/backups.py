@@ -51,15 +51,8 @@ def backup_files(root):
         if name == "manifest.json":
             continue
         parts = name.split("/")
-        allowed = (
-            name in {*CONFIGS, "records.sqlite3"}
-            or (len(parts) == 2 and parts[0] == "pending" and parts[1].endswith(".json"))
-            or name == "chatgpt-registration/host.json"
-            or (
-                len(parts) == 3
-                and parts[:2] == ["chatgpt-registration", "profiles"]
-                and parts[2].endswith(".json")
-            )
+        allowed = name in {*CONFIGS, "records.sqlite3"} or (
+            len(parts) == 2 and parts[0] == "pending" and parts[1].endswith(".json")
         )
         if not allowed:
             raise ConfigError("备份含未识别文件；拒绝恢复，请检查备份目录。")
@@ -108,7 +101,7 @@ def verify_backup(root, *, allow_legacy=False):
                 if db.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                     raise ConfigError("备份 SQLite 完整性检查失败。")
                 schema = db.execute("PRAGMA user_version").fetchone()[0]
-                if schema not in {0, 1, 2, 3, 4, 5}:
+                if schema not in {0, 1, 2, 3, 4, 5, 6}:
                     raise ConfigError("备份数据库版本不受支持。")
                 initialized = validate_schema(db)
                 if (
@@ -121,15 +114,6 @@ def verify_backup(root, *, allow_legacy=False):
         for name in files:
             if name.startswith("pending/"):
                 Journal.load(root / name)
-            elif name.startswith("chatgpt-registration/profiles/"):
-                # Use the unchanged credential schema; backups contain registration only.
-                from selark.chatgpt_auth import Profile
-
-                profile = load_config(root / name, Profile)
-                if any(
-                    getattr(profile, key) for key in ("access_token", "refresh_token", "id_token")
-                ):
-                    raise ConfigError("备份注册信息含 OAuth 凭据，拒绝恢复。")
         return {
             "ok": True,
             "backup": str(root),
@@ -138,7 +122,6 @@ def verify_backup(root, *, allow_legacy=False):
             "database_schema": schema,
             "created_at": manifest.get("created_at"),
             "reason": manifest.get("reason"),
-            "oauth_credentials_restored": False,
         }
     except ConfigError:
         raise
@@ -176,8 +159,6 @@ def restore_backup(root, target, *, allow_legacy=False):
             elif source.exists():
                 shutil.copyfile(source, instance / "data" / name)
                 native.protect(instance / "data" / name)
-        if (archive / "chatgpt-registration").exists():
-            shutil.copytree(archive / "chatgpt-registration", instance / "chatgpt-auth")
         # Retain the isolated layout even at the default XDG configuration path.
         # Never silently reopen an unrelated XDG ledger after a successful restore.
         _write_private(instance / "storage.json", StorageLayout().model_dump())
@@ -214,7 +195,6 @@ def restore_backup(root, target, *, allow_legacy=False):
         "recovery": recovery,
         "usage": usage,
         "callers": callers,
-        "oauth_credentials_restored": False,
         "model_generation_requests": 0,
         "note": "恢复为新实例，未启动服务；使用前核对端口和客户端地址，清除 SELARK_DATA_DIR 覆盖。",
     }

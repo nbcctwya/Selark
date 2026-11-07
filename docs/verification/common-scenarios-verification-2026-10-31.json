@@ -19012,7 +19012,6 @@
     "four_api": true,
     "real_generation_requests": 0,
     "real_provider_metadata_requests": 0,
-    "oauth_operations": 0,
     "checks": [
       {
         "check": "applications_same_session_isolated",

@@ -22,7 +22,6 @@
 | OpenAI API | 文本与 function 工具 | 原生转发 | 不支持 |
 | Anthropic | 文本与 function 工具的协议转换 | 不支持 | 原生转发，推荐 |
 | Kimi Code | 文本与 function 工具 | 官方原生接口 | 官方原生接口 |
-| ChatGPT 订阅 | 既有文本适配 | 官方原生接口，工具调用使用此入口 | 不支持 |
 | GLM / 智谱 API | 文本与 function 工具 | 未接入 | 未接入 |
 | 通用 API（OpenAI 兼容） | 文本与 function 工具 | 上游须提供此接口 | 上游须提供此接口 |
 | GLM Coding Plan | 保留模拟预设，真实生成仍禁用 | 未接入 | 未接入 |
@@ -37,14 +36,14 @@ MiMo、DeepSeek、Kimi 的 Messages 地址按官方路径使用配置 origin 下
 
 - `messages` 支持 `system/developer/user/assistant/tool`。content 为字符串或混合 `text` / `image_url` 块数组；assistant 工具调用可省略 content 或使用 null；tool 消息须提供 `tool_call_id` 和 content，允许截图工具返回混合文本和图片。
 - 图片块使用 `{"type":"image_url","image_url":{"url":"data:image/png;base64,..."}}`，也可提供 HTTP(S) 图片 URL，`detail` 可为 `auto/low/high/original`。同协议转发保留块顺序、原始图片字符串和调用方指定的 detail；Selark 不下载、解码、压缩或保存图片，也不把图片转写为提示文本。上游模型校验自己支持的格式、detail 和消息角色。
-- Anthropic Chat 转换会把图片 URL / PNG、JPEG、GIF、WebP base64 映射为原生 `image.source`，包括 `tool_result.content` 内的图片。显式 `low/high/original` 无法无损映射，须使用原生 `/v1/messages`；ChatGPT 订阅的图片输入使用原生 `/v1/responses`。
+- Anthropic Chat 转换会把图片 URL / PNG、JPEG、GIF、WebP base64 映射为原生 `image.source`，包括 `tool_result.content` 内的图片。显式 `low/high/original` 无法无损映射，须使用原生 `/v1/messages`。
 - 支持 `tools`、`tool_choice`、`parallel_tool_calls`、assistant `tool_calls`、`reasoning_content`、tool 结果及 SDK 消息扩展字段。JSON Schema、工具参数字符串、调用 ID、结果、空白和顺序保留；工具调用请求不再强制关闭思考。
 - 支持调用方显式提供 `thinking`、`reasoning_effort`、`stream_options`、`response_format`；供应商执行并校验其支持范围。Kimi Code 的强制思考要求仍检查，未知模型不隐式回退。
 - 支持桌面 SDK 常用的 `store`（布尔值）、`prompt_cache_key`（字符串）、`prompt_cache_retention`（`in_memory` / `24h`），同协议转发时保留调用方指定值。DSH 默认发送 `store:false`，Kimi Code 会发送缓存键；这些字段不会让 Selark 保存或补写对话，也不会产生额外生成。Anthropic Chat 转换仅接受 `store:false` / 未设置；其余存储与缓存参数无法无损映射，须改用原生 Messages 参数。
 - 非流式工具回复允许 `content: null` 和 `finish_reason: "tool_calls"`；SSE 保留工具参数增量、并行 index 和终止原因，不把它们当正文拼接。成功以 `data: [DONE]` 结束。
 - 普通 API 的 `max_tokens` 与 `max_completion_tokens` 互斥，范围 1–131072。普通文本省略时保留既有默认 1024；带工具定义的同协议请求省略时保留供应商默认行为，应用硬上限优先。Anthropic 的 Chat 转换仍使用默认 1024，因为 Messages 要求显式 max_tokens。
 - 支持 `temperature`（0–1.5）、`top_p`（0.01–1）、`stop`（字符串或 1–4 个字符串）、`presence_penalty/frequency_penalty`（-2–2）。这些参数由上游执行；Selark 不修复或重新生成不满足要求的答案。
-- 不带工具的既有文本模式保留原有低成本默认。Anthropic Chat 适配会映射 function / tool_use、工具结果与结束原因；签名思考块、供应商原生工具等完整能力使用 `/v1/messages`。ChatGPT 工具调用使用 `/v1/responses`，不会通过文本 JSON 模拟。
+- 不带工具的既有文本模式保留原有低成本默认。Anthropic Chat 适配会映射 function / tool_use、工具结果与结束原因；签名思考块、供应商原生工具等完整能力使用 `/v1/messages`。
 - 单 choice（index=0），最多 256 条消息、128 个工具。根级未知参数仍返回 400；Chat 暂不支持音频、视频、file 内容块和 `n` 多候选。包含 Base64 图片的完整请求仍受 1 MiB 上限约束；本地输入预留是启发式估算，不是视觉 Token 测量，实际用量以供应商回报为准。
 
 参数校验失败时，400 错误信息会列出字段位置与校验类型，例如 `prompt_cache_key (string_type)`，请求日志对应记录 `invalid_fields`（最多 8 项）。仅输出已知字段名和校验类型，不记录消息正文、密钥、字段值或任意未知键名。生成请求仍经过原有权限、限额和持久化检查。
@@ -61,7 +60,7 @@ Responses 使用 `input`、`tools`、`tool_choice` 等原生字段；支持 func
 
 Responses 未指定输出上限时，若应用配置了硬上限则传入该值；否则只在本地预留 131072 输出 Token，保留上游默认输出行为。这个数是入场估算，不是新增消耗或上游硬上限，账本分别记录 `output_limit` 和 `estimated_output_reservation`。工具定义也计入输入估算。预算较小的调用方可以显式设置输出上限，避免预留超过预算。派发前应用策略变化仍会被复查。
 
-ChatGPT 订阅遵循官方 SIWC 限制：`stream:true`、`store:false`、input 数组，无 `max_output_tokens` / `previous_response_id`；使用官方支持的 namespace / additional_tools 工具形式。保留原有订阅授权、专用输出估算预留与禁止按量回退策略，见 [ChatGPT 接入](chatgpt.md)。Kimi Code 保留真实 Selark 客户端身份、用途确认、套餐额度检查及官方路径。
+Kimi Code 保留真实 Selark 客户端身份、用途确认、套餐额度检查及官方路径。
 
 ## 客户端接入
 
@@ -103,7 +102,7 @@ openai-personal::gpt-6-luna
 
 DSH 在“设置 → 模型 → 添加提供商 → 自定义模型 API”中获取并保存模型；Kimi Code 桌面版在“设置 → Model Providers”中添加自定义提供商。页面按钮名称以安装版本为准，参见 [DSH 官方配置](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/guide/providers.md) 和 [Kimi Code 桌面版接入](https://www.kimi.com/code/docs/en/kimi-code-desktop/getting-started.html)。Selark 在 WSL、客户端在 Windows 时，先确认 Windows 能访问网关的 `/health`，再使用对应的本机地址；修改网关端口后同时修改 Base URL。
 
-官方协议依据（2026-11-05 核对）：[OpenAI 工具调用](https://developers.openai.com/api/docs/guides/function-calling)、[SIWC 约束](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)、[Anthropic 工具调用](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)、[DeepSeek 工具调用](https://api-docs.deepseek.com/guides/tool_calls/)、[DeepSeek Responses](https://api-docs.deepseek.com/guides/responses_api/)、[DeepSeek Messages](https://api-docs.deepseek.com/guides/anthropic_api/)、[MiMo Chat](https://mimo.mi.com/docs/en-US/api/chat/openai-api)、[MiMo Responses](https://mimo.mi.com/docs/en-US/api/chat/responses)、[MiMo Messages](https://mimo.mi.com/docs/en-US/api/chat/anthropic-api)、[Kimi 工具调用](https://platform.kimi.ai/docs/guide/use-kimi-api-to-complete-tool-calls)、[Kimi Responses](https://platform.kimi.ai/docs/guide/codex-kimi)、[Kimi Messages](https://platform.kimi.ai/docs/guide/claude-code-kimi)、[Kimi Code Responses](https://www.kimi.com/code/docs/en/third-party-tools/codex.html)、[Kimi Code Messages](https://www.kimi.com/code/docs/en/third-party-tools/claude-code.html)、[GLM 工具调用](https://docs.bigmodel.cn/cn/guide/capabilities/function-calling)。
+官方协议依据（2026-11-05 核对）：[OpenAI 工具调用](https://developers.openai.com/api/docs/guides/function-calling)、[Anthropic 工具调用](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)、[DeepSeek 工具调用](https://api-docs.deepseek.com/guides/tool_calls/)、[DeepSeek Responses](https://api-docs.deepseek.com/guides/responses_api/)、[DeepSeek Messages](https://api-docs.deepseek.com/guides/anthropic_api/)、[MiMo Chat](https://mimo.mi.com/docs/en-US/api/chat/openai-api)、[MiMo Responses](https://mimo.mi.com/docs/en-US/api/chat/responses)、[MiMo Messages](https://mimo.mi.com/docs/en-US/api/chat/anthropic-api)、[Kimi 工具调用](https://platform.kimi.ai/docs/guide/use-kimi-api-to-complete-tool-calls)、[Kimi Responses](https://platform.kimi.ai/docs/guide/codex-kimi)、[Kimi Messages](https://platform.kimi.ai/docs/guide/claude-code-kimi)、[Kimi Code Responses](https://www.kimi.com/code/docs/en/third-party-tools/codex.html)、[Kimi Code Messages](https://www.kimi.com/code/docs/en/third-party-tools/claude-code.html)、[GLM 工具调用](https://docs.bigmodel.cn/cn/guide/capabilities/function-calling)。
 
 请求示例（令牌从你的客户端配置安全取得，下面只使用占位值）：
 
@@ -121,7 +120,7 @@ Content-Type: application/json
 上游鉴权/额度/网络/协议失败 502，等待上游超时 504。错误信息不透传上游原始正文，以免泄露凭据。
 应用权限或订阅用途不满足时返回 403；派发前连接配置已变化可返回 409。
 连接停用或本地记录库不可用时返回 503；撤销后的调用方令牌返回 401。
-连接、模型和应用的日常管理同时提供本机 CLI 与独立 Dashboard API；备份恢复、服务控制和 OAuth 操作仍通过 CLI 完成。
+连接、模型和应用的日常管理同时提供本机 CLI 与独立 Dashboard API；备份恢复、服务控制仍通过 CLI 完成。
 执行与等待名额用尽返回 429，排队超时返回 503，请求体超时返回 408，请求总时限返回 504。
 本地过载和不可用响应附带 `Retry-After`；服务不会自行重试模型生成。
 流开始之后无法修改 HTTP 状态：发送 `event: error` 及同形 JSON，不发送成功终态（Chat Completions 不发送 `[DONE]`）；CLI 非零退出。

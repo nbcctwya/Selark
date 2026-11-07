@@ -1,6 +1,6 @@
 """Independent applications over real loopback HTTP, using invented upstreams only.
 
-No real profiles, provider sockets, API keys, subscriptions or OAuth are used.
+No real profiles, provider sockets, API keys, subscriptions are used.
 Run with the installed Selark Python to exercise that installation.
 """
 
@@ -208,7 +208,6 @@ async def run(args):
         "four_api": args.four_api,
         "real_generation_requests": 0,
         "real_provider_metadata_requests": 0,
-        "oauth_operations": 0,
         "checks": [],
     }
     checks, outcomes = report["checks"], []

@@ -37,7 +37,7 @@ OpenAPI 的 `info.version=2.0.0` 是文档契约版本，与 Python 包版本和
 | POST | `/api/applications/{identity}/revoke` | 撤销令牌 |
 | GET | `/api/applications/{identity}/quota` | UTC 当日使用与保守预留 |
 
-`identity` 是列表返回的 ID，在路径中按单个 URL 段编码。服务控制、备份恢复、迁移和 OAuth 登录退出仍由 CLI 提供。
+`identity` 是列表返回的 ID，在路径中按单个 URL 段编码。服务控制、备份恢复、迁移仍由 CLI 提供。
 
 ## 页面开发前需要掌握的规则
 

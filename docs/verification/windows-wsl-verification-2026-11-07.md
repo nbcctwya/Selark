@@ -129,7 +129,7 @@ python -m scripts.measure_relay --check-budget --output reports/relay.json
 保持测量脚本相同；真实测试不属于上述离线命令，也不接入自动 CI。
 前端和浏览器命令见开发指南；本机另使用前述浏览器路径覆盖。
 
-本次未覆盖交互式 OAuth、真实 Windows 登录自启动、桌面安装器交互、跨系统共享 SQLite、
+本次未覆盖真实 Windows 登录自启动、桌面安装器交互、跨系统共享 SQLite、
 所有供应商 / 模型、多模态和长时间真实 API 压力。日常运行的服务未被这次临时安装替换。
 原生 Windows 的覆盖和剩余范围另见 [Windows 验收](windows-native-2026-11-06.md)。
 

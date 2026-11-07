@@ -45,13 +45,11 @@ def configure_connection_interactively(args):
     if not sys.stdin.isatty():
         raise ConfigError("--interactive 需要交互终端；脚本请用 --provider，模型可自动发现。")
     if not args.provider:
-        providers = [key for key in PRESETS if key != "chatgpt"]
+        providers = list(PRESETS)
         print("可选平台：" + ", ".join(providers), file=sys.stderr)
         args.provider = input("平台 ID: ").strip()
         if args.provider not in providers:
-            raise ConfigError("平台 ID 无效；ChatGPT 继续使用原有 chatgpt 命令。")
-    if args.provider == "chatgpt":
-        raise ConfigError("ChatGPT 继续使用原有 chatgpt 命令；此向导不发起 OAuth。")
+            raise ConfigError("平台 ID 无效，请选择支持的平台。")
     provider = "zhipu" if args.provider == "glm" else args.provider
     if not args.name:
         args.name = input(f"连接名称 [{PRESETS[provider][0]}]: ").strip() or None
@@ -70,10 +68,9 @@ def configure_connection_interactively(args):
 
 def probe(runtime: Runtime, identity="mimo-default", *, model=None, stream=False) -> dict:
     config = require_connection(runtime.connection_settings(), identity)
-    if config.resource_type in {"token_plan", "chatgpt_subscription"}:
+    if config.resource_type == "token_plan":
         raise ConfigError(
-            "订阅资源不执行通用生成探测。ChatGPT 用 chatgpt status/usage 查询，"
-            "用专用受限令牌主动 ask 验证；Token Plan 参见 plans --help。"
+            "Token Plan 不执行通用生成探测，请使用专用受限令牌主动 ask 验证；参见 plans --help。"
         )
     if not config.enabled:
         raise ConfigError("连接已停用；请先启用，再显式探测。")

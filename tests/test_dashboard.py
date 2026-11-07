@@ -10,7 +10,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from selark import dashboard_data as data
-from selark.chatgpt_auth import PLAN_SCOPES, ChatGPTAuth, Profile
 from selark.cli import main
 from selark.config import ConfigError, _write_private, initialize, server_document
 from selark.dashboard import ASSETS, Session, create_dashboard
@@ -165,17 +164,6 @@ def test_empty_config_is_not_created_or_migrated(tmp_path):
 
 def test_full_read_only_snapshot_redacts_secrets_and_preserves_unknowns(runtime, monkeypatch):
     runtime.add_connection("plan", "kimi-code", "test-plan-secret")
-    runtime.add_connection("subscription", "chatgpt", None)
-    ChatGPTAuth(runtime.directory).write(
-        Profile(
-            connection_id="subscription",
-            state="connected",
-            access_token="test-oauth-access",
-            refresh_token="test-oauth-refresh",
-            expires_at=1,
-            scopes=list(PLAN_SCOPES),
-        )
-    )
     caller = runtime.store.create_token("reader")
     quote = price(runtime)
     allocation(runtime, caller, "known", quote=quote)
@@ -209,28 +197,24 @@ def test_full_read_only_snapshot_redacts_secrets_and_preserves_unknowns(runtime,
     before = contents(runtime.directory)
 
     def forbidden(*args, **kwargs):
-        pytest.fail("Dashboard must not call providers or mutate OAuth")
+        pytest.fail("Dashboard must not call providers")
 
-    monkeypatch.setattr(ChatGPTAuth, "write", forbidden)
     monkeypatch.setattr("httpx.Client.send", forbidden)
     # TestClient needs httpx.Client.send; call read-only projections directly here.
     result = data.snapshot(runtime.directory, data.query_filters({}), offline=True)
     rows = data.records(runtime.directory, data.query_filters({}))
-    api, plan, subscription = result["connections"]
+    api, plan = result["connections"]
     assert api["availability"] == {"state": "unknown", "checked_live": False, "blockers": []}
     assert api["verification"]["state"] == "success"
     assert api["provider_quota"]["remaining_tokens"] is None
     assert plan["provider_quota"]["reported_counters"][0]["remaining"] == "0"
     assert plan["provider_quota"]["current_remaining_tokens"] is None
-    assert subscription["authorization"]["access_expired"]
     assert result["usage"]["summary"]["known_tokens"]["total_tokens"] == 14
     assert Decimal(rows["items"][0]["cost"]["estimated_cost"]) == Decimal("0.000016")
     encoded = json.dumps([result, rows])
     for secret in (
         UPSTREAM_KEY,
         caller["token"],
-        "test-oauth-access",
-        "test-oauth-refresh",
         "test-plan-secret",
     ):
         assert secret not in encoded

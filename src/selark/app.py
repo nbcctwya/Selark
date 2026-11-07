@@ -256,9 +256,7 @@ class RequestMiddleware:
                 state["connection_id"] = selected.connection_id
                 state["resource_type"] = selected.resource_type
                 state["plan_id"] = (
-                    selected.connection_id
-                    if selected.resource_type in {"token_plan", "chatgpt_subscription"}
-                    else None
+                    selected.connection_id if selected.resource_type == "token_plan" else None
                 )
                 enforce_access(policy, selected.connection_id, model, selected.resource_type)
                 enforce_approval(selected, model)
@@ -592,9 +590,7 @@ def create_app(
                 "connection_name": c.name,
                 "connection_enabled": c.enabled,
                 "resource_type": c.resource_type,
-                "plan_id": c.connection_id
-                if c.resource_type in {"token_plan", "chatgpt_subscription"}
-                else None,
+                "plan_id": c.connection_id if c.resource_type == "token_plan" else None,
             }
             for c in available
             if c.enabled
@@ -624,9 +620,7 @@ def create_app(
                         "connection_enabled": c.enabled,
                         "alias": alias,
                         "resource_type": c.resource_type,
-                        "plan_id": c.connection_id
-                        if c.resource_type in {"token_plan", "chatgpt_subscription"}
-                        else None,
+                        "plan_id": c.connection_id if c.resource_type == "token_plan" else None,
                     }
                 )
         default_allowed = bool(
@@ -655,9 +649,7 @@ def create_app(
         request.state.connection_id = current.connection_id
         request.state.resource_type = current.resource_type
         request.state.plan_id = (
-            current.connection_id
-            if current.resource_type in {"token_plan", "chatgpt_subscription"}
-            else None
+            current.connection_id if current.resource_type == "token_plan" else None
         )
         if current.resource_type != "token_plan" and request.state.purpose != "connection_probe":
             request.state.purpose = "chat"
@@ -665,12 +657,6 @@ def create_app(
         if not current.enabled:
             raise GatewayError(
                 503, "connection_disabled", "所选连接已停用，请由本机管理员启用连接。"
-            )
-        if current.authorization_unreadable:
-            raise GatewayError(
-                503,
-                "connection_authorization_unreadable",
-                "所选订阅的本地凭据不可读，请运行 selark status / doctor 检查；其他连接不受影响。",
             )
         if model is None:
             raise GatewayError(
@@ -701,16 +687,7 @@ def create_app(
             and request.state.probe_fingerprint != request.state.fingerprint
         ):
             raise GatewayError(409, "probe_config_changed", "连接配置已改变，请重新显式探测。")
-        if current.provider == "chatgpt":
-            from selark.chatgpt_auth import ChatGPTAuth
-
-            provider = provider_for(
-                current.model_copy(update={"limits": limits}),
-                app.state.http,
-                auth=ChatGPTAuth(runtime.directory) if runtime else None,
-            )
-        else:
-            provider = provider_for(current.model_copy(update={"limits": limits}), app.state.http)
+        provider = provider_for(current.model_copy(update={"limits": limits}), app.state.http)
         native = data.wire_protocol != "chat"
         if native:
             from selark.providers.native import NativeProvider
@@ -723,7 +700,6 @@ def create_app(
             getattr(data, output_field, None) is None
             and getattr(data, "max_completion_tokens", None) is None
             and policy.max_output_tokens
-            and current.provider != "chatgpt"
         ):
             data = data.model_copy(
                 update={
@@ -783,15 +759,6 @@ def create_app(
         output_reservation_only = output is None
         if output_reservation_only:
             output = 131072  # Local conservative reservation; never sent as a model limit.
-        if current.provider == "chatgpt":
-            output = policy.chatgpt_output_reservation
-            if policy.max_output_tokens is not None or output is None:
-                raise GatewayError(
-                    403,
-                    "chatgpt_reservation_required",
-                    "此连接需要显式输出估算预留，且不能配置不受支持的 max_output_tokens 硬上限。",
-                )
-            await provider.authorize()
         price = next(
             (
                 p
@@ -835,9 +802,6 @@ def create_app(
                 setattr(request.state, key, value)
             if getattr(provider, "outcome", {}).get("upstream_result") in {"success", "failed"}:
                 request.state.upstream_completed_at = utc_now()
-            if current.provider == "chatgpt" and not provider.dispatched:
-                request.state.upstream_attempts = 0
-                request.state.upstream_result = "not_started"
 
         if not data.stream:
             try:

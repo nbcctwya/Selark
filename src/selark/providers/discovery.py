@@ -10,18 +10,14 @@ from selark.protocol import close_response, strict_json
 from selark.providers.factory import provider_for
 
 
-async def discover(config, *, transport=None, auth=None):
+async def discover(config, *, transport=None):
     models, after, seen_items = [], None, 0
     try:
         async with (
             asyncio.timeout(min(config.limits.request_timeout_seconds, 30)),
             httpx.AsyncClient(transport=transport, follow_redirects=False) as client,
         ):
-            provider = (
-                provider_for(config, client, auth=auth)
-                if config.provider == "chatgpt"
-                else provider_for(config, client)
-            )
+            provider = provider_for(config, client)
             for _ in range(10):
                 params = {"limit": 1000} if config.provider == "anthropic" else {}
                 if after:
@@ -36,20 +32,12 @@ async def discover(config, *, transport=None, auth=None):
                     data = strict_json(buffer)
                 finally:
                     await close_response(response)
-                key = "models" if config.provider == "chatgpt" else "data"
+                key = "data"
                 if not isinstance(data, dict) or not isinstance(data.get(key), list):
                     raise ValueError
                 seen_items += len(data[key])
                 for item in data[key]:
-                    if config.provider == "chatgpt" and (
-                        not isinstance(item, dict) or item.get("visibility") != "list"
-                    ):
-                        continue
-                    identity = (
-                        item.get("slug" if config.provider == "chatgpt" else "id")
-                        if isinstance(item, dict)
-                        else None
-                    )
+                    identity = item.get("id") if isinstance(item, dict) else None
                     if (
                         valid_model(identity)
                         and (
