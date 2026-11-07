@@ -4,7 +4,7 @@
   "tested_commit": "4ad023becacdebd7c4a9c993a76a05379d992cef",
   "baseline_commit": "5139f68516c07431f6d023e5a2f3e9e98a97c3f1",
   "frontend_commit": "b0e22be3836ea52bff5918ce4c34e2c82e22b284",
-  "runtime_source_modified_during_acceptance": false,
+  "runtime_source_modified_during_acceptance": true,
   "environment": {
     "os": "Ubuntu 20.04 on WSL2",
     "kernel": "5.15.167.4-microsoft-standard-WSL2",
@@ -9419,5 +9419,1039 @@
     "OpenAI Responses tool loop",
     "multimodal input",
     "long real-provider stress"
-  ]
+  ],
+  "post_ci_fix": {
+    "base_commit": "f2aa73f528f0d479188f0175c8a0de0b2157626b",
+    "failing_ci": {
+      "url": "https://github.com/nbcctwya/Selark/actions/runs/42338528901/job/128300827017",
+      "job": "test (3.12)",
+      "step": "Background service, backup drill and 20k-row overview (fake upstream only)",
+      "operation": "service restart",
+      "error": "该配置的 Selark 服务已在运行。",
+      "other_five_jobs_passed": true
+    },
+    "cause": "The process marker disappears before outer shutdown cleanup releases the service lock. Stop returned early and restart raced the old lock.",
+    "fix": "Wait for the verified process identity to exit even after marker removal; do not send another shutdown signal after the marker disappears. Preserve identity checks, timeout and refusal to force-kill.",
+    "source_sha256": {
+      "src/selark/service.py": "76c80f88fbeb4561fba6aa48d3dedc068977352355d2c4c92176167a5f7a3b58",
+      "tests/test_operations_071.py": "d7b05bbe40c8ab1e94cb907b39c0d31c32f8fbf4ed5ade2c324ea3f9c75a2d12"
+    },
+    "wheel_sha256": "5a9b8a748dcea40b954a3049f59bc2b34f926ce8ae16cb3fd877a304f1ad9a0c",
+    "deterministic_regression": {
+      "test": "tests/test_operations_071.py::test_stop_waits_for_process_exit_after_marker_removal",
+      "marker_phases": [
+        "before_signal",
+        "after_signal"
+      ],
+      "outcomes": [
+        "exited",
+        "reused",
+        "timeout"
+      ],
+      "before_fix_failed": 6,
+      "after_fix_passed": 6,
+      "clock": "simulated; no timing sleeps"
+    },
+    "related_tests": {
+      "passed": 30,
+      "skipped": 4,
+      "failed": 0
+    },
+    "full_python_suite": {
+      "passed": 1024,
+      "skipped": 4,
+      "failed": 0,
+      "errors": 0,
+      "warnings": 1
+    },
+    "check_attempts": [
+      {
+        "check": "ruff",
+        "exit_code": 0,
+        "seconds": 0.06,
+        "log": "ruff.log"
+      },
+      {
+        "check": "format",
+        "exit_code": 0,
+        "seconds": 0.06,
+        "log": "format.log"
+      },
+      {
+        "check": "security",
+        "exit_code": 0,
+        "seconds": 0.72,
+        "log": "security.log"
+      },
+      {
+        "check": "wheel",
+        "exit_code": 0,
+        "seconds": 0.72,
+        "log": "wheel.log"
+      },
+      {
+        "check": "install",
+        "exit_code": 0,
+        "seconds": 0.52,
+        "log": "install.log"
+      },
+      {
+        "check": "dependencies",
+        "exit_code": 0,
+        "seconds": 0.36,
+        "log": "dependencies.log"
+      },
+      {
+        "check": "installed-source",
+        "exit_code": 0,
+        "seconds": 0.03,
+        "log": "installed-source.log"
+      },
+      {
+        "check": "unit",
+        "exit_code": 0,
+        "seconds": 89.25,
+        "log": "unit.log"
+      },
+      {
+        "check": "contracts",
+        "exit_code": 0,
+        "seconds": 0.42,
+        "log": "contracts.log"
+      },
+      {
+        "check": "installed-cli",
+        "exit_code": 0,
+        "seconds": 0.21,
+        "log": "installed-cli.log"
+      },
+      {
+        "check": "stability",
+        "exit_code": 0,
+        "seconds": 6.08,
+        "log": "stability.log"
+      },
+      {
+        "check": "operations",
+        "exit_code": 0,
+        "seconds": 6.53,
+        "log": "operations.log"
+      },
+      {
+        "check": "api-stress",
+        "exit_code": 0,
+        "seconds": 5.93,
+        "log": "api-stress.log"
+      },
+      {
+        "check": "resource-matrix",
+        "exit_code": 0,
+        "seconds": 12.44,
+        "log": "resource-matrix.log"
+      },
+      {
+        "check": "multi-app",
+        "exit_code": 0,
+        "seconds": 11.39,
+        "log": "multi-app.log"
+      },
+      {
+        "check": "four-api",
+        "exit_code": 0,
+        "seconds": 22.56,
+        "log": "four-api.log"
+      },
+      {
+        "check": "runtime",
+        "exit_code": 0,
+        "seconds": 3.67,
+        "log": "runtime.log"
+      }
+    ],
+    "integration": {
+      "stability": {
+        "version": "0.10.0",
+        "real_mimo_requests": 0,
+        "simulated_upstream_requests": 9,
+        "checks": [
+          {
+            "check": "cli_and_passive_checks",
+            "passed": true,
+            "upstream_calls": 0
+          },
+          {
+            "check": "ordinary_and_sse_over_real_local_sockets",
+            "passed": true
+          },
+          {
+            "check": "bounded_queue_overload_and_wait_timeout",
+            "passed": true
+          },
+          {
+            "check": "actual_socket_read_idle_timeout",
+            "passed": true,
+            "elapsed_ms": 1072.67
+          },
+          {
+            "check": "trickling_stream_hits_total_deadline",
+            "passed": true,
+            "elapsed_ms": 1506.12
+          },
+          {
+            "check": "ordinary_client_socket_disconnect",
+            "passed": true
+          },
+          {
+            "check": "crash_restart_preserves_unknown_usage_without_retry",
+            "passed": true
+          },
+          {
+            "check": "bounded_shutdown_grace_and_accounting",
+            "passed": true,
+            "elapsed_ms": 418.27
+          },
+          {
+            "check": "post_recovery_call_and_usage_totals",
+            "passed": true,
+            "known_total_tokens": 56
+          }
+        ]
+      },
+      "operations": {
+        "version": "0.10.0",
+        "passed": true,
+        "checks": [
+          "background start confirms own health and repeated start is idempotent",
+          "two explicit fake generations recorded once with 28 tokens",
+          "online backup hash verification and isolated recovery preserve live ledger",
+          "persistent logs contain request metadata and no fake credentials",
+          "graceful restart preserves history without regenerating",
+          "crash restart and repeated stop are safe without extra generation",
+          "offline history overview is consistent on every repeated read"
+        ],
+        "real_provider_requests": 0,
+        "fake_generations": 2,
+        "known_tokens": 28,
+        "history_rows": 20000,
+        "overview_seconds": [
+          0.3322,
+          0.3315,
+          0.3444
+        ],
+        "service_backend": "process",
+        "platform": "linux"
+      },
+      "api-stress": {
+        "version": "0.10.0",
+        "scope": "temporary loopback upstream only; no real credentials or generations",
+        "real_generation_requests": 0,
+        "client_chat_requests": 275,
+        "simulated_upstream_requests": 49,
+        "peak_upstream_concurrency": 4,
+        "checks": [
+          {
+            "check": "80_simultaneous_clients_cycle_1",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 68
+            },
+            "upstream_calls": 12,
+            "health_latency_ms": 2.33
+          },
+          {
+            "check": "80_simultaneous_clients_cycle_2",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 68
+            },
+            "upstream_calls": 12,
+            "health_latency_ms": 3.99
+          },
+          {
+            "check": "80_simultaneous_clients_cycle_3",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 68
+            },
+            "upstream_calls": 12,
+            "health_latency_ms": 2.08
+          },
+          {
+            "check": "12_simultaneous_disconnects_release_active_and_queued",
+            "passed": true
+          },
+          {
+            "check": "queued_revocation_and_connection_disable_follow_documented_rules",
+            "passed": true
+          },
+          {
+            "check": "10_invalid_or_slow_requests_generate_nothing",
+            "passed": true
+          },
+          {
+            "check": "4_live_streams_with_sqlite_writer_and_consistent_pending_backup",
+            "passed": true,
+            "data_events_per_stream": [
+              42,
+              42,
+              42,
+              42
+            ],
+            "pending_at_backup": 4,
+            "health_latency_ms": 3.28,
+            "recovered_tokens": 56
+          }
+        ]
+      },
+      "resource-matrix": {
+        "version": "0.10.0",
+        "scope": "temporary profiles; real loopback downstream; MockTransport upstream",
+        "real_generation_requests": 0,
+        "real_provider_metadata_requests": 0,
+        "http_chat_requests": 668,
+        "cli_and_example_generations": 14,
+        "simulated_upstream_generations": 141,
+        "peak_upstream_concurrency": 4,
+        "peak_per_connection": {
+          "mimo-default": 1,
+          "deepseek-test": 3,
+          "relay-test": 1,
+          "coding-test": 1
+        },
+        "checks": [
+          {
+            "check": "four_resources_http_multiturn_text_blocks_routes_sessions",
+            "passed": true,
+            "requests": 8
+          },
+          {
+            "check": "cli_inputs_routes_json_stream_and_external_program",
+            "passed": true,
+            "successful_generations": 14,
+            "noninteractive_plan_cli_rejected": true
+          },
+          {
+            "check": "64_mixed_clients_cycle_1",
+            "passed": true,
+            "status_counts": {
+              "200": 9,
+              "429": 55
+            },
+            "upstream_calls": 9,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 49.93,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_2",
+            "passed": true,
+            "status_counts": {
+              "200": 10,
+              "429": 54
+            },
+            "upstream_calls": 10,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 49.83,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_3",
+            "passed": true,
+            "status_counts": {
+              "200": 11,
+              "429": 53
+            },
+            "upstream_calls": 11,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 49.84,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_4",
+            "passed": true,
+            "status_counts": {
+              "200": 10,
+              "429": 54
+            },
+            "upstream_calls": 10,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 49.94,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_5",
+            "passed": true,
+            "status_counts": {
+              "200": 7,
+              "429": 57
+            },
+            "upstream_calls": 7,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 49.89,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_6",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 52
+            },
+            "upstream_calls": 12,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 50.03,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_7",
+            "passed": true,
+            "status_counts": {
+              "200": 11,
+              "429": 53
+            },
+            "upstream_calls": 11,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 59.98,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_8",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 52
+            },
+            "upstream_calls": 12,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 49.89,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_9",
+            "passed": true,
+            "status_counts": {
+              "200": 10,
+              "429": 54
+            },
+            "upstream_calls": 10,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 50.68,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "64_mixed_clients_cycle_10",
+            "passed": true,
+            "status_counts": {
+              "200": 10,
+              "429": 54
+            },
+            "upstream_calls": 10,
+            "peak_active": 4,
+            "peak_plan_active": 1,
+            "health_latency_ms": 49.93,
+            "client_transport_errors": 0,
+            "generation_retries": 0
+          },
+          {
+            "check": "shared_caller_token_reservation_across_four_resources",
+            "passed": true,
+            "successful_generations": 1,
+            "quota_rejections": 3,
+            "settled_tokens": 14
+          },
+          {
+            "check": "four_resources_socket_disconnect_release",
+            "passed": true,
+            "unknown_usage_requests": 4
+          },
+          {
+            "check": "four_resource_streams_database_lock_backup_recovery",
+            "passed": true,
+            "restored_receipts": 4,
+            "known_total_tokens": 56,
+            "second_replay": 0
+          },
+          {
+            "check": "four_resources_zero_vs_missing_usage",
+            "passed": true
+          }
+        ],
+        "restart_preserved_summary": true,
+        "temporary_service_stopped": true
+      },
+      "multi-app": {
+        "version": "0.10.0",
+        "scope": "independent tokens and HTTP pools; loopback TCP; fake upstream only",
+        "real_generation_requests": 0,
+        "real_provider_metadata_requests": 0,
+        "checks": [
+          {
+            "check": "applications_same_session_isolated",
+            "passed": true,
+            "requests": 600,
+            "health_samples": 109,
+            "health_latency_ms": {
+              "p50": 45.13,
+              "p95": 55.09,
+              "max": 64.52
+            }
+          },
+          {
+            "check": "mixed_burst_1_bounded_execution_and_queue",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 36
+            },
+            "upstream_calls": 12
+          },
+          {
+            "check": "immediate_followups_measure_finalization_window",
+            "passed": true,
+            "status_counts": {
+              "200": 9,
+              "429": 1
+            },
+            "note": "Concurrency one includes final ledger persistence after delivery"
+          },
+          {
+            "check": "noisy_app_capped_shared_ingress_recovers_for_neighbors",
+            "passed": true,
+            "rejected": 10,
+            "immediate_neighbor_status_counts": {
+              "200": 4,
+              "429": 1
+            },
+            "other_apps_succeeded_after_cleanup": 5
+          },
+          {
+            "check": "concurrent_tokens_reservation_is_per_app",
+            "passed": true,
+            "admitted": 1,
+            "rejected": 3
+          },
+          {
+            "check": "concurrent_budget_reservation_is_per_app",
+            "passed": true,
+            "admitted": 1,
+            "rejected": 3
+          },
+          {
+            "check": "permissions_and_identity_are_not_client_claims",
+            "passed": true
+          },
+          {
+            "check": "six_faults_do_not_retry_or_block_healthy_request",
+            "passed": true,
+            "actual_simulated_attempts": 7
+          },
+          {
+            "check": "unknown_holds_only_block_affected_limited_apps",
+            "passed": true
+          },
+          {
+            "check": "revoking_one_application_keeps_others_usable",
+            "passed": true
+          },
+          {
+            "check": "entry_auth_rejection_has_no_generation_record",
+            "passed": true
+          },
+          {
+            "check": "every_response_attributed_once_and_usage_not_doubled",
+            "passed": true
+          },
+          {
+            "check": "restart_preserves_each_application_and_unknown_reservations",
+            "passed": true
+          }
+        ],
+        "passed": true,
+        "application_count": 6,
+        "client_requests": 702,
+        "simulated_upstream_requests": 643,
+        "peak_upstream_concurrency": 4,
+        "peak_distinct_connections": 3,
+        "peak_by_connection": {
+          "deepseek-test": 1,
+          "mimo-default": 3,
+          "relay-test": 2
+        },
+        "latency_ms": {
+          "p50": 78.03,
+          "p95": 99.06,
+          "max": 408.41
+        },
+        "error_counts": {
+          "server_overloaded": 37,
+          "caller_concurrency_limit": 11,
+          "caller_token_quota": 3,
+          "caller_budget_quota": 3,
+          "model_access_denied": 1,
+          "invalid_request": 1,
+          "upstream_protocol_error": 2,
+          "upstream_rate_limit": 1,
+          "upstream_timeout": 1,
+          "quota_usage_unknown": 1,
+          "budget_cost_unknown": 1,
+          "invalid_token": 1
+        },
+        "temporary_service_stopped": true,
+        "temporary_profiles_removed": true
+      },
+      "four-api": {
+        "version": "0.10.0",
+        "scope": "independent tokens and HTTP pools; loopback TCP; fake upstream only",
+        "real_generation_requests": 0,
+        "real_provider_metadata_requests": 0,
+        "checks": [
+          {
+            "check": "applications_same_session_isolated",
+            "passed": true,
+            "requests": 800,
+            "health_samples": 146,
+            "health_latency_ms": {
+              "p50": 46.75,
+              "p95": 55.96,
+              "max": 63.59
+            }
+          },
+          {
+            "check": "mixed_burst_1_bounded_execution_and_queue",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 116
+            },
+            "upstream_calls": 12
+          },
+          {
+            "check": "mixed_burst_2_bounded_execution_and_queue",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 116
+            },
+            "upstream_calls": 12
+          },
+          {
+            "check": "mixed_burst_3_bounded_execution_and_queue",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 116
+            },
+            "upstream_calls": 12
+          },
+          {
+            "check": "single_mimo-default_bounded_execution_and_queue",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 116
+            },
+            "upstream_calls": 12
+          },
+          {
+            "check": "single_deepseek-test_bounded_execution_and_queue",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 116
+            },
+            "upstream_calls": 12
+          },
+          {
+            "check": "single_relay-test_bounded_execution_and_queue",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 116
+            },
+            "upstream_calls": 12
+          },
+          {
+            "check": "single_openai-test_bounded_execution_and_queue",
+            "passed": true,
+            "status_counts": {
+              "200": 12,
+              "429": 116
+            },
+            "upstream_calls": 12
+          },
+          {
+            "check": "all_four_apis_overlap_and_each_reaches_four_execution_slots",
+            "passed": true,
+            "peak_distinct_connections": 4,
+            "peak_by_connection": {
+              "openai-test": 4,
+              "relay-test": 4,
+              "deepseek-test": 4,
+              "mimo-default": 4
+            }
+          },
+          {
+            "check": "queued_cancel_and_timeout_never_reach_upstream",
+            "passed": true
+          },
+          {
+            "check": "mimo-default_rate_isolated",
+            "passed": true
+          },
+          {
+            "check": "mimo-default_auth_isolated",
+            "passed": true
+          },
+          {
+            "check": "mimo-default_server-error_isolated",
+            "passed": true
+          },
+          {
+            "check": "mimo-default_timeout_isolated",
+            "passed": true
+          },
+          {
+            "check": "mimo-default_malformed_isolated",
+            "passed": true
+          },
+          {
+            "check": "mimo-default_truncated_isolated",
+            "passed": true
+          },
+          {
+            "check": "mimo-default_disconnect_isolated",
+            "passed": true
+          },
+          {
+            "check": "mimo-default_unknown_isolated",
+            "passed": true
+          },
+          {
+            "check": "deepseek-test_rate_isolated",
+            "passed": true
+          },
+          {
+            "check": "deepseek-test_auth_isolated",
+            "passed": true
+          },
+          {
+            "check": "deepseek-test_server-error_isolated",
+            "passed": true
+          },
+          {
+            "check": "deepseek-test_timeout_isolated",
+            "passed": true
+          },
+          {
+            "check": "deepseek-test_malformed_isolated",
+            "passed": true
+          },
+          {
+            "check": "deepseek-test_truncated_isolated",
+            "passed": true
+          },
+          {
+            "check": "deepseek-test_disconnect_isolated",
+            "passed": true
+          },
+          {
+            "check": "deepseek-test_unknown_isolated",
+            "passed": true
+          },
+          {
+            "check": "relay-test_rate_isolated",
+            "passed": true
+          },
+          {
+            "check": "relay-test_auth_isolated",
+            "passed": true
+          },
+          {
+            "check": "relay-test_server-error_isolated",
+            "passed": true
+          },
+          {
+            "check": "relay-test_timeout_isolated",
+            "passed": true
+          },
+          {
+            "check": "relay-test_malformed_isolated",
+            "passed": true
+          },
+          {
+            "check": "relay-test_truncated_isolated",
+            "passed": true
+          },
+          {
+            "check": "relay-test_disconnect_isolated",
+            "passed": true
+          },
+          {
+            "check": "relay-test_unknown_isolated",
+            "passed": true
+          },
+          {
+            "check": "openai-test_rate_isolated",
+            "passed": true
+          },
+          {
+            "check": "openai-test_auth_isolated",
+            "passed": true
+          },
+          {
+            "check": "openai-test_server-error_isolated",
+            "passed": true
+          },
+          {
+            "check": "openai-test_timeout_isolated",
+            "passed": true
+          },
+          {
+            "check": "openai-test_malformed_isolated",
+            "passed": true
+          },
+          {
+            "check": "openai-test_truncated_isolated",
+            "passed": true
+          },
+          {
+            "check": "openai-test_disconnect_isolated",
+            "passed": true
+          },
+          {
+            "check": "openai-test_unknown_isolated",
+            "passed": true
+          },
+          {
+            "check": "immediate_followups_measure_finalization_window",
+            "passed": true,
+            "status_counts": {
+              "200": 9,
+              "429": 1
+            },
+            "note": "Concurrency one includes final ledger persistence after delivery"
+          },
+          {
+            "check": "noisy_app_capped_shared_ingress_recovers_for_neighbors",
+            "passed": true,
+            "rejected": 10,
+            "immediate_neighbor_status_counts": {
+              "200": 5,
+              "429": 2
+            },
+            "other_apps_succeeded_after_cleanup": 7
+          },
+          {
+            "check": "concurrent_tokens_reservation_is_per_app",
+            "passed": true,
+            "admitted": 1,
+            "rejected": 3
+          },
+          {
+            "check": "concurrent_budget_reservation_is_per_app",
+            "passed": true,
+            "admitted": 1,
+            "rejected": 3
+          },
+          {
+            "check": "permissions_and_identity_are_not_client_claims",
+            "passed": true
+          },
+          {
+            "check": "six_faults_do_not_retry_or_block_healthy_request",
+            "passed": true,
+            "actual_simulated_attempts": 7
+          },
+          {
+            "check": "unknown_holds_only_block_affected_limited_apps",
+            "passed": true
+          },
+          {
+            "check": "revoking_one_application_keeps_others_usable",
+            "passed": true
+          },
+          {
+            "check": "entry_auth_rejection_has_no_generation_record",
+            "passed": true
+          },
+          {
+            "check": "every_response_attributed_once_and_usage_not_doubled",
+            "passed": true
+          },
+          {
+            "check": "restart_preserves_each_application_and_unknown_reservations",
+            "passed": true
+          }
+        ],
+        "passed": true,
+        "application_count": 8,
+        "client_requests": 1824,
+        "simulated_upstream_requests": 986,
+        "peak_upstream_concurrency": 4,
+        "peak_distinct_connections": 4,
+        "peak_by_connection": {
+          "openai-test": 4,
+          "relay-test": 4,
+          "deepseek-test": 4,
+          "mimo-default": 4
+        },
+        "latency_ms": {
+          "p50": 107.35,
+          "p95": 484.95,
+          "max": 626.26
+        },
+        "error_counts": {
+          "server_overloaded": 814,
+          "queue_timeout": 1,
+          "upstream_rate_limit": 5,
+          "upstream_auth_error": 4,
+          "upstream_error": 4,
+          "upstream_timeout": 5,
+          "upstream_protocol_error": 10,
+          "caller_concurrency_limit": 11,
+          "caller_token_quota": 3,
+          "caller_budget_quota": 3,
+          "model_access_denied": 1,
+          "invalid_request": 1,
+          "quota_usage_unknown": 1,
+          "budget_cost_unknown": 1,
+          "invalid_token": 1
+        },
+        "temporary_service_stopped": true,
+        "temporary_profiles_removed": true
+      },
+      "runtime": {
+        "python": "3.12.2",
+        "real_provider_requests": 0,
+        "fake_generation_requests": 11,
+        "forwarded_messages_unchanged": true,
+        "reported_tokens": 154,
+        "idle_seconds": 2.002,
+        "idle_cpu_seconds": 0.000108,
+        "idle_journal_scans": 0,
+        "idle_rss_bytes": 55140352,
+        "requests": 10,
+        "request_wall_seconds": 0.131438,
+        "request_cpu_seconds": 0.04335,
+        "after_requests_rss_bytes": 55410688,
+        "jwt_loaded": false
+      }
+    },
+    "additional_operation_cycles": [
+      {
+        "cycle": 1,
+        "exit_code": 0,
+        "seconds": 6.98,
+        "result": {
+          "version": "0.10.0",
+          "passed": true,
+          "checks": [
+            "background start confirms own health and repeated start is idempotent",
+            "two explicit fake generations recorded once with 28 tokens",
+            "online backup hash verification and isolated recovery preserve live ledger",
+            "persistent logs contain request metadata and no fake credentials",
+            "graceful restart preserves history without regenerating",
+            "crash restart and repeated stop are safe without extra generation",
+            "offline history overview is consistent on every repeated read"
+          ],
+          "real_provider_requests": 0,
+          "oauth_operations": 0,
+          "fake_generations": 2,
+          "known_tokens": 28,
+          "history_rows": 20000,
+          "overview_seconds": [
+            0.4627,
+            0.4856,
+            0.4933
+          ],
+          "service_backend": "process",
+          "platform": "linux"
+        }
+      },
+      {
+        "cycle": 2,
+        "exit_code": 0,
+        "seconds": 7.38,
+        "result": {
+          "version": "0.10.0",
+          "passed": true,
+          "checks": [
+            "background start confirms own health and repeated start is idempotent",
+            "two explicit fake generations recorded once with 28 tokens",
+            "online backup hash verification and isolated recovery preserve live ledger",
+            "persistent logs contain request metadata and no fake credentials",
+            "graceful restart preserves history without regenerating",
+            "crash restart and repeated stop are safe without extra generation",
+            "offline history overview is consistent on every repeated read"
+          ],
+          "real_provider_requests": 0,
+          "oauth_operations": 0,
+          "fake_generations": 2,
+          "known_tokens": 28,
+          "history_rows": 20000,
+          "overview_seconds": [
+            0.3473,
+            0.346,
+            0.3447
+          ],
+          "service_backend": "process",
+          "platform": "linux"
+        }
+      },
+      {
+        "cycle": 3,
+        "exit_code": 0,
+        "seconds": 6.58,
+        "result": {
+          "version": "0.10.0",
+          "passed": true,
+          "checks": [
+            "background start confirms own health and repeated start is idempotent",
+            "two explicit fake generations recorded once with 28 tokens",
+            "online backup hash verification and isolated recovery preserve live ledger",
+            "persistent logs contain request metadata and no fake credentials",
+            "graceful restart preserves history without regenerating",
+            "crash restart and repeated stop are safe without extra generation",
+            "offline history overview is consistent on every repeated read"
+          ],
+          "real_provider_requests": 0,
+          "oauth_operations": 0,
+          "fake_generations": 2,
+          "known_tokens": 28,
+          "history_rows": 20000,
+          "overview_seconds": [
+            0.3358,
+            0.3421,
+            0.3502
+          ],
+          "service_backend": "process",
+          "platform": "linux"
+        }
+      }
+    ],
+    "real_provider_requests": 0,
+    "performance_remeasured": false,
+    "scope_note": "Initial live API and performance evidence still describes 4ad023b. This follow-up covers only the service shutdown fix and its rebuilt wheel, with fake upstreams."
+  }
 }

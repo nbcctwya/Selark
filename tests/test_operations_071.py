@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import signal
 import subprocess
 import time
 from pathlib import Path
@@ -237,6 +238,59 @@ def test_stale_pid_is_never_signalled(runtime, monkeypatch):
     assert running_process(runtime.directory, runtime.data_dir) is None
     stop_process(runtime.directory, runtime.data_dir, 1)
     assert service_status(runtime.directory, offline=True)["pid"] is None
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX stop uses process identity polling")
+@pytest.mark.parametrize("marker_removed", ["before_signal", "after_signal"])
+@pytest.mark.parametrize("outcome", ["exited", "reused", "timeout"])
+def test_stop_waits_for_process_exit_after_marker_removal(
+    runtime, monkeypatch, marker_removed, outcome
+):
+    from selark import service
+
+    identity = {"pid": 424242, "start_ticks": "original", "boot_id": "test-boot"}
+    current = identity.copy()
+    marker = runtime.data_dir / "service-process.json"
+    _write_private(marker, identity | {"config_dir": str(runtime.directory), "backend": "process"})
+    now = 0.0
+    signals = []
+    waits = []
+
+    def open_pidfd(pid):
+        assert pid == identity["pid"]
+        if marker_removed == "before_signal":
+            marker.unlink()
+        return os.open(os.devnull, os.O_RDONLY)
+
+    def send_signal(descriptor, sig):
+        os.fstat(descriptor)
+        signals.append(sig)
+        marker.unlink(missing_ok=True)
+
+    def wait_for_exit(seconds):
+        nonlocal current, now
+        # The marker is gone, but the original process still owns shutdown cleanup.
+        assert not marker.exists() and current == identity
+        waits.append(seconds)
+        now += 6
+        if outcome == "exited":
+            current = None
+        elif outcome == "reused":
+            current = identity | {"start_ticks": "replacement"}
+
+    monkeypatch.setattr(service, "process_identity", lambda pid: current)
+    monkeypatch.setattr(os, "pidfd_open", open_pidfd, raising=False)
+    monkeypatch.setattr(signal, "pidfd_send_signal", send_signal, raising=False)
+    monkeypatch.setattr(os, "kill", lambda *args: pytest.fail("must use the bound pidfd"))
+    monkeypatch.setattr(service.time, "monotonic", lambda: now)
+    monkeypatch.setattr(service.time, "sleep", wait_for_exit)
+    if outcome == "timeout":
+        with pytest.raises(ConfigError, match="尚未退出，未强制终止"):
+            stop_process(runtime.directory, runtime.data_dir, 0)
+    else:
+        stop_process(runtime.directory, runtime.data_dir, 0)
+    assert signals == ([] if marker_removed == "before_signal" else [signal.SIGTERM])
+    assert len(waits) == 1
 
 
 @pytest.mark.skipif(os.name == "nt", reason="systemd is the Linux service adapter")

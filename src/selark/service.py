@@ -51,18 +51,18 @@ def process_marker(directory, data_dir, *, stop_callback=None):
             path.unlink(missing_ok=True)
 
 
+def _process_matches(saved):
+    current = process_identity(saved["pid"])
+    return bool(current and all(saved.get(key) == value for key, value in current.items()))
+
+
 def running_process(directory, data_dir):
     path = data_dir / "service-process.json"
     try:
         saved = json.loads(native.read_private(path, limit=4096))
         if not isinstance(saved, dict) or type(saved.get("pid")) is not int or saved["pid"] < 2:
             raise ValueError
-        current = process_identity(saved["pid"])
-        if (
-            saved.get("config_dir") == str(directory)
-            and current
-            and all(saved.get(k) == v for k, v in current.items())
-        ):
+        if saved.get("config_dir") == str(directory) and _process_matches(saved):
             return saved
     except FileNotFoundError:
         return None
@@ -222,19 +222,20 @@ def stop_process(directory, data_dir, grace):
             except OSError as error:
                 if error.errno not in {errno.ENOSYS, errno.EINVAL}:
                     raise
-        if running_process(directory, data_dir) != process:
-            return
-        if descriptor is not None:
-            signal.pidfd_send_signal(descriptor, signal.SIGTERM)
-        else:
-            os.kill(process["pid"], signal.SIGTERM)
+        if running_process(directory, data_dir) == process:
+            if descriptor is not None:
+                signal.pidfd_send_signal(descriptor, signal.SIGTERM)
+            else:
+                os.kill(process["pid"], signal.SIGTERM)
     except ProcessLookupError:
         return
     finally:
         if descriptor is not None:
             os.close(descriptor)
     deadline = time.monotonic() + min(grace + 5, 55)
-    while running_process(directory, data_dir) == process:
+    # The marker is removed before outer shutdown cleanup releases the service lock.
+    # If it has gone, wait for the verified process without another shutdown signal.
+    while _process_matches(process):
         if time.monotonic() >= deadline:
             raise ConfigError("服务尚未退出，未强制终止；请稍后查询状态与日志。")
         time.sleep(0.1)
