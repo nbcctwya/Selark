@@ -1,6 +1,6 @@
 # 安装与升级
 
-Selark 当前的日常运行环境是 Linux / WSL，要求 Python 3.11+。Python 包包含现有 Dashboard 静态资源，普通使用无需 Node.js。Windows、macOS 桌面安装包将在后续实现。
+Selark 要求 Python 3.11+。本页介绍 Linux / WSL；原生 Windows 的安装与后台运行见 [Windows 指南](windows.md)。Python 包包含现有 Dashboard 静态资源，普通使用无需 Node.js。桌面安装程序与后端 Python 包分别维护。
 
 ## 使用 pipx 安装
 

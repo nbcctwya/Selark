@@ -28,6 +28,7 @@ from selark.service import (
 
 from .support.governance import allocation, finished
 from .support.governance import runtime as runtime
+from .support.permissions import is_private, make_private, make_public
 from .support.resources import contents
 
 
@@ -109,7 +110,7 @@ def test_status_client_only_does_not_open_server(runtime):
     directory = runtime.directory / "client-only"
     directory.mkdir(mode=0o700)
     (directory / "client.json").write_bytes((runtime.directory / "client.json").read_bytes())
-    (directory / "client.json").chmod(0o600)
+    make_private(directory / "client.json")
     result = overview(directory, offline=True)
     assert result["scope"] == "client_only" and result["ok"]
     assert result["connections"] == []
@@ -154,7 +155,7 @@ def test_restore_and_drill_replay_pending_once_and_preserve_revocation(
     with pytest.raises(ConfigError, match="不存在"):
         restore_backup(backup, target)
     for path in target.rglob("*"):
-        assert path.stat().st_mode & 0o077 == 0
+        assert is_private(path, directory=path.is_dir())
 
 
 def test_old_backup_requires_explicit_legacy_choice(runtime):
@@ -176,7 +177,7 @@ def test_backup_rejects_unsafe_files(runtime, damage):
     elif damage == "missing":
         (backup / "server.json").unlink()
     else:
-        (backup / "server.json").chmod(0o644)
+        make_public(backup / "server.json")
     with pytest.raises(ConfigError):
         verify_backup(backup)
 
@@ -211,7 +212,7 @@ def test_log_rotation_is_bounded_private_and_readable(runtime):
         root.setLevel(old_level)
     files = list((runtime.data_dir / "logs").glob("selark.log*"))
     assert len(files) == 3
-    assert all(p.stat().st_size <= 65536 and not p.stat().st_mode & 0o077 for p in files)
+    assert all(p.stat().st_size <= 65536 and is_private(p) for p in files)
     assert read_logs(runtime.data_dir, lines=1)["lines"][0].startswith("299:")
 
 
@@ -238,6 +239,7 @@ def test_stale_pid_is_never_signalled(runtime, monkeypatch):
     assert service_status(runtime.directory, offline=True)["pid"] is None
 
 
+@pytest.mark.skipif(os.name == "nt", reason="systemd is the Linux service adapter")
 def test_systemd_install_and_enable_are_separate_and_contain_no_keys(
     runtime, monkeypatch, tmp_path
 ):
@@ -266,6 +268,7 @@ def test_systemd_install_and_enable_are_separate_and_contain_no_keys(
     assert any(call[0] == "disable" for call in calls) and any(call[0] == "stop" for call in calls)
 
 
+@pytest.mark.skipif(os.name == "nt", reason="systemd is the Linux service adapter")
 def test_systemd_failed_start_is_stopped_and_reported(runtime, monkeypatch, tmp_path):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
     calls = []
@@ -277,6 +280,7 @@ def test_systemd_failed_start_is_stopped_and_reported(runtime, monkeypatch, tmp_
     assert calls[-1][0] == "stop"
 
 
+@pytest.mark.skipif(os.name == "nt", reason="systemd is the Linux service adapter")
 def test_systemd_quotes_spaces_percent_dollars_and_rejects_newlines(runtime):
     unit = unit_text(Path('/tmp/s p%$"'), Path('/tmp/d p%$"'), runtime.settings())
     assert '%%$$\\"' in unit and '%%$\\"' in unit

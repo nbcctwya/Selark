@@ -21,6 +21,7 @@ from selark.storage import Store, utc_now
 
 from .support.governance import app_for, auth, finished
 from .support.governance import runtime as runtime
+from .support.permissions import is_private
 from .support.protocol import PNG_DATA_URL, event, sse
 from .support.token_plans import MODEL, PAYLOAD, PLAN, caller, handler, quota, reply
 from .support.token_plans import plan as plan
@@ -50,7 +51,20 @@ def test_old_tokens_deny_plans_and_explicit_connection_and_intent_required(runti
 
 
 @pytest.mark.parametrize("stream", [False, True])
-def test_plan_usage_reasoning_identity_and_sessions(runtime, plan, stream):
+@pytest.mark.parametrize(
+    "effort,effective",
+    [
+        (None, "max"),
+        ("low", "low"),
+        ("medium", "high"),
+        ("high", "high"),
+        ("xhigh", "max"),
+        ("max", "max"),
+        ("ultra", "max"),
+    ],
+)
+def test_plan_usage_reasoning_identity_and_sessions(runtime, plan, stream, effort, effective):
+    runtime.change_connection({"plan": plan.plan.model_dump() | {"reasoning_effort": "max"}}, PLAN)
     a, b = caller(runtime), caller(runtime)
     calls = []
     usage = reply()["usage"] | {
@@ -70,8 +84,10 @@ def test_plan_usage_reasoning_identity_and_sessions(runtime, plan, stream):
         for token in (a, b):
             result = client.post(
                 "/v1/chat/completions",
-                headers=auth(token),
-                json=PAYLOAD | {"stream": stream, "session_id": "same"},
+                headers=auth(token) | {"X-Selark-Interaction": "personal_coding"},
+                json={key: value for key, value in PAYLOAD.items() if key != "interaction"}
+                | {"stream": stream, "session_id": "same"}
+                | ({"reasoning_effort": effort} if effort is not None else {}),
             )
             assert result.status_code == 200
             assert "reasoning_content" in result.text
@@ -82,7 +98,8 @@ def test_plan_usage_reasoning_identity_and_sessions(runtime, plan, stream):
     posts = [json.loads(r.content) for r in calls if r.method == "POST"]
     assert len(posts) == 2
     for data in posts:
-        assert data["thinking"] == {"type": "enabled"} and data["reasoning_effort"] == "low"
+        assert data["thinking"] == {"type": "enabled"}
+        assert data["reasoning_effort"] == effective
         assert data["messages"] == PAYLOAD["messages"]
         assert data["max_tokens"] == 32 and "max_completion_tokens" not in data
         assert not {"interaction", "connection_id", "session_id"} & data.keys()
@@ -90,7 +107,7 @@ def test_plan_usage_reasoning_identity_and_sessions(runtime, plan, stream):
     assert len(rows) == 2
     for row in rows:
         assert row["resource_type"] == "token_plan" and row["purpose"] == "interactive_coding"
-        assert row["resources"]["plan_snapshot"]["effective_reasoning_effort"] == "low"
+        assert row["resources"]["plan_snapshot"]["effective_reasoning_effort"] == effective
         assert row["total_tokens"] == 14 and row["reported_usage"] == usage
         assert row["resources"]["estimated_cost"] is None
     totals = runtime.store.summary({"plan_id": PLAN}, group_by="plan")
@@ -101,6 +118,21 @@ def test_plan_usage_reasoning_identity_and_sessions(runtime, plan, stream):
     status = runtime.plan_status(PLAN)
     assert status["remaining_tokens"] is None and status["extra_usage"] == "disabled"
     assert "must-not-save" not in json.dumps(status)
+    # Per-request choices never rewrite the saved connection default.
+    assert runtime.connection_settings()[-1].plan.reasoning_effort == "max"
+
+
+@pytest.mark.parametrize("effort", ["none", "minimal"])
+def test_plan_unsupported_effort_refuses_before_upstream(runtime, plan, effort):
+    with TestClient(app_for(runtime, lambda _: pytest.fail("must not contact provider"))) as client:
+        result = client.post(
+            "/v1/chat/completions",
+            headers=auth(caller(runtime)),
+            json=PAYLOAD | {"reasoning_effort": effort},
+        )
+    assert result.status_code == 400
+    assert result.json()["error"]["code"] == "unsupported_provider_option"
+    assert runtime.store.records({"plan_id": PLAN})[0]["upstream_attempts"] == 0
 
 
 @pytest.mark.parametrize("failure", ["missing", "truncated", "timeout"])
@@ -471,7 +503,7 @@ def test_schema_three_migration_rollback_backup_and_repeat(runtime, monkeypatch)
     }
     with Runtime(runtime.directory) as upgraded:
         backup = upgraded.migration_backup
-        assert backup.stat().st_mode & 0o077 == 0
+        assert is_private(backup, directory=True)
         with contextlib.closing(connect(backup / "records.sqlite3")) as old:
             assert old.execute("PRAGMA user_version").fetchone()[0] == 3
         row = upgraded.store.records({})[0]
@@ -555,6 +587,7 @@ def test_plan_official_tools_keep_intent_quota_and_real_identity(runtime, plan, 
             ],
             "max_tokens": 128,
             "thinking": {"type": "enabled", "budget_tokens": 64},
+            "output_config": {"effort": "high"},
         }
         result = native_reply() | {
             "model": MODEL,
@@ -574,7 +607,7 @@ def test_plan_official_tools_keep_intent_quota_and_real_identity(runtime, plan, 
             "input": [{"role": "user", "content": "读取文件"}],
             "tools": [{"type": "function", **function_tools()[0]["function"]}],
             "max_output_tokens": 128,
-            "reasoning": {"effort": "low"},
+            "reasoning": {"effort": "xhigh"},
         }
         result = response_result() | {
             "model": MODEL,

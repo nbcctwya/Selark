@@ -26,8 +26,10 @@ import httpx
 from scripts.verify_stability import USAGE, chunk, completion
 from selark import __version__
 from selark.config import initialize
+from selark.platforms import native
 from selark.runtime import Runtime
 from selark.schemas import ChatRequest
+from selark.service import stop_process
 from selark.sse import SSEDecoder
 
 # The reference idle window follows 610 relay requests, not a single warm-up call.
@@ -63,6 +65,21 @@ def comparison(pairs):
 
 
 def process_stats(pid):
+    if os.name == "nt":
+        import win32api
+        import win32con
+        import win32process
+
+        with native.handle(
+            win32api.OpenProcess(
+                win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ, False, pid
+            )
+        ) as value:
+            times = win32process.GetProcessTimes(value)
+            return {
+                "cpu_seconds": (times["KernelTime"] + times["UserTime"]) / 10_000_000,
+                "rss_bytes": win32process.GetProcessMemoryInfo(value)["WorkingSetSize"],
+            }
     root = Path("/proc") / str(pid)
     if not root.exists():
         return None
@@ -247,10 +264,13 @@ def run(*, samples=300, idle_seconds=30, report=None, profile_path=None):
                     )
                     + "from selark.cli import main; raise SystemExit(main())",
                 ]
+            command, launch_env = native.python_command(
+                [*entry[1:], "--config-dir", str(profile), "serve"]
+            )
             process = subprocess.Popen(
-                [*entry, "--config-dir", str(profile), "serve"],
+                command,
                 cwd=root,
-                env=env,
+                env=env | launch_env,
                 stdout=log,
                 stderr=log,
             )
@@ -361,7 +381,10 @@ def run(*, samples=300, idle_seconds=30, report=None, profile_path=None):
                 raise
             finally:
                 if process.poll() is None:
-                    process.terminate()
+                    if native.IS_WINDOWS:
+                        stop_process(profile, profile / "data", 5)
+                    else:
+                        process.terminate()
                 try:
                     process.wait(timeout=10)
                 except subprocess.TimeoutExpired:

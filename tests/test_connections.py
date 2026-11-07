@@ -1,6 +1,5 @@
 import asyncio
 import json
-import stat
 
 import httpx
 import pytest
@@ -14,6 +13,7 @@ from selark.errors import GatewayError
 from selark.providers.discovery import discover
 from selark.runtime import Runtime, fingerprint
 
+from .support.permissions import is_private
 from .support.protocol import (
     PNG_DATA_URL,
     completion,
@@ -100,7 +100,7 @@ def test_provider_auth_payload_stream_and_actual_usage(multi, provider, streamin
             else "max_completion_tokens"
         )
         assert payload[parameter] == 16
-        if provider in {"mimo", "deepseek", "kimi", "zhipu"}:
+        if provider in {"mimo", "deepseek", "kimi"}:
             assert payload["thinking"] == {"type": "disabled"}
         else:
             assert "thinking" not in payload
@@ -339,7 +339,7 @@ def test_explicit_discovery_saves_refreshes_and_rejects_stale_results(multi):
     multi.change_connection({"default_model": "other"}, "relay")
     assert multi.connection("relay")["discovery"]["state"] == "success"
     assert "source_fingerprint" not in result["discovery"]
-    assert stat.S_IMODE((multi.directory / "connections.json").stat().st_mode) == 0o600
+    assert is_private(multi.directory / "connections.json")
     config = require_connection(multi.connection_settings(), "relay")
     failed = multi.save_discovery(
         config, [], GatewayError(502, "discovery_unavailable", "Unavailable; use manual models")
@@ -437,6 +437,82 @@ def test_anthropic_discovery_pagination_and_stream_interruption(multi):
     assert row["reported_usage"]["output_tokens"] == 2
     assert row["completion_tokens"] is None and row["total_tokens"] is None
     assert len(calls) == 3
+
+
+@pytest.mark.parametrize(
+    "provider", ["openai", "openai-compatible", "mimo", "deepseek", "zhipu", "kimi"]
+)
+@pytest.mark.parametrize("effort", ["low", "medium", "high", "xhigh", "max"])
+def test_chat_effort_is_not_replaced_by_implicit_thinking_off(multi, provider, effort):
+    # This tests transport preservation, not upstream acceptance of every value.
+    model = {"kimi": "kimi-k3.1-pro", "zhipu": "glm-5.3"}.get(provider, "shared")
+    multi.add_connection(
+        "effort",
+        provider,
+        "fake-effort-key",
+        base_url="https://upstream.test/v1",
+        allowed_models=[model],
+    )
+    sent = []
+
+    def upstream(request):
+        body = json.loads(request.content)
+        sent.append(body)
+        assert body["reasoning_effort"] == effort
+        assert "thinking" not in body
+        assert body["messages"] == [{"role": "user", "content": "  Keep this text.\n"}]
+        return httpx.Response(200, json=completion() | {"model": model})
+
+    with TestClient(
+        create_app(multi.settings(), runtime=multi, transport=httpx.MockTransport(upstream))
+    ) as client:
+        response = client.post(
+            "/v1/chat/completions",
+            headers=token(multi),
+            json={
+                "model": f"effort::{model}",
+                "reasoning_effort": effort,
+                "messages": [{"role": "user", "content": "  Keep this text.\n"}],
+            },
+        )
+        assert response.status_code == 200, response.text
+    assert len(sent) == 1
+    row = multi.store.records({})[0]
+    assert row["upstream_attempts"] == 1 and row["total_tokens"] == 14
+
+
+@pytest.mark.parametrize("model", ["glm-5.3", "glm-5.3-flash", "GLM-5.3-FLASHX", "glm-5.2"])
+@pytest.mark.parametrize("thinking", [None, {"type": "enabled"}, {"type": "disabled"}])
+def test_glm_53_default_does_not_disable_thinking_or_override_caller(multi, model, thinking):
+    multi.add_connection("glm", "zhipu", "fake-glm", allowed_models=[model])
+    messages = [{"role": "user", "content": "  Original request.\n"}]
+    sent = []
+
+    def upstream(request):
+        body = json.loads(request.content)
+        sent.append(body)
+        assert body["messages"] == messages
+        assert body["model"] == model
+        assert "reasoning_effort" not in body
+        if thinking is not None:
+            assert body["thinking"] == thinking
+        elif model == "glm-5.2":
+            assert body["thinking"] == {"type": "disabled"}  # Existing legacy behavior.
+        else:
+            assert "thinking" not in body
+        return httpx.Response(200, json=completion() | {"model": model})
+
+    with TestClient(
+        create_app(multi.settings(), runtime=multi, transport=httpx.MockTransport(upstream))
+    ) as client:
+        body = {"model": f"glm::{model}", "messages": messages}
+        if thinking is not None:
+            body["thinking"] = thinking
+        response = client.post("/v1/chat/completions", headers=token(multi), json=body)
+        assert response.status_code == 200, response.text
+    assert len(sent) == 1
+    row = multi.store.records({})[0]
+    assert row["upstream_attempts"] == 1 and row["total_tokens"] == 14
 
 
 def test_kimi_preserved_thinking_is_explicit_caller_input(multi):
@@ -850,8 +926,9 @@ def test_official_tool_roundtrip_preserves_calls_results_and_usage(multi, provid
     ],
 )
 @pytest.mark.parametrize("streaming", [False, True])
+@pytest.mark.parametrize("effort", ["low", "high", "xhigh", "max"])
 def test_native_protocol_preserves_tools_thinking_headers_and_terminal(
-    multi, provider, wire, path, streaming
+    multi, provider, wire, path, streaming, effort
 ):
     from .support.protocol import responses_result as responses_result
 
@@ -917,6 +994,7 @@ def test_native_protocol_preserves_tools_thinking_headers_and_terminal(
             "max_output_tokens": 128,
             "store": False,
             "include": ["reasoning.encrypted_content"],
+            "reasoning": {"effort": effort, "summary": "auto"},
         }
     else:
         output = [
@@ -973,6 +1051,7 @@ def test_native_protocol_preserves_tools_thinking_headers_and_terminal(
                 {"name": "read_file", "input_schema": function_tools()[0]["function"]["parameters"]}
             ],
             "thinking": {"type": "adaptive"},
+            "output_config": {"effort": effort},
             "max_tokens": 128,
         }
     body |= {"model": "shared", "stream": streaming}

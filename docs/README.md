@@ -16,6 +16,7 @@
 | 系统占用与中转 Token 边界 | [资源占用与转发开销](guides/efficiency.md) |
 | 应用令牌、策略、用量、费用 | [应用资源管理](guides/governance.md)、[管理命令](guides/management.md) |
 | 个人订阅 | [ChatGPT](guides/chatgpt.md)、[Token Plan](guides/token-plans.md) |
+| 推理档位与 DSH 接入 | [客户端推理配置](guides/reasoning-effort.md) |
 | 外部程序接入与参数范围 | [HTTP API](guides/http-api.md) |
 | 日常服务、日志、备份 | [运维](guides/operations.md) |
 | 并发、超时、落账与恢复 | [稳定性](guides/stability.md) |

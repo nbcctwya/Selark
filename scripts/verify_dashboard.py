@@ -22,6 +22,7 @@ from selark.config import initialize
 from selark.dashboard import ASSET_FILES
 from selark.governance import Price
 from selark.model_state import protocol
+from selark.platforms import native
 from selark.runtime import Runtime, capability_fingerprint, fingerprint
 
 
@@ -186,7 +187,7 @@ def seed(profile, count=140):
             )
             + "\nprivate unstructured line\n"
         )
-        log.chmod(0o600)
+        native.protect(log)
         return callers[0]["id"]
 
 

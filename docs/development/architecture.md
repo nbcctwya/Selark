@@ -71,7 +71,23 @@ flowchart TD
 应用写入使用只打开已有账本的模式，HTTP 管理不触发初始化或迁移。接口契约见 [日常管理 API](management-api.md)。
 Selark-Web 中的 `DashboardApi` 把组件与模拟/HTTP 数据源分开。前端目录是独立 Git 仓库，改动和版本引用需要分别提交。
 
-未来桌面版可以共享页面和业务契约，窗口、托盘、安装、进程启动等系统差异放入平台适配代码。当前 `service.py` 的 systemd 与 POSIX 进程实现仍有 Linux / WSL 边界，子模块接入本身不会提供跨平台运行能力。
+桌面版共享 HTTP / SSE 和管理契约，窗口与安装程序在独立项目维护。Windows Desktop 0.5.0 内置目录式 Python 后端，主进程通过私有管道启动 `desktop_session.py`；后者按需提供 Dashboard、复用或启动一个核心。续接管理会话不会重启核心，父进程退出通过管道 EOF 清理临时管理进程和自己拥有的核心；用户可明确选择保留核心，已有服务不接管退出。WSL 模式仍使用独立环境中的 Dashboard，双方运行数据分开保存。
+
+桌面首次初始化使用无 Key、无模型、停用的空连接状态，配置不包含虚假的供应商 Key；连接列表不展示缺失的旧式默认连接。新增连接、发现、启用模型和创建应用仍通过原有管理 API，鉴权和账本结构不变。
+
+后端 `platforms/` 根据当前系统选择底层实现，协议、权限、配额、SQLite 结构及恢复规则共用：
+
+| 能力 | Linux / WSL | Windows 原生 |
+| --- | --- | --- |
+| 默认目录 | XDG 用户目录 | `%LOCALAPPDATA%\Selark` |
+| 私有文件 | 所有者、0600 / 0700、O_NOFOLLOW | 受保护 DACL、句柄验证、拒绝重解析点 / 硬链接 |
+| 跨进程锁 | flock | LockFileEx，进程退出释放 |
+| 原子更新及刷盘 | 同目录替换、fsync | FileRenameInfoEx、文件和目录 FlushFileBuffers |
+| 进程身份 | 用户、PID、启动时刻和 boot ID | 用户 SID、进程句柄及创建时刻 |
+| 后台与退出 | systemd 或独立进程、SIGTERM | 独立进程、私有事件触发有界正常退出 |
+| 登录启动 | systemd 用户单元 | 用户 HKCU Run 启动项，显式 enable / disable |
+
+`windows_service.py` 的停止线程阻塞等待事件，不按时钟轮询。后台启动绕过 Windows 虚拟环境的重定向进程，保留虚拟环境依赖，使父进程观察的 PID 与实际核心一致。启动检查确认自身 PID 的健康接口，不向模型发请求。Windows 当前是用户级后台运行，不是 Windows Service；两边实例保存各自数据，不同时打开一份运行中的 SQLite 账本。
 
 ## 组织取舍
 

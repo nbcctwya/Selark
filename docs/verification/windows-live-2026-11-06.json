@@ -1,0 +1,247 @@
+{
+  "startedAt": "2026-11-06T13:33:00.248Z",
+  "maximumRequests": 4,
+  "generationAttempts": 4,
+  "automaticRetries": 0,
+  "calls": [
+    {
+      "model": "gpt-6-luna",
+      "stream": false,
+      "maxOutputTokens": 256,
+      "requestedReasoningEffort": "low",
+      "httpStatus": 200,
+      "actualModel": "gpt-6-luna",
+      "elapsedMs": 4403,
+      "reasoningCharacters": 0,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 27,
+        "completion_tokens": 14,
+        "total_tokens": 41,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "ledger": {
+        "model": "gpt-6-luna",
+        "status": "success",
+        "upstream_attempts": 1,
+        "prompt_tokens": 27,
+        "completion_tokens": 14,
+        "total_tokens": 41,
+        "usage_known": true,
+        "usage_final": true,
+        "error_code": null,
+        "delivery_status": "sent"
+      },
+      "usageMatchesLedger": true,
+      "passed": true,
+      "reportedUsage": {
+        "prompt_tokens": 27,
+        "completion_tokens": 14,
+        "total_tokens": 41,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "cost": {
+        "estimated_cost": null,
+        "currency": null,
+        "cost_status": null
+      },
+      "provider": "openai"
+    },
+    {
+      "model": "k3.1-pro",
+      "stream": false,
+      "maxOutputTokens": 1024,
+      "requestedReasoningEffort": "low",
+      "httpStatus": 200,
+      "actualModel": "k3.1-pro",
+      "elapsedMs": 4451,
+      "reasoningCharacters": 165,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 107,
+        "completion_tokens": 63,
+        "total_tokens": 170,
+        "completion_tokens_details": {
+          "reasoning_tokens": 39
+        }
+      },
+      "ledger": {
+        "model": "k3.1-pro",
+        "status": "success",
+        "upstream_attempts": 1,
+        "prompt_tokens": 107,
+        "completion_tokens": 63,
+        "total_tokens": 170,
+        "usage_known": true,
+        "usage_final": true,
+        "error_code": null,
+        "delivery_status": "sent"
+      },
+      "usageMatchesLedger": true,
+      "passed": true,
+      "reportedUsage": {
+        "prompt_tokens": 107,
+        "completion_tokens": 63,
+        "total_tokens": 170,
+        "completion_tokens_details": {
+          "reasoning_tokens": 39
+        }
+      },
+      "cost": {
+        "estimated_cost": null,
+        "currency": null,
+        "cost_status": null
+      },
+      "provider": "kimi-code"
+    },
+    {
+      "model": "k3.1-pro",
+      "stream": true,
+      "maxOutputTokens": 1024,
+      "requestedReasoningEffort": "low",
+      "httpStatus": 200,
+      "actualModel": "k3.1-pro",
+      "firstTextMs": 1254,
+      "elapsedMs": 1479,
+      "reasoningCharacters": 40,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 106,
+        "completion_tokens": 29,
+        "total_tokens": 135,
+        "completion_tokens_details": {
+          "reasoning_tokens": 7
+        },
+        "prompt_tokens_details": {}
+      },
+      "sseDone": true,
+      "ledger": {
+        "model": "k3.1-pro",
+        "status": "success",
+        "upstream_attempts": 1,
+        "prompt_tokens": 106,
+        "completion_tokens": 29,
+        "total_tokens": 135,
+        "usage_known": true,
+        "usage_final": true,
+        "error_code": null,
+        "delivery_status": "sent"
+      },
+      "usageMatchesLedger": true,
+      "passed": true,
+      "reportedUsage": {
+        "prompt_tokens": 106,
+        "completion_tokens": 29,
+        "total_tokens": 135,
+        "prompt_tokens_details": {},
+        "completion_tokens_details": {
+          "reasoning_tokens": 7
+        }
+      },
+      "cost": {
+        "estimated_cost": null,
+        "currency": null,
+        "cost_status": null
+      },
+      "provider": "kimi-code"
+    },
+    {
+      "model": "gpt-6-luna",
+      "stream": true,
+      "maxOutputTokens": 256,
+      "requestedReasoningEffort": "low",
+      "sseDone": true,
+      "reasoningCharacters": 0,
+      "httpStatus": 200,
+      "actualModel": "gpt-6-luna",
+      "firstTextMs": 3646,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 12,
+        "total_tokens": 38,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "elapsedMs": 3707,
+      "ledger": {
+        "model": "gpt-6-luna",
+        "status": "success",
+        "upstream_attempts": 1,
+        "prompt_tokens": 26,
+        "completion_tokens": 12,
+        "total_tokens": 38,
+        "usage_known": true,
+        "usage_final": true,
+        "error_code": null,
+        "delivery_status": "sent"
+      },
+      "reportedUsage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 12,
+        "total_tokens": 38,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "cost": {
+        "estimated_cost": null,
+        "currency": null,
+        "cost_status": null
+      },
+      "usageMatchesLedger": true,
+      "passed": true,
+      "provider": "openai"
+    }
+  ],
+  "temporaryApplicationRevoked": true,
+  "configurationUnchanged": true,
+  "existingGatewayStillRunning": true,
+  "finishedAt": "2026-11-06T13:35:44.589534+00:00",
+  "passed": true,
+  "ledgerVerification": "read-only SQLite; Dashboard GET cache has a 10-second TTL",
+  "knownTokens": {
+    "prompt_tokens": 266,
+    "completion_tokens": 118,
+    "total_tokens": 384
+  },
+  "publicationRedactions": [
+    "local request identifiers",
+    "local application identifier",
+    "local connection identifiers",
+    "generated answer text"
+  ]
+}

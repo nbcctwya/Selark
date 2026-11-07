@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- 修正 GLM 5.3 / Flash / FlashX 缺省请求被文本适配附加关闭思考参数的问题，保留调用方显式选项和较早 GLM 的默认行为。补充按具体模型区分实际档位、思考开关、预算和固定思考的客户端指南；完整 Windows / Linux 回归分别为 1016 / 1018 项通过，验证范围见 [后续推理能力回归](docs/verification/windows-native-2026-11-06.md#2026-11-07-推理能力与最终后端回归)。
+
+- 推理档位接入覆盖普通 API 与已实现的订阅协议。显式 Chat `reasoning_effort` 不再被隐式关闭思考冲突覆盖；原生 Responses / Messages 保留 effort、工具、思考历史及流式事件，ChatGPT 订阅保留原生 Responses 档位。扩展多供应商、普通/SSE 与订阅回归，并补充统一客户端配置、未知模型自定义和逐请求选择说明。
+
+- 明确 Kimi Chat Completions 的连接推理设置仅为默认值，请求档位优先；按官方规则归一化 `medium→high`、`xhigh/ultra→max` 并记录实际发送值。拒绝可能禁用思考或未定义的档位，不回退模型。补充普通/SSE 覆盖、原生协议参数保留回归与 DSH 接入指南。
+- 接入 Windows 桌面生命周期：`desktop-session` 通过私有管道提供临时管理会话，首次创建无供应商凭据的空工作空间；续接会话不重启网关。关闭或切换默认正常停止自己启动的核心，可显式保留；复用已有服务不接管其退出。提供包含 Python、依赖、静态资源的 PyInstaller 目录包，并验证中文管道输出及独立 EXE 的服务、转发、备份与崩溃恢复。
+
+- 增加 Windows 原生后端平台层：本地应用数据目录、私有 ACL、LockFileEx 跨进程互斥、可保留旧读者的原子替换、文件与目录刷盘，以及使用进程身份和私有事件的正常退出。协议、权限、配额、账本和恢复规则继续与 Linux / WSL 共用。
+- Windows 支持 `service start/status/stop/restart` 和显式登录自启动 `enable/disable`；绕过 Python 虚拟环境重定向器，保持单个常驻核心。补充双平台测试、Windows wheel / 服务 / 恢复 CI 和原生 CPU / 内存测量。静态资源关闭 Git 换行转换，保持发布清单哈希一致。使用范围与当前限制见 [Windows 指南](docs/guides/windows.md)。
+
 - 整理重复实现与测试依赖：网关和供应商适配器共用有界响应关闭逻辑；协议响应、订阅/套餐 fixture、ASGI 断连工具和 Dashboard 会话集中到 `tests/support/`，测试文件不再互相导入，保留全部行为用例与断言。补齐覆盖率产物忽略规则和最新验收索引。
 
 - 修正 Responses 字符串输入被按字符数重复预留 Token，以及 `input: null` / 仅指令请求触发 500；保留调用方原始输入，继续执行输入限额。原生 Messages / Responses 请求日志与 Dashboard 共用路径白名单，恢复这些请求的监控展示。

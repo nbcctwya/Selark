@@ -20,12 +20,18 @@ Kimi Code 官方模型 ID：`kimi-for-coding`（默认）、`kimi-for-coding-hig
 未知 ID、本地拼写错误与非官方套餐地址会被拒绝，不借用开放平台来源。
 官方套餐地址也不能误配成普通 API 类型，避免绕过套餐授权与使用限制。
 
-Selark 显式启用思考，默认 `reasoning_effort=low`，支持 `low/high/max`；
+Selark 显式启用思考，新连接的 Chat Completions 默认 `reasoning_effort=low`。
+连接设置是默认值，每次请求的 `reasoning_effort` 优先且不会改写保存值；例如连接默认 `max`，
+DSH 请求 `low`，本次就使用 `low`。支持 `low/high/max`，按 Kimi 官方规则将
+`medium` 映射为 `high`，`xhigh/ultra` 映射为 `max`；账本记录映射后的实际发送档位。
+`none/minimal` 等未支持档位在本地拒绝，不调用上游、不偷偷切换模型。
 `kimi-for-coding-highspeed` 不发送此参数，也不接受请求显式覆盖思考强度。
 不开放关闭思考：官方说明错误模型 ID 或禁用思考可能导致模型回退，Selark 避免这类隐式切换。
 输出上限映射为 `max_tokens`，包含思考消耗；很小的上限可能只产生思考、没有可见回答。
-采样参数请省略；若显式设置，仅接受官方固定值。工具调用、图片、Responses、原生 Anthropic
-Messages 入站协议、自动历史拼接不在本轮范围。
+采样参数请省略；若显式设置，仅接受官方固定值。工具调用和调用方提供的历史沿用现有
+协议适配。原生 Responses 的 `reasoning.effort`、Messages 的 `output_config.effort` /
+`thinking` 透传给上游，未指定时使用上游默认值，不套用 Chat Completions 的连接默认。
+DSH 等 coding agent 的配置见[推理档位与客户端接入](reasoning-effort.md)。
 
 普通 `--json` 响应保留 `assistant.reasoning_content`，SSE 保留 reasoning delta。
 CLI 文本视图仅显示答案。多轮输入须把实际响应的 `assistant.content` 与

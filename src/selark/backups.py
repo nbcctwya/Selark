@@ -5,7 +5,6 @@ import json
 import os
 import shutil
 import sqlite3
-import stat
 import tempfile
 from contextlib import closing
 from pathlib import Path
@@ -24,6 +23,7 @@ from selark.connections import ConnectionsConfig
 from selark.governance import ResourcesConfig
 from selark.locking import file_lock
 from selark.persistence import Journal, sync_directory
+from selark.platforms import native
 from selark.storage_schema import validate_schema
 
 CONFIGS = {
@@ -36,10 +36,7 @@ CONFIGS = {
 
 
 def private_path(path, *, directory=False):
-    info = path.lstat()
-    valid = stat.S_ISDIR(info.st_mode) if directory else stat.S_ISREG(info.st_mode)
-    if not valid or info.st_uid != os.getuid() or info.st_mode & 0o077:
-        raise ConfigError("备份必须由当前用户所有，目录 0700、文件 0600，且不能含符号链接。")
+    native.check_private(path, directory=directory)
 
 
 def backup_files(root):
@@ -161,6 +158,7 @@ def restore_backup(root, target, *, allow_legacy=False):
         raise ConfigError("恢复目标的父目录必须已存在，且不能为符号链接。")
     with tempfile.TemporaryDirectory(prefix=".selark-restore-", dir=target.parent) as temporary:
         stage = Path(temporary)
+        private_directory(stage)
         archive = stage / "archive"
         shutil.copytree(root, archive, symlinks=True)
         verify_backup(archive, allow_legacy=allow_legacy)
@@ -170,14 +168,14 @@ def restore_backup(root, target, *, allow_legacy=False):
         for name in CONFIGS:
             if (archive / name).exists():
                 shutil.copyfile(archive / name, instance / name)
-                (instance / name).chmod(0o600)
+                native.protect(instance / name)
         for name in ("records.sqlite3", "pending"):
             source = archive / name
             if source.is_dir():
                 shutil.copytree(source, instance / "data" / name)
             elif source.exists():
                 shutil.copyfile(source, instance / "data" / name)
-                (instance / "data" / name).chmod(0o600)
+                native.protect(instance / "data" / name)
         if (archive / "chatgpt-registration").exists():
             shutil.copytree(archive / "chatgpt-registration", instance / "chatgpt-auth")
         # Retain the isolated layout even at the default XDG configuration path.
@@ -199,7 +197,7 @@ def restore_backup(root, target, *, allow_legacy=False):
         # fsync restored bytes before publishing the complete directory.
         for path in instance.rglob("*"):
             if path.is_file():
-                with path.open("rb") as handle:
+                with path.open("r+b") as handle:
                     os.fsync(handle.fileno())
         sync_directory(instance / "data")
         sync_directory(instance)

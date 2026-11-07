@@ -18,6 +18,7 @@ from selark.config import (
 )
 from selark.connections import ConnectionsConfig
 from selark.governance import ResourcesConfig
+from selark.platforms import native
 from selark.storage import SCHEMA_VERSION, token_digest
 
 
@@ -36,7 +37,8 @@ def doctor(directory: Path) -> dict:
             {
                 "check": "connections_config",
                 "ok": True,
-                "configured_connections": 1 + len(registry.connections),
+                "configured_connections": int(config is not None and config.api_key is not None)
+                + len(registry.connections),
             }
         )
         for connection in registry.connections:
@@ -103,8 +105,7 @@ def doctor(directory: Path) -> dict:
         )
     else:
         try:
-            if database.is_symlink() or database.stat().st_mode & 0o077:
-                raise ConfigError("记录库权限应为 0600，且不能为符号链接。")
+            native.check_private(database)
             db = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2)
             try:
                 integrity = db.execute("PRAGMA quick_check").fetchone()[0]

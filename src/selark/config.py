@@ -4,8 +4,6 @@ import json
 import os
 import re
 import secrets
-import stat
-import tempfile
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
@@ -20,12 +18,11 @@ from pydantic import (
     model_validator,
 )
 
+from selark.errors import ConfigError as ConfigError
+from selark.platforms import native
+
 DEFAULT_BASE_URL = "https://api.xiaomimimo.com/v1"
 DEFAULT_MODEL = "mimo-v2.6-flash"
-
-
-class ConfigError(ValueError):
-    pass
 
 
 class StateConflict(ConfigError):
@@ -46,11 +43,7 @@ def config_directory(explicit: Path | None = None) -> Path:
                 "配置目录必须是绝对路径（可使用 ~）；请检查 --config-dir 或 SELARK_CONFIG_DIR。"
             )
         return directory
-    root = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config").expanduser()
-    # Empty or relative XDG paths must not silently select a directory under cwd.
-    if not root.is_absolute():
-        root = Path.home() / ".config"
-    return root / "selark"
+    return native.config_directory()
 
 
 def validate_url(value: str) -> str:
@@ -114,7 +107,7 @@ class ServerConfig(StrictConfig):
     enabled: bool = True
     config_revision: int = Field(default=1, ge=1)
     base_url: str = DEFAULT_BASE_URL
-    api_key: SecretStr
+    api_key: SecretStr | None
     allowed_models: list[str] = Field(default_factory=list, max_length=1000)
     default_model: str | None = None
     access_token: SecretStr | None = None  # Read-only compatibility input, removed on migration.
@@ -128,6 +121,8 @@ class ServerConfig(StrictConfig):
 
     @model_validator(mode="after")
     def check_models(self):
+        if self.api_key is None and (self.enabled or self.allowed_models or self.default_model):
+            raise ValueError("未配置凭据的初始连接必须停用且不包含模型")
         if any(
             not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:/@+-]{0,199}", m) or "::" in m
             for m in self.allowed_models
@@ -176,38 +171,24 @@ def data_directory(directory: Path) -> Path:
     if layout.exists() or layout.is_symlink():
         load_config(layout, StorageLayout)
         return directory / "data"
-    config_root = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config").expanduser()
-    if not config_root.is_absolute():
-        config_root = Path.home() / ".config"
-    if directory != config_root / "selark":
+    if directory != native.config_directory():
         return directory / "data"  # Isolate explicitly selected profiles, including tests.
-    root = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share").expanduser()
-    if not root.is_absolute():
-        root = Path.home() / ".local/share"
-    return root / "selark"
+    return native.data_directory()
 
 
 def private_directory(path: Path) -> None:
-    if path.is_symlink():
-        raise ConfigError("私有目录不能是符号链接。")
-    path.mkdir(mode=0o700, parents=True, exist_ok=True)
-    os.chmod(path, 0o700)
+    native.private_directory(path)
 
 
 def server_document(config: ServerConfig) -> dict:
     data = config.model_dump(mode="json", exclude={"access_token"})
-    data["api_key"] = config.api_key.get_secret_value()
+    data["api_key"] = config.api_key.get_secret_value() if config.api_key else None
     return data
 
 
 def load_config(path: Path, cls):
     try:
-        if path.is_symlink():
-            raise ConfigError(f"配置不能是符号链接：{path}")
-        info = path.stat()
-        if os.name == "posix" and (stat.S_IMODE(info.st_mode) & 0o077):
-            raise ConfigError(f"配置权限过宽，请执行 chmod 600 {path}")
-        return cls.model_validate_json(path.read_bytes())
+        return cls.model_validate_json(native.read_private(path))
     except FileNotFoundError:
         raise ConfigError(f"未找到配置 {path}；请先运行 selark init。") from None
     except ValidationError:
@@ -220,14 +201,14 @@ def load_config(path: Path, cls):
 
 
 def _write_private(path: Path, data: dict) -> None:
-    fd, name = tempfile.mkstemp(prefix=".selark-", dir=path.parent)
+    fd, name = native.temporary_file(path.parent)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             json.dump(data, handle, ensure_ascii=False, indent=2)
             handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(name, path)
+        native.replace(name, path)
     finally:
         if os.path.exists(name):
             os.unlink(name)
@@ -235,7 +216,7 @@ def _write_private(path: Path, data: dict) -> None:
 
 def initialize(
     directory: Path,
-    api_key: str,
+    api_key: str | None,
     base_url: str = DEFAULT_BASE_URL,
     models: list[str] | None = None,
     default_model: str | None = None,
@@ -247,6 +228,7 @@ def initialize(
     try:
         server = ServerConfig(
             api_key=api_key,
+            enabled=api_key is not None,
             access_token=token,
             base_url=base_url,
             allowed_models=models or [],
@@ -256,14 +238,11 @@ def initialize(
     except ValidationError:
         raise ConfigError("初始化参数无效；请检查地址、密钥、模型列表、默认模型和端口。") from None
     directory = directory.expanduser()
-    if directory.is_symlink():
-        raise ConfigError("配置目录不能是符号链接。")
-    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
-    os.chmod(directory, 0o700)
+    private_directory(directory)
     # Exclusive lock prevents two initializers from overwriting each other's credentials.
     lock = directory / ".init.lock"
     try:
-        fd = os.open(lock, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        fd = native.open_private(lock, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
     except FileExistsError:
         raise ConfigError("初始化已在进行；如上次初始化中断，请检查后移除 .init.lock。") from None
     try:

@@ -5,6 +5,7 @@
 | 用途 | 入口 |
 | --- | --- |
 | Git 文件与凭据模式检查 | `check_repository_security.py` |
+| Windows 内置后端 | `windows_entry.py`，配合根目录 `selark-windows.spec` 构建完整目录包 |
 | 导出前端合成数据契约 | `export_dashboard_fixtures.py` |
 | 导出/检查网关与 Dashboard OpenAPI | `export_api_contracts.py` |
 | 打包/检查固定前端的正式资源 | `build_dashboard.py` |
@@ -38,3 +39,5 @@ OpenAPI 导出本身不需要个人配置或数据库，`--check --frontend` 检
 
 真实验收脚本的参数、额度与授权边界各不相同，不属于常规测试，也不应作为批量默认入口。对应历史证据见 [验收索引](../docs/verification/README.md)。
 新生成的原始输出放在 Git 忽略的 `reports/` 或系统临时目录；审阅后的说明与脱敏 JSON 才放入 `docs/verification/`。
+
+Windows 原生验收可运行 `verify_operations.py`、`verify_stability.py` 和两项测量脚本。退出使用经身份核对的私有事件；模拟崩溃只终止本次创建的临时服务句柄。RSS 使用核心进程的 Windows Working Set，CPU 使用进程时间，不把虚拟环境启动器或测量器当作核心。`verify_resource_matrix.py` 的 PTY 场景及 `check_application_code.py` 的 Linux 资源限制仍只在 Linux 验收。

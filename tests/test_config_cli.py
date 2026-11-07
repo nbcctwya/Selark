@@ -1,5 +1,5 @@
 import json
-import stat
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -18,6 +18,7 @@ from selark.config import (
     load_config,
 )
 
+from .support.permissions import is_private, make_private, make_public
 from .support.protocol import TOKEN, UPSTREAM_KEY, completion, event, sse
 
 
@@ -34,14 +35,17 @@ def test_default_config_is_independent_of_cwd(tmp_path, monkeypatch, xdg):
         working = tmp_path / name
         working.mkdir()
         monkeypatch.chdir(working)
-        assert config_directory() == fake_home / ".config" / "selark"
+        expected = "AppData/Local/Selark/config" if os.name == "nt" else ".config/selark"
+        assert config_directory() == fake_home / expected
 
 
 def test_absolute_config_overrides_and_priority(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     monkeypatch.delenv("SELARK_CONFIG_DIR", raising=False)
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
-    assert config_directory() == tmp_path / "xdg" / "selark"
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "local"))
+    expected = "local/Selark/config" if os.name == "nt" else "xdg/selark"
+    assert config_directory() == tmp_path / expected
     monkeypatch.setenv("SELARK_CONFIG_DIR", str(tmp_path / "service"))
     assert config_directory() == tmp_path / "service"
     monkeypatch.setenv("SELARK_CONFIG_DIR", "invalid-relative")
@@ -80,7 +84,7 @@ def test_init_and_commands_reuse_default_configuration_after_chdir(tmp_path, mon
     second.mkdir()
     monkeypatch.chdir(first)
     assert main(["init"]) == 0
-    directory = fake_home / ".config" / "selark"
+    directory = config_directory()
     original = (directory / "server.json").read_bytes()
     monkeypatch.chdir(second)
     monkeypatch.delenv("MIMO_API_KEY")
@@ -88,7 +92,10 @@ def test_init_and_commands_reuse_default_configuration_after_chdir(tmp_path, mon
     assert (directory / "server.json").read_bytes() == original
 
     servers = []
-    monkeypatch.setattr("uvicorn.run", lambda app, **kwargs: servers.append(kwargs))
+    monkeypatch.setattr(
+        "selark.service.run_server",
+        lambda app, directory, data_dir, **kwargs: servers.append(kwargs),
+    )
     assert main(["serve"]) == 0
     assert servers[0]["host"] == "127.0.0.1" and servers[0]["port"] == 8787
 
@@ -130,9 +137,9 @@ def test_init_persistence_permissions_separation_and_no_overwrite(tmp_path):
     assert client.url == "http://127.0.0.1:9898"
     assert client.model == server.default_model == "test"
     assert UPSTREAM_KEY not in (directory / "client.json").read_text()
-    assert stat.S_IMODE(directory.stat().st_mode) == 0o700
+    assert is_private(directory, directory=True)
     for name in ("server.json", "client.json"):
-        assert stat.S_IMODE((directory / name).stat().st_mode) == 0o600
+        assert is_private(directory / name)
     original = (directory / "server.json").read_bytes()
     with pytest.raises(ConfigError, match="已存在"):
         initialize(directory, "replacement")
@@ -164,12 +171,12 @@ def test_bad_config_never_writes_secret(tmp_path, options):
 def test_invalid_private_file_does_not_leak_raw_data(tmp_path):
     path = tmp_path / "client.json"
     path.write_text(json.dumps({"url": UPSTREAM_KEY, "access_token": TOKEN, "model": "x"}))
-    path.chmod(0o600)
+    make_private(path)
     with pytest.raises(ConfigError) as error:
         load_config(path, ClientConfig)
     assert UPSTREAM_KEY not in str(error.value)
-    path.chmod(0o644)
-    with pytest.raises(ConfigError, match="chmod 600"):
+    make_public(path)
+    with pytest.raises(ConfigError, match="权限|chmod 600"):
         load_config(path, ClientConfig)
     alias = tmp_path / "alias.json"
     alias.symlink_to(path)
@@ -299,7 +306,11 @@ def test_client_cli_import_does_not_import_provider():
 def test_example_standalone_help_and_empty_input(tmp_path):
     script = Path(__file__).resolve().parents[1] / "examples" / "summarize.py"
     result = subprocess.run(
-        [sys.executable, "-I", str(script), "--help"], cwd=tmp_path, capture_output=True, text=True
+        [sys.executable, "-I", "-X", "utf8", str(script), "--help"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
     )
     assert result.returncode == 0
     assert "--config" in result.stdout
@@ -308,11 +319,12 @@ def test_example_standalone_help_and_empty_input(tmp_path):
         json.dumps({"url": "http://127.0.0.1:8787", "access_token": TOKEN, "model": "x"})
     )
     result = subprocess.run(
-        [sys.executable, "-I", str(script), "--config", str(path)],
+        [sys.executable, "-I", "-X", "utf8", str(script), "--config", str(path)],
         cwd=tmp_path,
         input="",
         capture_output=True,
         text=True,
+        encoding="utf-8",
     )
     assert result.returncode == 1
     assert TOKEN not in result.stdout + result.stderr

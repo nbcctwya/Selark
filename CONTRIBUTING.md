@@ -18,6 +18,20 @@ python -m pip install --no-build-isolation --no-deps -e .
 使用 Python 3.11+；上面是 Linux / WSL 的 shell 命令。运行时依赖在 `requirements.lock` 固定，开发与浏览器验收依赖分别在 `requirements-dev.lock`、`requirements-dashboard.lock`。
 已有克隆运行 `git submodule update --init --recursive` 补齐或对齐前端版本。
 
+Windows 使用原生 Python 3.11+，PowerShell 中无需激活脚本：
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.lock
+.\.venv\Scripts\python.exe -m pip install --no-deps --no-build-isolation -e .
+$env:PYTHONUTF8 = '1'
+.\.venv\Scripts\python.exe -m pytest -q --basetemp=reports/pytest
+```
+
+Windows 使用本地 NTFS 目录。符号链接安全测试要求测试终端具有创建符号链接权限（开发者模式或提升后的测试终端）；普通运行不注册系统服务。不能因缺少测试权限跳过实际路径安全检查。三个 systemd 用例仅在 Linux 运行；三个依赖 Linux `resource` 的生成代码隔离工具用例也只在 Linux 运行，不影响共用网关业务回归。Windows ACL、联接点和登录启动用例仅在 Windows 运行。
+
+跨平台改动同时运行 Windows 和 Linux 全套测试。Windows CI 另外安装 wheel 并在仓库外验证 CLI，执行模拟服务、备份、取消、崩溃恢复和空闲检查；登录自启动测试模拟注册表，不设置开发者的实际启动项。
+
 ## 检查与测试
 
 在仓库根目录执行：

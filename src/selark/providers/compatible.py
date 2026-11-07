@@ -33,14 +33,21 @@ class CompatibleProvider(MiMoProvider):
             or (provider == "openai-compatible" and self.config.token_parameter == "max_tokens")
         ):
             data["max_tokens"] = data.pop("max_completion_tokens")
-        if provider == "deepseek" and not request.tools:
+        if provider == "deepseek" and not request.tools and request.reasoning_effort is None:
             data.setdefault("thinking", {"type": "enabled" if reasoning_history else "disabled"})
         if provider == "zhipu":
             if data.get("temperature", 1) > 1:
                 unsupported("智谱 temperature 上限为 1。")
             if any(k in data for k in ("presence_penalty", "frequency_penalty")):
                 unsupported("当前智谱文本适配不支持 presence_penalty / frequency_penalty。")
-            if not request.tools and re.match(r"glm-(?:[5-9]|4\.[5-9])", model.lower()):
+            if (
+                not request.tools
+                and request.reasoning_effort is None
+                and re.match(r"glm-(?:[5-9]|4\.[5-9])", model.lower())
+                # GLM 5.3 owns its default thinking behavior; never inject the legacy
+                # text-only disabled flag, which these models can reject.
+                and model.lower() not in {"glm-5.3", "glm-5.3-flash", "glm-5.3-flashx"}
+            ):
                 data.setdefault(
                     "thinking", {"type": "enabled" if reasoning_history else "disabled"}
                 )
@@ -62,11 +69,12 @@ class CompatibleProvider(MiMoProvider):
                 if model.startswith("kimi-k3"):
                     data.setdefault("reasoning_effort", "low")
             if not request.tools and model.startswith(("kimi-k2.5", "kimi-k2.6")):
-                data.setdefault(
-                    "thinking", {"type": "enabled" if reasoning_history else "disabled"}
-                )
+                if request.reasoning_effort is None:
+                    data.setdefault(
+                        "thinking", {"type": "enabled" if reasoning_history else "disabled"}
+                    )
                 if (
-                    data["thinking"].get("type") == "disabled"
+                    data.get("thinking", {}).get("type") == "disabled"
                     and "temperature" in data
                     and data["temperature"] != 0.6
                 ):

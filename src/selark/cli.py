@@ -28,7 +28,9 @@ def parser() -> argparse.ArgumentParser:
 
     result.add_argument("--version", action="version", version="Selark " + __version__)
     result.add_argument(
-        "--config-dir", type=Path, help="私有配置的绝对路径（默认 ~/.config/selark）"
+        "--config-dir",
+        type=Path,
+        help="私有配置绝对路径；默认使用系统用户配置目录",
     )
     commands = result.add_subparsers(dest="command", required=True)
     init = commands.add_parser("init", help="创建私有配置，自动生成独立访问令牌")
@@ -37,6 +39,15 @@ def parser() -> argparse.ArgumentParser:
     init.add_argument("--default-model", help="默认使用 --models 中第一个模型")
     init.add_argument("--port", type=int, default=8787)
     commands.add_parser("serve", help="按持久配置启动 HTTP 服务")
+    desktop = commands.add_parser(
+        "desktop-session", help="供桌面管理的私有会话（由 stdin 控制生命周期）"
+    )
+    desktop.add_argument("--create", action="store_true", help="首次使用时创建空工作空间")
+    desktop.add_argument(
+        "--initial-port", type=int, default=8788, help="仅用于新工作空间的网关端口"
+    )
+    desktop.add_argument("--read-only", action="store_true")
+    desktop.add_argument("--keep-running", action="store_true", help="会话结束后保留本次启动的网关")
     dashboard = commands.add_parser("dashboard", help="打开本地资源仪表盘与日常管理接口")
     dashboard.add_argument(
         "--port", type=int, default=8790, help="本机端口（默认 8790；0 自动分配）"
@@ -88,6 +99,16 @@ def main(argv: list[str] | None = None) -> int:
     try:
         args = parser().parse_args(argv)
         directory = config_directory(args.config_dir)
+        if args.command == "desktop-session":
+            from selark.desktop_session import run_session
+
+            return run_session(
+                directory,
+                create=args.create,
+                initial_port=args.initial_port,
+                read_only=args.read_only,
+                keep_running=args.keep_running,
+            )
         if args.command == "dashboard":
             from selark.dashboard import run_dashboard
 
@@ -126,12 +147,10 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "serve":
             # Keep all provider imports exclusively in the server command.
-            import uvicorn
-
             from selark.app import create_app
             from selark.logs import configure_logging
             from selark.runtime import Runtime
-            from selark.service import process_marker
+            from selark.service import run_server
 
             logging.basicConfig(level=logging.INFO, format="%(message)s")
             logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -143,28 +162,29 @@ def main(argv: list[str] | None = None) -> int:
                     config.logging,
                     background=bool(os.environ.get("SELARK_SERVICE_BACKEND")),
                 )
-                with process_marker(directory, runtime.data_dir):
-                    try:
-                        uvicorn.run(
-                            create_app(config, runtime=runtime),
-                            host=config.host,
-                            port=config.port,
-                            access_log=False,
-                            server_header=False,
-                            timeout_graceful_shutdown=config.limits.shutdown_grace_seconds,
-                            timeout_keep_alive=5,
-                            backlog=128,
-                            limit_concurrency=max(
-                                128,
-                                config.limits.max_concurrent_requests
-                                + config.limits.max_queued_requests
-                                + 32,
-                            ),
-                            log_config=None,
-                        )
-                    finally:
-                        logging.getLogger().removeHandler(handler)
-                        handler.close()
+                try:
+                    run_server(
+                        create_app(config, runtime=runtime),
+                        directory,
+                        runtime.data_dir,
+                        host=config.host,
+                        port=config.port,
+                        access_log=False,
+                        server_header=False,
+                        timeout_graceful_shutdown=config.limits.shutdown_grace_seconds,
+                        timeout_keep_alive=5,
+                        backlog=128,
+                        limit_concurrency=max(
+                            128,
+                            config.limits.max_concurrent_requests
+                            + config.limits.max_queued_requests
+                            + 32,
+                        ),
+                        log_config=None,
+                    )
+                finally:
+                    logging.getLogger().removeHandler(handler)
+                    handler.close()
             return 0
         config = load_config(directory / "client.json", ClientConfig)
         with SelarkClient(config) as client:

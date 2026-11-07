@@ -23,6 +23,11 @@ from selark.runtime import Runtime
 
 
 def rss_bytes():
+    if os.name == "nt":
+        import win32api
+        import win32process
+
+        return win32process.GetProcessMemoryInfo(win32api.GetCurrentProcess())["WorkingSetSize"]
     path = Path("/proc/self/status")
     if path.exists():
         for line in path.read_text().splitlines():

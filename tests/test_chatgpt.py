@@ -588,7 +588,10 @@ def test_malformed_type_fields_are_protocol_failures(resource, where):
     assert row["total_tokens"] == (15 if where == "part" else None)
 
 
-def test_native_responses_subscription_preserves_agent_tools_and_rejects_unsupported_caps(resource):
+@pytest.mark.parametrize("effort", ["low", "medium", "high", "xhigh", "max"])
+def test_native_responses_subscription_preserves_agent_tools_and_rejects_unsupported_caps(
+    resource, effort
+):
     runtime, caller, _ = resource
     seen = []
     output = [
@@ -626,7 +629,7 @@ def test_native_responses_subscription_preserves_agent_tools_and_rejects_unsuppo
         "tools": tools,
         "stream": True,
         "store": False,
-        "reasoning": {"effort": "low"},
+        "reasoning": {"effort": effort},
     }
     final = result() | {"output": output}
     frames = [

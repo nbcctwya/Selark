@@ -92,7 +92,7 @@ def add_commands(commands):
     status = commands.add_parser("status", help="只读统一资源总览；不登录、刷新或调用供应商")
     status.add_argument("--offline", action="store_true", help="也不请求本地 /health")
     status.add_argument("--json", action="store_true")
-    service = commands.add_parser("service", help="WSL/Linux 后台服务与可选 systemd 用户自启动")
+    service = commands.add_parser("service", help="本机后台服务与可选登录自启动")
     actions = service.add_subparsers(dest="action", required=True)
     for name in ("start", "stop", "restart", "status", "enable", "disable"):
         action = actions.add_parser(name)

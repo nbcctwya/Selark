@@ -24,6 +24,12 @@ import httpx
 
 from selark import __version__
 from selark.config import initialize
+from selark.service import stop_process
+
+if __package__:
+    from .process_support import crash_service
+else:
+    from process_support import crash_service
 
 USAGE = {"prompt_tokens": 12, "completion_tokens": 2, "total_tokens": 14}
 
@@ -118,7 +124,7 @@ class Fixture:
                         self.send_header("Content-Length", str(len(body)))
                         self.end_headers()
                         self.wfile.write(body)
-                except (BrokenPipeError, ConnectionResetError):
+                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
                     pass
 
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
@@ -188,6 +194,8 @@ def run(command):
             }
         }
         argv = [*command, "--config-dir", str(directory)]
+        env["PYTHONUTF8"] = "1"
+        env["NO_PROXY"] = env["no_proxy"] = "127.0.0.1,localhost,::1"
         count = 0
 
         def rows():
@@ -219,7 +227,13 @@ def run(command):
         def stop(*, crash=False):
             nonlocal service, logfile
             if service:
-                service.kill() if crash else service.terminate()
+                if os.name == "nt":
+                    if crash:
+                        crash_service(directory, directory / "data")
+                    else:
+                        stop_process(directory, directory / "data", 0.2)
+                else:
+                    service.kill() if crash else service.terminate()
                 service.wait(timeout=5)
                 service = None
             if logfile:
@@ -249,7 +263,13 @@ def run(command):
                 ["limits", "show", "--json"],
             ):
                 result = subprocess.run(
-                    [*argv, *args], cwd=outside, env=env, capture_output=True, text=True, timeout=5
+                    [*argv, *args],
+                    cwd=outside,
+                    env=env,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    timeout=5,
                 )
                 assert result.returncode == 0, result.stderr
             assert fixture.calls == []
@@ -348,7 +368,7 @@ def run(command):
             assert matching("crash")["status"] == "interrupted"
             assert matching("crash")["total_tokens"] is None
             checks.append(
-                {"check": "sigkill_restart_preserves_unknown_usage_without_retry", "passed": True}
+                {"check": "crash_restart_preserves_unknown_usage_without_retry", "passed": True}
             )
 
             fixture.entered.clear()
@@ -363,7 +383,7 @@ def run(command):
             assert matching("shutdown")["error_code"] == "service_shutdown"
             checks.append(
                 {
-                    "check": "bounded_sigterm_grace_and_accounting",
+                    "check": "bounded_shutdown_grace_and_accounting",
                     "passed": True,
                     "elapsed_ms": round((time.monotonic() - before) * 1000, 2),
                 }

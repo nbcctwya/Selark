@@ -36,6 +36,7 @@ from selark.errors import GatewayError
 from selark.governance import Price, ResourcesConfig, Target
 from selark.locking import file_lock
 from selark.plans import PLAN_PRESETS, PlanSettings, empty_quota
+from selark.platforms import native
 from selark.storage import SCHEMA_VERSION, Store, utc_now
 
 
@@ -180,7 +181,7 @@ class Runtime:
 
     def connection_settings(self):
         server, registry = self.settings(), self.registry()
-        connections = [legacy_connection(server, registry)]
+        connections = [legacy_connection(server, registry)] if server.api_key is not None else []
         for config in registry.connections:
             generation, unreadable = 0, False
             if config.provider == "chatgpt":
@@ -324,9 +325,9 @@ class Runtime:
             if source.is_symlink():
                 raise ConfigError("待备份的配置不能是符号链接。")
             if source.exists():
-                fd = os.open(target / name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                fd = native.open_private(target / name, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
                 with os.fdopen(fd, "wb") as handle:
-                    handle.write(source.read_bytes())
+                    handle.write(native.read_private(source))
                     handle.flush()
                     os.fsync(handle.fileno())
         if self.store is not None:
@@ -334,7 +335,7 @@ class Runtime:
         elif (self.data_dir / "records.sqlite3").exists():
             database = self.data_dir / "records.sqlite3"
             destination = target / "records.sqlite3"
-            destination.touch(mode=0o600, exist_ok=False)
+            os.close(native.open_private(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL))
             with (
                 closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as source,
                 closing(sqlite3.connect(destination)) as dest,
@@ -346,9 +347,9 @@ class Runtime:
             for source in pending.glob("*.json"):
                 if source.is_symlink():
                     raise ConfigError("落账文件不能为符号链接。")
-                content = source.read_bytes()
-                fd = os.open(
-                    target / "pending" / source.name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
+                content = native.read_private(source)
+                fd = native.open_private(
+                    target / "pending" / source.name, os.O_WRONLY | os.O_CREAT | os.O_EXCL
                 )
                 with os.fdopen(fd, "wb") as output:
                     output.write(content)
@@ -477,7 +478,10 @@ class Runtime:
         with file_lock(self.data_dir / "management.lock"):
             current = self.settings()
             registry = self.registry()
-            check_connection_revision(legacy_connection(current, registry), expected_revision)
+            if current.api_key is not None:
+                check_connection_revision(legacy_connection(current, registry), expected_revision)
+            elif expected_revision is not None:
+                raise StateConflict("初始连接尚未配置，请刷新后重试。")
             document = server_document(current)
             allowed = {
                 "base_url",

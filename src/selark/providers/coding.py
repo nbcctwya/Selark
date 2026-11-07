@@ -42,7 +42,23 @@ class KimiCodeProvider(CompatibleProvider):
             if request.reasoning_effort is not None:
                 unsupported("该高速模型仅支持开启思考，不支持 reasoning_effort。")
         else:
-            data["reasoning_effort"] = request.reasoning_effort or self.config.plan.reasoning_effort
+            # Canonicalize only the aliases documented by Kimi Code. In particular,
+            # "none" can silently route older models to a different, non-thinking model.
+            effort = request.reasoning_effort or self.config.plan.reasoning_effort
+            efforts = {
+                "low": "low",
+                "medium": "high",
+                "high": "high",
+                "xhigh": "max",
+                "max": "max",
+                "ultra": "max",
+            }
+            if effort not in efforts:
+                unsupported(
+                    "Kimi Code 支持 low/high/max（medium→high，xhigh/ultra→max）；"
+                    "不支持此推理档位，不会关闭思考或切换模型。"
+                )
+            data["reasoning_effort"] = efforts[effort]
         fixed = {"temperature": 1.0, "top_p": 0.95, "presence_penalty": 0, "frequency_penalty": 0}
         if any(key in data and data[key] != value for key, value in fixed.items()):
             unsupported("Kimi Code 思考模型的采样参数有固定值，请省略。")

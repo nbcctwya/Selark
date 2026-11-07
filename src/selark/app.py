@@ -19,7 +19,7 @@ from starlette.requests import ClientDisconnect
 from selark import __version__
 from selark.admission import Admission
 from selark.config import ConfigError, ServerConfig
-from selark.connections import enforce_approval, legacy_connection, resolve_model
+from selark.connections import configured_connections, enforce_approval, resolve_model
 from selark.errors import GatewayError
 from selark.governance import Policy, ResourcesConfig, enforce_access, input_estimate, permitted
 from selark.persistence import AsyncLedger, Journal
@@ -473,7 +473,7 @@ def create_app(
         return (
             await asyncio.to_thread(runtime.connection_settings)
             if runtime
-            else [legacy_connection(config)]
+            else configured_connections(config)
         )
 
     async def resources():
@@ -486,7 +486,7 @@ def create_app(
         if runtime:
             settings, available = runtime.resources(), runtime.connection_settings()
         else:
-            settings, available = ResourcesConfig(), [legacy_connection(config)]
+            settings, available = ResourcesConfig(), configured_connections(config)
         return settings, available, Policy.model_validate(ledger.policy(caller))
 
     async def route(data, caller):
@@ -575,7 +575,7 @@ def create_app(
     async def models(request: Request, connection_id: str | None = None):
         policy = Policy.model_validate(await storage.call("policy", request.state.caller_id))
         available = await connections()
-        current = available[0]
+        current = next((item for item in available if item.connection_id == "mimo-default"), None)
         if connection_id is not None:
             selected, _ = resolve_model(available, connection_id, None)
             available = [selected]
@@ -629,8 +629,12 @@ def create_app(
                         else None,
                     }
                 )
-        default_allowed = current.enabled and permitted(
-            policy, current.connection_id, current.default_model, current.resource_type
+        default_allowed = bool(
+            current
+            and current.enabled
+            and permitted(
+                policy, current.connection_id, current.default_model, current.resource_type
+            )
         )
         return {
             "object": "list",

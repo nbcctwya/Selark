@@ -24,6 +24,8 @@ from selark.chatgpt_auth import (
 from selark.config import ConfigError
 from selark.errors import GatewayError
 
+from .support.permissions import is_private
+
 
 @pytest.fixture(scope="module")
 def signing_key():
@@ -126,7 +128,7 @@ def test_registration_and_identity(tmp_path, signing_key):
         assert original["ext_agent_host_id"].startswith("urn:uuid:")
         assert first["ready"] and first["plan_permission"]
         assert "fake-access" not in json.dumps(first)
-        assert manager.path("personal").stat().st_mode & 0o777 == 0o600
+        assert is_private(manager.path("personal"))
         await manager.login("personal", launch=server.launch)
         assert server.query["client_id"] == "selark-test-client"
         assert server.query["ext_agent_host_id"] == original["ext_agent_host_id"]

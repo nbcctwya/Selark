@@ -180,6 +180,13 @@ def legacy_connection(server, registry=None):
     )
 
 
+def configured_connections(server, registry=None):
+    """An empty desktop workspace has no invented provider or placeholder key."""
+    registry = registry or ConnectionsConfig()
+    legacy = [legacy_connection(server, registry)] if server.api_key is not None else []
+    return [*legacy, *registry.connections]
+
+
 def resolve_model(connections, connection_id, model):
     if model and "::" in model:
         selected, model = model.split("::", 1)

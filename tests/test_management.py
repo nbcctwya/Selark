@@ -1,7 +1,6 @@
 import asyncio
 import json
 import sqlite3
-import stat
 from argparse import Namespace
 
 import httpx
@@ -17,6 +16,7 @@ from selark.management import doctor, query_filters
 from selark.runtime import Runtime, fingerprint
 from selark.storage import Store, token_digest, utc_now
 
+from .support.permissions import is_private
 from .support.protocol import UPSTREAM_KEY, ByteStream, completion, event, sse
 
 PAYLOAD = {
@@ -51,7 +51,7 @@ def test_migration_backup_legacy_and_idempotency(tmp_path, monkeypatch):
         backup = runtime.migration_backup
         assert (backup / "server.json").read_bytes() == original
         assert (backup / "client.json").read_bytes() == client_bytes
-        assert all(stat.S_IMODE(p.stat().st_mode) == 0o600 for p in backup.iterdir())
+        assert all(is_private(p) for p in backup.iterdir())
         assert (
             runtime.store.authenticate(auth(token)["Authorization"].encode(), chat=True)[
                 "caller_id"
@@ -434,7 +434,7 @@ def test_cli_creation_output_once_and_client_only_profile(runtime, tmp_path, cap
     )
     created = json.loads(capsys.readouterr().out)
     assert load_config(path, ClientConfig).access_token.get_secret_value() == created["token"]
-    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+    assert is_private(path)
     assert main(base + ["tokens", "list", "--json"]) == 0
     assert created["token"] not in capsys.readouterr().out
     assert main(base + ["tokens", "revoke", created["id"], "--json"]) == 0

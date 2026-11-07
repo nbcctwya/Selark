@@ -24,6 +24,7 @@ from selark.management.connections import (
 )
 from selark.management.diagnostics import doctor
 from selark.plans import PLAN_PRESETS, query_quota
+from selark.platforms import native
 from selark.runtime import Runtime
 from selark.storage import SCHEMA_VERSION
 
@@ -340,14 +341,14 @@ def run(args, directory: Path) -> int:
                 )
                 if target:
                     try:
-                        target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+                        native.private_directory(target.parent)
                         config = runtime.settings()
                         profile = {
                             "url": server_url(config),
                             "access_token": result["token"],
                             "model": config.default_model,
                         }
-                        fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                        fd = native.open_private(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
                         with os.fdopen(fd, "w") as output:
                             json.dump(profile, output)
                             output.write("\n")

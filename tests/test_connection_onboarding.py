@@ -1,7 +1,6 @@
 """CLI model discovery on new API connections. Isolated configs and fake upstreams only."""
 
 import json
-import stat
 
 import httpx
 import pytest
@@ -10,6 +9,7 @@ from selark.cli import main
 from selark.connections import require_connection
 
 from .support.governance import runtime as runtime
+from .support.permissions import is_private
 
 KEY = "fixture-onboarding-key"
 
@@ -94,7 +94,7 @@ def test_new_api_without_models_discovers_all_without_generating(
         assert result["name"] == "通用 API（OpenAI 兼容）"
     assert callers == runtime.store.tokens()
     assert originals == {name: (runtime.directory / name).read_bytes() for name in originals}
-    assert stat.S_IMODE((runtime.directory / "connections.json").stat().st_mode) == 0o600
+    assert is_private(runtime.directory / "connections.json")
     assert KEY not in output.out + output.err
     assert "已发现 3 个模型，尚未启用" in output.err
 

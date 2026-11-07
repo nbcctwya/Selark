@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 import secrets
 import sqlite3
 import threading
@@ -24,6 +25,7 @@ from selark.governance import (
     reserve,
     settle,
 )
+from selark.platforms import native
 from selark.quota_cache import QuotaCache
 from selark.storage_schema import validate_schema
 from selark.usage import inconsistent_usage
@@ -146,12 +148,10 @@ class Store:
         if path:
             if not readonly and initialize:
                 private_directory(path.parent)
-            if path.is_symlink():
-                raise ConfigError("记录数据库不能是符号链接。")
+            native.reject_links(path)
             if not path.exists() and not readonly and initialize:
-                path.touch(mode=0o600)
-            if path.stat().st_mode & 0o077:
-                raise ConfigError("记录数据库权限过宽，请设置为 0600。")
+                os.close(native.open_private(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL))
+            native.check_private(path)
         self.lock = threading.RLock()
         self.quota_cache = QuotaCache()
         existing = readonly or not initialize
@@ -308,7 +308,7 @@ class Store:
             self.db.execute(f"PRAGMA busy_timeout={int(seconds * 1000)}")
 
     def backup(self, path: Path):
-        path.touch(mode=0o600, exist_ok=False)
+        os.close(native.open_private(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL))
         with self.lock:
             target = sqlite3.connect(path)
             try:

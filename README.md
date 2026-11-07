@@ -8,7 +8,7 @@ CLI / 外部应用 → Selark HTTP 网关 → 明确选择的模型连接
              本机 Dashboard 与管理 CLI
 ```
 
-Python 3.11+，使用 FastAPI、HTTPX 和 SQLite。当前版本 **0.10.0**，日常运行已在 Linux / WSL 验证；Windows、macOS 桌面版尚未实现。
+Python 3.11+，使用 FastAPI、HTTPX 和 SQLite。当前版本 **0.10.0**；本分支在 Linux / WSL 核心基础上增加 Windows 原生后端，业务逻辑共用。Windows 的安装、目录和服务生命周期见 [Windows 指南](docs/guides/windows.md)。桌面窗口与安装程序在独立项目维护。
 
 ## 已有功能
 
@@ -64,6 +64,7 @@ selark dashboard
 | 需要做什么 | 文档 |
 | --- | --- |
 | 安装、升级、选择 Python | [安装指南](docs/guides/installation.md) |
+| Windows 原生运行、后台服务与登录启动 | [Windows 指南](docs/guides/windows.md) |
 | 设置目录、凭据与客户端 | [配置说明](docs/guides/configuration.md) |
 | 添加连接、发现和启用模型 | [连接管理](docs/guides/connections.md)、[模型治理](docs/guides/model-governance.md) |
 | 使用界面和模型管理 | [Dashboard](docs/guides/dashboard.md) |
@@ -81,6 +82,7 @@ selark dashboard
 src/selark/           Python 运行时代码
   management/        本机管理命令的解析、执行、诊断与连接操作
   providers/         供应商协议适配器
+  platforms/         Linux / WSL 与 Windows 的文件安全、锁和进程适配
   dashboard_assets/  Selark-Web 正式构建，随 Python 包发布
 frontend/            Selark-Web Git 子模块，Dashboard 的 React 源码
 tests/               按功能组织的回归测试与共享测试支持

@@ -8,7 +8,7 @@ import httpx
 
 from selark import __version__
 from selark.config import ClientConfig, ConfigError, load_config, server_url
-from selark.connections import legacy_connection
+from selark.connections import configured_connections
 from selark.governance import Policy, permitted
 from selark.runtime import Runtime
 from selark.storage import utc_now
@@ -128,7 +128,7 @@ def overview(directory, *, offline=False, include_usage=True):
                 for caller in store.tokens():
                     result["callers"].append(caller | {"quota": store.quota(caller["id"])})
                 registry = runtime.registry()
-                configs = [legacy_connection(runtime.settings(), registry), *registry.connections]
+                configs = configured_connections(runtime.settings(), registry)
                 for config in configs:
                     try:
                         if config.provider == "chatgpt":

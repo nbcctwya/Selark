@@ -9,7 +9,6 @@ import asyncio
 import contextlib
 import json
 import os
-import pty
 import socket
 import sqlite3
 import subprocess
@@ -289,7 +288,12 @@ async def run(args):
 
                 async def cli(arguments, *, stdin=None, terminal=False, executable=None):
                     argv = executable or [*command, "--config-dir", str(profile)]
-                    descriptors = pty.openpty() if terminal else None
+                    if terminal:
+                        import pty  # Linux-only interactive CLI acceptance, not relay helpers.
+
+                        descriptors = pty.openpty()
+                    else:
+                        descriptors = None
                     try:
                         kwargs = {"stdin": descriptors[1]} if terminal else {"input": stdin}
                         result = await asyncio.to_thread(

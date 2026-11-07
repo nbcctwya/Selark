@@ -1,0 +1,2 @@
+# Bundled assets are verified byte-for-byte against manifest.json on every OS.
+src/selark/dashboard_assets/** -text

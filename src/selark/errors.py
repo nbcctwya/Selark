@@ -1,3 +1,7 @@
+class ConfigError(ValueError):
+    """Safe, user-facing local configuration or platform failure."""
+
+
 class GatewayError(Exception):
     def __init__(
         self,

@@ -13,6 +13,77 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.14']
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: requirements*.lock
+      - name: Install locked dependencies and wheel
+        run: |
+          python -m pip install -r requirements-dev.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip wheel --no-deps --no-build-isolation --wheel-dir reports/wheels .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install --no-deps (Get-Item reports/wheels/selark-*.whl).FullName
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip check
+      - name: Code and repository checks
+        run: |
+          python -m ruff check .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m ruff format --check .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/check_repository_security.py
+      - name: Native filesystem, process and shared business regressions
+        run: python -m pytest -q --basetemp=reports/pytest --junitxml=reports/windows-unit.xml
+      - name: Installed CLI outside repository
+        working-directory: ${{ runner.temp }}
+        run: |
+          selark --help
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          selark --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          selark service --help
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          selark dashboard --help
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          selark backup drill --help
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -c "import selark; print(selark.__file__)"
+      - name: Native TCP, graceful shutdown and interrupted stream recovery
+        run: python scripts/verify_stability.py --selark (Get-Command selark).Source --output reports/windows-stability.json
+      - name: Background lifecycle, online backup and 20k-row history
+        run: python scripts/verify_operations.py --selark (Get-Command selark).Source --output reports/windows-operations.json
+      - name: Zero-extra-generation and idle invariants
+        run: python -m scripts.measure_runtime --check-invariants --idle-seconds 2 --requests 10 --output reports/windows-idle.json
+      - name: Native relay budget sample (informational)
+        if: matrix.python == '3.14'
+        continue-on-error: true
+        run: python -m scripts.measure_relay --samples 100 --idle-seconds 10 --output reports/windows-relay.json
+      - name: Preserve synthetic Windows evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: selark-windows-${{ matrix.python }}
+          path: |
+            reports/windows-*.json
+            reports/windows-*.xml
+          if-no-files-found: ignore
+          retention-days: 7
   frontend:
     runs-on: ubuntu-latest
     timeout-minutes: 15

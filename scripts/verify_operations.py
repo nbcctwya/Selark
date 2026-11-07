@@ -4,7 +4,6 @@ import argparse
 import contextlib
 import json
 import os
-import signal
 import socket
 import subprocess
 import sys
@@ -12,6 +11,7 @@ import tempfile
 import time
 from pathlib import Path
 
+from process_support import crash_service
 from verify_stability import Fixture, wait_for
 
 from selark import __version__
@@ -47,6 +47,8 @@ def run(command, *, history_rows=20000):
         }
         env["XDG_CONFIG_HOME"] = str(root / "xdg")
         env["SELARK_DATA_DIR"] = str(profile / "data")
+        env["PYTHONUTF8"] = "1"
+        env["NO_PROXY"] = env["no_proxy"] = "127.0.0.1,localhost,::1"
 
         def cli(*args, json_output=True):
             result = subprocess.run(
@@ -55,6 +57,7 @@ def run(command, *, history_rows=20000):
                 cwd=outside,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 timeout=60,
             )
             if result.returncode:
@@ -96,7 +99,7 @@ def run(command, *, history_rows=20000):
             assert cli("usage", "--json")["summary"] == usage
             assert len(fixture.calls) == 2
             checks.append("graceful restart preserves history without regenerating")
-            os.kill(restarted["pid"], signal.SIGKILL)
+            crash_service(profile, profile / "data")
             wait_for(lambda: cli("service", "status", "--json")["pid"] is None)
             assert cli("service", "start", "--backend", "process", "--json")["state"] == "running"
             assert len(fixture.calls) == 2
@@ -148,7 +151,7 @@ def run(command, *, history_rows=20000):
             "history_rows": history_rows,
             "overview_seconds": samples,
             "service_backend": "process",
-            "systemd": "covered by unit simulation",
+            "platform": sys.platform,
         }
 
 

@@ -11,6 +11,7 @@ from selark.cli import main
 from selark.config import ConfigError, _write_private, data_directory
 from selark.history import import_history
 from selark.overview import overview
+from selark.platforms import native
 from selark.providers.chatgpt import response_usage
 from selark.runtime import Runtime
 from selark.storage import Store
@@ -18,6 +19,7 @@ from selark.usage import inconsistent_usage, sanitize_usage
 
 from .support.governance import PAYLOAD, allocation, app_for, auth, finished, price
 from .support.governance import runtime as runtime
+from .support.permissions import make_public
 from .support.protocol import completion, event, sse
 
 
@@ -294,10 +296,12 @@ def test_default_path_restore_uses_own_ledger_and_keeps_xdg_data(runtime, tmp_pa
     data_home.mkdir(mode=0o700)
     monkeypatch.setenv("XDG_CONFIG_HOME", str(config_home))
     monkeypatch.setenv("XDG_DATA_HOME", str(data_home))
-    original = data_home / "selark"
-    original.mkdir(mode=0o700)
+    monkeypatch.setenv("LOCALAPPDATA", str(config_home))
+    original = native.data_directory()
+    original.mkdir(mode=0o700, parents=True)
     (original / "records.sqlite3").write_bytes(b"unrelated-existing-database")
-    target = config_home / "selark"
+    target = native.config_directory()
+    target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     assert data_directory(target) == original
     report = restore_backup(backup, target)
     assert report["ok"] and data_directory(target) == target / "data"
@@ -314,7 +318,7 @@ def test_status_reports_invalid_client_as_failure_without_hiding_resources(runti
     if damage == "json":
         _write_private(path, {"broken": True})
     elif damage == "permission":
-        path.chmod(0o644)
+        make_public(path)
     else:
         path.unlink()
         path.symlink_to(runtime.directory / "server.json")

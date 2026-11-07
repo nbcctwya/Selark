@@ -1,3 +1,5 @@
+import os
+
 import httpx
 import pytest
 from fastapi.testclient import TestClient
@@ -6,6 +8,15 @@ from selark.app import create_app
 from selark.config import ServerConfig
 
 from .support.protocol import TOKEN, UPSTREAM_KEY, completion
+
+
+@pytest.fixture(autouse=True)
+def isolated_profile_environment(monkeypatch):
+    for name in ("SELARK_CONFIG_DIR", "SELARK_DATA_DIR", "MIMO_API_KEY"):
+        monkeypatch.delenv(name, raising=False)
+    if os.name == "nt":
+        # Default-directory tests replace Path.home; never select the developer's profile.
+        monkeypatch.delenv("LOCALAPPDATA", raising=False)
 
 
 @pytest.fixture

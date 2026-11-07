@@ -5,7 +5,6 @@ import contextlib
 import functools
 import json
 import logging
-import os
 import re
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
@@ -14,6 +13,7 @@ from pathlib import Path
 
 from selark.config import ConfigError, _write_private, private_directory
 from selark.locking import file_lock
+from selark.platforms import native
 from selark.storage import utc_now
 
 logger = logging.getLogger("selark.storage")
@@ -69,11 +69,7 @@ def snapshot(state, http_status, duration_ms, *, settled):
 
 
 def sync_directory(path):
-    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
-    try:
-        os.fsync(fd)
-    finally:
-        os.close(fd)
+    native.sync_directory(path)
 
 
 class Journal:
@@ -108,15 +104,7 @@ class Journal:
 
     @staticmethod
     def load(path):
-        info = path.stat()
-        if (
-            path.is_symlink()
-            or info.st_uid != os.getuid()
-            or info.st_mode & 0o077
-            or info.st_size > 65536
-        ):
-            raise ValueError("unsafe receipt")
-        value = json.loads(path.read_bytes())
+        value = json.loads(native.read_private(path, limit=65536))
         if (
             not isinstance(value, dict)
             or value.get("schema_version") != 1

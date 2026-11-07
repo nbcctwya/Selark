@@ -23,3 +23,5 @@ typing-extensions==4.16.0
 typing-inspection==0.4.4
 uvicorn==0.54.0
 wheel==0.48.0
+pywin32==312; sys_platform == "win32"
+tzdata==2026.6; sys_platform == "win32"

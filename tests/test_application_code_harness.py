@@ -1,9 +1,16 @@
 """The offline checker accepts ordinary container code without executing examples."""
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
+
+pytestmark = pytest.mark.skipif(
+    os.name == "nt", reason="Linux resource-limited generated-code checker; not gateway runtime"
+)
 
 CHECKER = Path(__file__).resolve().parents[1] / "scripts/check_application_code.py"
 IMPLEMENTATION = """

@@ -8,7 +8,6 @@ import asyncio
 import base64
 import contextlib
 import hashlib
-import os
 import re
 import secrets
 import time
@@ -26,6 +25,7 @@ from pydantic import Field, SecretStr
 from selark.config import ConfigError, StrictConfig, _write_private, load_config, private_directory
 from selark.errors import GatewayError
 from selark.locking import file_lock
+from selark.platforms import native
 from selark.protocol import strict_json
 
 ISSUER = "https://auth.openai.com"
@@ -135,7 +135,7 @@ class ChatGPTAuth:
             raise ConfigError("ChatGPT 私有目录不能是符号链接。")
         if not path.exists() and not path.is_symlink():
             return Profile(connection_id=identity)
-        if path.stat().st_size > 131072 or path.stat().st_uid != os.getuid():
+        if native.check_private(path).st_size > 131072:
             raise ConfigError("ChatGPT 凭据文件大小或所有者无效。")
         profile = load_config(path, Profile)
         if profile.connection_id != identity:

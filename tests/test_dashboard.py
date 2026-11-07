@@ -20,6 +20,7 @@ from selark.storage import Store, utc_now
 from .support.dashboard import BOOTSTRAP, HEADERS, ORIGIN, dashboard, login
 from .support.governance import allocation, finished, price
 from .support.governance import runtime as runtime
+from .support.permissions import make_private
 from .support.protocol import UPSTREAM_KEY
 from .support.resources import contents
 
@@ -383,7 +384,7 @@ def test_logs_are_projected_and_backups_never_claim_integrity(runtime, request_p
         )
         + "\n"
     )
-    path.chmod(0o600)
+    make_private(path)
     result = data.log_events(runtime.directory)
     assert result["omitted"] == 1
     assert result["items"][0]["status"] == 500

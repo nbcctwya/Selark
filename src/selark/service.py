@@ -1,8 +1,7 @@
-"""Per-instance Linux/WSL services, with systemd user units and a process fallback."""
+"""Per-instance service control with native Windows and Linux/WSL capabilities."""
 
 import contextlib
 import errno
-import fcntl
 import hashlib
 import json
 import os
@@ -24,52 +23,38 @@ from selark.config import (
     server_url,
 )
 from selark.locking import file_lock
+from selark.platforms import native
 
 
 def process_identity(pid):
-    try:
-        process = Path(f"/proc/{pid}")
-        if process.stat().st_uid != os.getuid():
-            return None
-        fields = (process / "stat").read_text().rsplit(")", 1)[1].split()
-        if fields[0] == "Z":
-            return None
-        return {
-            "pid": pid,
-            "start_ticks": fields[19],
-            "boot_id": Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
-        }
-    except (OSError, IndexError):
-        return None
+    return native.process_identity(pid)
 
 
 @contextmanager
-def process_marker(directory, data_dir):
+def process_marker(directory, data_dir, *, stop_callback=None):
     path = data_dir / "service-process.json"
     marker = process_identity(os.getpid())
     if marker is None:
-        raise ConfigError("无法读取 Linux 进程身份；后台服务需要 /proc。")
+        raise ConfigError("无法核对当前用户的进程身份；拒绝启动后台服务。")
     marker.update(
         config_dir=str(directory), backend=os.environ.get("SELARK_SERVICE_BACKEND", "foreground")
     )
-    _write_private(path, marker)
-    try:
-        yield
-    finally:
-        path.unlink(missing_ok=True)
+    with contextlib.ExitStack() as stack:
+        if native.IS_WINDOWS:
+            from selark.platforms.windows_service import stop_listener
+
+            marker["stop_event"] = stack.enter_context(stop_listener(stop_callback))
+        _write_private(path, marker)
+        try:
+            yield
+        finally:
+            path.unlink(missing_ok=True)
 
 
 def running_process(directory, data_dir):
     path = data_dir / "service-process.json"
     try:
-        if (
-            path.is_symlink()
-            or path.stat().st_uid != os.getuid()
-            or path.stat().st_mode & 0o077
-            or path.stat().st_size > 4096
-        ):
-            raise ConfigError("服务进程标记不安全；拒绝向未知进程发信号。")
-        saved = json.loads(path.read_bytes())
+        saved = json.loads(native.read_private(path, limit=4096))
         if not isinstance(saved, dict) or type(saved.get("pid")) is not int or saved["pid"] < 2:
             raise ValueError
         current = process_identity(saved["pid"])
@@ -90,12 +75,12 @@ def running_process(directory, data_dir):
 
 def service_lock_held(data_dir):
     try:
-        fd = os.open(data_dir / "service.lock", os.O_RDONLY | os.O_NOFOLLOW)
+        fd = native.open_private(data_dir / "service.lock", os.O_RDWR)
     except FileNotFoundError:
         return False
     try:
         try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            native.lock(fd, nonblocking=True)
             return False
         except BlockingIOError:
             return True
@@ -118,6 +103,8 @@ def systemctl(*args, check=True):
 
 
 def systemd_available():
+    if native.IS_WINDOWS:
+        return False
     if not shutil.which("systemctl"):
         return False
     try:
@@ -174,7 +161,7 @@ def install_unit(directory, data_dir, config):
     if path.exists() and not path.read_text().startswith("# Managed by Selark;"):
         raise ConfigError("同名 systemd 单元不属于 Selark，未覆盖。")
     path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+    fd = native.open_private(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
     with os.fdopen(fd, "w") as output:
         output.write(unit_text(directory, data_dir, config))
         output.flush()
@@ -186,6 +173,10 @@ def install_unit(directory, data_dir, config):
 def service_status(directory, *, offline=False):
     data_dir = data_directory(directory)
     process = running_process(directory, data_dir)
+    if native.IS_WINDOWS:
+        from selark.platforms.windows_service import status
+
+        return status(directory, data_dir, process, service_lock_held(data_dir))
     unit = unit_path(directory, data_dir)
     systemd = {}
     if unit.exists() and not offline:
@@ -216,6 +207,11 @@ def service_status(directory, *, offline=False):
 def stop_process(directory, data_dir, grace):
     process = running_process(directory, data_dir)
     if process is None:
+        return
+    if native.IS_WINDOWS:
+        from selark.platforms.windows_service import stop
+
+        stop(process, grace)
         return
     # pidfd binds the signal to this process even if the numeric PID is reused.
     descriptor = None
@@ -250,20 +246,28 @@ def start_process(directory, data_dir):
     # Validate and recover using the same service lock before detaching.
     with Runtime(directory) as runtime, runtime.service():
         pass
-    environment = os.environ | {
-        "SELARK_DATA_DIR": str(data_dir),
-        "SELARK_SERVICE_BACKEND": "process",
-    }
+    arguments = ["--config-dir", str(directory), "serve"]
+    if not getattr(sys, "frozen", False):
+        arguments = ["-m", "selark", *arguments]
+    command, environment = native.python_command(arguments)
+    if getattr(sys, "frozen", False):
+        environment["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
+    environment = (
+        os.environ
+        | environment
+        | {
+            "SELARK_DATA_DIR": str(data_dir),
+            "SELARK_SERVICE_BACKEND": "process",
+        }
+    )
     child = subprocess.Popen(
-        [os.path.abspath(sys.executable), "-m", "selark", "--config-dir", str(directory), "serve"],
-        cwd="/",
+        command,
         env=environment,
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
-        start_new_session=True,
         close_fds=True,
-        umask=0o077,
+        **native.detached_options(directory),
     )
     deadline = time.monotonic() + 10
     while time.monotonic() < deadline:
@@ -299,6 +303,10 @@ def wait_systemd_ready(directory, data_dir, *, timeout=10):
 
 
 def manage_service(directory, action, *, backend="auto"):
+    if native.IS_WINDOWS:
+        from selark.platforms.windows_service import manage
+
+        return manage(directory, action, backend=backend)
     if action == "status":
         return service_status(directory)
     config = load_config(directory / "server.json", ServerConfig)
@@ -359,3 +367,18 @@ def manage_service(directory, action, *, backend="auto"):
                         )
                     start_process(directory, data_dir)
         return service_status(directory) | {"changed": True}
+
+
+def run_server(app, directory, data_dir, **options):
+    """Keep the existing Linux signal path; Windows uses a protected, blocking event."""
+    import uvicorn
+
+    if native.IS_WINDOWS:
+        server = uvicorn.Server(uvicorn.Config(app, **options))
+        with process_marker(
+            directory, data_dir, stop_callback=lambda: setattr(server, "should_exit", True)
+        ):
+            server.run()
+    else:
+        with process_marker(directory, data_dir):
+            uvicorn.run(app, **options)

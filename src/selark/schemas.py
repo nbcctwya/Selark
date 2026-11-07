@@ -123,6 +123,7 @@ class ChatRequest(StrictModel):
         data["messages"] = [m.model_dump(exclude_unset=True) for m in self.messages]
         if (
             self.thinking is None
+            and self.reasoning_effort is None
             and not self.tools
             and not any(
                 m.reasoning_content is not None or m.tool_calls or m.role == "tool"
