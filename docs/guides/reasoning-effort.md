@@ -54,6 +54,13 @@ GPT-5.1 为 `low/medium/high`，GPT-5.2 增加 `xhigh`，已列出的 GPT-6 模�
 OpenAI 预设覆盖 `gpt-6-astra`、`gpt-6.1-sol`、`gpt-6.1-terra`、`gpt-6-sol`、
 `gpt-6-luna` 的 `low/medium/high/xhigh/max`，不把 Kimi 的别名规则用于 OpenAI。
 这不代表账户已获得每个模型的权限。不把「不指定」解释为关闭思考。
+
+GPT-6 Luna 的 Chat Completions 工具调用还要求客户端显式选择
+`reasoning_effort: none`；需要推理与工具一起使用时，应由客户端选择 Responses。
+Selark 不会因上游拒绝而自动关闭推理、切换协议或重试。依据
+[GPT-6 Luna 官方说明](https://developers.openai.com/api/docs/models/gpt-6-luna)
+（2026-11-07 核对），本次调用结果见 [WSL 验收](../verification/windows-wsl-verification-2026-11-07.md)。
+
 Claude Opus / Sonnet 4.6 预设四档，已确认支持 xhigh 的新模型提供五档；
 DeepSeek Flash / V4 Pro 预设 `low/high/max`。模型白名单和来源在桌面
 `src/lib/agent-config.ts` 中集中维护；新增预设必须核对具体模型官方能力。
