@@ -460,7 +460,11 @@ def test_degraded_ledger_returns_explicit_error_without_recovery(runtime):
     assert contents(runtime.directory) == before
 
 
-def test_unpriced_partial_inconsistent_and_multiple_currencies(runtime):
+def test_unpriced_partial_inconsistent_and_multiple_currencies(runtime, monkeypatch):
+    at = datetime(2026, 10, 31, tzinfo=UTC)
+    monkeypatch.setattr(
+        "tests.support.governance.utc_now", lambda: at.isoformat(timespec="microseconds")
+    )
     caller = runtime.store.create_token("accounting")
     cases = [
         ("usd", price(runtime), {"prompt_tokens": 12, "completion_tokens": 2, "total_tokens": 14}),
@@ -477,9 +481,12 @@ def test_unpriced_partial_inconsistent_and_multiple_currencies(runtime):
         runtime.store.finish(
             identity, state=finished(caller, identity, usage=usage), http_status=200, duration_ms=1
         )
-    result = data.snapshot(runtime.directory, data.query_filters({}), offline=True)["usage"][
-        "summary"
-    ]
+    # A coarse clock may not advance between inserting rows and querying them.
+    # The upper bound is exclusive; test accounting inside a deterministic window.
+    assert data.records(runtime.directory, data.query_filters({}, now=at))["total"] == 0
+    filters = data.query_filters({}, now=at + timedelta(microseconds=1))
+    result = data.snapshot(runtime.directory, filters, offline=True)["usage"]["summary"]
+    assert result["requests"] == len(cases)
     assert result["known_tokens"]["total_tokens"] == 31
     assert result["known_usage_requests"] == 2
     assert result["unknown_consumption_requests"] == 1
