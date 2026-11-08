@@ -153,8 +153,8 @@ ChatGPT 订阅功能已移除。升级时，旧连接配置中的订阅项不再
 含旧 `chatgpt-registration` 目录的备份仍校验完整性，但恢复只复制普通配置、账本和待落账记录，不复制旧注册目录。新备份不读取旧授权目录。`records` / `usage --resource-type chatgpt_subscription` 仅用于查询移除前的历史，不会触发调用。
 
 先备份并停止旧服务，再 `pipx install --force /absolute/path/to/Selark`，运行 `selark migrate` 后
-执行 `selark status`、`selark service start`。当前 0.10.0 使用数据库 schema 5；已有 schema 5 无需额外升级，
-旧版本迁移会先备份。具体步骤见 [安装与升级](installation.md)。
+执行 `selark status`、`selark service start`。当前版本使用数据库 schema 6；已有 schema 5 也需要迁移，
+迁移会先备份，再清除已退役的订阅策略字段，保留其他权限、配额和历史记录。具体步骤见 [安装与升级](installation.md)。
 轮转配置不改变连接验证指纹。待恢复记录应由与其格式兼容的版本处理，不直接交给旧程序恢复。
 
 本版仍是单用户、单实例数据目录的文本资源服务；不是官方账单系统、跨机器调度器或绝对费用上限。
