@@ -21,7 +21,7 @@ from .support.governance import allocation, finished, price
 from .support.governance import runtime as runtime
 from .support.permissions import make_private
 from .support.protocol import UPSTREAM_KEY
-from .support.resources import contents, retired_subscription
+from .support.resources import contents
 
 
 @pytest.mark.parametrize("path", ["snapshot", "records", "logs", "backups"])
@@ -164,7 +164,6 @@ def test_empty_config_is_not_created_or_migrated(tmp_path):
 
 def test_full_read_only_snapshot_redacts_secrets_and_preserves_unknowns(runtime, monkeypatch):
     runtime.add_connection("plan", "kimi-code", "test-plan-secret")
-    retired_subscription(runtime)
     caller = runtime.store.create_token("reader")
     quote = price(runtime)
     allocation(runtime, caller, "known", quote=quote)
@@ -198,7 +197,7 @@ def test_full_read_only_snapshot_redacts_secrets_and_preserves_unknowns(runtime,
     before = contents(runtime.directory)
 
     def forbidden(*args, **kwargs):
-        pytest.fail("Dashboard must not call providers or mutate OAuth")
+        pytest.fail("Dashboard must not call providers")
 
     monkeypatch.setattr("httpx.Client.send", forbidden)
     # TestClient needs httpx.Client.send; call read-only projections directly here.
@@ -216,8 +215,6 @@ def test_full_read_only_snapshot_redacts_secrets_and_preserves_unknowns(runtime,
     for secret in (
         UPSTREAM_KEY,
         caller["token"],
-        "test-oauth-access",
-        "test-oauth-refresh",
         "test-plan-secret",
     ):
         assert secret not in encoded

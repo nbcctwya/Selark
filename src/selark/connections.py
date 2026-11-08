@@ -125,27 +125,6 @@ class ConnectionsConfig(StrictConfig):
     legacy_discovery: Discovery = Field(default_factory=Discovery)
     connections: list[ConnectionConfig] = Field(default_factory=list, max_length=31)
 
-    @model_validator(mode="before")
-    @classmethod
-    def ignore_retired_connections(cls, value):
-        # Read old profiles without activating removed resources or rewriting history.
-        # ConnectionConfig still rejects attempts to create these connections.
-        if isinstance(value, dict) and isinstance(value.get("connections"), list):
-            return value | {
-                "connections": [
-                    item
-                    for item in value["connections"]
-                    if not (
-                        isinstance(item, dict)
-                        and (
-                            item.get("provider") == "chatgpt"
-                            or item.get("resource_type") == "chatgpt_subscription"
-                        )
-                    )
-                ]
-            }
-        return value
-
     @model_validator(mode="after")
     def unique_ids(self):
         ids = [c.connection_id for c in self.connections]

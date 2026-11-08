@@ -43,7 +43,7 @@ selark dashboard
 `model enable/disable/default` 支持明确选择、批量操作和清除默认模型；原 `connection set --models` 仍表示明确启用。
 发现失败、空目录或模型下架均不更改已有启用列表。应用令牌、连接、模型、并发及配额在派发前再次检查。
 CLI 与只读 Dashboard 展示四层状态，历史能力证据区分普通文本和 SSE、配置范围及时间。
-不会因为发现、登录或历史成功就显示实时可用，不自动验证全部模型或切换收费来源。
+不会因为发现或历史成功就显示实时可用，不自动验证全部模型或切换收费来源。
 
 升级保留全部已有启用项（包括 0.8.1 曾自动加入的模型）、默认模型、应用策略及记录。
 停止旧网关后运行 `selark migrate`，自动备份并将账本 schema 4 升为 5；Dashboard 不执行迁移。
@@ -91,7 +91,7 @@ Dashboard 独立于模型网关运行：只监听 `127.0.0.1`，不自动启动�
 
 ## 0.7.2：审查修复与稳定性加固
 
-修复备份业务结构漏检、损坏订阅影响其他连接、未发送请求错误占用配额、非法及缓存
+修复备份业务结构漏检、未发送请求错误占用配额、非法及缓存
 Token 计数、旧账本核算、默认目录恢复和状态退出码等问题。
 修复细节、兼容边界与复核方法见 [0.7.2 修复说明](stability-072.md)，
 测试与安装结果见 [0.7.2 验收](../verification/stability-072-verification.md)。
@@ -513,7 +513,7 @@ GitHub Actions 自动运行模拟测试与代码检查，不使用供应商凭�
 0.6 的 268 项回归、安装与恢复核对，以及 2 次真实 Kimi Code 编程调用（453 Token）
 见 [Token Plan 验收](../verification/token-plans-verification.md)。GLM Coding Plan 仅模拟验证。
 
-仅本机单实例，可有多个连接、独立调用方令牌、本地 Dashboard 和官方订阅登录；不提供远程管理、自动路由或生产托管。
+仅本机单实例，可有多个连接、独立调用方令牌、本地 Dashboard 和 Token Plan；不提供远程管理、自动路由或生产托管。
 
 2026-10-27 核对的官方来源：[首次调用](https://mimo.mi.com/docs/en-US/quick-start/summary/first-api-call)、
 [Chat Completions 协议](https://mimo.mi.com/docs/api/text-generation/openai-api)、

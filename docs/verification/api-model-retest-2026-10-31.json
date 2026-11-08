@@ -2,7 +2,7 @@
   "version": "0.10.0",
   "started_at": "2026-10-31T14:34:02.413346+00:00",
   "finished_at": "2026-10-31T14:36:48.791903+00:00",
-  "scope": "Historical API and Token Plan excerpt; retired integration evidence removed on 2026-11-07.",
+  "scope": "Historical API and Token Plan verification excerpt.",
   "generation_retries": 0,
   "ledger": "isolated; original dashboard/history not updated",
   "inventory": [

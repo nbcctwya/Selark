@@ -20,7 +20,6 @@ from .support.governance import PAYLOAD, allocation, app_for, auth, finished, pr
 from .support.governance import runtime as runtime
 from .support.permissions import make_public
 from .support.protocol import completion, event, sse
-from .support.resources import retired_subscription
 
 
 @pytest.mark.parametrize(
@@ -56,58 +55,6 @@ def test_backup_requires_verification_primary_key(runtime):
     backup = runtime.backup("missing-primary-key")
     with pytest.raises(ConfigError, match="主键"):
         verify_backup(backup)
-
-
-@pytest.mark.parametrize("enabled", [False, True])
-def test_retired_subscription_cannot_block_independent_api(runtime, enabled):
-    retired_subscription(runtime, "broken", enabled=enabled)
-    caller = runtime.store.create_token(
-        "isolated",
-        policy={
-            "allowed_connections": ["mimo-default", "broken"],
-        },
-    )
-    legacy_policy = caller["policy"] | {
-        "allow_chatgpt_subscriptions": True,
-        "chatgpt_output_reservation": 100,
-        "max_output_tokens": 1024,
-    }
-    with runtime.store.transaction() as db:
-        db.execute(
-            "UPDATE tokens SET policy_json=? WHERE id=?", (json.dumps(legacy_policy), caller["id"])
-        )
-    migrated = runtime.store.application(caller["id"])["policy"]
-    assert "allow_chatgpt_subscriptions" not in migrated
-    assert "chatgpt_output_reservation" not in migrated
-    assert migrated["max_output_tokens"] == 1024
-    calls = []
-
-    def upstream(request):
-        calls.append(request)
-        return httpx.Response(200, json=completion())
-
-    with TestClient(app_for(runtime, upstream)) as client:
-        assert client.get("/v1/models", headers=auth(caller)).status_code == 200
-        assert (
-            client.post("/v1/chat/completions", headers=auth(caller), json=PAYLOAD).status_code
-            == 200
-        )
-        failed = client.post(
-            "/v1/chat/completions", headers=auth(caller), json=PAYLOAD | {"connection_id": "broken"}
-        )
-        assert failed.status_code == 400
-        assert failed.json()["error"]["code"] == "unknown_connection"
-        for endpoint, payload in (
-            ("/v1/responses", {"model": "broken::subscription-model", "input": "hello"}),
-            ("/v1/messages", PAYLOAD | {"connection_id": "broken"}),
-        ):
-            rejected = client.post(endpoint, headers=auth(caller), json=payload)
-            assert rejected.status_code == 400
-            assert rejected.json()["error"]["code"] == "unknown_connection"
-    assert len(calls) == 1
-    assert runtime.connection("mimo-default")["configured"]
-    with pytest.raises(ConfigError, match="未找到连接"):
-        runtime.connection("broken")
 
 
 @pytest.mark.parametrize(

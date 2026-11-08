@@ -49,8 +49,8 @@ def add_filters(parser):
     parser.add_argument("--connection", help="按实际连接 ID 筛选")
     parser.add_argument(
         "--resource-type",
-        choices=["api", "token_plan", "chatgpt_subscription"],
-        help="筛选历史账本；chatgpt_subscription 仅用于查询移除前的记录",
+        choices=["api", "token_plan"],
+        help="按 API 或 Token Plan 资源筛选账本",
     )
     parser.add_argument("--plan", help="按套餐连接的稳定 ID 筛选")
     parser.add_argument("--caller", help="鉴权确定的调用方 ID")
@@ -89,7 +89,7 @@ def add_commands(commands):
             action.add_argument(
                 "--stream", action="store_true", help="显式生成一次短 SSE 请求；API 专用"
             )
-    status = commands.add_parser("status", help="只读统一资源总览；不登录、刷新或调用供应商")
+    status = commands.add_parser("status", help="只读统一资源总览；不调用供应商")
     status.add_argument("--offline", action="store_true", help="也不请求本地 /health")
     status.add_argument("--json", action="store_true")
     service = commands.add_parser("service", help="本机后台服务与可选登录自启动")

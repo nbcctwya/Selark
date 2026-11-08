@@ -51,15 +51,8 @@ def backup_files(root):
         if name == "manifest.json":
             continue
         parts = name.split("/")
-        allowed = (
-            name in {*CONFIGS, "records.sqlite3"}
-            or (len(parts) == 2 and parts[0] == "pending" and parts[1].endswith(".json"))
-            or name == "chatgpt-registration/host.json"
-            or (
-                len(parts) == 3
-                and parts[:2] == ["chatgpt-registration", "profiles"]
-                and parts[2].endswith(".json")
-            )
+        allowed = name in {*CONFIGS, "records.sqlite3"} or (
+            len(parts) == 2 and parts[0] == "pending" and parts[1].endswith(".json")
         )
         if not allowed:
             raise ConfigError("备份含未识别文件；拒绝恢复，请检查备份目录。")
@@ -121,15 +114,6 @@ def verify_backup(root, *, allow_legacy=False):
         for name in files:
             if name.startswith("pending/"):
                 Journal.load(root / name)
-            elif name.startswith("chatgpt-registration/profiles/"):
-                # Verify old archives without loading or restoring the retired OAuth code.
-                if (root / name).stat().st_size > 1024 * 1024:
-                    raise ConfigError("旧注册信息过大，拒绝恢复。")
-                profile = json.loads(native.read_private(root / name))
-                if not isinstance(profile, dict) or any(
-                    profile.get(key) for key in ("access_token", "refresh_token", "id_token")
-                ):
-                    raise ConfigError("备份注册信息含 OAuth 凭据，拒绝恢复。")
         return {
             "ok": True,
             "backup": str(root),

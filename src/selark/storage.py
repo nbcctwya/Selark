@@ -264,26 +264,15 @@ class Store:
         if version < 6:
             with self.db:
                 self.db.execute("BEGIN IMMEDIATE")
-                # Old releases serialized these fields for every application.
-                # Remove only retired fields, preserving all access and quota limits.
-                for row in self.db.execute("SELECT id,policy_json FROM tokens").fetchall():
+                # Validate every policy before committing the schema version.
+                # Permissions and quotas remain byte-for-byte unchanged.
+                for row in self.db.execute("SELECT policy_json FROM tokens"):
                     try:
-                        policy = json.loads(row["policy_json"])
-                        if not isinstance(policy, dict):
-                            raise ValueError
-                        retired = {"allow_chatgpt_subscriptions", "chatgpt_output_reservation"}
-                        if not retired.intersection(policy):
-                            continue
-                        policy = {key: value for key, value in policy.items() if key not in retired}
-                        Policy.model_validate(policy)
+                        Policy.model_validate_json(row["policy_json"])
                     except (ValueError, TypeError):
                         raise ConfigError(
                             "调用方策略损坏，迁移已回滚；请检查记录库和备份。"
                         ) from None
-                    self.db.execute(
-                        "UPDATE tokens SET policy_json=? WHERE id=?",
-                        (json.dumps(policy), row["id"]),
-                    )
                 self.db.execute("PRAGMA user_version=6")
 
     @contextmanager

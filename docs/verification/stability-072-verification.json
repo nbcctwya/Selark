@@ -11,7 +11,6 @@
   "ruff_format": "passed",
   "git_diff_check": "passed",
   "real_provider_requests": 0,
-  "subscription_adapter_change": "pure usage normalization preserves invalid count evidence",
   "pipx": {
     "version": "0.7.2",
     "python": "3.12.2",

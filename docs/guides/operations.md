@@ -17,7 +17,6 @@ selark records show REQUEST_ID --json
 修改权限或修复数据；默认仅访问配置中的本机 `/health`，`--offline` 连健康检查也不请求。
 只有客户端配置时显示 `client_only`，不会尝试读取其他实例的服务端凭据。
 配置或数据库不可读时退出 1；正常取得状态快照退出 0，即使服务已停止或某个资源停用。
-单个订阅凭据损坏时报告该资源问题，仍显示其他可读资源。
 
 | 状态维度 | 含义与边界 |
 | --- | --- |
@@ -33,7 +32,7 @@ selark records show REQUEST_ID --json
 
 常见诊断顺序：服务不可达看 `service status` 和 `doctor`；请求失败先凭 CLI 显示的请求 ID
 查询 `records show`，再查看日志。按量 API 的 `connection probe` 仍是**显式、有费用**的生成，
-不作为 `status`、`doctor`、服务启动或恢复的隐藏步骤。订阅资源继续使用原有受限调用流程。
+不作为 `status`、`doctor`、服务启动或恢复的隐藏步骤。Token Plan 使用专用受限调用流程。
 
 ## 用量、配额与费用
 
@@ -148,13 +147,9 @@ selark backup prune --keep 10 --apply   # 显式清理；至少保留一份
 
 ## 升级与边界
 
-ChatGPT 订阅功能已移除。升级时，旧连接配置中的订阅项不再加载，其他 API / Token Plan 继续使用；数据库迁移清除旧订阅授权字段，保留其余权限、配额和历史账本。旧桌面请求中的 `allow_chatgpt_subscriptions=false` 与 `chatgpt_output_reservation=null` 只作为无效默认值忽略，不会返回这些字段，也不能重新授权。
-
-含旧 `chatgpt-registration` 目录的备份仍校验完整性，但恢复只复制普通配置、账本和待落账记录，不复制旧注册目录。新备份不读取旧授权目录。`records` / `usage --resource-type chatgpt_subscription` 仅用于查询移除前的历史，不会触发调用。
-
 先备份并停止旧服务，再 `pipx install --force /absolute/path/to/Selark`，运行 `selark migrate` 后
 执行 `selark status`、`selark service start`。当前版本使用数据库 schema 6；已有 schema 5 也需要迁移，
-迁移会先备份，再清除已退役的订阅策略字段，保留其他权限、配额和历史记录。具体步骤见 [安装与升级](installation.md)。
+迁移会先备份并校验应用策略，保留权限、配额和历史记录；未知权限字段会使迁移回滚。具体步骤见 [安装与升级](installation.md)。
 轮转配置不改变连接验证指纹。待恢复记录应由与其格式兼容的版本处理，不直接交给旧程序恢复。
 
 本版仍是单用户、单实例数据目录的文本资源服务；不是官方账单系统、跨机器调度器或绝对费用上限。

@@ -29,12 +29,12 @@ from .support.resources import multi as multi
 from .support.resources import token
 
 
-def test_removed_provider_cannot_be_created_or_fall_back_to_api(multi):
+def test_unknown_provider_cannot_be_created_or_fall_back_to_api(multi):
     with pytest.raises(ConfigError, match="不支持的供应商"):
-        multi.add_connection("removed", "chatgpt", None)
-    obsolete = multi.connection_settings()[0].model_copy(update={"provider": "chatgpt"})
+        multi.add_connection("unknown", "unsupported", None)
+    invalid = multi.connection_settings()[0].model_copy(update={"provider": "unsupported"})
     with pytest.raises(GatewayError) as error:
-        provider_for(obsolete, None)
+        provider_for(invalid, None)
     assert error.value.code == "unsupported_provider"
 
 

@@ -9,7 +9,7 @@ Selark 采用 Python `src/` 布局。可安装代码在 `src/selark/`，测试�
 | 路径 | 职责 |
 | --- | --- |
 | `src/selark/` | 网关、本机管理、配置、存储与恢复 |
-| `src/selark/management/` | 管理命令的参数解析、执行、诊断、连接操作和订阅 CLI |
+| `src/selark/management/` | 管理命令的参数解析、执行、诊断、连接操作和 Token Plan CLI |
 | `src/selark/providers/` | 各供应商协议、文本/function 转换及原生 Responses/Messages 转发 |
 | `src/selark/dashboard_api/` | 日常管理的 HTTP 路由、请求结构和公开业务数据 |
 | `src/selark/contracts/` | 公开响应字段、接口目录及离线 OpenAPI 导出；不参与运行时响应过滤 |

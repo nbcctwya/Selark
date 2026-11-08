@@ -71,16 +71,7 @@ def test_help_does_not_require_valid_configuration(monkeypatch, capsys):
         main(["--help"])
     assert exit_info.value.code == 0
     output = capsys.readouterr().out
-    assert "serve" in output and "chatgpt" not in output
-
-
-@pytest.mark.parametrize("action", ["login", "logout", "refresh", "status", "usage", "list"])
-def test_retired_login_commands_rejected_before_accessing_profile(tmp_path, action):
-    profile = tmp_path / "unused"
-    with pytest.raises(SystemExit) as error:
-        main(["--config-dir", str(profile), "chatgpt", action])
-    assert error.value.code == 2
-    assert not profile.exists()
+    assert "serve" in output
 
 
 def test_init_and_commands_reuse_default_configuration_after_chdir(tmp_path, monkeypatch, capsys):

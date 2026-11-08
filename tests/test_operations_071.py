@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from selark.backups import drill_backup, prune_backups, restore_backup, seal_backup, verify_backup
+from selark.backups import drill_backup, prune_backups, restore_backup, verify_backup
 from selark.cli import main
-from selark.config import ConfigError, LogSettings, _write_private, initialize, private_directory
+from selark.config import ConfigError, LogSettings, _write_private, initialize
 from selark.logs import configure_logging, read_logs
 from selark.overview import overview
 from selark.persistence import Journal, snapshot
@@ -29,12 +29,11 @@ from selark.service import (
 from .support.governance import allocation, finished
 from .support.governance import runtime as runtime
 from .support.permissions import is_private, make_private, make_public
-from .support.resources import contents, retired_subscription
+from .support.resources import contents
 
 
 def test_status_is_read_only_and_separates_evidence(runtime, monkeypatch, capsys):
-    runtime.add_connection("coding", "kimi-code", "fake")
-    retired_subscription(runtime)
+    runtime.add_connection("coding", "kimi-code", "test-plan-secret")
     original = runtime.connection_settings()[0]
     caller = runtime.store.create_token("history")
     allocation(runtime, caller, "known")
@@ -48,7 +47,7 @@ def test_status_is_read_only_and_separates_evidence(runtime, monkeypatch, capsys
     before = contents(runtime.directory)
 
     def forbidden(*args, **kwargs):
-        pytest.fail("status must not access upstream or mutate OAuth")
+        pytest.fail("status must not access upstream")
 
     monkeypatch.setattr("httpx.Client", forbidden)
     result = overview(runtime.directory, offline=True)
@@ -61,7 +60,8 @@ def test_status_is_read_only_and_separates_evidence(runtime, monkeypatch, capsys
     assert plan["provider_quota"]["historical_snapshot"]
     assert contents(runtime.directory) == before
     encoded = json.dumps(result)
-    assert "test-oauth-access" not in encoded and "test-oauth-refresh" not in encoded
+    for secret in (original.api_key.get_secret_value(), caller["token"], "test-plan-secret"):
+        assert secret not in encoded
     assert main(["--config-dir", str(runtime.directory), "status", "--offline"]) == 0
     assert "当前客户端获准模型" in capsys.readouterr().out
 
@@ -77,13 +77,6 @@ def test_status_does_not_migrate_or_initialize(tmp_path, monkeypatch):
     empty = tmp_path / "empty"
     assert overview(empty, offline=True)["scope"] == "unconfigured"
     assert not empty.exists()
-
-
-def test_status_retired_subscription_does_not_hide_api_resources(runtime):
-    retired_subscription(runtime)
-    result = overview(runtime.directory, offline=True)
-    assert result["ok"] and len(result["connections"]) == 1
-    assert result["connections"][0]["provider"] == "mimo"
 
 
 def test_status_client_only_does_not_open_server(runtime):
@@ -106,38 +99,6 @@ def test_new_backup_detects_tamper_and_preserves_original(runtime, tmp_path):
     with pytest.raises(ConfigError, match="完整性"):
         restore_backup(backup, target)
     assert not target.exists() and contents(runtime.directory) == before
-
-
-def test_legacy_backup_restores_history_without_retired_authorization(runtime, tmp_path):
-    retired_subscription(runtime)
-    caller = runtime.store.create_token("history")
-    allocation(runtime, caller, "old-subscription")
-    runtime.store.finish(
-        "old-subscription",
-        state=finished(caller, "old-subscription"),
-        http_status=200,
-        duration_ms=1,
-    )
-    with runtime.store.transaction() as db:
-        db.execute(
-            "UPDATE requests SET resource_type='chatgpt_subscription',plan_id='subscription' "
-            "WHERE request_id='old-subscription'"
-        )
-    backup = runtime.backup("legacy")
-    assert not (backup / "chatgpt-registration").exists()
-    old_registration = backup / "chatgpt-registration" / "profiles"
-    private_directory(old_registration.parent)
-    private_directory(old_registration)
-    _write_private(old_registration / "subscription.json", {"client_id": "old-client"})
-    seal_backup(backup)
-    assert verify_backup(backup)["ok"]
-    target = tmp_path / "restored-without-subscription"
-    restore_backup(backup, target)
-    assert not (target / "chatgpt-auth").exists()
-    with Runtime(target) as restored:
-        assert [c.provider for c in restored.connection_settings()] == ["mimo"]
-        history = restored.store.records({"resource_type": "chatgpt_subscription"})
-        assert len(history) == 1 and history[0]["total_tokens"] == 14
 
 
 def test_restore_and_drill_replay_pending_once_and_preserve_revocation(

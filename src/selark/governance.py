@@ -57,22 +57,6 @@ class Policy(StrictConfig):
     daily_budget: str | None = None
     budget_currency: str = Field(default="USD", pattern=r"^[A-Z]{3}$")
 
-    @model_validator(mode="before")
-    @classmethod
-    def discard_retired_defaults(cls, value):
-        # Older desktop clients still send these disabled controls with API policies.
-        # Nondefault values remain unknown fields and are rejected by StrictConfig.
-        if isinstance(value, dict):
-            return {
-                key: item
-                for key, item in value.items()
-                if not (
-                    (key == "allow_chatgpt_subscriptions" and item is False)
-                    or (key == "chatgpt_output_reservation" and item is None)
-                )
-            }
-        return value
-
     @field_validator("daily_budget")
     @classmethod
     def valid_budget(cls, value):
@@ -260,13 +244,9 @@ def policy_for(db, caller):
 
 
 def stored_policy(raw):
-    """Read retired grants without authorizing them or rewriting the ledger."""
+    """Validate persisted permissions without rewriting the ledger."""
     try:
-        document = json.loads(raw)
-        if isinstance(document, dict):
-            document.pop("allow_chatgpt_subscriptions", None)
-            document.pop("chatgpt_output_reservation", None)
-        return Policy.model_validate(document)
+        return Policy.model_validate_json(raw)
     except (ValueError, TypeError):
         raise ConfigError("调用方策略损坏，请检查记录库和备份。") from None
 

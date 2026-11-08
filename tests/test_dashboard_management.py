@@ -245,7 +245,7 @@ def test_invalid_connection_edit_is_atomic_and_does_not_echo_input(runtime, clie
     assert contents(runtime.directory) == before
 
 
-def test_subscription_types_keep_their_core_constraints(runtime, client):
+def test_token_plan_and_provider_constraints(runtime, client):
     result = write(
         client,
         "POST",
@@ -277,49 +277,30 @@ def test_subscription_types_keep_their_core_constraints(runtime, client):
             "POST",
             "/api/connections",
             {
-                "id": "removed-provider",
-                "provider": "chatgpt",
+                "id": "unknown-provider",
+                "provider": "unsupported",
                 "api_key": "fake-api-key",
             },
         ).status_code
         == 400
     )
     providers = client.get("/api/providers").json()["items"]
-    assert all(p["id"] != "chatgpt" and p["credential_type"] == "api_key" for p in providers)
+    assert all(p["credential_type"] == "api_key" for p in providers)
     custom_api = next(p for p in providers if p["id"] == "openai-compatible")
     assert custom_api["name"] == "通用 API（OpenAI 兼容）"
     assert custom_api["base_url"] is None and custom_api["can_create"] is True
-    assert client.get("/api/connections/subscription").status_code == 404
+    assert client.get("/api/connections/unknown").status_code == 404
 
 
-@pytest.mark.parametrize(
-    "policy", [{"allow_chatgpt_subscriptions": True}, {"chatgpt_output_reservation": 1024}]
-)
-def test_retired_subscription_cannot_be_authorized(client, policy):
-    response = write(client, "POST", "/api/applications", {"name": "retired", "policy": policy})
-    assert response.status_code == 400
-
-
-def test_older_desktop_can_save_api_policy_without_retired_controls(client):
+@pytest.mark.parametrize("value", [True, False, None, 1024])
+def test_unknown_policy_fields_are_rejected(client, value):
     response = write(
         client,
         "POST",
         "/api/applications",
-        {
-            "name": "older desktop",
-            "policy": {
-                "allow_chatgpt_subscriptions": False,
-                "chatgpt_output_reservation": None,
-                "allowed_models": [],
-                "daily_token_limit": 1000,
-            },
-        },
+        {"name": "invalid", "policy": {"unknown_permission": value}},
     )
-    assert response.status_code == 201
-    policy = response.json()["policy"]
-    assert "allow_chatgpt_subscriptions" not in policy
-    assert "chatgpt_output_reservation" not in policy
-    assert policy["allowed_models"] == [] and policy["daily_token_limit"] == 1000
+    assert response.status_code == 400
 
 
 def test_batch_approval_default_and_gateway_visibility(runtime, client, monkeypatch):

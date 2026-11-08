@@ -4,7 +4,7 @@
   "selark_version": "0.10.0",
   "started_at": "2026-10-31T13:31:30.868950+00:00",
   "matrix_finished_at": "2026-10-31T13:34:11.340392+00:00",
-  "scope": "Historical API and Token Plan excerpt; retired integration evidence removed on 2026-11-07.",
+  "scope": "Historical API and Token Plan verification excerpt.",
   "enabled_models": 28,
   "text_gateway_passed_models": 24,
   "native_audio_passed_models": 4,

@@ -68,7 +68,7 @@ def overview(directory, *, offline=False, include_usage=True):
         "issues": [],
         "model_generation_requests": 0,
         "upstream_requests": 0,
-        "note": "历史调用、模型发现和本地凭据不证明当前上游可用；未登录、刷新或生成。",
+        "note": "历史调用、模型发现和本地凭据不证明当前上游可用；未调用供应商。",
     }
     client = None
     try:
