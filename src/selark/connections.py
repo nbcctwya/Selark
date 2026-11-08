@@ -8,7 +8,7 @@ import re
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import Field, SecretStr, ValidationInfo, field_validator, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 
 from selark.config import ConfigError, ServiceLimits, StrictConfig, validate_url
 from selark.errors import GatewayError
@@ -124,30 +124,6 @@ class ConnectionsConfig(StrictConfig):
     legacy_name: str = Field(default="MiMo", min_length=1, max_length=80)
     legacy_discovery: Discovery = Field(default_factory=Discovery)
     connections: list[ConnectionConfig] = Field(default_factory=list, max_length=31)
-
-    @model_validator(mode="before")
-    @classmethod
-    def retire_stored_connections(cls, value, info: ValidationInfo):
-        # Only old files may contain retired registrations. New configuration and
-        # management requests remain strict; no removed provider is instantiated.
-        if (
-            info.context
-            and info.context.get("stored_config")
-            and isinstance(value, dict)
-            and isinstance(value.get("connections"), list)
-        ):
-            return value | {
-                "connections": [
-                    item
-                    for item in value["connections"]
-                    if not (
-                        isinstance(item, dict)
-                        and item.get("provider") == "chatgpt"
-                        and item.get("resource_type") == "chatgpt_subscription"
-                    )
-                ]
-            }
-        return value
 
     @model_validator(mode="after")
     def unique_ids(self):

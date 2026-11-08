@@ -19,7 +19,7 @@ from selark.config import (
     load_config,
     private_directory,
 )
-from selark.connections import ConnectionsConfig, registry_document
+from selark.connections import ConnectionsConfig
 from selark.governance import ResourcesConfig
 from selark.locking import file_lock
 from selark.persistence import Journal, sync_directory
@@ -39,16 +39,6 @@ def private_path(path, *, directory=False):
     native.check_private(path, directory=directory)
 
 
-def retired_registration(name):
-    """Recognize historical backup metadata, never credentials or runnable state."""
-    parts = name.split("/")
-    return name == "chatgpt-registration/host.json" or (
-        len(parts) == 3
-        and parts[:2] == ["chatgpt-registration", "profiles"]
-        and parts[2].endswith(".json")
-    )
-
-
 def backup_files(root):
     private_path(root, directory=True)
     result = {}
@@ -61,10 +51,8 @@ def backup_files(root):
         if name == "manifest.json":
             continue
         parts = name.split("/")
-        allowed = (
-            name in {*CONFIGS, "records.sqlite3"}
-            or (len(parts) == 2 and parts[0] == "pending" and parts[1].endswith(".json"))
-            or retired_registration(name)
+        allowed = name in {*CONFIGS, "records.sqlite3"} or (
+            len(parts) == 2 and parts[0] == "pending" and parts[1].endswith(".json")
         )
         if not allowed:
             raise ConfigError("备份含未识别文件；拒绝恢复，请检查备份目录。")
@@ -126,17 +114,6 @@ def verify_backup(root, *, allow_legacy=False):
         for name in files:
             if name.startswith("pending/"):
                 Journal.load(root / name)
-            elif retired_registration(name):
-                # Old backups included non-secret registration metadata. Validate
-                # it for integrity, but restore_backup never copies these files.
-                if files[name]["bytes"] > 1024 * 1024:
-                    raise ConfigError("旧注册信息过大，拒绝恢复。")
-                metadata = json.loads(native.read_private(root / name))
-                if not isinstance(metadata, dict) or any(
-                    metadata.get(key) is not None
-                    for key in ("access_token", "refresh_token", "id_token")
-                ):
-                    raise ConfigError("备份注册信息无效或含 OAuth 凭据，拒绝恢复。")
         return {
             "ok": True,
             "backup": str(root),
@@ -173,12 +150,8 @@ def restore_backup(root, target, *, allow_legacy=False):
         private_directory(instance / "data")
         for name in CONFIGS:
             if (archive / name).exists():
-                if name == "connections.json":
-                    registry = load_config(archive / name, ConnectionsConfig)
-                    _write_private(instance / name, registry_document(registry))
-                else:
-                    shutil.copyfile(archive / name, instance / name)
-                    native.protect(instance / name)
+                shutil.copyfile(archive / name, instance / name)
+                native.protect(instance / name)
         for name in ("records.sqlite3", "pending"):
             source = archive / name
             if source.is_dir():

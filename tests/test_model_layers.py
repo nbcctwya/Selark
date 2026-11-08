@@ -438,9 +438,8 @@ def test_cli_init_and_model_management_are_local_and_default_deny(tmp_path, monk
 
 @pytest.mark.parametrize("version", [4, 5])
 @pytest.mark.parametrize("allow_list", [None, [], ["api::grandfathered"]])
-@pytest.mark.parametrize("retired", [None, (False, None), (True, 1024)])
 def test_schema_upgrade_preserves_existing_authorizations_and_history(
-    tmp_path, version, allow_list, retired
+    tmp_path, version, allow_list
 ):
     initialize(tmp_path, "fixture-migration-key", models=["keep"], default_model="keep")
     with Runtime(tmp_path) as runtime:
@@ -461,21 +460,11 @@ def test_schema_upgrade_preserves_existing_authorizations_and_history(
         runtime.store.revoke(caller["id"])
         database = runtime.store.path
         tokens = runtime.store.tokens()
-    with closing(sqlite3.connect(database)) as db, db:
+    with sqlite3.connect(database) as db:
         if version == 4:
             db.execute("DROP INDEX requests_evidence")
             for field in ("model_fingerprint", "protocol", "capability", "verified_at"):
                 db.execute(f"ALTER TABLE requests DROP COLUMN {field}")
-        if retired is not None:
-            for item in tokens:
-                policy = item["policy"] | {
-                    "allow_chatgpt_subscriptions": retired[0],
-                    "chatgpt_output_reservation": retired[1],
-                }
-                db.execute(
-                    "UPDATE tokens SET policy_json=? WHERE id=?",
-                    (json.dumps(policy), item["id"]),
-                )
         db.execute(f"PRAGMA user_version={version}")
     files = {p: p.read_bytes() for p in tmp_path.glob("*.json")}
     with pytest.raises(ConfigError, match="迁移"):
@@ -503,14 +492,7 @@ def test_schema_migration_failure_rolls_back_and_retry_is_idempotent(
             db.execute("DROP INDEX requests_evidence")
             for column in ("model_fingerprint", "protocol", "capability", "verified_at"):
                 db.execute(f"ALTER TABLE requests DROP COLUMN {column}")
-        old_policy = json.dumps(
-            {
-                "allowed_models": [],
-                "daily_token_limit": 1000,
-                "allow_chatgpt_subscriptions": False,
-                "chatgpt_output_reservation": None,
-            }
-        )
+        old_policy = json.dumps({"allowed_models": [], "daily_token_limit": 1000})
         db.execute("UPDATE tokens SET policy_json=?", (old_policy,))
         db.execute(f"PRAGMA user_version={target_version - 1}")
     connect = sqlite3.connect
@@ -552,7 +534,7 @@ def test_policy_validation_rejects_corruption_without_partial_writes(runtime, in
     with runtime.store.transaction() as db:
         db.execute(
             "UPDATE tokens SET policy_json=?",
-            (json.dumps({"allowed_models": [], "allow_chatgpt_subscriptions": False}),),
+            (json.dumps({"allowed_models": [], "daily_token_limit": 1000}),),
         )
         db.execute(
             "UPDATE tokens SET policy_json=? WHERE id=?", (json.dumps(invalid), caller["id"])

@@ -4,12 +4,11 @@ import json
 import httpx
 import pytest
 from fastapi.testclient import TestClient
-from pydantic import ValidationError
 
 from selark.app import create_app
 from selark.cli import main
-from selark.config import ConfigError, _write_private
-from selark.connections import ConnectionsConfig, require_connection
+from selark.config import ConfigError
+from selark.connections import require_connection
 from selark.errors import GatewayError
 from selark.providers.discovery import discover
 from selark.providers.factory import provider_for
@@ -30,33 +29,13 @@ from .support.resources import multi as multi
 from .support.resources import token
 
 
-@pytest.mark.parametrize("provider", ["unsupported", "chatgpt"])
-def test_unknown_provider_cannot_be_created_or_fall_back_to_api(multi, provider):
+def test_unknown_provider_cannot_be_created_or_fall_back_to_api(multi):
     with pytest.raises(ConfigError, match="不支持的供应商"):
-        multi.add_connection("unknown", provider, None)
-    invalid = multi.connection_settings()[0].model_copy(update={"provider": provider})
+        multi.add_connection("unknown", "unsupported", None)
+    invalid = multi.connection_settings()[0].model_copy(update={"provider": "unsupported"})
     with pytest.raises(GatewayError) as error:
         provider_for(invalid, None)
     assert error.value.code == "unsupported_provider"
-
-
-def test_retired_stored_connection_does_not_block_api_or_hide_invalid_configuration(multi):
-    multi.add_connection("api", "openai", "fixture-api-key", allowed_models=["shared"])
-    path = multi.directory / "connections.json"
-    document = json.loads(path.read_bytes())
-    document["connections"].append(
-        {"connection_id": "retired", "provider": "chatgpt", "resource_type": "chatgpt_subscription"}
-    )
-    _write_private(path, document)
-    original = path.read_bytes()
-    assert [item.connection_id for item in multi.connection_settings()] == ["mimo-default", "api"]
-    assert path.read_bytes() == original  # Reading never rewrites the user's file.
-    with pytest.raises(ValidationError):
-        ConnectionsConfig.model_validate(document)  # New writes still reject retired types.
-    document["connections"][0]["provider"] = "typo"
-    _write_private(path, document)
-    with pytest.raises(ConfigError, match="配置格式无效"):
-        multi.registry()
 
 
 @pytest.mark.parametrize(
