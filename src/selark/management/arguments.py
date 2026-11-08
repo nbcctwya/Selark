@@ -26,7 +26,6 @@ MANAGEMENT_COMMANDS = {
     "prices",
     "costs",
     "plans",
-    "chatgpt",
     "status",
     "service",
     "logs",
@@ -48,7 +47,11 @@ def add_filters(parser):
     parser.add_argument("--tz", default="UTC", help="IANA 时区，默认 UTC，如 Asia/Shanghai")
     parser.add_argument("--model")
     parser.add_argument("--connection", help="按实际连接 ID 筛选")
-    parser.add_argument("--resource-type", choices=["api", "token_plan", "chatgpt_subscription"])
+    parser.add_argument(
+        "--resource-type",
+        choices=["api", "token_plan", "chatgpt_subscription"],
+        help="筛选历史账本；chatgpt_subscription 仅用于查询移除前的记录",
+    )
     parser.add_argument("--plan", help="按套餐连接的稳定 ID 筛选")
     parser.add_argument("--caller", help="鉴权确定的调用方 ID")
     parser.add_argument("--session", help="仅筛选归组标签；跨调用方仍分别汇总")
@@ -61,9 +64,6 @@ def add_filters(parser):
 
 
 def add_commands(commands):
-    from selark.management.chatgpt import add_commands as chatgpt_commands
-
-    chatgpt_commands(commands)
     model = commands.add_parser("model", help="分开管理模型目录、启用、应用授权与历史能力证据")
     actions = model.add_subparsers(dest="action", required=True)
     for name in ("list", "show", "enable", "disable", "default", "verify"):

@@ -37,7 +37,7 @@ OpenAPI 的 `info.version=2.0.0` 是文档契约版本，与 Python 包版本和
 | POST | `/api/applications/{identity}/revoke` | 撤销令牌 |
 | GET | `/api/applications/{identity}/quota` | UTC 当日使用与保守预留 |
 
-`identity` 是列表返回的 ID，在路径中按单个 URL 段编码。服务控制、备份恢复、迁移和 OAuth 登录退出仍由 CLI 提供。
+`identity` 是列表返回的 ID，在路径中按单个 URL 段编码。服务控制、备份恢复、迁移仍由 CLI 提供。
 
 ## 页面开发前需要掌握的规则
 
@@ -76,7 +76,7 @@ pytest -q tests/test_frontend_contract.py tests/test_dashboard_management.py tes
 npm --prefix frontend test
 ```
 
-现有契约测试核对规范是否过期、公开路由是否遗漏、后端实际响应和合成数据是否符合字段声明；前端测试核对 HTTP 方法、请求和模拟交互。CI 运行同样检查。新增接口时扩展这些检查，不为每份生成文件复制一套测试。
+现有契约测试严格核对后端规范是否过期；固定前端副本允许说明文字不同，但字段、类型、约束和路由必须一致。测试同时核对公开路由是否遗漏、后端实际响应和合成数据是否符合字段声明；前端测试核对 HTTP 方法、请求和模拟交互。CI 运行同样检查。新增接口时扩展这些检查，不为每份生成文件复制一套测试。
 
 修改字段或行为时，同时更新 OpenAPI 源定义、指南、前端基线和适配器。新字段优先保持兼容；字段删除、类型变化、必填参数或错误语义变化需明确升级契约版本并完成联调。
 

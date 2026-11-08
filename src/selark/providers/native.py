@@ -17,7 +17,6 @@ NATIVE_PROTOCOLS = {
     "deepseek": {"responses", "messages"},
     "kimi": {"responses", "messages"},
     "openai": {"responses"},
-    "chatgpt": {"responses"},
     "anthropic": {"messages"},
     "kimi-code": {"responses", "messages"},
     # Custom API endpoints are owner-configured; unsupported routes fail once upstream.
@@ -59,32 +58,6 @@ class NativeProvider:
         payload = request.upstream_payload(model)
         if self.wire_protocol == "responses" and payload.get("background") is True:
             unsupported("Selark 暂不提供后台 Responses 的查询与取消接口，请使用同步或 SSE 请求。")
-        if kind == "chatgpt":
-            forbidden = {
-                "background",
-                "conversation",
-                "max_output_tokens",
-                "max_tool_calls",
-                "metadata",
-                "moderation",
-                "multi_agent",
-                "prompt",
-                "prompt_cache_retention",
-                "safety_identifier",
-                "temperature",
-                "top_logprobs",
-                "top_p",
-                "truncation",
-                "user",
-                "previous_response_id",
-            }
-            if any(payload.get(key) is not None for key in forbidden):
-                unsupported("官方 ChatGPT 订阅不支持这些 Responses 参数；请使用无状态流式请求。")
-            if payload.get("store") not in (None, False) or not request.stream:
-                unsupported("官方 ChatGPT 订阅需要 store=false、stream=true。")
-            if not isinstance(payload.get("input"), list):
-                unsupported("官方 ChatGPT 订阅需要 input 数组。")
-            payload["store"] = False
         return payload
 
     def measure_usage(self, value):
@@ -144,8 +117,6 @@ class NativeProvider:
         return value
 
     async def open(self, payload):
-        if self.config.provider == "chatgpt":
-            return await self.provider.open(payload)
         response = await self.provider.request(
             "POST", self.endpoint, json=payload, params=self.provider.forward_params
         )
@@ -196,9 +167,6 @@ class NativeProvider:
                 if kind == "error":
                     raise protocol_error("上游原生流返回错误；未自动重试。")
                 if self.wire_protocol == "responses":
-                    if kind == "response.metadata":
-                        yield event  # Advisory SIWC extension; not identity or sequence evidence.
-                        continue
                     if "sequence_number" in event:
                         value = event["sequence_number"]
                         if type(value) is not int or value <= sequence:
@@ -224,7 +192,7 @@ class NativeProvider:
                             event = event | {"response": self.terminal(result)}
                             yield event
                             return
-                    elif identity is None and kind != "response.metadata":
+                    elif identity is None:
                         raise protocol_error("Responses 流缺少回复身份。")
                 else:
                     if kind == "message_start":

@@ -5,6 +5,7 @@ from typing import Literal, NotRequired
 from pydantic import ConfigDict
 from typing_extensions import TypedDict
 
+# Retired values remain readable in historical records and older frontend fixtures.
 ResourceType = Literal["api", "token_plan", "chatgpt_subscription"]
 
 
@@ -47,6 +48,7 @@ class Provider(Shape):
 
 class PolicyView(Shape):
     allow_token_plans: bool
+    # Compatibility only: the backend always projects False / None for these fields.
     allow_chatgpt_subscriptions: bool
     chatgpt_output_reservation: int | None
     allowed_connections: list[str] | None

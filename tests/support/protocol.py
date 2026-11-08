@@ -184,7 +184,7 @@ def responses_events(status="completed", usage=RESPONSES_USAGE, *, terminal=True
         final = responses_result(status, usage)
         if status == "failed":
             final["error"] = {
-                "code": "subscription_sharing_usage_limit_exceeded",
+                "code": "rate_limit_exceeded",
                 "message": "secret-must-not-echo",
             }
         values.append({"type": "response." + status, "response": final})

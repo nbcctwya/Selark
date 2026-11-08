@@ -285,36 +285,19 @@ def test_subscription_types_keep_their_core_constraints(runtime, client):
         == 400
     )
     providers = client.get("/api/providers").json()["items"]
-    assert next(p for p in providers if p["id"] == "chatgpt")["can_create"] is False
+    assert all(p["id"] != "chatgpt" and p["credential_type"] == "api_key" for p in providers)
     custom_api = next(p for p in providers if p["id"] == "openai-compatible")
     assert custom_api["name"] == "通用 API（OpenAI 兼容）"
     assert custom_api["base_url"] is None and custom_api["can_create"] is True
-    runtime.add_connection("subscription", "chatgpt", None)
-    current = client.get("/api/connections/subscription").json()
-    assert (
-        write(
-            client,
-            "PATCH",
-            "/api/connections/subscription",
-            {
-                "revision": current["revision"],
-                "api_key": "fake-not-an-oauth-token",
-            },
-        ).status_code
-        == 400
-    )
-    assert (
-        write(
-            client,
-            "PATCH",
-            "/api/connections/subscription",
-            {
-                "revision": current["revision"],
-                "enabled": False,
-            },
-        ).status_code
-        == 200
-    )
+    assert client.get("/api/connections/subscription").status_code == 404
+
+
+@pytest.mark.parametrize(
+    "policy", [{"allow_chatgpt_subscriptions": True}, {"chatgpt_output_reservation": 1024}]
+)
+def test_retired_subscription_cannot_be_authorized(client, policy):
+    response = write(client, "POST", "/api/applications", {"name": "retired", "policy": policy})
+    assert response.status_code == 400
 
 
 def test_batch_approval_default_and_gateway_visibility(runtime, client, monkeypatch):

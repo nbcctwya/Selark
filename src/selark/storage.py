@@ -24,6 +24,7 @@ from selark.governance import (
     public_allocation,
     reserve,
     settle,
+    stored_policy,
 )
 from selark.platforms import native
 from selark.quota_cache import QuotaCache
@@ -389,9 +390,7 @@ class Store:
             if row is None:
                 raise GatewayError(404, "application_not_found", "未找到应用。")
             result = dict(row)
-            result["policy"] = Policy.model_validate(
-                json.loads(result.pop("policy_json"))
-            ).model_dump()
+            result["policy"] = stored_policy(result.pop("policy_json")).model_dump()
             result["active"] = result["revoked_at"] is None
             result["revision"] = application_revision(result)
             if expected_revision is not None and expected_revision != result["revision"]:
@@ -586,8 +585,7 @@ class Store:
                     connection_id,
                     (resource or {}).get("resource_type", "api") if resource else None,
                     connection_id
-                    if (resource or {}).get("resource_type")
-                    in {"token_plan", "chatgpt_subscription"}
+                    if (resource or {}).get("resource_type") == "token_plan"
                     else None,
                     (resource or {}).get("resource_type"),
                     purpose or "interactive_coding",

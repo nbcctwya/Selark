@@ -5,7 +5,8 @@ import json
 
 import pytest
 
-from selark.config import initialize
+from selark.config import _write_private, initialize, private_directory
+from selark.connections import registry_document
 from selark.runtime import Runtime
 
 from ..four_resources import configure
@@ -47,3 +48,29 @@ def contents(directory):
         for p in directory.rglob("*")
         if p.is_file() and not p.name.endswith(("-wal", "-shm"))
     }
+
+
+def retired_subscription(runtime, identity="subscription", *, enabled=True):
+    """Pre-removal files only: no executable provider or OAuth implementation."""
+    document = registry_document(runtime.registry())
+    document["connections"].append(
+        {
+            "connection_id": identity,
+            "name": "Retired subscription",
+            "provider": "chatgpt",
+            "resource_type": "chatgpt_subscription",
+            "base_url": "https://api.openai.com/v1",
+            "api_key": None,
+            "enabled": enabled,
+            "allowed_models": ["subscription-model"],
+            "default_model": "subscription-model",
+        }
+    )
+    _write_private(runtime.directory / "connections.json", document)
+    folder = runtime.directory / "chatgpt-auth" / "profiles"
+    private_directory(folder.parent)
+    private_directory(folder)
+    _write_private(
+        folder / (identity + ".json"),
+        {"access_token": "test-oauth-access", "refresh_token": "test-oauth-refresh"},
+    )

@@ -5,14 +5,13 @@ import logging
 import os
 import signal
 import subprocess
-import time
 from pathlib import Path
 
 import pytest
 
-from selark.backups import drill_backup, prune_backups, restore_backup, verify_backup
+from selark.backups import drill_backup, prune_backups, restore_backup, seal_backup, verify_backup
 from selark.cli import main
-from selark.config import ConfigError, LogSettings, _write_private, initialize
+from selark.config import ConfigError, LogSettings, _write_private, initialize, private_directory
 from selark.logs import configure_logging, read_logs
 from selark.overview import overview
 from selark.persistence import Journal, snapshot
@@ -30,25 +29,12 @@ from selark.service import (
 from .support.governance import allocation, finished
 from .support.governance import runtime as runtime
 from .support.permissions import is_private, make_private, make_public
-from .support.resources import contents
+from .support.resources import contents, retired_subscription
 
 
 def test_status_is_read_only_and_separates_evidence(runtime, monkeypatch, capsys):
-    from selark.chatgpt_auth import PLAN_SCOPES, ChatGPTAuth, Profile
-
     runtime.add_connection("coding", "kimi-code", "fake")
-    runtime.add_connection("subscription", "chatgpt", None)
-    authorization = ChatGPTAuth(runtime.directory)
-    authorization.write(
-        Profile(
-            connection_id="subscription",
-            state="connected",
-            access_token="fake-access",
-            refresh_token="fake-refresh",
-            expires_at=time.time() - 60,
-            scopes=list(PLAN_SCOPES),
-        )
-    )
+    retired_subscription(runtime)
     original = runtime.connection_settings()[0]
     caller = runtime.store.create_token("history")
     allocation(runtime, caller, "known")
@@ -65,17 +51,14 @@ def test_status_is_read_only_and_separates_evidence(runtime, monkeypatch, capsys
         pytest.fail("status must not access upstream or mutate OAuth")
 
     monkeypatch.setattr("httpx.Client", forbidden)
-    monkeypatch.setattr(ChatGPTAuth, "write", forbidden)
     result = overview(runtime.directory, offline=True)
     assert result["ok"] and result["service"]["state"] == "not_checked"
-    api, plan, subscription = result["connections"]
+    api, plan = result["connections"]
     assert api["configured"] and api["verification"]["state"] == "success"
     assert api["availability"]["state"] == "blocked_locally"
     assert api["authorization"]["remote_validity"] == "unknown"
     assert plan["client_allowed_models"] == []
     assert plan["provider_quota"]["historical_snapshot"]
-    assert subscription["authorization"]["access_expired"]
-    assert "access_expired_refresh_required" in subscription["availability"]["blockers"]
     assert contents(runtime.directory) == before
     encoded = json.dumps(result)
     assert "fake-access" not in encoded and "fake-refresh" not in encoded
@@ -97,14 +80,10 @@ def test_status_does_not_migrate_or_initialize(tmp_path, monkeypatch):
 
 
 def test_status_corrupt_subscription_does_not_hide_api_resources(runtime):
-    runtime.add_connection("subscription", "chatgpt", None)
-    folder = runtime.directory / "chatgpt-auth" / "profiles"
-    folder.mkdir(parents=True, mode=0o700)
-    _write_private(folder / "subscription.json", {"broken": "not-a-profile"})
+    retired_subscription(runtime)
     result = overview(runtime.directory, offline=True)
-    assert not result["ok"] and len(result["connections"]) == 2
+    assert result["ok"] and len(result["connections"]) == 1
     assert result["connections"][0]["provider"] == "mimo"
-    assert result["connections"][1]["authorization"]["state"] == "unreadable"
 
 
 def test_status_client_only_does_not_open_server(runtime):
@@ -127,6 +106,38 @@ def test_new_backup_detects_tamper_and_preserves_original(runtime, tmp_path):
     with pytest.raises(ConfigError, match="完整性"):
         restore_backup(backup, target)
     assert not target.exists() and contents(runtime.directory) == before
+
+
+def test_legacy_backup_restores_history_without_retired_authorization(runtime, tmp_path):
+    retired_subscription(runtime)
+    caller = runtime.store.create_token("history")
+    allocation(runtime, caller, "old-subscription")
+    runtime.store.finish(
+        "old-subscription",
+        state=finished(caller, "old-subscription"),
+        http_status=200,
+        duration_ms=1,
+    )
+    with runtime.store.transaction() as db:
+        db.execute(
+            "UPDATE requests SET resource_type='chatgpt_subscription',plan_id='subscription' "
+            "WHERE request_id='old-subscription'"
+        )
+    backup = runtime.backup("legacy")
+    assert not (backup / "chatgpt-registration").exists()
+    old_registration = backup / "chatgpt-registration" / "profiles"
+    private_directory(old_registration.parent)
+    private_directory(old_registration)
+    _write_private(old_registration / "subscription.json", {"client_id": "old-client"})
+    seal_backup(backup)
+    assert verify_backup(backup)["ok"]
+    target = tmp_path / "restored-without-subscription"
+    restore_backup(backup, target)
+    assert not (target / "chatgpt-auth").exists()
+    with Runtime(target) as restored:
+        assert [c.provider for c in restored.connection_settings()] == ["mimo"]
+        history = restored.store.records({"resource_type": "chatgpt_subscription"})
+        assert len(history) == 1 and history[0]["total_tokens"] == 14
 
 
 def test_restore_and_drill_replay_pending_once_and_preserve_revocation(

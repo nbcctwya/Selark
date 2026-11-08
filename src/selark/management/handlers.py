@@ -75,10 +75,6 @@ def run(args, directory: Path) -> int:
             result = restore_backup(args.path, args.to, allow_legacy=args.allow_legacy)
         emit(result, args.json)
         return 0
-    if args.command == "chatgpt":
-        from selark.management.chatgpt import run as chatgpt_run
-
-        return chatgpt_run(args, directory)
     if args.command == "doctor":
         result = doctor(directory)
         emit(result, args.json)
@@ -233,17 +229,11 @@ def run(args, directory: Path) -> int:
                         "provider": key,
                         "name": name,
                         "base_url": url,
-                        "protocol": "responses"
-                        if key == "chatgpt"
-                        else "anthropic-messages"
+                        "protocol": "anthropic-messages"
                         if key == "anthropic"
                         else "chat-completions",
                         "scope": "text subset; model availability requires account verification",
-                        "resource_type": "chatgpt_subscription"
-                        if key == "chatgpt"
-                        else "token_plan"
-                        if key in PLAN_PRESETS
-                        else "api",
+                        "resource_type": "token_plan" if key in PLAN_PRESETS else "api",
                         "generation_support": PLAN_PRESETS[key]["generation_support"]
                         if key in PLAN_PRESETS
                         else "text",
@@ -258,8 +248,6 @@ def run(args, directory: Path) -> int:
                         "请指定 --provider，或用 connection add ID --interactive 交互配置。"
                     )
                 provider = "zhipu" if args.provider == "glm" else args.provider
-                if provider == "chatgpt":
-                    raise ConfigError("ChatGPT 订阅请用 selark chatgpt login [连接 ID]。")
                 auto_discover = (
                     not args.models and not args.no_discover and provider not in PLAN_PRESETS
                 )
@@ -323,10 +311,6 @@ def run(args, directory: Path) -> int:
                 }
                 if args.api_key or args.api_key_env:
                     current = require_connection(runtime.connection_settings(), identity)
-                    if current.provider == "chatgpt":
-                        raise ConfigError(
-                            "ChatGPT 连接请通过 chatgpt login 更新授权，不能配置 API Key。"
-                        )
                     changes["api_key"] = read_key(current.provider, args.api_key_env)
                 result = runtime.change_connection(changes, identity)
         elif args.command == "tokens":

@@ -122,12 +122,12 @@ def verify_backup(root, *, allow_legacy=False):
             if name.startswith("pending/"):
                 Journal.load(root / name)
             elif name.startswith("chatgpt-registration/profiles/"):
-                # Use the unchanged credential schema; backups contain registration only.
-                from selark.chatgpt_auth import Profile
-
-                profile = load_config(root / name, Profile)
-                if any(
-                    getattr(profile, key) for key in ("access_token", "refresh_token", "id_token")
+                # Verify old archives without loading or restoring the retired OAuth code.
+                if (root / name).stat().st_size > 1024 * 1024:
+                    raise ConfigError("旧注册信息过大，拒绝恢复。")
+                profile = json.loads(native.read_private(root / name))
+                if not isinstance(profile, dict) or any(
+                    profile.get(key) for key in ("access_token", "refresh_token", "id_token")
                 ):
                     raise ConfigError("备份注册信息含 OAuth 凭据，拒绝恢复。")
         return {
@@ -176,8 +176,6 @@ def restore_backup(root, target, *, allow_legacy=False):
             elif source.exists():
                 shutil.copyfile(source, instance / "data" / name)
                 native.protect(instance / "data" / name)
-        if (archive / "chatgpt-registration").exists():
-            shutil.copytree(archive / "chatgpt-registration", instance / "chatgpt-auth")
         # Retain the isolated layout even at the default XDG configuration path.
         # Never silently reopen an unrelated XDG ledger after a successful restore.
         _write_private(instance / "storage.json", StorageLayout().model_dump())

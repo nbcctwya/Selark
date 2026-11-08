@@ -2131,6 +2131,7 @@
         "properties": {
           "allow_chatgpt_subscriptions": {
             "default": false,
+            "description": "已移除的订阅能力。仅为旧客户端保留 false；true 会被拒绝。",
             "title": "Allow Chatgpt Subscriptions",
             "type": "boolean"
           },
@@ -2191,6 +2192,7 @@
               }
             ],
             "default": null,
+            "description": "已移除的订阅输出预留。仅为旧客户端保留 null；其他值会被拒绝。",
             "title": "Chatgpt Output Reservation"
           },
           "daily_budget": {
@@ -2287,6 +2289,7 @@
         "properties": {
           "allow_chatgpt_subscriptions": {
             "default": false,
+            "description": "已移除的订阅能力。仅为旧客户端保留 false；true 会被拒绝。",
             "title": "Allow Chatgpt Subscriptions",
             "type": "boolean"
           },
@@ -2347,6 +2350,7 @@
               }
             ],
             "default": null,
+            "description": "已移除的订阅输出预留。仅为旧客户端保留 null；其他值会被拒绝。",
             "title": "Chatgpt Output Reservation"
           },
           "daily_budget": {
@@ -5112,7 +5116,7 @@
         "x-reject-query-parameters": true
       },
       "post": {
-        "description": "Key 只写入，不在任何响应中返回。连接 ID 不可重复或使用 mimo-default；最多 32 个连接。ChatGPT 授权需先通过 CLI。返回 enabled=true、空 allowed_models、default_model=null。",
+        "description": "Key 只写入，不在任何响应中返回。连接 ID 不可重复或使用 mimo-default；最多 32 个连接。仅支持 API Key 与 Token Plan。返回 enabled=true、空 allowed_models、default_model=null。",
         "operationId": "createConnection",
         "parameters": [
           {

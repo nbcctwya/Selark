@@ -91,14 +91,13 @@ type Provider = {
   id: string;
   name: string;
   base_url: string | null;
-  resource_type: 'api' | 'token_plan' | 'chatgpt_subscription';
+  resource_type: 'api' | 'token_plan';
   can_create: boolean;
-  credential_type: 'api_key' | 'oauth';
+  credential_type: 'api_key';
 };
 ```
 
-普通 API 和 Key 型 Token Plan 支持创建。ChatGPT 连接需先通过 CLI 完成授权，`can_create=false`；
-已有 ChatGPT 连接支持查询、名称/启停/超时修改、模型管理和显式发现。此阶段没有 OAuth 登录或退出接口。
+普通 API 和 Key 型 Token Plan 支持创建。ChatGPT 订阅已移除，不再出现在供应商或连接列表中；旧订阅连接不能登录、发现或调用。
 
 ## 连接
 
@@ -109,10 +108,10 @@ type Connection = {
   id: string;
   name: string;
   provider: string;
-  resource_type: 'api' | 'token_plan' | 'chatgpt_subscription';
+  resource_type: 'api' | 'token_plan';
   base_url: string;
   enabled: boolean;
-  api_key_configured: boolean; // 仅表示是否配置了 API Key，不代表 OAuth 状态或远端有效性
+  api_key_configured: boolean; // 仅表示是否配置了 API Key，不代表远端有效性
   timeout_seconds: number;
   stream_usage: boolean;
   token_parameter: 'max_tokens' | 'max_completion_tokens';
@@ -187,7 +186,7 @@ ID、供应商和资源类型不可修改；模型启用列表与默认模型使
 ## 模型发现、审批与默认值
 
 POST `/api/connections/{id}/discover` 请求为 `{}`。仅此操作会显式读取上游模型目录；
-已有 ChatGPT 连接可能按既有授权流程刷新 OAuth，不生成文本。单次发现沿用最多 30 秒、10 页、
+发现不生成文本。单次发现沿用最多 30 秒、10 页、
 每页至多 1 MiB、总计 1000 模型的边界；前端应为该请求提供至少 45 秒等待时间。
 每个 Dashboard 同时允许一个发现任务，第二个返回 409 `discovery_busy`；发现不会阻塞其他本地查询或审批。
 
@@ -287,8 +286,7 @@ POST `/api/applications`：
 }
 ```
 
-名称为 1–80 个可打印字符。`policy` 可省略，默认继承 CLI 的普通 API 通配权限，不授予 Token Plan 或
-ChatGPT 订阅权限。成功返回 `Application & { token: string }`；**只有创建响应包含令牌明文**。
+名称为 1–80 个可打印字符。`policy` 可省略，默认继承 CLI 的普通 API 通配权限，不授予 Token Plan 权限。成功返回 `Application & { token: string }`；**只有创建响应包含令牌明文**。
 显示一次性的复制区域，关闭后清除；任何列表、详情、配额、策略更新或撤销响应都不会再提供该令牌。
 
 PATCH `/api/applications/{id}/policy`：
@@ -308,8 +306,8 @@ await patchPolicy(id, {
 | `allowed_connections` | 连接 ID 数组，最多 32；或 null | null |
 | `allowed_models` | `connection::model` 数组，最多 1000；或 null | null |
 | `allow_token_plans` | boolean | false |
-| `allow_chatgpt_subscriptions` | boolean | false |
-| `chatgpt_output_reservation` | 整数 1–131072，或 null | null |
+| `allow_chatgpt_subscriptions` | 旧客户端兼容字段，仅接受 false | false |
+| `chatgpt_output_reservation` | 旧客户端兼容字段，仅接受 null | null |
 | `requests_per_minute` | 整数 1–100000，或 null | null |
 | `max_concurrent_requests` | 整数 1–256，或 null | null |
 | `max_output_tokens` | 整数 1–131072，或 null | null |
@@ -340,6 +338,6 @@ GET `/api/applications/{id}/quota` 返回 `{id, ...quota}`，其中 `quota` 与�
 查询及配置操作以只读账本连接执行；应用写入只以 `mode=rw` 打开**已有且 schema 匹配**的账本，
 不会创建、迁移、修复或恢复账本，也不会从旧凭据重新生成应用令牌。缺失或旧版状态返回 503。
 
-服务启动/停止、备份恢复、迁移、OAuth 登录退出、价格与别名编辑仍由 CLI 提供。
+服务启动/停止、备份恢复、迁移、价格与别名编辑仍由 CLI 提供。
 Selark-Web 的 React 页面已接入这些 API、模拟实现、表单和确认流程；
 后续页面更新按 [前端 Git 协作](frontend-development.md) 交付具体提交并联调。

@@ -8,58 +8,12 @@ from fastapi.testclient import TestClient
 
 from selark import dashboard_data as data
 from selark.config import _write_private, server_document
-from selark.providers.chatgpt import response_usage
 from selark.runtime import Runtime, capability_fingerprint, fingerprint
-from selark.usage import MAX_COUNT, inconsistent_usage, observed_token_floor
+from selark.usage import MAX_COUNT, inconsistent_usage, observed_token_floor, response_usage
 
-from .support.chatgpt import PAYLOAD as SUBSCRIPTION_PAYLOAD
-from .support.chatgpt import resource as resource
 from .support.governance import PAYLOAD, allocation, app_for, auth, finished, price
 from .support.governance import runtime as runtime
 from .support.protocol import completion, event, sse
-from .support.protocol import responses_events as events
-from .support.protocol import responses_reply as reply
-from .support.protocol import responses_result as result
-
-
-@pytest.mark.parametrize("streaming", [False, True])
-@pytest.mark.parametrize("fault", ["json_response", "contradictory_text"])
-def test_subscription_protocol_failure_preserves_usage_without_certifying_capability(
-    resource, streaming, fault
-):
-    runtime, caller, _ = resource
-    calls = []
-
-    def upstream(request):
-        calls.append(request)
-        if fault == "json_response":
-            return httpx.Response(200, json=result())
-        values = events()
-        values[-1]["response"]["output"][0]["content"][0]["text"] = "different"
-        return reply(values)
-
-    with TestClient(app_for(runtime, upstream)) as client:
-        response = client.post(
-            "/v1/chat/completions",
-            headers=auth(caller),
-            json=SUBSCRIPTION_PAYLOAD | {"stream": streaming},
-        )
-    assert response.status_code == (200 if streaming and fault == "contradictory_text" else 502)
-    assert "upstream_protocol_error" in response.text and "[DONE]" not in response.text
-    assert len(calls) == 1
-    row = runtime.store.records({})[0]
-    assert row["status"] == "failed" and row["upstream_result"] == "success"
-    assert row["upstream_error_code"] == "upstream_protocol_error"
-    assert row["usage_known"] and row["total_tokens"] == 15
-    assert row["resources"]["quota_tokens"] == 15
-    model = runtime.models("personal")["models"][0]
-    assert model["verified_capabilities"] == []
-    assert model["verification"][0]["state"] == "failure"
-    assert runtime.connection("personal")["verification"]["state"] == "failure"
-    dashboard = data.snapshot(runtime.directory, data.query_filters({}), offline=True)
-    connection = next(c for c in dashboard["connections"] if c["id"] == "personal")
-    assert connection["verification"]["state"] == "failure"
-    assert connection["model_catalog"]["models"][0]["verified_capabilities"] == []
 
 
 def test_legacy_protocol_success_is_corrected_without_rewriting_history(runtime):
@@ -207,7 +161,7 @@ def test_reasoning_is_part_of_output_without_double_counting(counts, inconsisten
     assert observed_token_floor(counts, "openai") == floor
 
 
-def test_reasoning_floor_is_bounded_and_survives_subscription_normalization():
+def test_reasoning_floor_is_bounded_and_survives_responses_normalization():
     counts = response_usage(
         {
             "usage": {
@@ -220,7 +174,7 @@ def test_reasoning_floor_is_bounded_and_survives_subscription_normalization():
     )
     assert counts["completion_tokens_details"]["reasoning_tokens"] == MAX_COUNT
     assert inconsistent_usage(counts)
-    assert observed_token_floor(counts, "chatgpt") == MAX_COUNT
+    assert observed_token_floor(counts, "openai") == MAX_COUNT
 
 
 @pytest.mark.parametrize(

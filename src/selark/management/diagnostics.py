@@ -41,12 +41,6 @@ def doctor(directory: Path) -> dict:
                 + len(registry.connections),
             }
         )
-        for connection in registry.connections:
-            if connection.provider == "chatgpt":
-                from selark.chatgpt_auth import ChatGPTAuth
-
-                status = ChatGPTAuth(directory).status(connection.connection_id)
-                checks.append({"check": "chatgpt_authorization", "ok": status["ready"], **status})
     except ConfigError as exc:
         checks.append({"check": "connections_config", "ok": False, "message": str(exc)})
     try:

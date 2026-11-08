@@ -7,9 +7,7 @@ from selark.storage import verification_outcome
 
 
 def protocol(config):
-    return {"chatgpt": "responses", "anthropic": "anthropic-messages"}.get(
-        config.provider, "chat-completions"
-    )
+    return "anthropic-messages" if config.provider == "anthropic" else "chat-completions"
 
 
 def catalog(config):

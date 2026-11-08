@@ -1429,7 +1429,7 @@
     },
     "/v1/messages": {
       "post": {
-        "description": "按供应商官方原生协议转发工具、思考和内容块，不执行工具或自动重试。保留事件 type 及 event 名称；Responses 以 response.completed/incomplete/failed，Messages 以 message_stop 结束，不追加 [DONE]。未知扩展字段原样交给上游。Responses 省略输出上限时遵循应用硬上限；无硬上限时只做本地估算预留，保留供应商默认输出行为。ChatGPT 订阅例外，只接受流式且不支持输出硬上限。见 HTTP API 指南的供应商协议矩阵。",
+        "description": "按供应商官方原生协议转发工具、思考和内容块，不执行工具或自动重试。保留事件 type 及 event 名称；Responses 以 response.completed/incomplete/failed，Messages 以 message_stop 结束，不追加 [DONE]。未知扩展字段原样交给上游。Responses 省略输出上限时遵循应用硬上限；无硬上限时只做本地估算预留，保留供应商默认输出行为。见 HTTP API 指南的供应商协议矩阵。",
         "operationId": "createMessage",
         "parameters": [
           {
@@ -1809,7 +1809,7 @@
     },
     "/v1/responses": {
       "post": {
-        "description": "按供应商官方原生协议转发工具、思考和内容块，不执行工具或自动重试。保留事件 type 及 event 名称；Responses 以 response.completed/incomplete/failed，Messages 以 message_stop 结束，不追加 [DONE]。未知扩展字段原样交给上游。Responses 省略输出上限时遵循应用硬上限；无硬上限时只做本地估算预留，保留供应商默认输出行为。ChatGPT 订阅例外，只接受流式且不支持输出硬上限。见 HTTP API 指南的供应商协议矩阵。",
+        "description": "按供应商官方原生协议转发工具、思考和内容块，不执行工具或自动重试。保留事件 type 及 event 名称；Responses 以 response.completed/incomplete/failed，Messages 以 message_stop 结束，不追加 [DONE]。未知扩展字段原样交给上游。Responses 省略输出上限时遵循应用硬上限；无硬上限时只做本地估算预留，保留供应商默认输出行为。见 HTTP API 指南的供应商协议矩阵。",
         "operationId": "createResponse",
         "parameters": [
           {

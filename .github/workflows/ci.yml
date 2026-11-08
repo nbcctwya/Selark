@@ -144,7 +144,7 @@ jobs:
           ruff format --check .
       - name: Reject credential literals and tracked private files
         run: python scripts/check_repository_security.py
-      - name: Isolated regressions including OAuth and subscription safety (no real credentials)
+      - name: Isolated API, Token Plan and retired-provider regressions (no real credentials)
         run: pytest -q
       - name: Installed CLI outside repository
         working-directory: ${{ runner.temp }}
@@ -165,9 +165,6 @@ jobs:
           selark logs --help
           selark backup drill --help
           selark plans --help
-          selark chatgpt --help
-          selark chatgpt login --help
-          selark chatgpt logout --help
           selark ask --help
           selark ask --help | grep -- '--interactive'
           selark plans set --help | grep -- 'personal_interactive'

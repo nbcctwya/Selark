@@ -12,7 +12,7 @@ Python 3.11+，使用 FastAPI、HTTPX 和 SQLite。当前版本 **0.10.0**；本
 
 ## 已有功能
 
-- 多平台、多连接管理：普通 API、Token Plan 和 ChatGPT 订阅分别记录与授权；[通用 API](docs/guides/connections.md#通用-api-接入) 支持自定义 Base URL、Key 和模型。
+- 多平台、多连接管理：普通 API 和 Token Plan 分别记录与授权；[通用 API](docs/guides/connections.md#通用-api-接入) 支持自定义 Base URL、Key 和模型。
 - 文本与工具调用：Chat Completions、原生 Responses 和 Messages；支持工具结果回传、思考历史、SSE、取消、超时和有界排队，见 [HTTP 接入](docs/guides/http-api.md)。
 - 模型治理：模型发现、启用、应用授权、历史验证分别管理；调用方令牌可以限定连接、模型和额度。
 - 用量与恢复：SQLite 调用记录、Token 与费用估算、日志、备份、迁移及中断恢复。
@@ -69,7 +69,7 @@ selark dashboard
 | 添加连接、发现和启用模型 | [连接管理](docs/guides/connections.md)、[模型治理](docs/guides/model-governance.md) |
 | 使用界面和模型管理 | [Dashboard](docs/guides/dashboard.md) |
 | 管理应用权限、配额和费用 | [应用资源管理](docs/guides/governance.md) |
-| 使用个人订阅 | [ChatGPT](docs/guides/chatgpt.md)、[Token Plan](docs/guides/token-plans.md) |
+| 使用个人订阅 | [Token Plan](docs/guides/token-plans.md) |
 | 对接外部程序 | [HTTP API](docs/guides/http-api.md)、[示例](examples/) |
 | 前端与客户端接口开发 | [完整接口目录与 OpenAPI](docs/api/README.md) |
 | 服务、日志、备份和恢复 | [日常运维](docs/guides/operations.md)、[稳定性与恢复](docs/guides/stability.md) |

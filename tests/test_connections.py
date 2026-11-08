@@ -11,6 +11,7 @@ from selark.config import ConfigError
 from selark.connections import require_connection
 from selark.errors import GatewayError
 from selark.providers.discovery import discover
+from selark.providers.factory import provider_for
 from selark.runtime import Runtime, fingerprint
 
 from .support.permissions import is_private
@@ -26,6 +27,15 @@ from .support.protocol import (
 )
 from .support.resources import multi as multi
 from .support.resources import token
+
+
+def test_removed_provider_cannot_be_created_or_fall_back_to_api(multi):
+    with pytest.raises(ConfigError, match="不支持的供应商"):
+        multi.add_connection("removed", "chatgpt", None)
+    obsolete = multi.connection_settings()[0].model_copy(update={"provider": "chatgpt"})
+    with pytest.raises(GatewayError) as error:
+        provider_for(obsolete, None)
+    assert error.value.code == "unsupported_provider"
 
 
 @pytest.mark.parametrize(

@@ -52,7 +52,6 @@ def seed(profile, count=140):
             name="Kimi Coding Plan",
             allowed_models=["kimi-for-coding"],
         )
-        runtime.add_connection("subscription", "chatgpt", None, name="ChatGPT Personal")
         runtime.add_connection(
             "anthropic",
             "anthropic",
@@ -563,7 +562,7 @@ def run(command, *, browser_output=None, rows=140):
                     )
                     checks.append("authenticated_queries_and_redaction")
                 assert files(profile) == before
-                checks.append("configuration_ledger_oauth_and_backup_content_unchanged")
+                checks.append("configuration_ledger_and_backup_content_unchanged")
         finally:
             process.send_signal(signal.SIGINT)
             try:

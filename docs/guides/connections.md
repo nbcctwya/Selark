@@ -39,7 +39,7 @@ selark connection probe deepseek-work     # 显式生成一次短请求，有实
 会使用已输入的 Key 查询当前 API 地址的 `/models`，保存上游返回的全部合法模型标识。
 **0.9.0 起这些标识只进入发现目录，不加入 `allowed_models`。** 新建所有类型连接默认不启用模型。
 显式填写模型会跳过发现并启用手动列表；`--no-discover` 可保留只写本地配置的流程。Token Plan 使用原协议预设，
-ChatGPT 继续通过专用 OAuth 命令管理，已有连接的 `set --api-key` 不会替换模型列表。
+已有连接的 `set --api-key` 不会替换模型列表。ChatGPT 订阅接入已移除；OpenAI API Key 接入不受影响。
 发现失败时连接和 Key 已保存，命令返回 1，输出 `discovery.state=failure`，
 无需重新输入 Key；使用 `connection discover ID` 重试，或 `connection set ID --models ...` 手动配置。
 新增时使用 `--default-model` 必须同时给出 `--models`，否则在保存和发现前拒绝。

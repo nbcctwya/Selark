@@ -12,15 +12,15 @@ from selark.config import ConfigError, _write_private, data_directory
 from selark.history import import_history
 from selark.overview import overview
 from selark.platforms import native
-from selark.providers.chatgpt import response_usage
 from selark.runtime import Runtime
 from selark.storage import Store
-from selark.usage import inconsistent_usage, sanitize_usage
+from selark.usage import inconsistent_usage, response_usage, sanitize_usage
 
 from .support.governance import PAYLOAD, allocation, app_for, auth, finished, price
 from .support.governance import runtime as runtime
 from .support.permissions import make_public
 from .support.protocol import completion, event, sse
+from .support.resources import retired_subscription
 
 
 @pytest.mark.parametrize(
@@ -59,25 +59,27 @@ def test_backup_requires_verification_primary_key(runtime):
 
 
 @pytest.mark.parametrize("enabled", [False, True])
-def test_broken_subscription_cannot_block_independent_api(runtime, enabled):
-    runtime.add_connection(
-        "broken",
-        "chatgpt",
-        None,
-        enabled=enabled,
-        allowed_models=["subscription-model"],
-        default_model="subscription-model",
-    )
+def test_retired_subscription_cannot_block_independent_api(runtime, enabled):
+    retired_subscription(runtime, "broken", enabled=enabled)
     caller = runtime.store.create_token(
         "isolated",
         policy={
-            "allow_chatgpt_subscriptions": True,
             "allowed_connections": ["mimo-default", "broken"],
         },
     )
-    folder = runtime.directory / "chatgpt-auth" / "profiles"
-    folder.mkdir(parents=True, mode=0o700)
-    _write_private(folder / "broken.json", {"broken": True})
+    legacy_policy = caller["policy"] | {
+        "allow_chatgpt_subscriptions": True,
+        "chatgpt_output_reservation": 100,
+        "max_output_tokens": 1024,
+    }
+    with runtime.store.transaction() as db:
+        db.execute(
+            "UPDATE tokens SET policy_json=? WHERE id=?", (json.dumps(legacy_policy), caller["id"])
+        )
+    migrated = runtime.store.application(caller["id"])["policy"]
+    assert migrated["allow_chatgpt_subscriptions"] is False
+    assert migrated["chatgpt_output_reservation"] is None
+    assert migrated["max_output_tokens"] == 1024
     calls = []
 
     def upstream(request):
@@ -93,13 +95,19 @@ def test_broken_subscription_cannot_block_independent_api(runtime, enabled):
         failed = client.post(
             "/v1/chat/completions", headers=auth(caller), json=PAYLOAD | {"connection_id": "broken"}
         )
-        assert failed.status_code == 503
-        assert failed.json()["error"]["code"] == (
-            "connection_authorization_unreadable" if enabled else "connection_disabled"
-        )
+        assert failed.status_code == 400
+        assert failed.json()["error"]["code"] == "unknown_connection"
+        for endpoint, payload in (
+            ("/v1/responses", {"model": "broken::subscription-model", "input": "hello"}),
+            ("/v1/messages", PAYLOAD | {"connection_id": "broken"}),
+        ):
+            rejected = client.post(endpoint, headers=auth(caller), json=payload)
+            assert rejected.status_code == 400
+            assert rejected.json()["error"]["code"] == "unknown_connection"
     assert len(calls) == 1
     assert runtime.connection("mimo-default")["configured"]
-    assert runtime.connection("broken")["authorization"]["state"] == "unreadable"
+    with pytest.raises(ConfigError, match="未找到连接"):
+        runtime.connection("broken")
 
 
 @pytest.mark.parametrize(

@@ -42,7 +42,6 @@ GPT-5.1 为 `low/medium/high`，GPT-5.2 增加 `xhigh`，已列出的 GPT-6 模�
 | 连接 | 推荐协议 | 档位处理 |
 | --- | --- | --- |
 | OpenAI API | Responses | `reasoning.effort` 原值转发，工具调用使用原生协议 |
-| ChatGPT 订阅 | Responses | 同样按请求选择；应用必须允许订阅、明确选择连接并设置输出预留 |
 | Anthropic API | Messages | `output_config.effort`；支持档位的现代模型使用自适应思考 |
 | Kimi Coding Plan | Chat Completions，也可选原生协议 | 模型支持范围和别名见下文 |
 | DeepSeek | Responses | Flash / V4 Pro：`low/high/max` |
@@ -120,8 +119,8 @@ Windows 原生模式自动带入实际网关地址；WSL / 手动连接需要填
 这是模型 API 地址（默认 Windows `8788`、WSL `8787`），不是 Dashboard 的临时端口。
 DSH 在另一环境中运行时，应使用从该环境可达的地址；`localhost` 始终指 DSH 所在环境。
 
-1. 在 Selark「应用管理」创建 DSH 应用，授权对应模型。Token Plan / ChatGPT 订阅另需各自的权限开关和明确连接；ChatGPT 还需设置订阅输出预留。
-2. 将 Selark **应用令牌**提供给 DSH；这里不使用上游 API Key 或 OAuth 凭据。
+1. 在 Selark「应用管理」创建 DSH 应用，授权对应模型。Token Plan 另需套餐权限开关和明确连接。
+2. 将 Selark **应用令牌**提供给 DSH；这里不使用上游 API Key。
 3. 将生成的 provider 合并到 DSH 已有的 `llm-pi-ai` 配置，不覆盖其他 providers。
 4. 在 DSH 中选中该模型，通过会话的 Effort 菜单选择档位。无需重启 Selark。
 
@@ -157,8 +156,7 @@ DSH 在另一环境中运行时，应使用从该环境可达的地址；`localh
 个人交互式编程用途声明；它不授予套餐权限，也不转发给供应商。
 不声明 `off`：DSH 的空 `off` 值表示不发送档位，不等于关掉一个默认会思考的模型。
 客户端默认档位可留空；显式选择后只写入此 provider 的 `reasoning`，会话仍可覆盖。
-OpenAI / ChatGPT 导出 `openai-responses`；ChatGPT 关闭 SDK 的 `max_output_tokens`
-发送，通过 Selark 的订阅输出预留约束本机配额。Messages 导出根地址（不带 `/v1`），
+OpenAI 导出 `openai-responses`。Messages 导出根地址（不带 `/v1`），
 由 SDK 添加 `/v1/messages`，并显式声明自适应思考，避免连接前缀影响模型能力识别。
 
 已有提供商可通过 DSH 的 Settings → Models → Customized settings → Model options →
@@ -169,7 +167,7 @@ Reasoning levels 配置同样的映射。目前 DSH 的自定义 `/models` 发�
 ## 验证范围
 
 回归通过模拟上游覆盖普通 / SSE 的请求优先级、别名映射、实际档位落账、默认值不被改写、
-未支持参数零上游派发，以及多供应商原生 Responses / Messages 和 ChatGPT 订阅参数保留。
+未支持参数零上游派发，以及多供应商原生 Responses / Messages 参数保留。
 桌面验收检查 API 与订阅配置、模型预设 / 自定义、保存隔离、默认值设置、配置复制和
 无生成副作用。没有修改用户 DSH 配置，也不把模拟验证当作
 在用户 DSH 中的完整真实会话验收。
