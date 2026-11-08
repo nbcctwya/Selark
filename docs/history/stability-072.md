@@ -1,8 +1,8 @@
 # Selark 0.7.2：审查问题修复
 
 此补丁基于 0.7.1，修复项目审查发现的八项问题。没有新增平台或路由功能。
-HTTP 接口、CLI、Token Plan、ChatGPT 注册和数据库 schema 4 保持兼容。
-OAuth 登录、授权、刷新及退出机制未修改；订阅适配器仅保留异常用量的诊断证据。
+HTTP 接口、CLI、Token Plan 和数据库 schema 4 保持兼容。
+异常用量保留诊断证据。
 
 ## 修复范围
 
@@ -37,7 +37,7 @@ selark backup restore /absolute/backup/path --to /private/new-instance --json
 selark --config-dir /private/new-instance status --offline --json
 ```
 
-恢复仍只接受尚不存在的目标目录，并且不启动服务、不恢复 OAuth Token。
+恢复仍只接受尚不存在的目标目录，并且不启动服务。
 新布局文件只允许 `{"schema_version": 1, "layout": "colocated"}`，权限 0600，不接收任意路径；
 后续备份包含该文件。没有布局文件的旧实例继续使用原来的目录规则。
 显式 `SELARK_DATA_DIR` 仍有最高优先级，使用恢复实例前应清除或核对该变量，
@@ -50,7 +50,7 @@ selark --config-dir /private/new-instance status --offline --json
 
 ## 验证与边界
 
-针对上述真实缺陷增加回归，并继续运行原有 OAuth 模拟、API/套餐并发、断流、进程恢复、
+针对上述真实缺陷增加回归，并继续运行原有 API/套餐并发、断流、进程恢复、
 备份与性能检查。结果见 [0.7.2 验收](../verification/stability-072-verification.md)。
 真实供应商状态、断流后的实际账单、WSL 重启与 systemd 用户自启动仍需在对应环境验证。
 本轮没有真实模型、真实额度查询、登录、刷新或退出操作。

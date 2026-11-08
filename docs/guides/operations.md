@@ -25,7 +25,7 @@ selark records show REQUEST_ID --json
 | models / client_allowed_models | 本地允许模型 / 当前客户端令牌策略允许的模型，不代表供应商已授权 |
 | discovery | 过去显式发现的结果，附时间；不是实时模型可用性 |
 | verification | 当前连接配置对应的历史调用结果，或 stale；附时间、模型和请求 ID，不代表其他模型也验证过 |
-| authorization | API Key 是否已配置；远端是否撤销仍未知 |
+| authorization | API Key 已配置；远端是否撤销仍未知 |
 | availability | 有明确本地阻碍时 blocked_locally，否则 unknown；从不凭历史验证输出“实时可用” |
 | provider_quota | Token Plan 的历史官方快照、时间与年龄；未提供的 Token 余量保持 null |
 | callers[].quota | 每个本地应用的 UTC 当天策略、用量、预留、未知消耗及预算；与官方套餐额度分开 |
@@ -61,7 +61,6 @@ Token Plan 额度预检查失败明确标注“未生成”，保留错误码和
 不切换来源。额外检查官方计数中 remaining > limit 和非法重置时间。
 SSE 中途更换回复 ID/模型、空或含控制字符的回复身份都视为协议错误；
 已输出内容可能不完整，终止为错误，不伪造成功 `[DONE]`。
-这些检查不生成模型请求。
 
 ## 交互式配置
 
@@ -72,7 +71,6 @@ selark connection add custom-api --provider openai-compatible --interactive
 
 向导选择已有平台、名称、API 地址、模型及默认模型；Key 继续从环境变量或隐藏输入读取，
 从不要求在命令行放入明文 Key。非终端脚本使用显式参数。向导只写本地配置，不发现模型、
-不生成模型请求。ChatGPT 订阅命令已移除。
 以上是 0.7.1 行为；0.8.1 起普通 API 的模型留空会自动发现，可用 `--no-discover` 保留离线配置流程。
 `init --models first second` 未指定默认模型时选第一个，避免常见的默认模型不匹配错误。
 交互 `ask` 从标准输入读取时会提示 Ctrl+D 发送、Ctrl+C 取消。
@@ -120,7 +118,7 @@ process 后端没有崩溃自动重启或开机自启动；systemd enable 针对
 服务将元数据写入数据目录 `logs/selark.log`，默认单文件 5 MiB 轮转，保留 3 份历史文件。
 原配置没有 `logging` 时使用默认值；可在 server.json 中设置
 `"logging": {"max_bytes": 5242880, "backup_count": 3}`，重启生效。
-目录 0700、文件 0600，拒绝符号链接和过宽权限；不记录提示词、回答、API Key 或 OAuth 凭据。
+目录 0700、文件 0600，拒绝符号链接和过宽权限；不记录提示词、回答、API Key。
 前台模式继续输出 stderr；后台模式使用持久日志。`logs --lines N` 查看当前文件最近 N 行，
 最多 1000 行/1 MiB。日志轮转不删除数据库记录，日志本身不进入恢复备份。
 
@@ -137,7 +135,6 @@ selark backup prune --keep 10 --apply   # 显式清理；至少保留一份
 新备份保持原有配置 + SQLite 快照 + pending 一致性，并写入包含文件长度与 SHA-256 的 manifest。
 校验检查缺失/额外文件、私有权限、链接、配置结构、SQLite 完整性与落账格式。
 清单用于检测意外损坏，不是签名或加密；备份含 API Key 与客户端令牌，不能公开或提交。
-新备份不再读取 ChatGPT 注册信息或凭据。旧备份仍可恢复配置与账本，但不会恢复 ChatGPT 注册目录，旧订阅连接也不会加载。
 
 `restore` 只接受**不存在的新目标目录**（父目录须存在），完整校验后在同文件系统暂存目录复制，
 用明确隔离的数据目录迁移、幂等重放和检查，全部成功才发布为新实例。不会覆盖已有实例、
@@ -150,6 +147,10 @@ selark backup prune --keep 10 --apply   # 显式清理；至少保留一份
 原始数据库及凭据不会被 prune 删除。备份、演练和显式清理均为本机操作，没有自动调度。
 
 ## 升级与边界
+
+ChatGPT 订阅功能已移除。升级时，旧连接配置中的订阅项不再加载，其他 API / Token Plan 继续使用；数据库迁移清除旧订阅授权字段，保留其余权限、配额和历史账本。旧桌面请求中的 `allow_chatgpt_subscriptions=false` 与 `chatgpt_output_reservation=null` 只作为无效默认值忽略，不会返回这些字段，也不能重新授权。
+
+含旧 `chatgpt-registration` 目录的备份仍校验完整性，但恢复只复制普通配置、账本和待落账记录，不复制旧注册目录。新备份不读取旧授权目录。`records` / `usage --resource-type chatgpt_subscription` 仅用于查询移除前的历史，不会触发调用。
 
 先备份并停止旧服务，再 `pipx install --force /absolute/path/to/Selark`，运行 `selark migrate` 后
 执行 `selark status`、`selark service start`。当前 0.10.0 使用数据库 schema 5；已有 schema 5 无需额外升级，

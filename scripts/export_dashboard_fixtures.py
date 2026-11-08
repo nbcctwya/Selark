@@ -1,7 +1,7 @@
 """Export the public Dashboard contract from an isolated, synthetic local ledger.
 
 Run with: python -m scripts.export_dashboard_fixtures
-Never reads a personal profile or makes provider / OAuth requests.
+Never reads a personal profile or makes provider requests.
 """
 
 import argparse

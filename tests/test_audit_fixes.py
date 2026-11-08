@@ -77,8 +77,8 @@ def test_retired_subscription_cannot_block_independent_api(runtime, enabled):
             "UPDATE tokens SET policy_json=? WHERE id=?", (json.dumps(legacy_policy), caller["id"])
         )
     migrated = runtime.store.application(caller["id"])["policy"]
-    assert migrated["allow_chatgpt_subscriptions"] is False
-    assert migrated["chatgpt_output_reservation"] is None
+    assert "allow_chatgpt_subscriptions" not in migrated
+    assert "chatgpt_output_reservation" not in migrated
     assert migrated["max_output_tokens"] == 1024
     calls = []
 
@@ -336,7 +336,7 @@ def test_status_reports_invalid_client_as_failure_without_hiding_resources(runti
 
 
 @pytest.mark.parametrize("invalid", [-1, "private-invalid-count"])
-def test_subscription_usage_keeps_invalid_evidence_through_normalization(invalid):
+def test_responses_usage_keeps_invalid_evidence_through_normalization(invalid):
     usage = response_usage(
         {"usage": {"input_tokens": invalid, "output_tokens": 0, "total_tokens": 0}}
     )

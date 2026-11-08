@@ -61,7 +61,7 @@ def test_status_is_read_only_and_separates_evidence(runtime, monkeypatch, capsys
     assert plan["provider_quota"]["historical_snapshot"]
     assert contents(runtime.directory) == before
     encoded = json.dumps(result)
-    assert "fake-access" not in encoded and "fake-refresh" not in encoded
+    assert "test-oauth-access" not in encoded and "test-oauth-refresh" not in encoded
     assert main(["--config-dir", str(runtime.directory), "status", "--offline"]) == 0
     assert "当前客户端获准模型" in capsys.readouterr().out
 
@@ -79,7 +79,7 @@ def test_status_does_not_migrate_or_initialize(tmp_path, monkeypatch):
     assert not empty.exists()
 
 
-def test_status_corrupt_subscription_does_not_hide_api_resources(runtime):
+def test_status_retired_subscription_does_not_hide_api_resources(runtime):
     retired_subscription(runtime)
     result = overview(runtime.directory, offline=True)
     assert result["ok"] and len(result["connections"]) == 1

@@ -144,7 +144,7 @@ jobs:
           ruff format --check .
       - name: Reject credential literals and tracked private files
         run: python scripts/check_repository_security.py
-      - name: Isolated API, Token Plan and retired-provider regressions (no real credentials)
+      - name: Isolated regressions including API and Token Plan safety (no real credentials)
         run: pytest -q
       - name: Installed CLI outside repository
         working-directory: ${{ runner.temp }}

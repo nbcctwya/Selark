@@ -166,7 +166,7 @@ DESCRIPTIONS = {
     ),
     "createConnection": (
         "Key 只写入，不在任何响应中返回。连接 ID 不可重复或使用 mimo-default；"
-        "最多 32 个连接。仅支持 API Key 与 Token Plan。返回 enabled=true、"
+        "最多 32 个连接。返回 enabled=true、"
         "空 allowed_models、default_model=null。"
     ),
     "updateConnection": (
@@ -293,12 +293,6 @@ def dashboard_schemas():
     schemas["DefaultModel"]["properties"]["model"]["anyOf"][0]["pattern"] = model_pattern
     for name in ("Policy", "PolicyPatch"):
         properties = schemas[name]["properties"]
-        properties["allow_chatgpt_subscriptions"]["description"] = (
-            "已移除的订阅能力。仅为旧客户端保留 false；true 会被拒绝。"
-        )
-        properties["chatgpt_output_reservation"]["description"] = (
-            "已移除的订阅输出预留。仅为旧客户端保留 null；其他值会被拒绝。"
-        )
         properties["daily_budget"]["anyOf"][0].update(
             pattern=r"^\d{1,10}(?:\.\d{1,9})?$",
             description="非负十进制字符串，最多 9 位小数，数值不超过 1000000000。",

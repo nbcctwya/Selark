@@ -49,7 +49,7 @@ def configure_connection_interactively(args):
         print("可选平台：" + ", ".join(providers), file=sys.stderr)
         args.provider = input("平台 ID: ").strip()
         if args.provider not in providers:
-            raise ConfigError("平台 ID 无效，请查看 connection providers。")
+            raise ConfigError("平台 ID 无效，请选择支持的平台。")
     provider = "zhipu" if args.provider == "glm" else args.provider
     if not args.name:
         args.name = input(f"连接名称 [{PRESETS[provider][0]}]: ").strip() or None
@@ -69,7 +69,9 @@ def configure_connection_interactively(args):
 def probe(runtime: Runtime, identity="mimo-default", *, model=None, stream=False) -> dict:
     config = require_connection(runtime.connection_settings(), identity)
     if config.resource_type == "token_plan":
-        raise ConfigError("Token Plan 不执行通用生成探测；参见 plans --help。")
+        raise ConfigError(
+            "Token Plan 不执行通用生成探测，请使用专用受限令牌主动 ask 验证；参见 plans --help。"
+        )
     if not config.enabled:
         raise ConfigError("连接已停用；请先启用，再显式探测。")
     model = model or config.default_model

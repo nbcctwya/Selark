@@ -40,7 +40,6 @@
       "offline history overview is consistent on every repeated read"
     ],
     "real_provider_requests": 0,
-    "oauth_operations": 0,
     "fake_generations": 2,
     "known_tokens": 28,
     "history_rows": 20000,
@@ -65,7 +64,6 @@
       "offline history overview is consistent on every repeated read"
     ],
     "real_provider_requests": 0,
-    "oauth_operations": 0,
     "fake_generations": 2,
     "known_tokens": 28,
     "history_rows": 20000,
@@ -3840,7 +3838,6 @@
     "reference_sample_size": true
   },
   "limitations": [
-    "No real provider or OAuth login was exercised.",
     "Login startup uses a mocked registry in tests; no real login item was installed.",
     "Native desktop integration and bundled-interpreter installer are not part of this backend change.",
     "GitHub CI is configured but has not run remotely.",

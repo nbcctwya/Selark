@@ -15,7 +15,7 @@
 
 [.gitignore](../../.gitignore) 已覆盖：
 
-- `.env`、API / 客户端 / 连接 / 资源配置、私钥、凭据文件和 `chatgpt-auth/`。
+- `.env`、API / 客户端 / 连接 / 资源配置、私钥和凭据文件。
 - 数据库、WAL、日志、备份、恢复记录、`.private/` 和 `.selark/`。
 - 原始验收报告目录 `artifacts/`、`reports/`，以及 `*.raw.json`、`*.private.json`。
 - 浏览器测试结果、会话状态、Cookie、HAR 网络抓包和 trace 压缩包。

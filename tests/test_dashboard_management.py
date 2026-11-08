@@ -13,7 +13,7 @@ from selark.connections import require_connection
 from selark.dashboard_api.routes import MAX_BODY
 from selark.errors import GatewayError
 from selark.runtime import Runtime, connection_revision
-from selark.storage import Store
+from selark.storage import SCHEMA_VERSION, Store
 
 from .support.contracts import dashboard_response
 from .support.dashboard import HEADERS, ORIGIN, dashboard, login
@@ -277,9 +277,9 @@ def test_subscription_types_keep_their_core_constraints(runtime, client):
             "POST",
             "/api/connections",
             {
-                "id": "oauth",
+                "id": "removed-provider",
                 "provider": "chatgpt",
-                "api_key": "fake-not-an-oauth-token",
+                "api_key": "fake-api-key",
             },
         ).status_code
         == 400
@@ -298,6 +298,28 @@ def test_subscription_types_keep_their_core_constraints(runtime, client):
 def test_retired_subscription_cannot_be_authorized(client, policy):
     response = write(client, "POST", "/api/applications", {"name": "retired", "policy": policy})
     assert response.status_code == 400
+
+
+def test_older_desktop_can_save_api_policy_without_retired_controls(client):
+    response = write(
+        client,
+        "POST",
+        "/api/applications",
+        {
+            "name": "older desktop",
+            "policy": {
+                "allow_chatgpt_subscriptions": False,
+                "chatgpt_output_reservation": None,
+                "allowed_models": [],
+                "daily_token_limit": 1000,
+            },
+        },
+    )
+    assert response.status_code == 201
+    policy = response.json()["policy"]
+    assert "allow_chatgpt_subscriptions" not in policy
+    assert "chatgpt_output_reservation" not in policy
+    assert policy["allowed_models"] == [] and policy["daily_token_limit"] == 1000
 
 
 def test_batch_approval_default_and_gateway_visibility(runtime, client, monkeypatch):
@@ -689,7 +711,7 @@ def test_unknown_resources_and_internal_probe_tokens_are_not_mutable(runtime, cl
     assert contents(runtime.directory) == before
 
 
-@pytest.mark.parametrize("version", [0, 4, 6])
+@pytest.mark.parametrize("version", [0, 4, 5, SCHEMA_VERSION + 1])
 def test_token_management_never_migrates_or_repairs_database(runtime, client, version):
     runtime.store.db.execute(f"PRAGMA user_version={version}")
     before = contents(runtime.directory)

@@ -47,9 +47,6 @@ def money(value):
 
 class Policy(StrictConfig):
     allow_token_plans: bool = False
-    # Inert compatibility fields for existing Web/desktop clients. New grants fail closed.
-    allow_chatgpt_subscriptions: bool = False
-    chatgpt_output_reservation: int | None = Field(default=None, ge=1, le=131072)
     allowed_connections: list[str] | None = Field(default=None, max_length=32)
     allowed_models: list[str] | None = Field(default=None, max_length=1000)
     requests_per_minute: int | None = Field(default=None, ge=1, le=100000)
@@ -60,6 +57,22 @@ class Policy(StrictConfig):
     daily_budget: str | None = None
     budget_currency: str = Field(default="USD", pattern=r"^[A-Z]{3}$")
 
+    @model_validator(mode="before")
+    @classmethod
+    def discard_retired_defaults(cls, value):
+        # Older desktop clients still send these disabled controls with API policies.
+        # Nondefault values remain unknown fields and are rejected by StrictConfig.
+        if isinstance(value, dict):
+            return {
+                key: item
+                for key, item in value.items()
+                if not (
+                    (key == "allow_chatgpt_subscriptions" and item is False)
+                    or (key == "chatgpt_output_reservation" and item is None)
+                )
+            }
+        return value
+
     @field_validator("daily_budget")
     @classmethod
     def valid_budget(cls, value):
@@ -67,8 +80,6 @@ class Policy(StrictConfig):
 
     @model_validator(mode="after")
     def valid_access(self):
-        if self.allow_chatgpt_subscriptions or self.chatgpt_output_reservation is not None:
-            raise ValueError("ChatGPT 订阅已移除，不能再授权或设置订阅输出预留")
         for connection in self.allowed_connections or []:
             if not re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", connection):
                 raise ValueError("连接 ID 无效")
@@ -249,11 +260,10 @@ def policy_for(db, caller):
 
 
 def stored_policy(raw):
-    """Read legacy grants without weakening current admission or rewriting the ledger."""
+    """Read retired grants without authorizing them or rewriting the ledger."""
     try:
         document = json.loads(raw)
         if isinstance(document, dict):
-            # Old ledger policies remain readable; retired grants are never honored.
             document.pop("allow_chatgpt_subscriptions", None)
             document.pop("chatgpt_output_reservation", None)
         return Policy.model_validate(document)

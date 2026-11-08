@@ -18,8 +18,6 @@
 | [Selark 0.4.1：API 极端场景与并发追加验收](api-stress-verification.md) | `api-stress-verification.md` |
 | [六类应用场景：真实回答样本（0.6.2）](application-live-samples.md) | `application-live-samples.md` |
 | [六类应用场景、多轮与并发真实验收（0.6.2）](application-live-verification.md) | `application-live-verification.md` |
-| [ChatGPT 完成态修复与全部启用模型复测](chatgpt-completion-fix-verification.md) | `chatgpt-completion-fix-verification.md` |
-| [ChatGPT 订阅验收 · Selark 0.7.0](chatgpt-verification.md) | `chatgpt-verification.md` |
 | [CI 稳定性修复与中转定向排查](ci-relay-verification.md) | `ci-relay-verification.md` |
 | [Selark 常见场景模拟与 MiMo 实测 · 2026-10-31](common-scenarios-verification-2026-10-31.md) | `common-scenarios-verification-2026-10-31.md` |
 | [0.10.0 Core 与 Dashboard 高强度验收](core-010-stress-verification.md) | `core-010-stress-verification.md` |
@@ -56,3 +54,5 @@
 | [长文本、编程与设计真实验收（0.6.1）](workload-live-verification.md) | `workload-live-verification.md` |
 
 机器可读结果与相关报告放在同一目录，链接保留在各报告中。当前检查入口见 [开发指南](../../CONTRIBUTING.md)，项目导航见 [文档索引](../README.md)。
+
+历史模型复测的 API 与 Token Plan 节选见 [2026-10-31 复测](api-model-retest-2026-10-31.md)。

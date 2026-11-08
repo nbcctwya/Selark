@@ -97,7 +97,7 @@ type Provider = {
 };
 ```
 
-普通 API 和 Key 型 Token Plan 支持创建。ChatGPT 订阅已移除，不再出现在供应商或连接列表中；旧订阅连接不能登录、发现或调用。
+普通 API 和 Key 型 Token Plan 支持创建、查询、名称/启停/超时修改、模型管理和显式发现。
 
 ## 连接
 
@@ -306,8 +306,6 @@ await patchPolicy(id, {
 | `allowed_connections` | 连接 ID 数组，最多 32；或 null | null |
 | `allowed_models` | `connection::model` 数组，最多 1000；或 null | null |
 | `allow_token_plans` | boolean | false |
-| `allow_chatgpt_subscriptions` | 旧客户端兼容字段，仅接受 false | false |
-| `chatgpt_output_reservation` | 旧客户端兼容字段，仅接受 null | null |
 | `requests_per_minute` | 整数 1–100000，或 null | null |
 | `max_concurrent_requests` | 整数 1–256，或 null | null |
 | `max_output_tokens` | 整数 1–131072，或 null | null |

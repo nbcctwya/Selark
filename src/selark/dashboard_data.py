@@ -1,4 +1,4 @@
-"""Read-only, explicitly projected dashboard data. No provider or OAuth operations."""
+"""Read-only, explicitly projected dashboard data. No provider operations."""
 
 import json
 import math
@@ -61,8 +61,7 @@ def projected_connection(entry):
     )
     result["authorization"] = pick(
         entry["authorization"],
-        "kind state credential_configured remote_validity access_expired expires_at "
-        "refresh_available refresh_state plan_permission ready",
+        "kind state credential_configured remote_validity",
     )
     result["verification"] = pick(
         entry["verification"], "state previous_state verified_at age_seconds model scope"

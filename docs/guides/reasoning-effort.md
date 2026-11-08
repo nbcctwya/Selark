@@ -119,7 +119,7 @@ Windows 原生模式自动带入实际网关地址；WSL / 手动连接需要填
 这是模型 API 地址（默认 Windows `8788`、WSL `8787`），不是 Dashboard 的临时端口。
 DSH 在另一环境中运行时，应使用从该环境可达的地址；`localhost` 始终指 DSH 所在环境。
 
-1. 在 Selark「应用管理」创建 DSH 应用，授权对应模型。Token Plan 另需套餐权限开关和明确连接。
+1. 在 Selark「应用管理」创建 DSH 应用，授权对应模型。Token Plan 另需权限开关和明确连接。
 2. 将 Selark **应用令牌**提供给 DSH；这里不使用上游 API Key。
 3. 将生成的 provider 合并到 DSH 已有的 `llm-pi-ai` 配置，不覆盖其他 providers。
 4. 在 DSH 中选中该模型，通过会话的 Effort 菜单选择档位。无需重启 Selark。

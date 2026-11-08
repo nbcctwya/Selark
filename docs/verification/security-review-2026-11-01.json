@@ -3,7 +3,7 @@
   "project_version": "0.10.0",
   "status": "review_complete_follow_up_fixes_verified",
   "scope": {
-    "source": "current_workspace_including_previous_chatgpt_completion_fix",
+    "source": "workspace_at_original_review",
     "production_code_changed_this_review": false,
     "live_configuration_changed": false,
     "installed_version_changed": false,

@@ -167,33 +167,3 @@ def responses_result(status="completed", usage=RESPONSES_USAGE, text="Hello"):
         ],
         "usage": usage,
     }
-
-
-def responses_events(status="completed", usage=RESPONSES_USAGE, *, terminal=True):
-    values = [
-        {"type": "response.created", "response": responses_result("in_progress", None)},
-        {
-            "type": "response.output_text.delta",
-            "item_id": "msg_test",
-            "output_index": 0,
-            "content_index": 0,
-            "delta": "Hello",
-        },
-    ]
-    if terminal:
-        final = responses_result(status, usage)
-        if status == "failed":
-            final["error"] = {
-                "code": "rate_limit_exceeded",
-                "message": "secret-must-not-echo",
-            }
-        values.append({"type": "response." + status, "response": final})
-    return values
-
-
-def responses_reply(values=None):
-    return httpx.Response(
-        200,
-        content=sse(*(values if values is not None else responses_events())),
-        headers={"Content-Type": "text/event-stream"},
-    )

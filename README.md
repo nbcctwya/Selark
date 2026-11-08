@@ -12,7 +12,7 @@ Python 3.11+，使用 FastAPI、HTTPX 和 SQLite。当前版本 **0.10.0**；本
 
 ## 已有功能
 
-- 多平台、多连接管理：普通 API 和 Token Plan 分别记录与授权；[通用 API](docs/guides/connections.md#通用-api-接入) 支持自定义 Base URL、Key 和模型。
+- 多平台、多连接管理：普通 API 和 Token Plan分别记录与授权；[通用 API](docs/guides/connections.md#通用-api-接入) 支持自定义 Base URL、Key 和模型。
 - 文本与工具调用：Chat Completions、原生 Responses 和 Messages；支持工具结果回传、思考历史、SSE、取消、超时和有界排队，见 [HTTP 接入](docs/guides/http-api.md)。
 - 模型治理：模型发现、启用、应用授权、历史验证分别管理；调用方令牌可以限定连接、模型和额度。
 - 用量与恢复：SQLite 调用记录、Token 与费用估算、日志、备份、迁移及中断恢复。

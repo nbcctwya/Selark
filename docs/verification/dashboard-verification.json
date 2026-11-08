@@ -35,7 +35,7 @@
       "installed_assets_outside_repository",
       "unauthenticated_rebinding_and_mutation_rejected",
       "browser_desktop_mobile_theme_filters_details_and_session",
-      "configuration_ledger_oauth_and_backup_content_unchanged",
+      "configuration_ledger_and_backup_content_unchanged",
       "clean_shutdown"
     ]
   },
@@ -51,7 +51,7 @@
       "installed_assets_outside_repository",
       "unauthenticated_rebinding_and_mutation_rejected",
       "authenticated_queries_and_redaction",
-      "configuration_ledger_oauth_and_backup_content_unchanged",
+      "configuration_ledger_and_backup_content_unchanged",
       "clean_shutdown"
     ]
   },

@@ -5,7 +5,7 @@ from selark.config import ConfigError
 
 def validate_schema(db):
     version = db.execute("PRAGMA user_version").fetchone()[0]
-    if version not in {0, 1, 2, 3, 4, 5}:
+    if version not in {0, 1, 2, 3, 4, 5, 6}:
         raise ConfigError("记录库版本不受支持。")
     tables = dict(db.execute("SELECT name,type FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'"))
     # An empty version-zero database is the only legitimate pre-initialization shape.

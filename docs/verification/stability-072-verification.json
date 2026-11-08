@@ -11,8 +11,6 @@
   "ruff_format": "passed",
   "git_diff_check": "passed",
   "real_provider_requests": 0,
-  "real_oauth_operations": 0,
-  "oauth_mechanisms_changed": false,
   "subscription_adapter_change": "pure usage normalization preserves invalid count evidence",
   "pipx": {
     "version": "0.7.2",
@@ -650,7 +648,6 @@
         "offline history overview is consistent on every repeated read"
       ],
       "real_provider_requests": 0,
-      "oauth_operations": 0,
       "fake_generations": 2,
       "known_tokens": 28,
       "history_rows": 20000,

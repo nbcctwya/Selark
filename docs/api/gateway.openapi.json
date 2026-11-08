@@ -619,8 +619,7 @@
           "resource_type": {
             "enum": [
               "api",
-              "token_plan",
-              "chatgpt_subscription"
+              "token_plan"
             ],
             "title": "Resource Type",
             "type": "string"

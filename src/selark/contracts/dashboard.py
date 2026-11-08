@@ -5,8 +5,7 @@ from typing import Literal, NotRequired
 from pydantic import ConfigDict
 from typing_extensions import TypedDict
 
-# Retired values remain readable in historical records and older frontend fixtures.
-ResourceType = Literal["api", "token_plan", "chatgpt_subscription"]
+ResourceType = Literal["api", "token_plan"]
 
 
 class Shape(TypedDict):
@@ -43,14 +42,11 @@ class Provider(Shape):
     base_url: str | None
     resource_type: ResourceType
     can_create: bool
-    credential_type: Literal["api_key", "oauth"]
+    credential_type: Literal["api_key"]
 
 
 class PolicyView(Shape):
     allow_token_plans: bool
-    # Compatibility only: the backend always projects False / None for these fields.
-    allow_chatgpt_subscriptions: bool
-    chatgpt_output_reservation: int | None
     allowed_connections: list[str] | None
     allowed_models: list[str] | None
     requests_per_minute: int | None
@@ -220,12 +216,6 @@ class Authorization(Shape):
     state: NotRequired[str]
     credential_configured: NotRequired[bool]
     remote_validity: NotRequired[str]
-    access_expired: NotRequired[bool | None]
-    expires_at: NotRequired[str | None]
-    refresh_available: NotRequired[bool]
-    refresh_state: NotRequired[str]
-    plan_permission: NotRequired[bool]
-    ready: NotRequired[bool]
 
 
 class Verification(Shape):

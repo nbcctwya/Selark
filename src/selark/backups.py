@@ -108,7 +108,7 @@ def verify_backup(root, *, allow_legacy=False):
                 if db.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                     raise ConfigError("备份 SQLite 完整性检查失败。")
                 schema = db.execute("PRAGMA user_version").fetchone()[0]
-                if schema not in {0, 1, 2, 3, 4, 5}:
+                if schema not in {0, 1, 2, 3, 4, 5, 6}:
                     raise ConfigError("备份数据库版本不受支持。")
                 initialized = validate_schema(db)
                 if (
@@ -138,7 +138,6 @@ def verify_backup(root, *, allow_legacy=False):
             "database_schema": schema,
             "created_at": manifest.get("created_at"),
             "reason": manifest.get("reason"),
-            "oauth_credentials_restored": False,
         }
     except ConfigError:
         raise
@@ -212,7 +211,6 @@ def restore_backup(root, target, *, allow_legacy=False):
         "recovery": recovery,
         "usage": usage,
         "callers": callers,
-        "oauth_credentials_restored": False,
         "model_generation_requests": 0,
         "note": "恢复为新实例，未启动服务；使用前核对端口和客户端地址，清除 SELARK_DATA_DIR 覆盖。",
     }

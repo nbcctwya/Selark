@@ -360,7 +360,7 @@ def browser_checks(url, output, first_caller):
         expect(page.get_by_role("img", name="Token每日趋势", exact=False)).to_be_visible()
         page.screenshot(path=str(output / "overview-light.png"), full_page=True)
         nav.get_by_role("button", name="连接与模型", exact=True).click()
-        expect(page.locator(".entity-card")).to_have_count(6)
+        expect(page.locator(".entity-card")).to_have_count(5)
         expect(page.get_by_role("button", name="新建连接")).to_be_disabled()
         page.screenshot(path=str(output / "resources-light.png"), full_page=True)
         for label in ("发现目录", "明确启用", "应用获权", "历史能力"):

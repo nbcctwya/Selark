@@ -9,8 +9,7 @@
     "passed": 679,
     "warnings": 1,
     "seconds": 70.52,
-    "new_onboarding_tests": 23,
-    "targeted_connection_oauth_tests_passed": 114
+    "new_onboarding_tests": 23
   },
   "code_checks": {
     "ruff": true,
@@ -52,7 +51,7 @@
       "installed_assets_outside_repository",
       "unauthenticated_rebinding_and_mutation_rejected",
       "browser_desktop_mobile_theme_filters_details_and_session",
-      "configuration_ledger_oauth_and_backup_content_unchanged",
+      "configuration_ledger_and_backup_content_unchanged",
       "clean_shutdown"
     ]
   },

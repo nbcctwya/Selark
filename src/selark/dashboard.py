@@ -265,7 +265,7 @@ def create_dashboard(directory, *, port, bootstrap, offline=False, read_only=Fal
 
         def change():
             # Only configuration approval is writable. Never initialize/migrate or
-            # mutate the ledger, refresh OAuth, discover models or call a provider.
+            # mutate the ledger, discover models or call a provider.
             with Runtime(directory, readonly=True) as runtime:
                 result = runtime.change_models(
                     selection.connection_id,

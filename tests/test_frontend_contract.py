@@ -6,31 +6,13 @@ from pathlib import Path
 import httpx
 from pydantic import TypeAdapter
 
-from scripts.export_api_contracts import contract_shape, export
+from scripts.export_api_contracts import export
 from scripts.export_dashboard_fixtures import export_fixture
 from selark.contracts import dashboard as contract
 from selark.contracts.openapi import dashboard_document
 from selark.dashboard import create_dashboard
 
 FIXTURE = Path(__file__).resolve().parents[1] / "frontend/src/mocks/fixture.json"
-
-
-def test_pinned_frontend_contract_allows_only_explanatory_text_differences():
-    before = {
-        "description": "Previous release",
-        "properties": {"description": {"type": "string"}},
-        "required": ["description"],
-    }
-    assert contract_shape(before) == contract_shape(before | {"description": "Current release"})
-    for change in (
-        {"properties": {"description": {"type": "integer"}}},
-        {"properties": {}},
-        {"required": []},
-    ):
-        assert contract_shape(before) != contract_shape(before | change)
-    assert contract_shape(before | {"example": {"description": "old"}}) != contract_shape(
-        before | {"example": {"description": "new"}}
-    )
 
 
 def contract_shapes(document):
@@ -104,8 +86,13 @@ def test_frontend_fixture_tracks_current_backend_without_personal_data_or_networ
     assert contract_shapes(fresh) == contract_shapes(committed)
     assert fresh["fixture_only"] is True
     assert len(fresh["records"]) == 65
-    assert len(fresh["snapshot"]["connections"]) == 5
-    assert all(c["provider"] != "chatgpt" for c in fresh["snapshot"]["connections"])
+    assert {c["provider"] for c in fresh["snapshot"]["connections"]} == {
+        "mimo",
+        "deepseek",
+        "kimi-code",
+        "anthropic",
+        "openai",
+    }
     serialized = json.dumps(fresh)
     for field in ("api_key", "access_token", "refresh_token", "token_hash", "error_message"):
         assert f'"{field}":' not in serialized

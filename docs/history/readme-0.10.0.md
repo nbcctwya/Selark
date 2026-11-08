@@ -9,7 +9,7 @@ Python 3.11+，FastAPI + HTTPX + Uvicorn；默认仅监听 `127.0.0.1:8787`。
 
 `selark dashboard` → **连接与模型 → 管理模型**：搜索模型、筛选已启用/未启用，点击启用或禁用。
 禁用默认模型需要确认清除默认值，不会自动换模型；跨标签页或 CLI 的旧版本操作会被拒绝并提示刷新。
-操作前自动备份，应用策略保持独立；没有供应商调用、OAuth 刷新、额度调整或服务控制操作。
+操作前自动备份，应用策略保持独立；没有供应商调用、额度调整或服务控制操作。
 
 ```bash
 selark dashboard                    # 本机模型启用管理，其余状态只读
@@ -39,13 +39,13 @@ selark dashboard
 ```
 
 **发现不等于启用，启用不等于应用获权，获权不等于供应商实际可用。**
-新增连接（包括 Token Plan 和 ChatGPT）默认不启用模型；普通 API 省略 `--models` 时自动发现目录。
+新增连接（包括 Token Plan）默认不启用模型；普通 API 省略 `--models` 时自动发现目录。
 `model enable/disable/default` 支持明确选择、批量操作和清除默认模型；原 `connection set --models` 仍表示明确启用。
 发现失败、空目录或模型下架均不更改已有启用列表。应用令牌、连接、模型、并发及配额在派发前再次检查。
 CLI 与只读 Dashboard 展示四层状态，历史能力证据区分普通文本和 SSE、配置范围及时间。
 不会因为发现、登录或历史成功就显示实时可用，不自动验证全部模型或切换收费来源。
 
-升级保留全部已有启用项（包括 0.8.1 曾自动加入的模型）、默认模型、应用策略、记录及 OAuth 配置。
+升级保留全部已有启用项（包括 0.8.1 曾自动加入的模型）、默认模型、应用策略及记录。
 停止旧网关后运行 `selark migrate`，自动备份并将账本 schema 4 升为 5；Dashboard 不执行迁移。
 详细操作、订阅边界及兼容性见 [模型治理说明](../guides/model-governance.md)，
 测试与安装结果见 [0.9.0 验收](../verification/model-governance-verification.md)。
@@ -67,9 +67,9 @@ selark dashboard --offline --read-only # 完全离线，只读本地文件与账
 
 Dashboard 独立于模型网关运行：只监听 `127.0.0.1`，不自动启动网关；网关停止时仍可查看历史。
 终端中的一次性管理链接有效期 5 分钟，登录后通过按端口隔离的独立管理会话访问，最长 8 小时，刷新页面可继续使用。
-保持终端运行，`Ctrl+C` 关闭 Dashboard。API Key、OAuth 凭据、调用方令牌不发送到浏览器。
+保持终端运行，`Ctrl+C` 关闭 Dashboard。API Key、调用方令牌不发送到浏览器。
 0.8/0.9 阶段没有资源写入接口；0.10 仅增加明确的模型启用/禁用，其他管理操作仍在 CLI。
-旧 CLI、配置与 OAuth 机制保持兼容；0.9.0 首次使用需完成上述账本迁移。
+旧 CLI、配置保持兼容；0.9.0 首次使用需完成上述账本迁移。
 
 完整使用、统计口径与安全边界见 [Dashboard 说明](../guides/dashboard.md)，
 测试、浏览器与安装验收见 [Dashboard 验收](../verification/dashboard-verification.md)。
@@ -111,7 +111,7 @@ OpenAI、DeepSeek、MiMo 与中转站的 [四 API 并发与极端场景验收](.
 
 ```bash
 selark status                       # 所有资源、模型、历史验证、授权、用量及本地配额
-selark status --offline --json       # 完全离线只读，不迁移、不刷新 OAuth
+selark status --offline --json       # 完全离线只读，不迁移、不调用供应商
 selark service start                 # 优先 systemd 用户服务，否则独立后台进程
 selark service status
 selark service restart
@@ -126,14 +126,14 @@ selark backup verify /absolute/backup/path
 selark backup drill /absolute/backup/path  # 临时副本恢复演练，不启动服务
 ```
 
-`status` 严格区分配置、历史验证、本地调用方权限、OAuth 本地状态和当前可用性；
+`status` 严格区分配置、历史验证、本地调用方权限和当前可用性；
 不会因曾经成功、持有 Key 或存在套餐快照就声称上游当前可用，也不会调用供应商。
 Token 矛盾、流式累计计数回退和不完整用量保留追溯信息与保守预留。
 费用仍按请求时价格快照估算，不是账单。限流等待提示保留，无自动重试或付费来源切换。
 
 新增 `connection add ID --interactive` 配置向导；日志默认按 5 MiB 轮转并保留 3 个历史文件。
-0.7.0 配置、数据库 schema 4、令牌、API、Token Plan 和 ChatGPT 连接继续兼容，
-OAuth 登录、授权、刷新和退出代码保持原样。
+0.7.0 配置、数据库 schema 4、令牌、API、Token Plan 连接继续兼容，
+
 日常操作仍适用 [0.7.1 使用说明](../guides/operations.md)，
 上一版测试证据保留在 [0.7.1 验收](../verification/stability-071-verification.md)。
 
@@ -270,28 +270,6 @@ selark ask --messages /absolute/path/to/messages.json --max-tokens 32
 `ask` 支持 `--model`、`--system`、`--messages`；省略文本或传 `-` 时读取 stdin。
 `Ctrl+C` 停止服务，再次 `selark serve` 使用原配置启动。服务停机时 CLI 以非零码明确报告连接失败。
 
-## ChatGPT 个人订阅：官方 OAuth
-
-0.7.0 增加独立 `chatgpt_subscription` 资源，使用 Selark 自己的官方开源客户端注册，
-支持浏览器登录、状态、到期刷新、退出、官方模型发现与文本推理。
-普通响应和流式调用继续经过 Selark HTTP；旧令牌默认没有新订阅权限，不自动切换收费 API。
-
-```bash
-selark chatgpt login
-selark chatgpt status --json
-selark connection discover chatgpt-personal
-selark chatgpt usage --json
-selark chatgpt refresh --json
-selark chatgpt logout
-```
-
-先按 [ChatGPT 接入说明](../guides/chatgpt.md) 选择已发现模型，并用
-[专用策略模板](../../examples/chatgpt-policy.example.json) 创建受限的 Selark 调用方。
-官方订阅目前不支持硬输出 Token 上限，`chatgpt_output_reservation` 仅为本地估算；
-此连接不可传 `--max-tokens` 或采样参数。套餐剩余额度与刷新窗口保持未知，官方资格不足时明确失败。
-OAuth 凭据不进入源码、日志或备份；备份只保留注册身份，恢复后需要本人重新授权。
-完整真实／模拟结果见 [0.7 验收](../verification/chatgpt-verification.md)。
-
 ## Token Plan：个人交互式使用
 
 0.6 将 `token_plan` 与普通 `api` 连接分开管理，接入 **Kimi Coding Plan** 的官方
@@ -406,7 +384,7 @@ python3 /absolute/path/to/Selark/examples/summarize.py \
 
 该示例仅依赖 Python 标准库，可以复制到其他目录、脱离 Selark 安装运行。
 `examples/` 是单独的小程序示例，不是已安装 `selark` 命令的运行依赖。
-只向外部调用方提供客户端配置；模型权限受该令牌策略约束，旧令牌默认无 Token Plan 或 ChatGPT 订阅权限。
+只向外部调用方提供客户端配置；模型权限受该令牌策略约束，旧令牌默认无 Token Plan 权限。
 
 初始化时可选择端口、地址和允许模型：
 
@@ -436,14 +414,14 @@ selark --config-dir /private/new-selark init \
 - 可选 `session_id` 仅在 Selark 内按 `(鉴权调用方, session_id)` 归组，不传给 MiMo，也不修改 messages。
 - `connection_id` 或 `连接ID::模型ID` 明确选连接；裸模型名继续指向原 MiMo。model 省略或 null 使用所选连接默认模型，指定模型须在该连接允许列表中。
 - `stream` 默认为 false。流式 `data: <JSON>` 逐事件转发，以 `data: [DONE]` 结束；保持上游分片和实际 usage。
-- 普通 API 支持 `max_completion_tokens`，以及映射到它的别名 `max_tokens`（两者不可同时给出，范围 1–131072，省略默认 1024）；ChatGPT 订阅拒绝这些参数。
+- 普通 API 支持 `max_completion_tokens`，以及映射到它的别名 `max_tokens`（两者不可同时给出，范围 1–131072，省略默认 1024）。
 - 支持 `temperature`（0–1.5）、`top_p`（0.01–1）、`stop`（字符串或最多四个字符串）、`presence_penalty/frequency_penalty`（-2–2）。
 - 这些参数由上游执行；MiMo 实测中存在已传入 `stop` 但仍输出停止序列的情况，见上述实测报告。
   Selark 保留原始回答和用量；需要严格格式的调用方应检查结果，输出预算仍须设置 Token 上限。
 - MiMo/DeepSeek 及可关闭思考的 GLM/Kimi 模式关闭 thinking；Kimi K3 等保留调用方显式提供的 assistant reasoning_content，不自动管理历史。原生 Anthropic 转换为统一文本响应。
 - 普通响应保留上游 `id/model/choices/usage` 等字段。不会生成、估算或补零 usage；上游缺失时日志标记 null。
 - 上游回复只接受一条 `index=0` 的 assistant 文本 choice；结束原因必须是非空字符串。SSE 允许空 choices 的用量帧、重复累计用量和无新增文本的相同结束标记；结束后继续输出或改写结束原因视为协议错误。已经收到的有效部分用量保留，未完成的用量仍不作为最终消耗汇总。
-- 不支持工具调用、图片/音视频、原生 Responses HTTP 路由、对话正文存储、`n`、`stream_options`、`response_format`、用户可调 thinking；未知请求字段返回 400。ChatGPT 订阅服务端将官方 Responses SSE 转换为统一文本响应，具体参数限制见其接入说明。
+- 不支持工具调用、图片/音视频、原生 Responses HTTP 路由、对话正文存储、`n`、`stream_options`、`response_format`、用户可调 thinking；未知请求字段返回 400。
 - 单请求体上限 1 MiB，最多 256 条消息；普通上游响应上限 8 MiB；SSE 单事件上限约 1 MiB。
 
 请求示例（令牌从你的客户端配置安全取得，下面只使用占位值）：
