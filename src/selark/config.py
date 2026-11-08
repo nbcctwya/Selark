@@ -188,7 +188,7 @@ def server_document(config: ServerConfig) -> dict:
 
 def load_config(path: Path, cls):
     try:
-        return cls.model_validate_json(native.read_private(path))
+        return cls.model_validate_json(native.read_private(path), context={"stored_config": True})
     except FileNotFoundError:
         raise ConfigError(f"未找到配置 {path}；请先运行 selark init。") from None
     except ValidationError:

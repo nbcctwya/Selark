@@ -6,11 +6,13 @@ import time
 
 import pytest
 
-from selark.backups import drill_backup, verify_backup
-from selark.config import initialize
+from selark.backups import drill_backup, restore_backup, seal_backup, verify_backup
+from selark.config import ConfigError, _write_private, initialize, private_directory
 from selark.persistence import Journal, snapshot
 from selark.runtime import Runtime
-from selark.storage import SCHEMA, Store, token_digest, utc_now
+from selark.storage import SCHEMA, SCHEMA_VERSION, Store, token_digest, utc_now
+
+from .support.resources import contents
 
 
 @pytest.fixture(autouse=True)
@@ -101,3 +103,79 @@ def test_schema_one_database_with_legacy_secret_recovers_interrupted_migration(t
         assert len(again.store.tokens()) == 1
     assert (tmp_path / "client.json").read_bytes() == client_before
     assert "access_token" not in json.loads((tmp_path / "server.json").read_text())
+
+
+def test_old_backup_restores_api_and_revocation_without_retired_registrations(tmp_path):
+    initialize(tmp_path / "source", "fixture-upstream-key")
+    with Runtime(tmp_path / "source") as runtime:
+        runtime.add_connection("api", "openai", "fixture-api-key", allowed_models=["model"])
+        caller = runtime.store.create_token("revoked", policy={"daily_token_limit": 1000})
+        runtime.store.revoke(caller["id"])
+        expected = runtime.store.tokens()
+        config = runtime.directory / "connections.json"
+        document = json.loads(config.read_bytes())
+        document["connections"].append(
+            {
+                "connection_id": "retired",
+                "provider": "chatgpt",
+                "resource_type": "chatgpt_subscription",
+            }
+        )
+        _write_private(config, document)
+        with runtime.store.transaction() as db:
+            for item in expected:
+                policy = item["policy"] | {
+                    "allow_chatgpt_subscriptions": False,
+                    "chatgpt_output_reservation": None,
+                }
+                db.execute(
+                    "UPDATE tokens SET policy_json=? WHERE id=?",
+                    (json.dumps(policy), item["id"]),
+                )
+            db.execute("PRAGMA user_version=5")
+        backup = runtime.backup("old-release-fixture")
+    registration = backup / "chatgpt-registration"
+    private_directory(registration)
+    private_directory(registration / "profiles")
+    _write_private(registration / "host.json", {"host_id": "fixture-host"})
+    profile = registration / "profiles" / "retired.json"
+    _write_private(
+        profile,
+        {
+            "schema_version": 1,
+            "connection_id": "retired",
+            "state": "signed_out",
+            "generation": 1,
+            "refresh_state": "ready",
+            "access_token": None,
+            "refresh_token": None,
+            "id_token": None,
+            "scopes": [],
+            "expires_at": None,
+            "earliest_refresh_at": None,
+        },
+    )
+    seal_backup(backup)
+    before = contents(backup)
+    assert verify_backup(backup)["database_schema"] == 5
+    target = tmp_path / "restored"
+    assert restore_backup(backup, target)["model_generation_requests"] == 0
+    assert contents(backup) == before
+    assert not (target / "chatgpt-registration").exists()
+    assert "chatgpt" not in (target / "connections.json").read_text()
+    with Runtime(target) as restored:
+        assert restored.store.db.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
+        assert restored.store.tokens() == expected
+        assert [item.connection_id for item in restored.connection_settings()] == [
+            "mimo-default",
+            "api",
+        ]
+    _write_private(profile, {"access_token": "fixture-secret"})
+    with pytest.raises(ConfigError, match="完整性"):
+        verify_backup(backup)
+    seal_backup(backup)
+    with pytest.raises(ConfigError, match="OAuth"):
+        verify_backup(backup)
+    _write_private(registration / "unknown.json", {})
+    with pytest.raises(ConfigError, match="未识别"):
+        seal_backup(backup)
