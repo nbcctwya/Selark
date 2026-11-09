@@ -1,7 +1,13 @@
 """The offline burst harness must expose transport failures, never retry or hide them."""
 
 import asyncio
+import copy
 import json
+import os
+import subprocess
+import sys
+import time
+from pathlib import Path
 
 import httpx
 import pytest
@@ -10,6 +16,230 @@ from scripts.verify_resource_matrix import mixed_burst
 
 from .four_resources import FourUpstreams, app_for, auth, caller, payload
 from .support.resources import resources as resources
+
+
+@pytest.fixture
+def qualification_evidence():
+    from scripts.qualify_relay import RECOVERY_CHECKS, STEPS
+
+    signature = {
+        **dict.fromkeys(("runtime", "installed_runtime", "harness", "dependencies_lock"), "a" * 64),
+        "python": "3.12.2",
+        "platform": "Linux",
+        "machine": "x86_64",
+    }
+    # Hand-calculated ranks: 150 negative samples, then 135 at 5 ms, 12 at 8 ms,
+    # and 3 at 9 ms. p50=-1, p95=5 and p99=8; negative differences must survive.
+    timings = {
+        "pairs": [
+            {"direct_ms": 100, "relay_ms": value}
+            for value in [99] * 150 + [105] * 135 + [108] * 12 + [109] * 3
+        ],
+        "overhead_ms": {"p50": -1, "p95": 5, "p99": 8},
+        "negative_differences": 150,
+    }
+    relay = {
+        "python": "3.12.2",
+        "platform": "Linux",
+        "machine": "x86_64",
+        "samples_per_mode": 300,
+        "warmup_pairs_per_mode": 5,
+        "concurrency": 1,
+        "chunked_sse": False,
+        "loopback_proxy_bypassed": True,
+        "real_provider_requests": 0,
+        "extra_generations": 0,
+        "fake_direct_generations": 610,
+        "fake_relay_generations": 610,
+        "reported_relay_tokens": 8540,
+        "forwarded_payloads_unchanged": True,
+        "idle": {
+            "seconds": 30,
+            "cpu_seconds": 0.03,
+            "rss_bytes": 60 * 1048576,
+            "upstream_requests": 0,
+        },
+        **{
+            mode: copy.deepcopy(timings)
+            for mode in ("nonstream", "stream_first_text", "stream_complete")
+        },
+    }
+    invariants = {
+        "requests": 10,
+        "fake_generation_requests": 11,
+        "reported_tokens": 154,
+        "real_provider_requests": 0,
+        "forwarded_messages_unchanged": True,
+        "idle_seconds": 2,
+        "idle_journal_scans": 0,
+        "jwt_loaded": False,
+    }
+    recovery = {
+        "real_mimo_requests": 0,
+        "simulated_upstream_requests": 9,
+        "checks": [
+            {"check": name, "passed": True, "known_total_tokens": 56, "upstream_calls": 0}
+            for name in sorted(RECOVERY_CHECKS)
+        ],
+    }
+    return {
+        "schema": 1,
+        "complete": True,
+        "fingerprint": signature,
+        "final_fingerprint": copy.deepcopy(signature),
+        "steps": [
+            {
+                "name": name,
+                "before": copy.deepcopy(signature),
+                "after": copy.deepcopy(signature),
+                "exit_code": 0,
+                "report": copy.deepcopy(
+                    invariants
+                    if name == "invariants"
+                    else recovery
+                    if name == "recovery"
+                    else relay
+                ),
+            }
+            for name, *_ in STEPS
+        ],
+    }
+
+
+def test_qualification_recomputes_raw_pairs_and_ignores_saved_flags(qualification_evidence):
+    from scripts.measure_relay import BUDGET
+    from scripts.qualify_relay import POLICY, assess
+
+    assert (POLICY["p95_ms"], POLICY["rss_mib"], POLICY["cpu"]) == (
+        BUDGET["relay_p95_ms"],
+        BUDGET["idle_rss_mib"],
+        BUDGET["idle_cpu_percent"],
+    )
+    for step in qualification_evidence["steps"][2:]:
+        step["report"]["budget_checks"] = {"nonstream_p95": False}
+    result = assess(qualification_evidence)
+    assert result["qualified"] and all(result["groups"].values())
+    assert result["rounds"][0]["nonstream"] == {"p50": -1, "p95": 5, "p99": 8}
+
+    # One bad round must fail even when saved flags and the median look good.
+    report = qualification_evidence["steps"][2]["report"]
+    data = report["nonstream"]
+    for pair in data["pairs"]:
+        pair["relay_ms"] = pair["direct_ms"] + 11
+    data.update(overhead_ms={"p50": 11, "p95": 11, "p99": 11}, negative_differences=0)
+    report["budget_checks"] = {"nonstream_p95": True}
+    report["budgets"] = {"relay_p95_ms": 1000}
+    result = assess(qualification_evidence)
+    assert result["groups"]["evidence"] and not result["qualified"]
+    assert result["failed_checks"] == [
+        {"group": "performance", "check": "relay-1_nonstream_p95", "passed": False}
+    ]
+
+
+@pytest.mark.parametrize(
+    ("path", "value"),
+    [
+        (("complete",), False),
+        (("final_fingerprint", "runtime"), "b" * 64),
+        (("fingerprint", "installed_runtime"), "b" * 64),
+        (("steps", 2, "exit_code"), 1),
+        (("steps", 2, "error_type"), "TimeoutExpired"),
+        (("steps", 0, "report", "idle_journal_scans"), 1),
+        (("steps", 0, "report", "fake_generation_requests"), 12),
+        (("steps", 1, "report", "checks"), []),
+        (("steps", 2, "report", "profile"), {}),
+        (("steps", 2, "report", "python"), "3.13.0"),
+        (("steps", 2, "report", "samples_per_mode"), 299),
+        (("steps", 2, "report", "nonstream", "pairs"), []),
+        (("steps", 2, "report", "nonstream", "pairs", 0, "relay_ms"), float("nan")),
+        (("steps", 2, "report", "nonstream", "pairs", 0, "direct_ms"), -1),
+        (("steps", 2, "report", "nonstream", "overhead_ms", "p95"), 0),
+        (("steps", 2, "report", "reported_relay_tokens"), None),
+        (("steps", 2, "report", "idle", "seconds"), 2),
+        (("steps", 2, "report", "idle", "rss_bytes"), None),
+        (("steps", 2, "report", "idle", "cpu_seconds"), 1),
+    ],
+)
+def test_qualification_rejects_missing_or_damaged_evidence(qualification_evidence, path, value):
+    from scripts.qualify_relay import assess
+
+    target = qualification_evidence
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+    result = assess(qualification_evidence)
+    assert not result["qualified"] and result["failed_checks"]
+
+
+def test_qualification_preserves_failed_collection_and_refuses_overwrite(
+    tmp_path, monkeypatch, capsys
+):
+    from scripts import qualify_relay
+
+    def unavailable(_):
+        raise subprocess.TimeoutExpired("synthetic import probe", 10)
+
+    monkeypatch.setattr(qualify_relay, "fingerprint", unavailable)
+    output = tmp_path / "qualification"
+    assert not qualify_relay.collect(output)["qualified"]
+    evidence = json.loads((output / "evidence.json").read_text())
+    assert not evidence["complete"] and evidence["error_type"] == "TimeoutExpired"
+    monkeypatch.setattr(
+        "sys.argv", ["qualify_relay", "--check-evidence", str(output / "evidence.json")]
+    )
+    assert qualify_relay.main() == 2
+    assert not json.loads(capsys.readouterr().out)["qualified"]
+    original = (output / "evidence.json").read_bytes()
+    monkeypatch.setattr("sys.argv", ["qualify_relay", "--output", str(output)])
+    with pytest.raises(SystemExit) as error:
+        qualify_relay.main()
+    assert error.value.code == 2 and (output / "evidence.json").read_bytes() == original
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Reference collector uses Linux process groups")
+@pytest.mark.parametrize("parent_mode", ["ignore_interrupt", "handle_interrupt", "exit_failed"])
+def test_qualification_timeout_cleans_its_process_group(tmp_path, parent_mode):
+    from scripts.qualify_relay import run_step
+
+    identity = tmp_path / "process-group"
+    # The child ignores SIGINT; cleanup must work even if its parent exits first.
+    child = "import signal,time; signal.signal(signal.SIGINT, signal.SIG_IGN); time.sleep(60)"
+    parent = (
+        "import os,signal,subprocess,sys,time; from pathlib import Path; "
+        + (
+            "signal.signal(signal.SIGINT, signal.SIG_IGN); "
+            if parent_mode == "ignore_interrupt"
+            else ""
+        )
+        + f"subprocess.Popen([sys.executable, '-c', {child!r}]); "
+        f"Path({str(identity)!r}).write_text(str(os.getpid())); "
+        + ("sys.exit(7)" if parent_mode == "exit_failed" else "time.sleep(60)")
+    )
+    started = time.monotonic()
+    if parent_mode == "exit_failed":
+        assert (
+            run_step([sys.executable, "-c", parent], tmp_path / "timeout.log", os.environ.copy(), 1)
+            == 7
+        )
+    else:
+        with pytest.raises(subprocess.TimeoutExpired):
+            run_step([sys.executable, "-c", parent], tmp_path / "timeout.log", os.environ.copy(), 1)
+    assert time.monotonic() - started < 15
+    group = int(identity.read_text())
+    # Linux can briefly retain a dead orphan as a zombie; it cannot execute work.
+    for _ in range(100):
+        active = []
+        for stat in Path("/proc").glob("[0-9]*/stat"):
+            try:
+                fields = stat.read_text().rsplit(")", 1)[1].split()
+            except OSError:
+                continue
+            if int(fields[2]) == group and fields[0] not in {"Z", "X"}:
+                active.append(stat.parent.name)
+        if not active:
+            break
+        time.sleep(0.01)
+    assert not active
 
 
 @pytest.mark.parametrize("chunked", [False, True])

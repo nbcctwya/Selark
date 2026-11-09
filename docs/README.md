@@ -26,6 +26,7 @@
 ## 开发与协作
 
 - [硬性设计原则与性能预算](development/design-principles.md)
+- [从单点优化到可验证的交付工作流](development/outcome-workflow.md)
 - [架构与模块职责](development/architecture.md)
 - [前端仓库与子模块协作](development/frontend-development.md)
 - [日常管理 API 与前端契约](development/management-api.md)

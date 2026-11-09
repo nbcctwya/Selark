@@ -62,6 +62,8 @@ npm run test:browser
 
 性能改动在固定环境运行 `python -m scripts.measure_relay --check-budget --output /tmp/selark-relay-budget.json`；它以模拟上游比较直连/中转，不调用真实模型。未达标保留报告并说明原因。共享 CI 产出性能报告，同时用 `measure_runtime.py --check-invariants` 强制检查空闲零扫描和按需依赖加载。
 
+Linux / WSL 可用 `python -m scripts.qualify_relay --output reports/qualification/new-run` 一次运行约束、恢复及三轮参考测量，输出完整证据并独立判定每轮预算；目录必须为新目录。用 `--check-evidence path/to/evidence.json` 跨平台离线复算，证据不足不能判为通过。此入口不会触发真实调用、部署或更改个人服务，完整边界见 [可验证的交付工作流](docs/development/outcome-workflow.md)。
+
 ## 放置新代码
 
 - 网关请求处理放在 `app.py`，供应商协议差异放在 `providers/`，公共数据与配置放在各自领域模块。

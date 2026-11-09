@@ -15,6 +15,7 @@
 | 服务、备份、日志与历史查询 | `verify_operations.py` |
 | 空闲 CPU、内存与模拟转发对比 | `measure_runtime.py` |
 | 本机直连/中转逐对 p95 与核心预算 | `measure_relay.py`（以 `python -m scripts.measure_relay` 运行） |
+| 三轮参考验收、恢复与独立证据判定 | `qualify_relay.py`（Linux / WSL 采集，跨平台离线复算） |
 | 大账本配额准入与 Dashboard 缩放 | `measure_accounting.py`（以 `python -m scripts.measure_accounting` 运行，仅合成账本） |
 | 临时进程的全链路分段测量 | `measure_relay.py --profile /tmp/new-trace.jsonl`（由 `profile_relay.py` 安装开发探针） |
 | 显式真实调用验收 | `verify_live.py`、`verify_multiconnection_live.py`、`verify_api_live_stress.py`、`verify_four_api_live.py` |
@@ -38,6 +39,8 @@ OpenAPI 导出本身不需要个人配置或数据库，`--check --frontend` 检
 `measure_runtime.py --check-invariants` 检查健康空闲零扫描、普通转发不加载 JWT；默认仍可用于前后版本对比。`measure_relay.py` 只启动临时核心与回环模拟上游，分别报告普通响应和 SSE 首段的逐对额外延迟，以及仅核心 PID 的 RSS/CPU。默认 300 对/模式、30 秒空闲；参考环境加 `--check-budget` 才将性能未达标变成非零退出码，报告始终保存。预算与验收口径见 [硬性设计原则](../docs/development/design-principles.md)。
 
 `measure_relay.py` 的 `upstream_connections` 记录两个阶段新增的模拟上游 TCP 连接数。加 `--chunked-sse` 可切换流式响应的 HTTP 分帧；默认保持 `Content-Length`，其他负载、预热和配对口径相同。
+
+需要完整的参考闭环时运行 `python -m scripts.qualify_relay --output reports/qualification/new-run`，输出目录必须尚不存在。它按固定顺序运行约束、恢复和三轮参考测量，核对源码/安装包/依赖一致性，并从原始样本独立重算全部轮次；不修改预算，不自动重跑失败批次。返回 0 表示本次参考范围通过，1 表示指标未达标，2 表示证据不完整或采集失败。`--check-evidence path/to/evidence.json` 可离线只读复算，原始输出与 `assessment.json` 分别保留。该工具不代替完整发布验收；方法、权限及成本见 [交付工作流](../docs/development/outcome-workflow.md)。
 
 真实验收脚本的参数、额度与授权边界各不相同，不属于常规测试，也不应作为批量默认入口。对应历史证据见 [验收索引](../docs/verification/README.md)。
 新生成的原始输出放在 Git 忽略的 `reports/` 或系统临时目录；审阅后的说明与脱敏 JSON 才放入 `docs/verification/`。
