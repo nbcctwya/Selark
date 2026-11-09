@@ -272,6 +272,12 @@ def test_full_read_only_snapshot_redacts_secrets_and_preserves_unknowns(
 
 
 def test_accounting_filtering_pagination_and_trend_consistency(runtime, monkeypatch):
+    at = datetime(2026, 10, 31, tzinfo=UTC)
+    monkeypatch.setattr(
+        "tests.support.governance.utc_now", lambda: at.isoformat(timespec="microseconds")
+    )
+    # The query's upper bound is exclusive, including on coarse Windows clocks.
+    window = data.query_filters({}, now=at + timedelta(microseconds=1))
     caller = runtime.store.create_token("editor")
     second = runtime.store.create_token("other")
     quote = price(runtime)
@@ -293,19 +299,19 @@ def test_accounting_filtering_pagination_and_trend_consistency(runtime, monkeypa
             http_status=200 if index < 20 else 504,
             duration_ms=100 + index * 10,
         )
-    runtime.store.begin_request("pending", utc_now(), caller["id"], "mimo-default", "chat")
+    runtime.store.begin_request("pending", at.isoformat(), caller["id"], "mimo-default", "chat")
     runtime.store.begin_request("unknown-time", None, caller["id"], "mimo-default", "chat")
     runtime.store.finish(
         "old-history",
-        state=finished(
-            caller, "old-history", started_at=(datetime.now(UTC) - timedelta(days=90)).isoformat()
-        ),
+        state=finished(caller, "old-history", started_at=(at - timedelta(days=90)).isoformat()),
         http_status=200,
         duration_ms=1,
     )
-    filters = data.query_filters(
-        {"caller_id": caller["id"], "model": "mimo-test", "connection_id": "mimo-default"}
-    )
+    filters = window | {
+        "caller_id": caller["id"],
+        "model": "mimo-test",
+        "connection_id": "mimo-default",
+    }
     original = Store.summary
 
     def filtered_summary(store, selected, **options):
@@ -338,7 +344,7 @@ def test_accounting_filtering_pagination_and_trend_consistency(runtime, monkeypa
     assert len(page1["items"]) == 25 and len(page2["items"]) == 5
     assert len({r["request_id"] for r in page1["items"] + page2["items"]}) == 30
     assert data.records(runtime.directory, filters, errors=True)["total"] == 10
-    all_usage = data.snapshot(runtime.directory, data.query_filters({}), offline=True)["usage"]
+    all_usage = data.snapshot(runtime.directory, window, offline=True)["usage"]
     assert all_usage["unknown_time_excluded"] == 1
     assert all_usage["summary"]["success_rate"] == 20 / 32
     pending = next(group for group in all_usage["models"] if group["model"] is None)
@@ -353,7 +359,7 @@ def test_accounting_filtering_pagination_and_trend_consistency(runtime, monkeypa
             http_status=status,
             duration_ms=duration,
         )
-    grouped = data.snapshot(runtime.directory, data.query_filters({}), offline=True)["usage"]
+    grouped = data.snapshot(runtime.directory, window, offline=True)["usage"]
     by_connection = {
         group["connection_id"]: group
         for group in grouped["models"]

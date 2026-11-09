@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import json
 import sqlite3
+import threading
 import time
 
 import httpx
@@ -709,23 +710,50 @@ def test_storage_writer_competition_does_not_pause_stream_chunks(runtime):
 def test_deadline_during_checkpoint_cannot_leave_settled_row_running(runtime, monkeypatch, channel):
     async def scenario():
         caller = runtime.store.create_token("deadline-checkpoint")
+        config = runtime.settings()
+        loop = asyncio.get_running_loop()
+        entered, release = asyncio.Event(), threading.Event()
+        checkpoint_task = None
+        timeout = asyncio.timeout
+        deadline = timeout(None)
+        # Arm the actual request timeout only after the selected checkpoint I/O starts.
+        monkeypatch.setattr(
+            asyncio,
+            "timeout",
+            lambda delay: (
+                deadline if delay == config.limits.request_timeout_seconds else timeout(delay)
+            ),
+        )
         original = runtime.store.finish
+
+        def hold_checkpoint():
+            loop.call_soon_threadsafe(entered.set)
+            assert release.wait(5), "test must always release its checkpoint worker"
 
         def slow_finish(*args, **kwargs):
             if kwargs["state"].get("record_status") == "running":
-                time.sleep(0.1)
+                hold_checkpoint()
             return original(*args, **kwargs)
 
         app = create_app(
-            limited(runtime, request_timeout_seconds=0.05),
+            config,
             runtime=runtime,
             transport=httpx.MockTransport(lambda _: httpx.Response(200, json=completion())),
         )
         save = app.state.storage.journal.save
+        persist = app.state.storage.persist
+
+        async def observe_checkpoint(*args, **kwargs):
+            nonlocal checkpoint_task
+            if not kwargs["settled"]:
+                checkpoint_task = asyncio.current_task()
+            return await persist(*args, **kwargs)
+
+        monkeypatch.setattr(app.state.storage, "persist", observe_checkpoint)
 
         def slow_save(document):
             if not document["settled"]:
-                time.sleep(0.1)
+                hold_checkpoint()
             return save(document)
 
         if channel == "database":
@@ -738,13 +766,24 @@ def test_deadline_during_checkpoint_cannot_leave_settled_row_running(runtime, mo
                 transport=httpx.ASGITransport(app=app), base_url="http://selark"
             ) as client,
         ):
-            response = await client.post(
-                "/v1/chat/completions", headers=headers(caller["token"]), json=PAYLOAD
+            pending = asyncio.create_task(
+                client.post("/v1/chat/completions", headers=headers(caller["token"]), json=PAYLOAD)
             )
+            try:
+                await asyncio.wait_for(entered.wait(), 5)
+                assert checkpoint_task is not None
+                deadline.reschedule(loop.time())
+                await wait_until(checkpoint_task.cancelling)
+                assert not pending.done(), "cancellation must wait for the checkpoint worker"
+            finally:
+                release.set()
+                response = await asyncio.wait_for(pending, 5)
             assert response.status_code == 504
         row = runtime.store.records({})[0]
         assert row["status"] == "failed" and row["total_tokens"] == 14
-        assert row["upstream_result"] == "success"
+        assert row["upstream_result"] == "success" and row["upstream_attempts"] == 1
+        assert row["error_code"] == "request_deadline_exceeded"
+        assert app.state.storage.journal.entries() == []
 
     asyncio.run(scenario())
 

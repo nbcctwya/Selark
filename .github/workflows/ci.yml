@@ -117,7 +117,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
   test:
-    runs-on: ubuntu-latest
+    # Keep the Python Playwright 1.58 browser matrix on a supported distribution.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
