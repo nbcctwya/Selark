@@ -10,7 +10,7 @@ import httpx
 from selark.config import ServerConfig
 from selark.errors import GatewayError
 from selark.protocol import close_response, strict_json
-from selark.sse import SSEDecoder, async_sse_lines
+from selark.sse import SSEDecoder, async_sse_lines, finish_sse
 from selark.usage import sanitize_usage
 
 
@@ -235,8 +235,9 @@ class MiMoProvider:
         finish_reason = None
         identities = {}
         tools = {}
+        lines = async_sse_lines(response)
         try:
-            async for line in async_sse_lines(response):
+            async for line in lines:
                 raw = decoder.feed(line)
                 if raw is None:
                     continue
@@ -244,6 +245,7 @@ class MiMoProvider:
                     if not saw_choice or finish_reason is None or "model" not in identities:
                         raise protocol_error("上游流缺少有效回复或结束原因。")
                     yield raw
+                    await finish_sse(response, lines)
                     return
                 data = self.normalize(strict_json(raw), stream=True)
                 if not isinstance(data, dict) or "error" in data:

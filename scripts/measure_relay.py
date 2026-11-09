@@ -96,8 +96,9 @@ def process_stats(pid):
 
 
 class Fixture:
-    def __init__(self):
+    def __init__(self, *, chunked_sse=False):
         self.calls = 0
+        self.connections = 0
         self.errors = []
         expected = {
             stream: ChatRequest.model_validate(payload(stream)).upstream_payload("mimo-test")
@@ -116,6 +117,7 @@ class Fixture:
 
             def setup(self):
                 super().setup()
+                owner.connections += 1
                 # Avoid a delayed-ACK/Nagle artefact from separate headers/body writes.
                 self.connection.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
@@ -148,9 +150,15 @@ class Fixture:
                 self.send_header(
                     "Content-Type", "text/event-stream" if stream else "application/json"
                 )
-                self.send_header("Content-Length", str(len(body)))
+                chunked = stream and chunked_sse
+                if chunked:
+                    self.send_header("Transfer-Encoding", "chunked")
+                else:
+                    self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
-                self.wfile.write(body)
+                self.wfile.write(
+                    f"{len(body):x}\r\n".encode() + body + b"\r\n0\r\n\r\n" if chunked else body
+                )
 
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
@@ -215,11 +223,11 @@ def save_report(path, report):
         path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
 
 
-def run(*, samples=300, idle_seconds=30, report=None, profile_path=None):
+def run(*, samples=300, idle_seconds=30, report=None, profile_path=None, chunked_sse=False):
     report = {} if report is None else report
     with (
         tempfile.TemporaryDirectory(prefix="selark-relay-measure-") as temporary,
-        contextlib.closing(Fixture()) as fixture,
+        contextlib.closing(Fixture(chunked_sse=chunked_sse)) as fixture,
     ):
         root = Path(temporary)
         profile = root / "profile"
@@ -308,10 +316,13 @@ def run(*, samples=300, idle_seconds=30, report=None, profile_path=None):
                             "warmup_pairs_per_mode": 5,
                             "real_provider_requests": 0,
                             "loopback_proxy_bypassed": True,
+                            "chunked_sse": chunked_sse,
+                            "upstream_connections": {},
                             "budgets": BUDGET,
                         }
                     )
                     for stream in (False, True):
+                        connections_before = fixture.connections
                         wire = ChatRequest.model_validate(payload(stream)).upstream_payload(
                             "mimo-test"
                         )
@@ -337,6 +348,9 @@ def run(*, samples=300, idle_seconds=30, report=None, profile_path=None):
                         )
                         if stream:
                             report["stream_complete"] = comparison(complete_pairs)
+                        report["upstream_connections"]["stream" if stream else "nonstream"] = (
+                            fixture.connections - connections_before
+                        )
                 # Drain the final receipt, then measure only the core PID while idle.
                 report["progress"] = {"phase": "idle"}
                 time.sleep(1.1)
@@ -423,6 +437,7 @@ def main():
     parser.add_argument("--samples", type=int, default=300)
     parser.add_argument("--idle-seconds", type=float, default=30)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--chunked-sse", action="store_true", help="Use chunked HTTP SSE framing.")
     parser.add_argument(
         "--profile", type=Path, help="Write opt-in per-stage JSONL timings (new file)."
     )
@@ -447,6 +462,7 @@ def main():
             idle_seconds=args.idle_seconds,
             report=report,
             profile_path=args.profile,
+            chunked_sse=args.chunked_sse,
         )
     except Exception as error:
         report.update(failed=True, error_type=type(error).__name__)

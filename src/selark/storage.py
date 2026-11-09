@@ -699,6 +699,13 @@ class Store:
                     ),
                 )
 
+    def supersedes_receipt(self, request_id, revision):
+        with self.lock:
+            row = self.db.execute(
+                "SELECT record_revision FROM requests WHERE request_id=?", (request_id,)
+            ).fetchone()
+            return row is not None and row["record_revision"] > revision
+
     def recover_interrupted(self) -> int:
         with self.transaction() as db:
             result = db.execute(

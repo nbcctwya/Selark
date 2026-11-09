@@ -6,6 +6,7 @@
 
 | 报告 | 文件 |
 | --- | --- |
+| [连接复用与持久化延迟优化 · 2026-11-09](latency-optimization-2026-11-09.md) | `latency-optimization-2026-11-09.md`、`latency-optimization-2026-11-09.json` |
 | [Windows 分支 WSL 与真实 API 验收 · 2026-11-07](windows-wsl-verification-2026-11-07.md) | `windows-wsl-verification-2026-11-07.md`、`windows-wsl-verification-2026-11-07.json` |
 | [Windows 原生适配 · 2026-11-06](windows-native-2026-11-06.md) | `windows-native-2026-11-06.md`、`windows-native-2026-11-06.json` |
 | [大账本与转发复测 · 2026-11-06](../guides/efficiency.md#2026-11-06-大账本与转发复测) | `accounting-performance-2026-11-06.json` |

@@ -11,7 +11,7 @@ import httpx
 import pytest
 
 from selark.app import create_app
-from selark.config import initialize
+from selark.config import ConfigError, initialize
 from selark.runtime import Runtime, fingerprint
 
 from .support.asgi import PAYLOAD, Wire, limited, wait_until
@@ -98,6 +98,17 @@ def test_final_send_failure_preserves_usage_and_records_delivery(runtime, stream
                     and (not message.get("more_body") or b"[DONE]" in message.get("body", b""))
                 )
             if fail:
+                if not streaming or stage == "terminal":
+                    journal = app.state.storage.journal
+                    receipts = journal.entries()
+                    assert len(receipts) == 1
+                    checkpoint = journal.load(receipts[0])
+                    assert not checkpoint["settled"]
+                    assert checkpoint["state"]["usage"] == completion()["usage"]
+                    # Both the recovery receipt and the independently visible
+                    # database checkpoint must precede terminal delivery.
+                    row = runtime.store.records({})[0]
+                    assert row["status"] == "running" and row["total_tokens"] == 14
                 raise OSError("simulated broken pipe")
 
         scope = {
@@ -426,7 +437,8 @@ def test_slow_downstream_preserves_completed_upstream_usage(runtime, streaming):
     asyncio.run(scenario())
 
 
-def test_final_accounting_failure_replays_once_and_bounds_backlog(runtime, monkeypatch):
+@pytest.mark.parametrize("failure", ["database", "receipt_cleanup", "receipt_permissions"])
+def test_final_accounting_failure_replays_once_and_bounds_backlog(runtime, monkeypatch, failure):
     async def scenario():
         caller = runtime.store.create_token("receipts")
         calls = []
@@ -438,9 +450,14 @@ def test_final_accounting_failure_replays_once_and_bounds_backlog(runtime, monke
             ),
         )
         finish = runtime.store.finish
+        remove = app.state.storage.journal.remove
 
         def unavailable(*args, **kwargs):
             raise sqlite3.OperationalError("simulated locked ledger")
+
+        def cleanup_unavailable(*args, **kwargs):
+            error = ConfigError if failure == "receipt_permissions" else OSError
+            raise error("simulated receipt cleanup failure")
 
         async with (
             app.router.lifespan_context(app),
@@ -458,7 +475,10 @@ def test_final_accounting_failure_replays_once_and_bounds_backlog(runtime, monke
             monkeypatch.setattr(app.state.storage.journal, "entries", counted_entries)
             await asyncio.sleep(1.1)
             assert not scans  # Healthy idle ledgers do not poll the filesystem.
-            monkeypatch.setattr(runtime.store, "finish", unavailable)
+            if failure == "database":
+                monkeypatch.setattr(runtime.store, "finish", unavailable)
+            else:
+                monkeypatch.setattr(app.state.storage.journal, "remove", cleanup_unavailable)
             assert (
                 await client.post(
                     "/v1/chat/completions", headers=headers(caller["token"]), json=PAYLOAD
@@ -473,6 +493,7 @@ def test_final_accounting_failure_replays_once_and_bounds_backlog(runtime, monke
                 assert response.status_code == 503
             assert len(calls) == 1 and len(list((runtime.data_dir / "pending").glob("*.json"))) == 1
             monkeypatch.setattr(runtime.store, "finish", finish)
+            monkeypatch.setattr(app.state.storage.journal, "remove", remove)
             # A failed write wakes recovery without another request or a manual replay.
             async with asyncio.timeout(4):
                 while app.state.storage.health()["pending_records"]:
@@ -491,7 +512,8 @@ def test_final_accounting_failure_replays_once_and_bounds_backlog(runtime, monke
     asyncio.run(scenario())
 
 
-def test_stale_receipt_never_overwrites_settled_delivery(runtime):
+@pytest.mark.parametrize("recovery", ["online", "restart"])
+def test_stale_receipt_never_overwrites_settled_delivery(runtime, recovery):
     from selark.persistence import Journal, snapshot
     from selark.storage import utc_now
 
@@ -513,16 +535,19 @@ def test_stale_receipt_never_overwrites_settled_delivery(runtime):
     journal.save(snapshot(state, 200, 10, settled=False))
     state.update(record_revision=2, record_status="success", delivery_status="sent")
     runtime.store.finish("stale-receipt", state=state, http_status=200, duration_ms=11)
-    with runtime.service():
-        pass
+    if recovery == "online":
+        assert journal.replay(runtime.store)["restored"] == 1
+    else:
+        with runtime.service():
+            pass
     row = runtime.store.records({})[0]
     assert row["status"] == "success" and row["delivery_status"] == "sent"
     assert row["total_tokens"] == 14 and journal.entries() == []
 
 
 @pytest.mark.parametrize("channel", ["journal", "database"])
-def test_restart_recovers_known_upstream_usage_with_unknown_delivery(runtime, channel):
-    from selark.persistence import Journal, snapshot
+def test_restart_recovers_known_upstream_usage_with_unknown_delivery(runtime, monkeypatch, channel):
+    from selark.persistence import AsyncLedger, Journal
     from selark.storage import utc_now
 
     state = {
@@ -555,11 +580,34 @@ def test_restart_recovers_known_upstream_usage_with_unknown_delivery(runtime, ch
             "alias": None,
         },
     )
-    document = snapshot(state, 200, 10, settled=False)
+    journal = Journal(runtime.data_dir / "pending")
+
+    def unavailable(*args, **kwargs):
+        raise OSError("simulated unavailable receipt storage")
+
+    if channel == "database":
+        monkeypatch.setattr(journal, "save", unavailable)
+
+    async def checkpoint():
+        storage = AsyncLedger(runtime.store, runtime.settings().limits, journal)
+        await storage.start()
+        try:
+            with monkeypatch.context() as patch:
+                if channel == "journal":
+                    patch.setattr(runtime.store, "finish", unavailable)
+                result = await storage.persist(state, 200, 10, settled=False)
+            assert result == ("pending" if channel == "journal" else "committed")
+        finally:
+            await storage.close()
+
+    asyncio.run(checkpoint())
     if channel == "journal":
-        Journal(runtime.data_dir / "pending").save(document)
+        assert runtime.store.records({})[0]["total_tokens"] is None
+        assert runtime.store.quota("legacy")["charged_or_reserved_tokens"] == 316
+        assert journal.replay(runtime.store)["restored"] == 0
+        assert journal.load(journal.entries()[0])["state"]["usage"] == completion()["usage"]
     else:
-        runtime.store.finish("checkpoint", state=document["state"], http_status=200, duration_ms=10)
+        assert runtime.store.records({})[0]["total_tokens"] == 14
     with Runtime(runtime.directory) as restarted, restarted.service():
         row = restarted.store.records({})[0]
         assert row["status"] == "interrupted" and row["delivery_status"] == "unknown"
@@ -753,13 +801,14 @@ def test_deadline_during_checkpoint_cannot_leave_settled_row_running(runtime, mo
 
         def slow_save(document):
             if not document["settled"]:
+                if channel == "database":
+                    raise OSError("force the durable database checkpoint fallback")
                 hold_checkpoint()
             return save(document)
 
+        monkeypatch.setattr(app.state.storage.journal, "save", slow_save)
         if channel == "database":
             monkeypatch.setattr(runtime.store, "finish", slow_finish)
-        else:
-            monkeypatch.setattr(app.state.storage.journal, "save", slow_save)
         async with (
             app.router.lifespan_context(app),
             httpx.AsyncClient(
@@ -909,13 +958,26 @@ def test_limits_changes_keep_probe_fingerprint_and_require_restart(runtime, caps
     assert json.loads(capsys.readouterr().out)["restored"] == 0
 
 
-def test_delivered_done_is_not_followed_by_timeout_during_cleanup(runtime):
+@pytest.mark.parametrize("tail", ["eof", "stall", "error", "excess"])
+def test_delivered_done_is_not_followed_by_timeout_during_cleanup(runtime, tail):
     from .support.protocol import ByteStream
 
     async def scenario():
         caller = runtime.store.create_token("terminal-cleanup")
 
         class SlowClose(ByteStream):
+            async def __aiter__(self):
+                for piece in self.pieces:
+                    yield piece
+                if tail == "stall":
+                    await asyncio.Event().wait()
+                elif tail == "error":
+                    raise httpx.ReadError("synthetic error after a delivered terminal event")
+                elif tail == "excess":
+                    for _ in range(1000):
+                        yield b": ignored trailing comment\n"
+                self.exhausted = True
+
             async def aclose(self):
                 await asyncio.sleep(0.12)
                 self.closed = True
@@ -944,6 +1006,7 @@ def test_delivered_done_is_not_followed_by_timeout_during_cleanup(runtime):
             assert response.text.count("[DONE]") == 1 and "event: error" not in response.text
         row = runtime.store.records({})[0]
         assert row["status"] == "success" and row["total_tokens"] == 14 and body.closed
+        assert body.exhausted is (tail == "eof")
 
     asyncio.run(scenario())
 

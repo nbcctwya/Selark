@@ -9,7 +9,7 @@ from selark.errors import GatewayError
 from selark.protocol import close_response, strict_json
 from selark.providers.compatible import unsupported
 from selark.providers.mimo import MiMoProvider, protocol_error, reported_usage
-from selark.sse import SSEDecoder, async_sse_lines
+from selark.sse import SSEDecoder, async_sse_lines, finish_sse
 
 
 def usage(raw):
@@ -277,8 +277,9 @@ class AnthropicProvider(MiMoProvider):
                 "usage": usage(counts),
             }
 
+        lines = async_sse_lines(response)
         try:
-            async for line in async_sse_lines(response):
+            async for line in lines:
                 raw = decoder.feed(line)
                 if raw is None:
                     continue
@@ -380,6 +381,7 @@ class AnthropicProvider(MiMoProvider):
                         raise protocol_error("Anthropic 流缺少完整结束事件。")
                     yield chunk(final=True)
                     yield "[DONE]"
+                    await finish_sse(response, lines)
                     return
                 # Unknown event types are ignored per Anthropic forward compatibility.
             raise protocol_error("Anthropic 流提前结束，未收到 message_stop。")

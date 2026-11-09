@@ -17,6 +17,7 @@ from selark.runtime import Runtime, fingerprint
 from .support.permissions import is_private
 from .support.protocol import (
     PNG_DATA_URL,
+    ByteStream,
     completion,
     event,
     function_tools,
@@ -54,6 +55,13 @@ def test_provider_auth_payload_stream_and_actual_usage(multi, provider, streamin
         allowed_models=[model],
     )
     calls = []
+    bodies = []
+
+    def streamed(raw):
+        body = ByteStream([raw])
+        bodies.append(body)
+        return httpx.Response(200, stream=body, headers={"content-type": "text/event-stream"})
+
     messages = [
         {"role": "system", "content": "Be brief"},
         {"role": "user", "content": "  Hi\n中文 😀  "},
@@ -89,11 +97,7 @@ def test_provider_auth_payload_stream_and_actual_usage(multi, provider, streamin
                 for m in messages[1:]
             ]
             return (
-                httpx.Response(
-                    200, content=native_events(), headers={"content-type": "text/event-stream"}
-                )
-                if streaming
-                else httpx.Response(200, json=native_reply())
+                streamed(native_events()) if streaming else httpx.Response(200, json=native_reply())
             )
         if provider == "mimo":
             assert request.headers["api-key"] == "fake-mimo"
@@ -126,9 +130,7 @@ def test_provider_auth_payload_stream_and_actual_usage(multi, provider, streamin
                 chunk["model"] = model
                 if provider == "zhipu":
                     chunk.pop("object")
-            return httpx.Response(
-                200, content=sse(*chunks, "[DONE]"), headers={"content-type": "text/event-stream"}
-            )
+            return streamed(sse(*chunks, "[DONE]"))
         return httpx.Response(200, json=data)
 
     with TestClient(
@@ -206,6 +208,8 @@ def test_provider_auth_payload_stream_and_actual_usage(multi, provider, streamin
         else:
             assert response.json()["choices"][0]["message"]["content"]
     assert len(calls) == 1
+    if streaming:
+        assert bodies[0].exhausted and bodies[0].closed
     row = multi.store.records({})[0]
     assert row["connection_id"] == "selected" and row["model"] == model
     assert row["status"] == "success" and row["usage_final"] and row["usage_received"]
@@ -975,6 +979,7 @@ def test_native_protocol_preserves_tools_thinking_headers_and_terminal(
         allowed_models=["shared"],
     )
     calls = []
+    bodies = []
     if wire == "responses":
         output = [
             {
@@ -1100,11 +1105,11 @@ def test_native_protocol_preserves_tools_thinking_headers_and_terminal(
             assert request.headers["anthropic-version"] == "2023-06-01"
             assert request.headers["anthropic-beta"] == "test-feature"
             assert request.url.params["beta"] == "true"
-        return (
-            httpx.Response(200, content=sse(*frames), headers={"content-type": "text/event-stream"})
-            if streaming
-            else httpx.Response(200, json=result)
-        )
+        if streaming:
+            stream = ByteStream([sse(*frames)])
+            bodies.append(stream)
+            return httpx.Response(200, stream=stream, headers={"content-type": "text/event-stream"})
+        return httpx.Response(200, json=result)
 
     headers = token(multi) | {
         "X-Selark-Connection": "native-tools",
@@ -1130,6 +1135,8 @@ def test_native_protocol_preserves_tools_thinking_headers_and_terminal(
         else:
             assert response.json() == result
     assert len(calls) == 1
+    if streaming:
+        assert bodies[0].exhausted and bodies[0].closed
     row = multi.store.records({"connection_id": "native-tools"})[0]
     assert (
         row["upstream_result"] == "success" and row["usage_final"] and row["upstream_attempts"] == 1

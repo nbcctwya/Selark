@@ -37,6 +37,8 @@ OpenAPI 导出本身不需要个人配置或数据库，`--check --frontend` 检
 
 `measure_runtime.py --check-invariants` 检查健康空闲零扫描、普通转发不加载 JWT；默认仍可用于前后版本对比。`measure_relay.py` 只启动临时核心与回环模拟上游，分别报告普通响应和 SSE 首段的逐对额外延迟，以及仅核心 PID 的 RSS/CPU。默认 300 对/模式、30 秒空闲；参考环境加 `--check-budget` 才将性能未达标变成非零退出码，报告始终保存。预算与验收口径见 [硬性设计原则](../docs/development/design-principles.md)。
 
+`measure_relay.py` 的 `upstream_connections` 记录两个阶段新增的模拟上游 TCP 连接数。加 `--chunked-sse` 可切换流式响应的 HTTP 分帧；默认保持 `Content-Length`，其他负载、预热和配对口径相同。
+
 真实验收脚本的参数、额度与授权边界各不相同，不属于常规测试，也不应作为批量默认入口。对应历史证据见 [验收索引](../docs/verification/README.md)。
 新生成的原始输出放在 Git 忽略的 `reports/` 或系统临时目录；审阅后的说明与脱敏 JSON 才放入 `docs/verification/`。
 

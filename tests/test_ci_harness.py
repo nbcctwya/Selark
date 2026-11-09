@@ -12,6 +12,15 @@ from .four_resources import FourUpstreams, app_for, auth, caller, payload
 from .support.resources import resources as resources
 
 
+@pytest.mark.parametrize("chunked", [False, True])
+def test_completed_streams_reuse_tcp_connections(chunked):
+    from scripts.measure_relay import run
+
+    report = run(samples=2, idle_seconds=0.01, chunked_sse=chunked)
+    # One direct and one relayed upstream connection, retained across both modes.
+    assert report["upstream_connections"] == {"nonstream": 2, "stream": 0}
+
+
 def test_latency_report_uses_paired_signed_differences_and_nearest_rank():
     from scripts.measure_relay import comparison, distribution
 

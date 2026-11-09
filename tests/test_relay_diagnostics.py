@@ -86,7 +86,7 @@ def test_relay_gzip_and_explicit_parameter_choices(multi, parameter, streaming, 
         assert "[DONE]" in response.text if streaming else response.json()["choices"]
         assert "event: error" not in response.text
         assert client.get("/health").json()["capacity"]["admitted"] == 0
-    assert len(calls) == 1 and bodies[0].closed
+    assert len(calls) == 1 and bodies[0].closed and bodies[0].exhausted
     row = multi.store.records({})[0]
     assert row["status"] == "success" and row["usage_final"]
     assert row["connection_id"] == "relay" and row["model"] == "shared"

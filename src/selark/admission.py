@@ -48,11 +48,12 @@ class Admission:
         self.tasks.add(asyncio.current_task())
 
     async def acquire(self):
+        """Acquire a slot and report whether this request had to wait."""
         if not self.accepting:
             raise GatewayError(503, "service_shutting_down", "服务正在关闭。")
         if self.active < self.limits.max_concurrent_requests and not self.waiters:
             self.active += 1
-            return
+            return False
         future = asyncio.get_running_loop().create_future()
         self.waiters.append(future)
         try:
@@ -70,6 +71,7 @@ class Admission:
                     503, "queue_timeout", "等待 Selark 执行名额超时，未发送上游。"
                 ) from None
             raise
+        return True
 
     def release(self):
         self.active -= 1

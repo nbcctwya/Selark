@@ -1,6 +1,11 @@
 """Small SSE data decoder shared by the HTTP client and provider adapter."""
 
+import asyncio
+import contextlib
 import re
+
+import anyio
+import httpx
 
 MAX_SSE_BYTES = 1_048_576
 NEWLINE = re.compile(b"[\r\n]")
@@ -51,6 +56,41 @@ async def async_sse_lines(response):
             yield line
     if lines.buffer:
         yield lines.take()
+
+
+async def finish_sse(response, lines):
+    """Release a completed HTTP body for reuse after delivering its terminal event.
+
+    Some providers leave the transport open after the protocol has ended. Cleanup
+    is opportunistic and bounded; terminal usage and delivery cannot be replaced
+    by a trailing transport error, and cancellation still propagates.
+    """
+
+    async def drain():
+        try:
+            size = 0
+            for _ in range(64):
+                line = await anext(lines, None)
+                if line is None:
+                    return
+                size += len(line.encode("utf-8")) + 1
+                if size > 65536:
+                    return
+        except (httpx.HTTPError, ValueError, UnicodeError):
+            pass
+
+    pending = asyncio.create_task(drain())
+    try:
+        await asyncio.wait({pending}, timeout=0.01)
+    finally:
+        with anyio.CancelScope(shield=True):
+            # HTTPX marks the response closed before awaiting transport cleanup.
+            # Interrupt reads after the short grace period, but let a close that
+            # has already started finish within the ordinary two-second limit.
+            if not pending.done() and not response.is_closed:
+                pending.cancel()
+            with contextlib.suppress(asyncio.CancelledError, TimeoutError):
+                await asyncio.wait_for(pending, timeout=2)
 
 
 def sse_lines(response):

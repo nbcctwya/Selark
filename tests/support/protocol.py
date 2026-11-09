@@ -84,12 +84,14 @@ class ByteStream(httpx.AsyncByteStream):
         self.pieces = pieces
         self.error = error
         self.closed = False
+        self.exhausted = False
 
     async def __aiter__(self):
         for piece in self.pieces:
             yield piece
         if self.error:
             raise self.error("sensitive upstream error")
+        self.exhausted = True
 
     async def aclose(self):
         self.closed = True

@@ -162,17 +162,19 @@ class Journal:
             except (OSError, ValueError, TypeError, AttributeError):
                 invalid += 1
                 continue
-            if not document["settled"]:
-                if not include_unsettled:
-                    continue
-                document["state"].update(
-                    record_status="interrupted",
-                    delivery_status="unknown",
-                    error_code="service_restarted",
-                    error_message="交付确认前退出；保留已取得的上游结果和用量。",
-                    finished_at=utc_now(),
-                )
             try:
+                if not document["settled"]:
+                    if not include_unsettled and not store.supersedes_receipt(
+                        path.stem, document["state"]["record_revision"]
+                    ):
+                        continue  # Never replay an active delivery's checkpoint.
+                    document["state"].update(
+                        record_status="interrupted",
+                        delivery_status="unknown",
+                        error_code="service_restarted",
+                        error_message="交付确认前退出；保留已取得的上游结果和用量。",
+                        finished_at=utc_now(),
+                    )
                 apply_document(store, document)
                 self._remove(path.stem)
                 restored += 1
@@ -254,8 +256,8 @@ class AsyncLedger:
         document = snapshot(state, http_status, duration_ms, settled=settled)
         loop = asyncio.get_running_loop()
         async with self.receipt_lock:
-            # Keep the durable write order, but execute the contiguous blocking
-            # work in one visit to the receipt worker. Store.transaction's RLock
+            # Serialize checkpoints and settlement in the receipt worker.
+            # Store.transaction's RLock
             # serializes SQLite access with the database worker. Reads can still
             # proceed while a receipt is syncing; blocking I/O stays off the event loop.
             return await self.io(self._persist, document, loop)
@@ -264,12 +266,14 @@ class AsyncLedger:
         state = document["state"]
         settled = document["settled"]
         journal_ok = False
-        if self.journal:
+        if self.journal and not settled:
             try:
                 self.journal.save(document)
                 journal_ok = True
             except (OSError, ValueError):
                 self.degraded = True
+        # Checkpoints remain visible to an independent CLI before delivery.
+        # Final settlement can reuse that receipt until its FULL commit succeeds.
         try:
             self.store.finish(
                 state["request_id"],
@@ -278,9 +282,15 @@ class AsyncLedger:
                 duration_ms=document["duration_ms"],
             )
             result = "committed"
-            if settled and journal_ok:
-                self.journal.remove(state["request_id"])
         except (sqlite3.Error, OSError, ConfigError):
+            # Preserve the actual delivery state if the final database write
+            # fails; the previous checkpoint still protects the upstream usage.
+            if settled and self.journal:
+                try:
+                    self.journal.save(document)
+                    journal_ok = True
+                except (OSError, ValueError):
+                    self.degraded = True
             result = "pending" if journal_ok else "failed"
             if not journal_ok:
                 self.degraded = True
@@ -296,6 +306,14 @@ class AsyncLedger:
                 )
             )
         if self.journal:
+            if settled and result == "committed":
+                try:
+                    self.journal.remove(state["request_id"])
+                except (OSError, ConfigError):
+                    # Revision ordering makes a retained checkpoint harmless,
+                    # but keep admission blocked until cleanup can recover.
+                    self.degraded = True
+                    logger.error(json.dumps({"event": "receipt_cleanup_failed"}))
             try:
                 self.pending = len(self.journal.entries())
             except OSError:

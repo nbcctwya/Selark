@@ -9,7 +9,7 @@ from selark.protocol import close_response, strict_json
 from selark.providers.anthropic import usage as messages_usage
 from selark.providers.compatible import unsupported
 from selark.providers.mimo import protocol_error, response_identity
-from selark.sse import SSEDecoder, async_sse_lines
+from selark.sse import SSEDecoder, async_sse_lines, finish_sse
 from selark.usage import response_usage, sanitize_usage
 
 NATIVE_PROTOCOLS = {
@@ -152,8 +152,9 @@ class NativeProvider:
         counts, blocks = {}, set()
         stopped = False
         count = 0
+        lines = async_sse_lines(response)
         try:
-            async for line in async_sse_lines(response):
+            async for line in lines:
                 raw = decoder.feed(line)
                 if raw is None:
                     continue
@@ -191,6 +192,7 @@ class NativeProvider:
                                 raise protocol_error("Responses 终态不一致。")
                             event = event | {"response": self.terminal(result)}
                             yield event
+                            await finish_sse(response, lines)
                             return
                     elif identity is None:
                         raise protocol_error("Responses 流缺少回复身份。")
@@ -235,6 +237,7 @@ class NativeProvider:
                             usage_final=True, upstream_result="success", upstream_status=200
                         )
                         yield event
+                        await finish_sse(response, lines)
                         return
                     self.provider.outcome["usage"] = self.measure_usage({"usage": counts})
                 yield event

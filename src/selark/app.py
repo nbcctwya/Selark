@@ -252,7 +252,8 @@ class RequestMiddleware:
                 state["chat_input"] = data
                 state["session_id"] = data.session_id
                 state["model"] = data.model
-                selected, model, alias, _, policy = await self.route(data, state["caller_id"])
+                routing = await self.route(data, state["caller_id"])
+                selected, model, alias, _, policy = routing
                 state["connection_id"] = selected.connection_id
                 state["resource_type"] = selected.resource_type
                 state["plan_id"] = (
@@ -270,8 +271,10 @@ class RequestMiddleware:
                     state["plan_slot"] = selected.connection_id
                 waiting = time.monotonic()
                 try:
-                    await self.gate.acquire()
+                    queued = await self.gate.acquire()
                     slot = True
+                    if not queued:
+                        state["routing_snapshot"] = routing
                 finally:
                     state["queue_ms"] = round((time.monotonic() - waiting) * 1000, 2)
 
@@ -643,7 +646,13 @@ def create_app(
     @app.post("/v1/messages")
     async def chat(request: Request):
         data = request.state.chat_input
-        current, model, alias, settings, policy = await route(data, request.state.caller_id)
+        # Immediate admission has not yielded since the initial route. Queued
+        # work reloads it; both paths still recheck approval under the management
+        # lock and current policy/quota in the dispatch transaction below.
+        routing = request.scope["state"].pop("routing_snapshot", None)
+        current, model, alias, settings, policy = routing or await route(
+            data, request.state.caller_id
+        )
         enforce_access(policy, current.connection_id, model, current.resource_type)
         request.state.requested_alias = alias
         request.state.connection_id = current.connection_id
