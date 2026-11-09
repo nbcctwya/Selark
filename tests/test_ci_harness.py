@@ -251,6 +251,25 @@ def test_completed_streams_reuse_tcp_connections(chunked):
     assert report["upstream_connections"] == {"nonstream": 2, "stream": 0}
 
 
+def test_socket_acceptance_survives_slow_client_initialization(monkeypatch):
+    from scripts.verify_stability import run
+
+    initialize = httpx.Client.__init__
+    constructions = 0
+
+    def slow_initialize(self, *args, **kwargs):
+        nonlocal constructions
+        constructions += 1
+        time.sleep(0.25)  # Reproduces expensive Windows client/SSL setup.
+        initialize(self, *args, **kwargs)
+
+    monkeypatch.setattr(httpx.Client, "__init__", slow_initialize)
+    report = run([sys.executable, "-m", "selark"])
+    assert constructions and len(report["checks"]) == 9
+    assert all(item["passed"] for item in report["checks"])
+    assert report["real_mimo_requests"] == 0 and report["simulated_upstream_requests"] == 9
+
+
 def test_latency_report_uses_paired_signed_differences_and_nearest_rank():
     from scripts.measure_relay import comparison, distribution
 

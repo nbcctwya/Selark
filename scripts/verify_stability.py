@@ -152,7 +152,12 @@ def run(command):
     checks = []
     fixture = Fixture()
     service = logfile = None
-    with tempfile.TemporaryDirectory(prefix="selark-stability-") as tmp:
+    with (
+        tempfile.TemporaryDirectory(prefix="selark-stability-") as tmp,
+        # Client/SSL-context construction can consume the short queue window on
+        # Windows. Create the thread-safe pool before any timed request begins.
+        httpx.Client(trust_env=False, timeout=5) as http,
+    ):
         directory = Path(tmp) / "profile"
         outside = Path(tmp) / "outside-repository"
         outside.mkdir()
@@ -217,7 +222,7 @@ def run(command):
             def ready():
                 assert service.poll() is None, "Isolated service exited during startup"
                 try:
-                    response = httpx.get(url + "/health", trust_env=False, timeout=0.2)
+                    response = http.get(url + "/health", timeout=0.2)
                     return response.status_code == 200 and response.json()["version"] == __version__
                 except httpx.RequestError:
                     return False
@@ -241,7 +246,7 @@ def run(command):
                 logfile = None
 
         def post(prompt="fast", *, stream=False, session=None):
-            return httpx.post(
+            return http.post(
                 url + "/v1/chat/completions",
                 headers=auth,
                 json={
@@ -250,8 +255,6 @@ def run(command):
                     "session_id": session,
                     "max_tokens": 8,
                 },
-                trust_env=False,
-                timeout=5,
             )
 
         try:
@@ -286,14 +289,13 @@ def run(command):
                 first = pool.submit(post, "hold", session="active")
                 assert fixture.entered.wait(2)
                 second = pool.submit(post, "fast", session="queued")
-                wait_for(
-                    lambda: (
-                        httpx.get(url + "/health", trust_env=False).json()["capacity"]["queued"]
-                        == 1
-                    )
-                )
+                wait_for(lambda: http.get(url + "/health").json()["capacity"]["queued"] == 1)
                 rejected = post(session="overloaded")
-                assert rejected.status_code == 429 and rejected.headers["retry-after"] == "1"
+                assert rejected.status_code == 429 and rejected.headers["retry-after"] == "1", (
+                    rejected.status_code,
+                    rejected.text,
+                    {"active_done": first.done(), "queued_done": second.done()},
+                )
                 timed_out = second.result(timeout=2)
                 assert (
                     timed_out.status_code == 503
