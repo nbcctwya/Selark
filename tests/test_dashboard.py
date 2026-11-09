@@ -8,10 +8,12 @@ from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import TypeAdapter
 
 from selark import dashboard_data as data
 from selark.cli import main
 from selark.config import ConfigError, _write_private, initialize, server_document
+from selark.contracts.dashboard import Connection, RecordsPage
 from selark.dashboard import ASSETS, Session, create_dashboard
 from selark.runtime import fingerprint
 from selark.storage import Store, utc_now
@@ -162,14 +164,47 @@ def test_empty_config_is_not_created_or_migrated(tmp_path):
     assert contents(directory) == before
 
 
-def test_full_read_only_snapshot_redacts_secrets_and_preserves_unknowns(runtime, monkeypatch):
+@pytest.mark.parametrize(
+    "details,reasoning,thinking,known",
+    [
+        ({}, None, None, True),
+        ({"completion_tokens_details": {"reasoning_tokens": 0}}, "0", None, True),
+        (
+            {
+                "completion_tokens_details": {"reasoning_tokens": 1},
+                "output_tokens_details": {"thinking_tokens": 2},
+            },
+            "1",
+            "2",
+            True,
+        ),
+        (
+            {"completion_tokens_details": {"reasoning_tokens": 2**63 - 1}},
+            str(2**63 - 1),
+            None,
+            False,
+        ),
+        ({"completion_tokens_details": {"reasoning_tokens": True}}, None, None, False),
+        (
+            {"output_tokens_details": {"thinking_tokens": "private-usage-text"}},
+            None,
+            None,
+            False,
+        ),
+    ],
+)
+def test_full_read_only_snapshot_redacts_secrets_and_preserves_unknowns(
+    runtime, monkeypatch, details, reasoning, thinking, known
+):
     runtime.add_connection("plan", "kimi-code", "test-plan-secret")
     caller = runtime.store.create_token("reader")
     quote = price(runtime)
     allocation(runtime, caller, "known", quote=quote)
+    state = finished(caller, "known", fingerprint=fingerprint(runtime.settings()))
+    state["usage"].update(details)
     runtime.store.finish(
         "known",
-        state=finished(caller, "known", fingerprint=fingerprint(runtime.settings())),
+        state=state,
         http_status=200,
         duration_ms=120,
     )
@@ -182,7 +217,10 @@ def test_full_read_only_snapshot_redacts_secrets_and_preserves_unknowns(runtime,
                 {
                     "window": "five-hours",
                     "unit": "provider_units",
+                    "limit": str(2**63 - 1),
+                    "used": str(2**63 - 1),
                     "remaining": "0",
+                    "reset_at": None,
                     "api_key": "test-plan-secret",
                 }
             ],
@@ -203,19 +241,30 @@ def test_full_read_only_snapshot_redacts_secrets_and_preserves_unknowns(runtime,
     # TestClient needs httpx.Client.send; call read-only projections directly here.
     result = data.snapshot(runtime.directory, data.query_filters({}), offline=True)
     rows = data.records(runtime.directory, data.query_filters({}))
+    TypeAdapter(list[Connection]).validate_python(result["connections"])
+    TypeAdapter(RecordsPage).validate_python(rows)
     api, plan = result["connections"]
     assert api["availability"] == {"state": "unknown", "checked_live": False, "blockers": []}
     assert api["verification"]["state"] == "success"
     assert api["provider_quota"]["remaining_tokens"] is None
     assert plan["provider_quota"]["reported_counters"][0]["remaining"] == "0"
+    assert plan["provider_quota"]["reported_counters"][0]["limit"] == str(2**63 - 1)
     assert plan["provider_quota"]["current_remaining_tokens"] is None
-    assert result["usage"]["summary"]["known_tokens"]["total_tokens"] == 14
-    assert Decimal(rows["items"][0]["cost"]["estimated_cost"]) == Decimal("0.000016")
+    assert result["usage"]["summary"]["known_tokens"]["total_tokens"] == (14 if known else None)
+    record = rows["items"][0]
+    assert record["reasoning_tokens"] == reasoning
+    assert record["thinking_tokens"] == thinking
+    assert record["usage_known"] is known
+    if known:
+        assert Decimal(record["cost"]["estimated_cost"]) == Decimal("0.000016")
+    else:
+        assert record["cost"]["estimated_cost"] is None
     encoded = json.dumps([result, rows])
     for secret in (
         UPSTREAM_KEY,
         caller["token"],
         "test-plan-secret",
+        "private-usage-text",
     ):
         assert secret not in encoded
     assert "digest" not in encoded and "error_message" not in encoded
@@ -274,6 +323,10 @@ def test_accounting_filtering_pagination_and_trend_consistency(runtime, monkeypa
     assert Decimal(cli["estimated_cost_by_currency"]["USD"]) == Decimal("0.000320")
     assert result["summary"]["success_rate"] == 20 / 30
     assert result["summary"]["average_latency_ms"] == 245
+    model = result["models"][0]
+    assert model["success_rate"] == 20 / 30
+    assert model["average_latency_ms"] == 245
+    assert model["completed_requests"] == model["latency_samples"] == 30
     assert result["summary"]["unknown_consumption_requests"] == 10
     assert sum(p["requests"] for p in result["trend"]) == 30
     assert sum(p["known_tokens"]["total_tokens"] or 0 for p in result["trend"]) == 280
@@ -288,6 +341,29 @@ def test_accounting_filtering_pagination_and_trend_consistency(runtime, monkeypa
     all_usage = data.snapshot(runtime.directory, data.query_filters({}), offline=True)["usage"]
     assert all_usage["unknown_time_excluded"] == 1
     assert all_usage["summary"]["success_rate"] == 20 / 32
+    pending = next(group for group in all_usage["models"] if group["model"] is None)
+    assert pending["success_rate"] is None and pending["average_latency_ms"] is None
+    assert pending["completed_requests"] == pending["latency_samples"] == 0
+
+    # Identical model IDs on different connections must not share latency or outcomes.
+    for identity, duration, status in (("other-good", 900, 200), ("other-bad-time", -1, 500)):
+        runtime.store.finish(
+            identity,
+            state=finished(second, identity, connection_id="other-connection"),
+            http_status=status,
+            duration_ms=duration,
+        )
+    grouped = data.snapshot(runtime.directory, data.query_filters({}), offline=True)["usage"]
+    by_connection = {
+        group["connection_id"]: group
+        for group in grouped["models"]
+        if group["model"] == "mimo-test"
+    }
+    assert by_connection["mimo-default"]["success_rate"] == 20 / 32
+    assert by_connection["mimo-default"]["average_latency_ms"] == 255
+    assert by_connection["other-connection"]["success_rate"] == 0.5
+    assert by_connection["other-connection"]["average_latency_ms"] == 900
+    assert by_connection["other-connection"]["latency_samples"] == 1
 
 
 @pytest.mark.parametrize(
@@ -343,6 +419,8 @@ def test_filter_boundaries_timezone_sql_injection_and_zero_usage(runtime):
     assert result["summary"]["requests"] == 1
     assert result["summary"]["known_tokens"]["total_tokens"] == 0
     assert result["summary"]["average_latency_ms"] == 0
+    assert result["models"][0]["success_rate"] == 1
+    assert result["models"][0]["average_latency_ms"] == 0
     assert result["summary"]["estimated_cost_by_currency"] == {}
     assert len(result["trend"]) == 1
     assert data.records(runtime.directory, filters | {"model": "' OR 1=1 --"})["total"] == 0

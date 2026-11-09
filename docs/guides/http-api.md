@@ -44,6 +44,7 @@ MiMo、DeepSeek、Kimi 的 Messages 地址按官方路径使用配置 origin 下
 - 普通 API 的 `max_tokens` 与 `max_completion_tokens` 互斥，范围 1–131072。普通文本省略时保留既有默认 1024；带工具定义的同协议请求省略时保留供应商默认行为，应用硬上限优先。Anthropic 的 Chat 转换仍使用默认 1024，因为 Messages 要求显式 max_tokens。
 - 支持 `temperature`（0–1.5）、`top_p`（0.01–1）、`stop`（字符串或 1–4 个字符串）、`presence_penalty/frequency_penalty`（-2–2）。这些参数由上游执行；Selark 不修复或重新生成不满足要求的答案。
 - 不带工具的既有文本模式保留原有低成本默认。Anthropic Chat 适配会映射 function / tool_use、工具结果与结束原因；签名思考块、供应商原生工具等完整能力使用 `/v1/messages`。
+- Anthropic Chat 消息的非 null `name` 或其他扩展字段无法无损映射时，返回 `400 unsupported_provider_option`，不会派发上游请求。SDK 明确表示无内容的 `refusal: null`、`annotations: null/[]` 仍可使用。请使用能表达相应能力的原生协议；适配器不会静默删去调用方内容或把字段改写进提示文本。
 - 单 choice（index=0），最多 256 条消息、128 个工具。根级未知参数仍返回 400；Chat 暂不支持音频、视频、file 内容块和 `n` 多候选。包含 Base64 图片的完整请求仍受 1 MiB 上限约束；本地输入预留是启发式估算，不是视觉 Token 测量，实际用量以供应商回报为准。
 
 参数校验失败时，400 错误信息会列出字段位置与校验类型，例如 `prompt_cache_key (string_type)`，请求日志对应记录 `invalid_fields`（最多 8 项）。仅输出已知字段名和校验类型，不记录消息正文、密钥、字段值或任意未知键名。生成请求仍经过原有权限、限额和持久化检查。

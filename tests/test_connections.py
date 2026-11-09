@@ -134,11 +134,23 @@ def test_provider_auth_payload_stream_and_actual_usage(multi, provider, streamin
     with TestClient(
         create_app(multi.settings(), runtime=multi, transport=httpx.MockTransport(upstream))
     ) as client:
-        if provider == "anthropic" and not streaming:
+        if provider == "anthropic":
             for options in (
                 {"store": True},
                 {"prompt_cache_key": "synthetic-session"},
                 {"prompt_cache_retention": "24h"},
+                *(
+                    {"messages": [{"role": role, "content": "  Caller text\n", "name": "alice"}]}
+                    for role in ("system", "user", "assistant")
+                ),
+                *(
+                    {"messages": [{"role": "assistant", "content": "text", **extension}]}
+                    for extension in (
+                        {"refusal": "Caller-owned refusal text"},
+                        {"annotations": [{"text": "Caller-owned annotation"}]},
+                        {"future_extension": None},
+                    )
+                ),
                 {
                     "messages": [
                         {
@@ -166,7 +178,12 @@ def test_provider_auth_payload_stream_and_actual_usage(multi, provider, streamin
                 rejected = client.post(
                     "/v1/chat/completions",
                     headers=token(multi),
-                    json={"connection_id": "selected", "messages": messages, **options},
+                    json={
+                        "connection_id": "selected",
+                        "messages": messages,
+                        "stream": streaming,
+                        **options,
+                    },
                 )
                 assert rejected.status_code == 400
                 assert rejected.json()["error"]["code"] == "unsupported_provider_option"
@@ -870,7 +887,15 @@ def test_official_tool_roundtrip_preserves_calls_results_and_usage(multi, provid
                 assert actual == expected
         history = (
             request_body["messages"]
-            + [{"role": "assistant", "content": None, "tool_calls": returned, "refusal": None}]
+            + [
+                {
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": returned,
+                    "refusal": None,
+                    "annotations": [],
+                }
+            ]
             + [
                 {
                     "role": "tool",

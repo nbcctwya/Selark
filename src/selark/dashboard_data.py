@@ -14,6 +14,7 @@ from selark.overview import health_status, overview
 from selark.runtime import Runtime
 from selark.schemas import REQUEST_LOG_PATHS
 from selark.storage import utc_now
+from selark.usage import valid_count
 
 
 def pick(value, fields):
@@ -173,6 +174,23 @@ def usage(store, filters):
     result["trend"] = trend
     models = store.summary(filters, group_by="model")["groups"]
     result["models"] = sorted(models, key=lambda g: g["requests"], reverse=True)[:10]
+    model_latency = {
+        (row["connection_id"], row["model"]): row
+        for row in store.db.execute(
+            "SELECT connection_id,model,"
+            + latency_sql
+            + " FROM requests"
+            + where
+            + " GROUP BY connection_id,model",
+            args,
+        )
+    }
+    for model in result["models"]:
+        rates(model)
+        latency = model_latency[(model["connection_id"], model["model"])]
+        model.update(
+            average_latency_ms=latency["latency"], latency_samples=latency["latency_samples"]
+        )
     other_filters = {k: v for k, v in filters.items() if k not in {"since", "until"}}
     clause, values = store.where(other_filters)
     result["unknown_time_excluded"] = store.db.execute(
@@ -195,6 +213,16 @@ def public_record(row):
     )
     allocation = row.get("resources") or {}
     result["cost"] = pick(allocation, "estimated_cost currency cost_status token_basis")
+    reported = row.get("reported_usage")
+    for details, field in (
+        ("completion_tokens_details", "reasoning_tokens"),
+        ("output_tokens_details", "thinking_tokens"),
+    ):
+        values = reported.get(details) if isinstance(reported, dict) else None
+        count = values.get(field) if isinstance(values, dict) else None
+        # Reported evidence remains visible even when totals are incomplete or contradictory.
+        # Decimal strings preserve the ledger's 64-bit counts in browser clients.
+        result[field] = str(count) if valid_count(count) else None
     # Free-form error messages, session IDs, raw usage and allocation documents stay local.
     return result
 

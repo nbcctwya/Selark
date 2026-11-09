@@ -242,9 +242,9 @@ class QuotaWindow(Shape):
 class QuotaCounter(Shape):
     window: str
     unit: str
-    limit: int | None
-    used: int | None
-    remaining: int | None
+    limit: str | None
+    used: str | None
+    remaining: str | None
     reset_at: str | None
 
 
@@ -339,6 +339,10 @@ class PopulatedTrendPoint(UsageSummary):
 class ModelUsage(UsageSummary):
     connection_id: str | None
     model: str | None
+    completed_requests: int
+    success_rate: float | None
+    average_latency_ms: float | None
+    latency_samples: int
 
 
 class UsageFilters(Shape):
@@ -442,6 +446,8 @@ class RequestRecord(Shape):
     prompt_tokens: int | None
     completion_tokens: int | None
     total_tokens: int | None
+    reasoning_tokens: str | None
+    thinking_tokens: str | None
     origin: str
     cost: RecordCost
 

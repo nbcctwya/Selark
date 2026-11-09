@@ -14,7 +14,9 @@ from unittest.mock import patch
 from scripts.verify_dashboard import seed
 from selark import dashboard_data as data
 from selark.dashboard_api import service as management
+from selark.plans import parse_quota
 from selark.runtime import Runtime
+from selark.storage import utc_now
 
 
 def export_fixture():
@@ -33,6 +35,12 @@ def export_fixture():
                     elif config.connection_id == "mimo-default":
                         models.append("demo-unapproved")
                     runtime.save_discovery(config, models)
+                    if config.resource_type == "token_plan":
+                        runtime.save_plan_status(
+                            config,
+                            parse_quota({"usage": {"limit": 1000, "used": 900, "remaining": 100}}),
+                            utc_now(),
+                        )
                 runtime.change_models("openai-demo", "enable", ["demo-text"])
                 runtime.change_models("openai-demo", "default", default="demo-text")
                 # Exercise a finite quota and unknown-consumption state in the UI.

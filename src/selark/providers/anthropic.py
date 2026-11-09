@@ -77,8 +77,19 @@ class AnthropicProvider(MiMoProvider):
             )
         if request.reasoning_effort is not None:
             unsupported("当前 Anthropic 文本子集不支持 reasoning_effort。")
-        if any(m.reasoning_content is not None for m in request.messages):
-            unsupported("Anthropic 思考块需要原生结构；当前文本接口不接收 reasoning_content。")
+        for message in request.messages:
+            if message.reasoning_content is not None:
+                unsupported("Anthropic 思考块需要原生结构；当前文本接口不接收 reasoning_content。")
+            # SDK dumps can explicitly report absent refusal/annotations, with no content
+            # to map. Other extensions (including unknown null fields) are unsupported.
+            if message.name is not None or any(
+                not (
+                    (key == "refusal" and value is None)
+                    or (key == "annotations" and (value is None or value == []))
+                )
+                for key, value in (message.model_extra or {}).items()
+            ):
+                unsupported("Anthropic 无法无损映射消息 name 或扩展字段，请使用原生 /v1/messages。")
         data = request.upstream_payload(model)
         if request.response_format is not None:
             unsupported("Anthropic 结构化输出请使用原生 /v1/messages 的 output_config。")

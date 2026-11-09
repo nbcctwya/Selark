@@ -132,6 +132,11 @@ def seed(profile, count=140):
                     "prompt_tokens": input_count,
                     "completion_tokens": output_count,
                     "total_tokens": input_count + output_count,
+                    **(
+                        {"completion_tokens_details": {"reasoning_tokens": output_count // 2}}
+                        if index % 2
+                        else {"output_tokens_details": {"thinking_tokens": output_count // 2}}
+                    ),
                 },
                 "error_code": "fixture_timeout" if unknown else None,
                 "error_message": "fixture-private-error-never-expose",

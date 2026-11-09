@@ -11,7 +11,7 @@ from selark.dashboard import ModelApproval as LegacyModelApproval
 from selark.dashboard_api import schemas as requests
 from selark.schemas import ChatRequest, MessagesRequest, ResponsesRequest
 
-CONTRACT_VERSION = "2.0.0"
+CONTRACT_VERSION = "2.1.0"
 
 # Method, concrete path, stable operation ID, summary, input schema, output schema.
 DASHBOARD_OPERATIONS = (

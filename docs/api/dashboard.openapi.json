@@ -1893,6 +1893,10 @@
           "unknown_cost_requests",
           "billed_cost",
           "resource_accounting",
+          "average_latency_ms",
+          "latency_samples",
+          "completed_requests",
+          "success_rate",
           "connection_id",
           "model"
         ],
@@ -2888,7 +2892,7 @@
           "limit": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -2899,7 +2903,7 @@
           "remaining": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -2925,7 +2929,7 @@
           "used": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -3203,6 +3207,17 @@
             ],
             "title": "Queue Ms"
           },
+          "reasoning_tokens": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasoning Tokens"
+          },
           "request_id": {
             "title": "Request Id",
             "type": "string"
@@ -3236,6 +3251,17 @@
           "status": {
             "title": "Status",
             "type": "string"
+          },
+          "thinking_tokens": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thinking Tokens"
           },
           "total_tokens": {
             "anyOf": [
@@ -3331,6 +3357,8 @@
           "prompt_tokens",
           "completion_tokens",
           "total_tokens",
+          "reasoning_tokens",
+          "thinking_tokens",
           "origin",
           "cost"
         ],
@@ -3941,7 +3969,7 @@
   "info": {
     "description": "本机管理接口。应用调用令牌不能代替管理会话；所有响应 no-store。新管理接口补充既有查询契约，路径没有版本前缀。只读模式拒绝业务写入，离线模式关闭模型发现。",
     "title": "Selark Dashboard API",
-    "version": "2.0.0"
+    "version": "2.1.0"
   },
   "openapi": "3.1.0",
   "paths": {

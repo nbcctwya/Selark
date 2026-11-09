@@ -8,7 +8,10 @@ Selark 维护两份 OpenAPI 3.1 规范，共覆盖当前 27 个 HTTP 操作。�
 | Dashboard，22 个操作 | `http://127.0.0.1:8790` | 独立管理会话及显式请求头 | [dashboard.openapi.json](dashboard.openapi.json) | [连接、模型与应用管理](../development/management-api.md) |
 
 实际地址以启动输出为准。管理会话和应用令牌不能混用；两个服务没有相互替代的接口。
-OpenAPI 的 `info.version=2.0.0` 是文档契约版本，与 Python 包版本和网关 `/v1/` 路径分别维护。
+OpenAPI 的 `info.version=2.1.0` 是文档契约版本，与 Python 包版本和网关 `/v1/` 路径分别维护。
+2.1.0 将套餐报告计数的声明修正为实际返回的十进制字符串；前端保留 64 位精度，null 继续表示未知。
+调用记录同时增加供应商已报告的 `reasoning_tokens/thinking_tokens` 明细（十进制字符串或 null），与总量、完整性和一致性状态分别展示，不重复累加。
+模型分组补齐已结束请求数、成功率、平均耗时与耗时样本数；按连接与模型分别计算，沿用当前筛选范围及总体统计口径。
 规范作为 Git 文件发布，现有服务的 `/docs`、`/redoc`、`/openapi.json` 继续关闭。
 
 ## Dashboard 接口目录
